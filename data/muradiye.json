@@ -1,0 +1,310 @@
+{
+  "content_version": "bursa-muradiye-0.2.0",
+  "chapter_id": "chapter-record-and-service",
+  "title": "Muradiye evidence catalogue",
+  "site": "Muradiye Külliyesi · Bursa",
+  "fiction_notice": "主角、账目差异、对话和分支结果均为原创虚构；真实史料只用于呈现建筑、职责与制度背景。",
+  "map_notice": "北向上，仅表达出版物确认的相对位置；不是比例平面图。虚线标记为目录扩展点，点击可查看。GPS 当前关闭。",
+  "context_markers": [
+    {
+      "id": "context-bath",
+      "title": "Muradiye Hamamı",
+      "x": 7,
+      "y": 57,
+      "detail": "库存卷印刷页 126–127：浴室位于 medrese 西侧，始建于 1426 年。该卷记载 2020 年一度作为服装商店使用，当前用途需核实。",
+      "source_id": "src-inventory-volume"
+    },
+    {
+      "id": "context-tombs",
+      "title": "十三座陵墓",
+      "x": 43,
+      "y": 79,
+      "detail": "库存卷印刷页 111、130–166 记载陵墓群。从 1442 年的 Şehzade Alâaddin 墓到 1573 年的 Şehzade Mustafa 墓，形成跨越多代的纪念空间。精确入口和各建筑坐标仍需核对。",
+      "source_id": "src-inventory-volume"
+    }
+  ],
+  "photo_archive_url": "https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh",
+  "sources": [
+    {
+      "id": "src-vakfiye-study",
+      "title": "Sultan II. Murad’ın Bursa Vakfiyesi",
+      "kind": "学术论文 · 2022",
+      "url": "https://dergipark.org.tr/tr/pub/uluifd/article/1071329",
+      "supports": "1430 年文书背景、供餐规定、职员职责、喷泉维护与文本抄本差异。"
+    },
+    {
+      "id": "src-layout-study",
+      "title": "Bursa Muradiye Külliyesi and tombs study",
+      "kind": "建筑研究 · 2020",
+      "url": "https://acikerisim.erbakan.edu.tr/bitstreams/53db0ca4-7000-4e68-a4bd-0fcc804081c8/download",
+      "supports": "建筑群相对布局、medrese 空间与研究发表时的使用变化。"
+    },
+    {
+      "id": "src-inventory-volume",
+      "title": "Vakıf Eserleri Envanteri · II. Murad Külliyesi",
+      "kind": "建筑群库存出版物 · 印刷页 111–170",
+      "url": "https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh",
+      "supports": "清真寺、medrese、喷泉、imaret、hamam 与十三座陵墓的空间、构造、铭文和历史记录。"
+    },
+    {
+      "id": "src-tdv",
+      "title": "Murâdiye Külliyesi",
+      "kind": "TDV İslâm Ansiklopedisi",
+      "url": "https://islamansiklopedisi.org.tr/muradiye-kulliyesi--bursa",
+      "supports": "清真寺年代与建筑群概况。"
+    }
+  ],
+  "assets": [
+    {
+      "id": "asset-aerial-oblique",
+      "filename": "DJI_20241025141037_0007_D_ODAK-Edit.jpg",
+      "note": "倾斜航拍；建筑映射待编辑核对。",
+      "mapping_state": "provisional"
+    },
+    {
+      "id": "asset-aerial-topdown",
+      "filename": "DJI_20241025141257_0016_D_ODAK-Edit.jpg",
+      "note": "俯拍可观察屋顶、路径和树木；不是测绘平面。",
+      "mapping_state": "provisional"
+    },
+    {
+      "id": "asset-fountain-niche",
+      "filename": "20250817_140332.jpg",
+      "note": "墙面喷泉壁龛；具体位置与身份未确认。",
+      "mapping_state": "unmapped"
+    },
+    {
+      "id": "asset-courtyard-portico",
+      "filename": "ERD00738 kopya-2.jpg",
+      "note": "庭院水景与拱廊；具体建筑映射待核对。",
+      "mapping_state": "provisional"
+    },
+    {
+      "id": "asset-medrese-interior-unknown",
+      "filename": "ERD00899 kopya.jpg",
+      "note": "蓝色瓷砖室内；房间身份未核实。",
+      "mapping_state": "unmapped"
+    },
+    {
+      "id": "asset-masonry-detail",
+      "filename": "DJI_20241025143109_0061_D_ODAK-Edit.jpeg",
+      "note": "砖石构造细节；具体位置未映射。",
+      "mapping_state": "unmapped"
+    },
+    {
+      "id": "asset-tomb-exterior-candidate",
+      "filename": "ERD00835 kopya.jpg",
+      "note": "穹顶陵墓候选；具体陵墓身份待核对。",
+      "mapping_state": "provisional"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-mosque-date",
+      "text": "Muradiye 清真寺建于 1425–1426 年。",
+      "source_ids": [
+        "src-tdv"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-vakfiye-date",
+      "text": "论文研究的阿拉伯文 vakfiye 抄本标注日期为 833 年 Shawwal 月 22 日（1430 年 7 月 14 日）；论文比较了另一份 1907 年奥斯曼土耳其语译本。",
+      "source_ids": [
+        "src-vakfiye-study"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-waqf-scale",
+      "text": "论文统计该 vakfiye 涉及 58 项 waqf 收入来源、89 名职员和 24 类职责。",
+      "source_ids": [
+        "src-vakfiye-study"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-imaret-meals",
+      "text": "论文所述 vakfiye 规定 imaret 每日供两餐给到场者，不作身份区分。",
+      "source_ids": [
+        "src-vakfiye-study"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-katib-keeper",
+      "text": "文书员记录物资出入，仓储人员负责保管；厨房职员负责备餐。",
+      "source_ids": [
+        "src-vakfiye-study"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-fountain-repair",
+      "text": "论文记载有两名建筑师负责建筑群喷泉的维护或修理。",
+      "source_ids": [
+        "src-vakfiye-study"
+      ],
+      "kind": "verified_fact",
+      "caveat": "这是概括性职责，没有指明某一座现存喷泉。"
+    },
+    {
+      "id": "claim-madrasa-fountain",
+      "text": "库存出版物将位于建筑群西端的 Sıbyan Mektebi（Medrese）喷泉认定为建筑群内唯一的 vakıf 喷泉；其记录包括尖拱砖壁龛、锯齿砖框、两个杯槽及 1.30 × 0.43 米石水槽。",
+      "source_ids": [
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact",
+      "caveat": "Drive 中的喷泉照片尚未确认对应这条记录。"
+    },
+    {
+      "id": "claim-medrese-space",
+      "text": "库存出版物记录 medrese 有 17 × 17 米拱廊庭院、16 间房、课堂 iwan 和八角形大理石池。",
+      "source_ids": [
+        "src-layout-study",
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact",
+      "caveat": "需把历史平面与后期改造、当前室内区分开。"
+    },
+    {
+      "id": "claim-medrese-change",
+      "text": "2020 年研究记载庭院后来加盖，并称 medrese 于 2019 年作为古兰经与手稿博物馆开放。",
+      "source_ids": [
+        "src-layout-study"
+      ],
+      "kind": "verified_fact",
+      "caveat": "这是研究发表时的记录，当前用途需重新核实。"
+    },
+    {
+      "id": "claim-stipend-discrepancy",
+      "text": "论文指出学生津贴在阿拉伯文抄本与奥斯曼土耳其语译本中的数值不一致，作者认为译本可能有误。",
+      "source_ids": [
+        "src-vakfiye-study"
+      ],
+      "kind": "verified_fact",
+      "caveat": "不把差异简化成一个已确定的数额。"
+    },
+    {
+      "id": "claim-imaret-architecture",
+      "text": "库存出版物记录 imaret 位于清真寺东北约 20 米，建筑约 13 × 40 米，留有烤炉痕迹及谷物、油储罐；旁侧仓库、木料库、面粉库与马厩没有保存下来。",
+      "source_ids": [
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact",
+      "caveat": "出版物记载其 2000 年代初作为餐厅使用；当前用途需现场或官方资料复核。"
+    },
+    {
+      "id": "claim-muradiye-tomb-count",
+      "text": "该库存卷记录 Muradiye 建筑群内十三座陵墓，名单所列年代从 1442 延伸至 1573。",
+      "source_ids": [
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact",
+      "caveat": "指该卷的分类和统计口径。"
+    },
+    {
+      "id": "claim-mustafa-tomb-history",
+      "text": "库存卷记载 Şehzade Mustafa 于 1553 年去世，遗体先葬于别处，1573 年建成此陵后迁入；门上有记述建造的铭文。",
+      "source_ids": [
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-mustafa-tomb-material",
+      "text": "库存卷描述此陵为八角形，使用 Bursa 宫殿的再利用大理石构件，饰有十六世纪 İznik 瓷砖，共有十四扇窗。",
+      "source_ids": [
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact"
+    },
+    {
+      "id": "claim-mustafa-fourth-sarcophagus",
+      "text": "库存卷确认四座石棺中三座的身份；第四座身份不明，仅提出可能属于 Şehzade Orhan。",
+      "source_ids": [
+        "src-inventory-volume"
+      ],
+      "kind": "verified_fact",
+      "caveat": "游戏答案必须保留‘身份不明’，不可把推测当成结论。"
+    },
+    {
+      "id": "claim-fictional-stock-mismatch",
+      "text": "玩家遇到一条虚构的仓储数量差异。",
+      "source_ids": [],
+      "kind": "original_fiction",
+      "caveat": "这是游戏情节，不是史料事件。"
+    }
+  ],
+  "task_policy": {
+    "priority": [
+      "published_manual",
+      "validated_ai",
+      "published_fallback"
+    ],
+    "ai_may_change": [
+      "wording",
+      "hint",
+      "difficulty",
+      "task_form"
+    ],
+    "ai_must_not_change": [
+      "historical_claims",
+      "answer_truth",
+      "choice_effects",
+      "endings"
+    ],
+    "gps": {
+      "state": "disabled",
+      "latitude": null,
+      "longitude": null
+    },
+    "model_3d": {
+      "state": "not_connected",
+      "asset_id": null
+    }
+  },
+  "playable_chapter_file": "muradiye-story.json",
+  "spatial_context": [
+    {
+      "id": "bath",
+      "name": "浴室",
+      "x": 10,
+      "y": 65,
+      "page": "126–127",
+      "text": "出版物记载浴室位于经学学校西侧。本章没有浴室任务。"
+    },
+    {
+      "id": "medrese",
+      "name": "经学学校",
+      "x": 34,
+      "y": 65,
+      "page": "120–122",
+      "text": "位于建筑群西端，庭院内有八角池。第二幕的照片观察在这里。"
+    },
+    {
+      "id": "fountain",
+      "name": "西端喷泉",
+      "x": 20,
+      "y": 30,
+      "page": "123",
+      "text": "尖拱砖壁龛有两个杯槽。第三幕检查构件并与证人互动。"
+    },
+    {
+      "id": "mosque",
+      "name": "清真寺",
+      "x": 60,
+      "y": 65,
+      "page": "111–119",
+      "text": "清真寺建于 1425–1426 年。它是理解建筑群布局的参照，不承担本案的证据任务。"
+    },
+    {
+      "id": "imaret",
+      "name": "施食所",
+      "x": 81,
+      "y": 30,
+      "page": "124–125",
+      "text": "出版物记载在清真寺东北约二十米。第四、五幕在这里核对收料与原账。"
+    }
+  ]
+}
