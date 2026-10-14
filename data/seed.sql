@@ -119,27 +119,27 @@ VALUES
 ('asset-tomb-exterior-candidate', 'bursa-muradiye', 'src-drive-photos', 'ERD00835 kopya.jpg', 'image', 'Exterior photograph of a domed tomb-like structure within a tree-lined setting; tomb identity pending crosswalk.', 'provisional', 'provided_for_project', 'Domed tomb-like building; exact tomb identity pending verification.', NULL);
 
 INSERT OR IGNORE INTO chapters (chapter_id, site_id, title, period_text, premise, fiction_notice, status)
-VALUES ('chapter-record-and-service', 'bursa-muradiye', 'Bir Kayıt, Bir Hizmet | 一份记录，一项服务', 'around the 1430 vakfiye context',
+VALUES ('chapter-record-and-service', 'bursa-muradiye', 'One Record, One Service', 'around the 1430 vakfiye context',
         'A fictional clerk and a fictional madrasa student investigate how a record, a learning space and an imaret’s service fit together.',
-        '人物、账目差异、对话与选择后果均为原创虚构；不代表史料记载的真实事件。', 'draft');
+        'Characters, ledger discrepancies, dialogue, and outcomes are fictional; they are not historical events.', 'draft');
 
 INSERT OR IGNORE INTO game_items (item_id, chapter_id, name, description, item_kind, claim_id, fiction_notice)
 VALUES
-('blank-register', 'chapter-record-and-service', '空白记录页', '用于记录发现、出处和待核状态。', 'document', 'claim-katib-keeper', '玩家持有的物件为游戏道具。'),
-('space-sketch', 'chapter-record-and-service', '空间草图', '帮助玩家串联经学学校空间与建筑群位置。', 'map', 'claim-medrese-space', '草图为游戏道具，不是历史原图。');
+('blank-register', 'chapter-record-and-service', 'Blank record page', 'Record findings, sources, and items awaiting review.', 'document', 'claim-katib-keeper', 'This player-held item is a game prop.'),
+('space-sketch', 'chapter-record-and-service', 'Site sketch', 'Help players connect madrasa spaces with the wider complex.', 'map', 'claim-medrese-space', 'This is a game prop, not a historical plan.');
 
 INSERT OR IGNORE INTO characters (character_id, chapter_id, role_name, description, personal_goal, historical_role_claim_id, starting_item_id)
 VALUES
-('role-katib', 'chapter-record-and-service', 'Kâtib / 文书员', 'A fictional character in a historically documented record-keeping role.', 'Prove reliability while learning that a transparent record protects the service and its users.', 'claim-katib-keeper', 'blank-register'),
-('role-talebe', 'chapter-record-and-service', 'Talebe / 学生', 'A fictional student in a documented madrasa setting.', 'Make sure the institution is understood through the spaces and provisions that shape daily life.', 'claim-medrese-space', 'space-sketch');
+('role-katib', 'chapter-record-and-service', 'Kâtib / Clerk', 'A fictional character in a historically documented record-keeping role.', 'Prove reliability while learning that a transparent record protects the service and its users.', 'claim-katib-keeper', 'blank-register'),
+('role-talebe', 'chapter-record-and-service', 'Talebe / Student', 'A fictional student in a documented madrasa setting.', 'Make sure the institution is understood through the spaces and provisions that shape daily life.', 'claim-medrese-space', 'space-sketch');
 
 INSERT OR IGNORE INTO scene_nodes (node_id, chapter_id, structure_id, node_order, title, node_kind, map_x, map_y, spatial_accuracy)
 VALUES
-('node-overview', 'chapter-record-and-service', NULL, 1, '建筑群总览', 'orientation', 50, 87, 'schematic'),
-('node-mosque', 'chapter-record-and-service', 'mosque', 2, '清真寺与空间关系', 'observation', 55, 61, 'schematic'),
-('node-medrese', 'chapter-record-and-service', 'medrese', 3, '经学学校庭院', 'observation', 31, 59, 'schematic'),
-('node-fountain', 'chapter-record-and-service', 'school-fountain', 4, '喷泉与维护责任', 'evidence_task', 24, 51, 'schematic'),
-('node-imaret', 'chapter-record-and-service', 'imaret', 5, 'Imaret 与记录台', 'choice', 72, 55, 'schematic');
+('node-overview', 'chapter-record-and-service', NULL, 1, 'Complex overview', 'orientation', 50, 87, 'schematic'),
+('node-mosque', 'chapter-record-and-service', 'mosque', 2, 'Mosque and site layout', 'observation', 55, 61, 'schematic'),
+('node-medrese', 'chapter-record-and-service', 'medrese', 3, 'Madrasa courtyard', 'observation', 31, 59, 'schematic'),
+('node-fountain', 'chapter-record-and-service', 'school-fountain', 4, 'Fountain and maintenance', 'evidence_task', 24, 51, 'schematic'),
+('node-imaret', 'chapter-record-and-service', 'imaret', 5, 'Imaret and ledger desk', 'choice', 72, 55, 'schematic');
 
 INSERT OR IGNORE INTO node_evidence (node_id, claim_id, asset_id)
 VALUES
@@ -163,10 +163,10 @@ VALUES
 
 INSERT OR IGNORE INTO task_candidates (task_id, slot_id, provider, state, version, priority, task_payload_json, approved_by)
 VALUES
-('task-overview-fallback', 'slot-overview-map', 'fallback', 'published', 1, 10, '{"prompt":"根据经核实的示意平面，判断 medrese 与清真寺的相对关系。","answer":"west_same_alignment","fiction_label":""}', 'content-seed'),
-('task-medrese-fallback', 'slot-medrese-observation', 'fallback', 'published', 1, 10, '{"prompt":"哪组描述对应资料中的 medrese？","answer":"16_cells_arcade_octagonal_pool","fiction_label":""}', 'content-seed'),
-('task-fountain-fallback', 'slot-fountain-duty', 'fallback', 'published', 1, 10, '{"prompt":"资料记载哪类人员负责喷泉维护？","answer":"two_architects","fiction_label":"照片与喷泉的对应关系需人工复核后才能作为定位线索。"}', 'content-seed'),
-('task-imaret-fallback', 'slot-imaret-flow', 'fallback', 'published', 1, 10, '{"prompt":"把历史职责与角色配对：记录出入、保管物资、准备食物。","answer":"scribe_keeper_cooks","fiction_label":"账目差异为原创情节。"}', 'content-seed');
+('task-overview-fallback', 'slot-overview-map', 'fallback', 'published', 1, 10, '{"prompt":"Use the verified site diagram to find the madrasa in relation to the mosque.","answer":"west_same_alignment","fiction_label":""}', 'content-seed'),
+('task-medrese-fallback', 'slot-medrese-observation', 'fallback', 'published', 1, 10, '{"prompt":"Which description matches the madrasa in the source?","answer":"16_cells_arcade_octagonal_pool","fiction_label":""}', 'content-seed'),
+('task-fountain-fallback', 'slot-fountain-duty', 'fallback', 'published', 1, 10, '{"prompt":"Which staff were responsible for fountain maintenance?","answer":"two_architects","fiction_label":"An editor must verify the photo match before it can be used as a location clue."}', 'content-seed'),
+('task-imaret-fallback', 'slot-imaret-flow', 'fallback', 'published', 1, 10, '{"prompt":"Match each duty to a role: record supplies, store goods, or prepare meals.","answer":"scribe_keeper_cooks","fiction_label":"The ledger discrepancy is fictional."}', 'content-seed');
 
 INSERT OR IGNORE INTO task_candidate_claims (task_id, claim_id)
 VALUES
@@ -183,6 +183,6 @@ UPDATE task_slots SET fallback_task_id = 'task-imaret-fallback' WHERE slot_id = 
 
 INSERT OR IGNORE INTO story_choices (choice_id, chapter_id, node_id, choice_order, prompt, options_json, effects_json)
 VALUES
-('choice-record-observation', 'chapter-record-and-service', 'node-medrese', 1, '学生提出一条尚待核验的观察。你如何记录？', '[{"id":"log_pending","label":"记录为待核线索并注明来源状态"},{"id":"verify_first","label":"先核对图纸与来源，再入正式记录"}]', '{"log_pending":{"evidence_integrity":1,"trust_student":1,"time_budget":-1},"verify_first":{"evidence_integrity":2,"trust_student":-1,"time_budget":-1}}'),
-('choice-spend-time', 'chapter-record-and-service', 'node-fountain', 2, '时间有限，你先核实什么？', '[{"id":"inspect_maintenance","label":"核对喷泉维护职责与构件照片"},{"id":"reach_imaret","label":"先到 imaret 核对供餐流程"}]', '{"inspect_maintenance":{"evidence_integrity":1,"time_budget":-1},"reach_imaret":{"service_continuity":1,"time_budget":0}}'),
-('choice-report-mismatch', 'chapter-record-and-service', 'node-imaret', 3, '如何处理本章虚构的出入库差异？', '[{"id":"report_pending","label":"标记待查，按原规则继续服务"},{"id":"pause_verify","label":"暂缓这次虚构发放，完成核验"},{"id":"quiet_correct","label":"私下改正记录，不保留差异轨迹"}]', '{"report_pending":{"evidence_integrity":2,"service_continuity":1,"trust_student":1,"character_growth":2},"pause_verify":{"evidence_integrity":2,"service_continuity":-1,"trust_custodian":1,"character_growth":1},"quiet_correct":{"evidence_integrity":-2,"service_continuity":1,"trust_student":-1,"character_growth":-1}}');
+('choice-record-observation', 'chapter-record-and-service', 'node-medrese', 1, 'A student reports an observation that still needs checking. How will you record it?', '[{"id":"log_pending","label":"Log it as an unverified clue and note its source"},{"id":"verify_first","label":"Check the plan and source before adding it to the official record"}]', '{"log_pending":{"evidence_integrity":1,"trust_student":1,"time_budget":-1},"verify_first":{"evidence_integrity":2,"trust_student":-1,"time_budget":-1}}'),
+('choice-spend-time', 'chapter-record-and-service', 'node-fountain', 2, 'Time is short. What will you check first?', '[{"id":"inspect_maintenance","label":"Check the fountain duty against the feature photo"},{"id":"reach_imaret","label":"Go to the imaret and check the meal process"}]', '{"inspect_maintenance":{"evidence_integrity":1,"time_budget":-1},"reach_imaret":{"service_continuity":1,"time_budget":0}}'),
+('choice-report-mismatch', 'chapter-record-and-service', 'node-imaret', 3, 'How will you handle this fictional stock discrepancy?', '[{"id":"report_pending","label":"Flag it for review and keep service running"},{"id":"pause_verify","label":"Pause this fictional delivery until it is checked"},{"id":"quiet_correct","label":"Quietly change the record and erase the trail"}]', '{"report_pending":{"evidence_integrity":2,"service_continuity":1,"trust_student":1,"character_growth":2},"pause_verify":{"evidence_integrity":2,"service_continuity":-1,"trust_custodian":1,"character_growth":1},"quiet_correct":{"evidence_integrity":-2,"service_continuity":1,"trust_student":-1,"character_growth":-1}}');

@@ -1,16 +1,15 @@
-# 竞赛对齐与验收清单
+# Competition Alignment and Acceptance
 
-这份清单把 Terms and Conditions 与 Information Note 的要求转成项目验收项。条款说明最终权重可能另行公布；本表不是官方权重，也不伪造百分比。
+This checklist translates the published Terms and Information Note into product checks. It does not claim official score weights.
 
-| 维度 | 首期验收证据 | 状态 |
+| Area | Current evidence | Remaining work |
 |---|---|---|
-| 核心问题与文化价值 | 玩家能发现多处 vakıf 作品，读到历史、视觉和来源，并理解其社会服务价值 | 已索引 Muradiye 卷内 18 项作品；Bursa 其余独立遗址待导入 |
-| 端到端可运行产品 | 锁定主角 → 观察实拍 → 获取案情证据 → 做有成本的选择 → 分账核对 → 人物、关系与服务结果 | 新版《最后两袋》可玩，浏览器保存进度；服务端会话待接 |
-| 内容增改 | 资料、任务、地点和图片映射有草稿、审核、发布、版本流程 | 数据模型已设计；管理 UI 待实现 |
-| 数据利用与准确性 | 每条史实显示来源；事实、复原、虚构分层；未核验图片不做谜题 | 16 条主张关联来源和印刷页码；Drive 子目录 93 张照片已编目，7 张有初步观察；五张出版物照片按页核对并嵌入场景；其余原片 crosswalk 待审核 |
-| 可扩展性 | 新城市、遗址、内容类型和 2D/GPS/3D 层可独立添加 | SQL schema 和接口边界已预留 |
-| 用户体验与无障碍 | 手机屏可用、文本可读、键盘可操作、色彩不作唯一信号、图片替代文本、提示和旁白预留 | 响应式界面和键盘按钮已实现；屏幕阅读器/真人测试待做 |
-| 技术质量与演示 | 模块化代码、数据校验、关键流程测试、可复现启动、团队能说明架构与数据利用 | 5 项数据库测试、7 项剧情规则测试通过；浏览器完整通关与错误操作验证通过 |
-| 创新与反馈 | 任务把证据观察与人物成长连接；汇总任务难点、遗产理解和自愿反馈，区分点击与到访 | 照片定位、任务解锁、证词取舍与成长后果已实装；真人好玩度与理解测试待做 |
+| Heritage value | Players explore the madrasa, fountain, and imaret and see sourced facts with citations. | Import additional independent Bursa sites. |
+| Working product | Five scenes, photo clues, evidence collection, consequential choices, a stock-sorting task, and multiple endings. | Run moderated player sessions. |
+| Reliable content | Historical facts are separated from invented characters and case records. | Review all original-photo mappings. |
+| Extensible design | Site, chapter, evidence, task, and source records have stable IDs and relational tables. | Build an editorial administration screen. |
+| Location and 3D | GPS and 3D fields are reserved; neither is needed to play online. | Connect only after on-site coordinates and geometry are verified. |
+| Access | Responsive layout, keyboard-operable controls, and text alternatives for photo hotspots. | Test with assistive technology and players. |
+| Repeatable build | Database and story-engine tests validate imports, task gates, choices, and saved progress. | Demonstrate a clean checkout with the full local media set. |
 
-官方条款明确要求工作产品、多处作品发现、内容增改、来源显示、准确性、可扩展架构、可访问体验和核心流程现场演示。完整竞赛交付前必须从 Bursa 项目资料继续导入多个独立遗址，不能只演示一个建筑群。
+Before competition delivery, add multiple independent works and provide a working content-edit flow. Do not claim the pilot is the complete Bursa archive.

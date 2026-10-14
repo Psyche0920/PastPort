@@ -3,7 +3,7 @@ export class StoryEngine {
   constructor(chapter, saved = null) {
     this.chapter = chapter;
     this.state = saved || {version: chapter.version, scene: 0, elapsed: 0, observed: {}, completed: [], decisions: {}, inventory: [], assignments: {}, caseboard: [], ending: null};
-    if (this.state.version !== chapter.version) throw new Error('存档版本与章节不一致');
+    if (this.state.version !== chapter.version) throw new Error('Save version does not match this chapter');
   }
   get scene() { return this.chapter.scenes[this.state.scene]; }
   get remaining() { return this.chapter.initial_minutes - this.state.elapsed; }
@@ -78,9 +78,9 @@ export class StoryEngine {
   }
   resolveEnding(choice) {
     const late = this.state.elapsed > this.chapter.initial_minutes;
-    if (choice === 'erase') return {id:'clean-page', title:'一页干净的账，一双没松开的手', career:'管事接受新账，你的职位暂时保住。', friend:this.friend === 'with_you' ? '你亲手替杰姆担保，却抽走了能解释错误的原账。他的保证人如今成了另一个需要被追问的人。' : '杰姆仍被扣留。没有原账，没人知道嫌疑是怎样落在他身上的。', service:'物资恢复发放；对学徒的追问还会继续。', growth:'你知道真相，却把成长的机会留在了被抽走的那一页。', late};
-    if (choice === 'accuse') return {id:'other-signature', title:'你留下了位置，饭却停了', career:'你把责任推给厨房。管事决定冻结相关发放，核查工作人员。', friend:this.hasWitness ? '哈丽梅拒绝在你的报告上签名：她的证词说的是货物到达，不是厨房有错。' : '杰姆没有被证明无辜，只是多了一群被怀疑的人。', service:'这一次虚构的供餐暂停。账里有粮，桌上却没有饭。', growth:'你又把一个总数写成了另一个人的过错。', late};
-    return {id: this.hasWitness ? 'signed-truth' : 'unfinished-truth', title: this.hasWitness ? '名字留下，嫌疑撤回' : '你承认了错误，仍欠一份证词', career:'你保留原账，补记货物分类并具名。管事暂停你的独立签账资格，安排重新核验。', friend:this.hasWitness ? (this.friend === 'with_you' ? '杰姆始终站在你身边。厨房收料单与哈丽梅的证词相互核对，他的嫌疑被撤回。' : '物资与搬运者都已核对。杰姆获释，但你让看守带走他的那一刻，不会从他的记忆里消失。') : '物资差异已经解释，但收料单没有搬运者姓名。杰姆的正式核验留到下一轮；你承诺补齐证词，不再用猜测定责。', service:late ? '你交账时已超过约定时限。这一餐延后发放；你亲自去向等待的人解释。' : '核账在时限内完成，这一餐按时发放。', growth:'从今天起，你的名字既代表签收，也代表愿意承担更正。', late};
+    if (choice === 'erase') return {id:'clean-page', title:'A Clean Page, a Closed Hand', career:'The steward accepts the new ledger. Your job is safe for now.', friend:this.friend === 'with_you' ? 'You vouched for Cem, then removed the original record that could explain the error. Now the person who guaranteed him must answer questions too.' : 'Cem remains detained. Without the original ledger, no one can trace how suspicion fell on him.', service:'Supplies go out again, but the apprentice will still be questioned.', growth:'You learned the truth, then removed the page that could have helped you grow.', late};
+    if (choice === 'accuse') return {id:'other-signature', title:'You Kept Your Place. The Meal Stopped.', career:'You blamed the kitchen. The steward freezes the supplies and investigates its staff.', friend:this.hasWitness ? 'Halime will not sign your report. Her statement proves the flour arrived, not that the kitchen was at fault.' : 'Cem has not been cleared. Now more people are under suspicion.', service:'This fictional meal service is paused. The grain is there, but no meal reaches the table.', growth:'You turned a number in your ledger into someone else’s fault.', late};
+    return {id: this.hasWitness ? 'signed-truth' : 'unfinished-truth', title: this.hasWitness ? 'Your Name Stays. The Blame Is Lifted.' : 'You Own the Error, but One Statement Is Missing.', career:'You keep the original ledger, sign a correction, and lose independent signing privileges while the steward reviews your work.', friend:this.hasWitness ? (this.friend === 'with_you' ? 'Cem stays by your side. Halime’s statement and the kitchen receipt clear him.' : 'The goods and delivery are confirmed. Cem is released, but he will remember that you let the guard take him.' ) : 'The stock is accounted for, but the receipt does not name the carrier. You promise to get Cem’s statement checked before blaming anyone.', service:late ? 'The accounts are late. This meal is delayed, and you explain the delay to the people waiting.' : 'The accounts close on time, and the meal goes out as planned.', growth:'From now on, your name stands for both a delivery and the courage to correct the record.', late};
   }
   snapshot() { return JSON.parse(JSON.stringify(this.state)); }
 }

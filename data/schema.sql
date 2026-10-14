@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS story_choices (
     prompt TEXT NOT NULL,
     options_json TEXT NOT NULL,
     effects_json TEXT NOT NULL,
-    fiction_notice TEXT NOT NULL DEFAULT '此选择属于原创虚构情境。'
+    fiction_notice TEXT NOT NULL DEFAULT 'This choice is an original fictional scenario.'
 );
 
 CREATE TABLE IF NOT EXISTS game_sessions (

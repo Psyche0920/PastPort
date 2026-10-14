@@ -101,7 +101,7 @@ class DatabaseBuilderTests(unittest.TestCase):
             self.assertEqual(digest, hashlib.sha256(payload).hexdigest())
             self.assertEqual(connection.execute("SELECT COUNT(*) FROM scene_photos").fetchone()[0], 5)
             self.assertEqual(connection.execute("SELECT COUNT(*) FROM media_derivatives WHERE review_state = 'verified'").fetchone()[0], 5)
-            self.assertEqual(connection.execute("SELECT title FROM chapters").fetchone()[0], "最后两袋")
+            self.assertEqual(connection.execute("SELECT title FROM chapters").fetchone()[0], "The Last Two Sacks")
 
     def test_builder_refuses_to_overwrite_without_explicit_flag(self) -> None:
         config = BuildConfig(

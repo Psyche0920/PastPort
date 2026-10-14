@@ -1,33 +1,488 @@
 {
-  "version":"muradiye-0.2.0",
-  "chapter_id":"chapter-record-and-service",
-  "title":"最后两袋",
-  "subtitle":"你要查清一笔失踪的粮食。账页上的签名，却是你的。",
-  "period":"1430 年代 · 历史背景下的原创悬疑",
-  "fiction_notice":"人物、账单、证词、数量和事件均为原创。照片为当代实拍，用于观察现存遗址；玻璃顶、招牌和餐厅陈设不属于故事年代。",
-  "initial_minutes":6,
-  "protagonist":{"name":"优素福","role":"试任文书员","want":"保住来之不易的职位","need":"敢于保留自己的错误，而不是用别人的名字遮住它"},
-  "cast":[{"name":"杰姆","role":"搬运学徒","bond":"替你担保，才让你进了记录房"},{"name":"哈丽梅","role":"在喷泉旁歇脚的供餐帮手","bond":"看见了两袋东西的去向，但不愿为一份空白账单作证"},{"name":"管事","role":"发放前核账的人","bond":"他相信签了名的记录，不相信口头辩解"}],
-  "photos":[
-    {"id":"photo-aerial","file":"assets/aerial.jpg","source_id":"src-inventory-volume","pdf_page":1,"printed_page":"110","image_index":0,"caption":"Muradiye 建筑群全景","structure_id":null},
-    {"id":"photo-courtyard","file":"assets/courtyard.jpg","source_id":"src-inventory-volume","pdf_page":12,"printed_page":"121","image_index":0,"caption":"经学学校庭院：八角大理石池与课堂 iwan","structure_id":"medrese"},
-    {"id":"photo-fountain","file":"assets/fountain.jpg","source_id":"src-inventory-volume","pdf_page":14,"printed_page":"123","image_index":0,"caption":"Sıbyan Mektebi 喷泉：尖拱、两个杯槽与石水槽","structure_id":"school-fountain"},
-    {"id":"photo-imaret-front","file":"assets/imaret-front.jpg","source_id":"src-inventory-volume","pdf_page":15,"printed_page":"124","image_index":0,"caption":"施食所外墙：窗楣的星形与几何砖饰","structure_id":"imaret"},
-    {"id":"photo-imaret-inside","file":"assets/imaret-inside.jpg","source_id":"src-inventory-volume","pdf_page":16,"printed_page":"125","image_index":0,"caption":"施食所室内：出版物所记录的后期餐厅陈设","structure_id":"imaret"}
+  "version": "muradiye-0.2.0",
+  "chapter_id": "chapter-record-and-service",
+  "title": "The Last Two Sacks",
+  "subtitle": "Two sacks are missing. The signature on the ledger is yours.",
+  "period": "1430s · An original mystery inspired by a real place",
+  "fiction_notice": "Characters, records, testimony, quantities, and events are fictional. Photos show the site today. The glass roof, signs, and restaurant furnishings are from a later period.",
+  "initial_minutes": 6,
+  "protagonist": {
+    "name": "Yusuf",
+    "role": "Probationary clerk",
+    "want": "Keep the job he worked hard to earn",
+    "need": "Own his mistake instead of hiding behind someone else’s name"
+  },
+  "cast": [
+    {
+      "name": "Cem",
+      "role": "Delivery apprentice",
+      "bond": "He vouched for you and got you into the records room."
+    },
+    {
+      "name": "Halime",
+      "role": "Kitchen helper taking a break by the fountain",
+      "bond": "She saw where the sacks went, but will not sign a blank record."
+    },
+    {
+      "name": "The steward",
+      "role": "Checks the accounts before supplies go out",
+      "bond": "He trusts signed records, not spoken excuses."
+    }
   ],
-  "evidence":[
-    {"id":"tally","name":"早晨的签收账页","kind":"fiction","text":"送达：12 袋货物。你誊写为：入库麦粒 12 袋。具名：优素福。纸角写着‘品类待核’，这一行没有被誊进正式账。"},
-    {"id":"loading-slip","name":"装车单","kind":"fiction","text":"麦粒 10 袋；面粉 2 袋。合计 12 袋。杰姆说：面粉没有进粮仓，是直接交给施食所的。"},
-    {"id":"witness","name":"哈丽梅的具名证词","kind":"fiction","text":"我接下杰姆交来的面粉 2 袋，送到施食所。她愿意在证词上具名，但要求你把自己的名字也留在原账上。"},
-    {"id":"kitchen-slip","name":"厨房收料单","kind":"fiction","text":"收面粉 2 袋，送来者一栏空白；厨房记账人签收。麦粒库现存 10 袋。物资总数相符，搬运者身份仍需证词核对。"},
-    {"id":"reconciliation","name":"并列核账页","kind":"fiction","text":"装车 12 = 麦粒库 10 + 厨房面粉 2。没有物资短缺；你的正式账把混合货物写成了单一麦粒。"}
+  "photos": [
+    {
+      "id": "photo-aerial",
+      "file": "assets/aerial.jpg",
+      "source_id": "src-inventory-volume",
+      "pdf_page": 1,
+      "printed_page": "110",
+      "image_index": 0,
+      "caption": "Aerial view of the Muradiye complex",
+      "structure_id": null
+    },
+    {
+      "id": "photo-courtyard",
+      "file": "assets/courtyard.jpg",
+      "source_id": "src-inventory-volume",
+      "pdf_page": 12,
+      "printed_page": "121",
+      "image_index": 0,
+      "caption": "Madrasa courtyard: octagonal marble pool and teaching iwan",
+      "structure_id": "medrese"
+    },
+    {
+      "id": "photo-fountain",
+      "file": "assets/fountain.jpg",
+      "source_id": "src-inventory-volume",
+      "pdf_page": 14,
+      "printed_page": "123",
+      "image_index": 0,
+      "caption": "Sıbyan Mektebi fountain: pointed arch, two cup niches, and stone basin",
+      "structure_id": "school-fountain"
+    },
+    {
+      "id": "photo-imaret-front",
+      "file": "assets/imaret-front.jpg",
+      "source_id": "src-inventory-volume",
+      "pdf_page": 15,
+      "printed_page": "124",
+      "image_index": 0,
+      "caption": "Imaret exterior: star and geometric brickwork above the window",
+      "structure_id": "imaret"
+    },
+    {
+      "id": "photo-imaret-inside",
+      "file": "assets/imaret-inside.jpg",
+      "source_id": "src-inventory-volume",
+      "pdf_page": 16,
+      "printed_page": "125",
+      "image_index": 0,
+      "caption": "Imaret interior: later restaurant furnishings shown in the publication",
+      "structure_id": "imaret"
+    }
   ],
-  "scenes":[
-    {"id":"arrival","title":"你的名字在账上","place":"Muradiye · 核账前","photo_id":"photo-aerial","claim_ids":["claim-katib-keeper","claim-imaret-meals"],"goal":"在发放前找到两袋货物。先查看那张由你具名的账。","opening":[{"speaker":"管事","text":"账上十二袋，粮仓只有十袋。杰姆搬过货。发放之前，给我一个能写进账里的解释。"},{"speaker":"你 · 优素福","text":"我才当文书员七天。杰姆替我担了保。现在，只要指认他，账就能对上，我也能留下。"}],"task":{"kind":"document","prompt":"展开早晨的账页，检查你到底签了什么。","required":["tally"]},"after":[{"speaker":"你","text":"‘品类待核’。我记得这四个字，但正式账上只有‘麦粒’。先找到杰姆——他还在经学学校。"}],"next":"courtyard"},
-    {"id":"courtyard","title":"替你担保的人","place":"经学学校 · 八角池旁","photo_id":"photo-courtyard","claim_ids":["claim-medrese-space","claim-medrese-change"],"goal":"用照片找到杰姆说的会面地点，再决定是否替他争取时间。","opening":[{"speaker":"杰姆","text":"我搬的是两种货。麦粒进仓，面粉送厨房。我把装车单留在课堂正对面的八角水池旁。你至少看完，再让他们带我走。"}],"task":{"kind":"inspect","prompt":"在照片上找到‘课堂正对面的八角水池’。可点击编号区域，也可用下方区域按钮检查。","required":["pool"],"hotspots":[{"id":"pool","x":49,"y":88,"label":"庭院中央的白色水景","text":"八角大理石池。出版物确认其位于庭院中央。会面地点对上了；这只证明你找对了地方，不证明谁搬走了货。","claim_id":"claim-medrese-space"},{"id":"iwan","x":51,"y":56,"label":"正面的高大拱口","text":"课堂 iwan 与庭院相对，是判断位置的另一个参照。","claim_id":"claim-medrese-space"},{"id":"glass","x":52,"y":10,"label":"上方透明屋盖","text":"后期修复添加的钢架玻璃顶，不能作为 1430 年代证词里的线索。","claim_id":"claim-medrese-change"}]},"after":[{"speaker":"你","text":"装车单上是‘十袋麦粒，两袋面粉’。如果货分成了两类，是不是我把总数抄成了麦粒数？可两袋面粉真的送进厨房了吗？"}],"decision":{"id":"friend","prompt":"看守已经走近。杰姆伸手抓住你的袖口。","options":[{"id":"vouch","label":"以自己的名字替他担保","cost":2,"detail":"多争取两刻钟核对；你承担担保责任，杰姆跟你一起走。","effects":{"friend":"with_you","authority":-1}},{"id":"detain","label":"先让看守带走他","cost":0,"detail":"保住核账时间；装车单留下，杰姆无法继续帮你。","effects":{"friend":"detained","authority":1}}]},"next":"fountain"},
-    {"id":"fountain","title":"两个杯子的位置","place":"西端喷泉 · 哈丽梅","photo_id":"photo-fountain","claim_ids":["claim-madrasa-fountain","claim-fountain-repair"],"goal":"找到喷泉的两个杯槽。帮手需要安顿饮水的人，才能留下来为你作证。","opening":[{"speaker":"哈丽梅","text":"两袋面粉？我见过。但你得说清楚，你是要知道发生了什么，还是只要我替你的账作证。"},{"speaker":"哈丽梅","text":"先帮我把共用杯的位置找出来。左边一个，右边一个。我安顿好这里的人，就跟你去厨房。"}],"task":{"kind":"inspect","prompt":"检查砖壁上的两个小凹槽，找到共用杯的位置。","required":["cup-left","cup-right"],"hotspots":[{"id":"cup-left","x":33,"y":55,"label":"砖壁左侧的方形凹槽","text":"左侧杯槽。出版物将两个凹槽描述为放置饮水杯的地方，不是储粮暗格。","claim_id":"claim-madrasa-fountain"},{"id":"cup-right","x":66,"y":57,"label":"砖壁右侧的方形凹槽","text":"右侧杯槽。这个服务空间让人取水、共用杯具；本章的安顿饮水者行动属于虚构。","claim_id":"claim-madrasa-fountain"},{"id":"tap","x":49,"y":88,"label":"下方白色面板与出水口","text":"照片中的出水设施与砖壁是当代拍摄状态；从照片不能判断故事年代的管件或水流。","claim_id":"claim-madrasa-fountain"}]},"after":[{"speaker":"你","text":"我把两个位置指给她。她仍没有替我落笔：‘你留得下自己的错误，我才敢把名字交给你。’"}],"decision":{"id":"witness","prompt":"离核账越来越近，你是否留下来帮她？","options":[{"id":"help","label":"留下帮忙，请她共同具名","cost":2,"detail":"获得辨认搬运者的证词；需要付出时间，不能保证按时交账。","effects":{"witness":true}},{"id":"hurry","label":"只问厨房位置，立即赶路","cost":0,"detail":"继续追查物资，但她不会为搬运者的身份具名。","effects":{"witness":false}}]},"next":"imaret"},
-    {"id":"imaret","title":"账里消失的厨房","place":"施食所 · 窗楣下","photo_id":"photo-imaret-front","claim_ids":["claim-imaret-architecture","claim-katib-keeper"],"goal":"辨认星形砖饰，找到故事中的收料地点；把两种货物分回各自的账。","opening":[{"speaker":"厨房帮手","text":"送面粉的人说，把收料单留在星形窗楣那边。我们收了两袋，但这张单子没有记下是谁送的。"},{"speaker":"你","text":"如果只翻粮仓的账，厨房就像不存在。可饭不会从账页里自己长出来。"}],"task":{"kind":"inspect-sort","prompt":"在照片里找到窗楣上的星形砖饰。注意：现代招牌不是故事线索。","required":["star"],"hotspots":[{"id":"star","x":37,"y":46,"label":"左侧窄窗上方的几何砖饰","text":"星形砖饰与几何纹样是出版物记载的施食所特征。收料单的位置是游戏设定，不是隐藏文物。","claim_id":"claim-imaret-architecture"},{"id":"sign","x":51,"y":44,"label":"中央黑色招牌","text":"后期餐厅招牌；不能用现代文字来解读 1430 年代的事件。","claim_id":"claim-imaret-architecture"},{"id":"door","x":86,"y":64,"label":"右侧木门","text":"这里是当代照片所呈现的入口。不要把它等同于未经测绘的历史物流路线。","claim_id":"claim-imaret-architecture"}]},"after":[{"speaker":"你","text":"厨房收了两袋面粉。现在，把装车单、粮仓清点和厨房收料放在一起——不要再只看一个总数。"}],"sorting":{"cards":[{"id":"grain","label":"麦粒 10 袋","destination":"store"},{"id":"flour","label":"面粉 2 袋","destination":"kitchen"}],"destinations":[{"id":"store","label":"麦粒库账"},{"id":"kitchen","label":"厨房收料账"}],"success":"12 = 10 + 2。物资没有少，是你把两种货写进了同一列。"},"cost":2,"next":"reckoning"},
-    {"id":"reckoning","title":"空出来的那一行","place":"施食所 · 交账时","photo_id":"photo-imaret-inside","claim_ids":["claim-imaret-meals","claim-katib-keeper","claim-imaret-architecture"],"goal":"提交能追溯的核账结果。你的名字会留下；杰姆的命运也取决于你保留了什么。","opening":[{"speaker":"管事","text":"两袋在哪里？"},{"speaker":"你","text":"一直在厨房。错的是我写的品类。我知道，只要重新誊一页，把早晨那张抽走，今天就像什么也没发生过。"}],"task":{"kind":"caseboard","prompt":"从笔记中选出三份能解释‘12 袋’去向的材料，摆到核账板上。","required":["loading-slip","kitchen-slip","tally"]},"after":[{"speaker":"管事","text":"货没少。现在告诉我：原账怎么办，学徒的名字怎么办？"}],"decision":{"id":"final","prompt":"最后落笔的人是你。","options":[{"id":"confess","label":"保留原账，署名补记我的错误","cost":1,"detail":"物资账得到修正；是否能立刻解除杰姆嫌疑取决于证词。你的试任资格进入复核。","effects":{}},{"id":"erase","label":"抽走原账，交一份干净的新账","cost":0,"detail":"职位暂时保住；错误来源消失，杰姆仍会被追问。","effects":{}},{"id":"accuse","label":"说厨房漏记，让他们承担责任","cost":0,"detail":"你绕开了自己的错误；厨房人员将被核查，供餐受影响。","effects":{}}]},"next":null}
+  "evidence": [
+    {
+      "id": "tally",
+      "name": "Morning delivery ledger",
+      "kind": "fiction",
+      "text": "Delivered: 12 sacks. Your entry: 12 sacks of grain received. Signed: Yusuf. A margin note says “check the types of goods.” You left it out of the official ledger."
+    },
+    {
+      "id": "loading-slip",
+      "name": "Loading slip",
+      "kind": "fiction",
+      "text": "10 sacks of grain; 2 sacks of flour. Total: 12. Cem says the flour went straight to the imaret, not the grain store."
+    },
+    {
+      "id": "witness",
+      "name": "Halime’s signed statement",
+      "kind": "fiction",
+      "text": "I received two sacks of flour from Cem and took them to the imaret. I will sign this statement if you leave your own name in the original ledger."
+    },
+    {
+      "id": "kitchen-slip",
+      "name": "Kitchen receipt",
+      "kind": "fiction",
+      "text": "Received: 2 sacks of flour. Delivery name: blank. The kitchen clerk signed. The grain store holds 10 sacks. Nothing is missing, but we still need a witness to identify the carrier."
+    },
+    {
+      "id": "reconciliation",
+      "name": "Reconciliation sheet",
+      "kind": "fiction",
+      "text": "12 delivered = 10 sacks of grain + 2 sacks of flour at the kitchen. Nothing is missing. Your official ledger recorded both goods as grain."
+    }
   ],
-  "task_policy":{"priority":["published_manual","validated_ai","published_fallback"],"ai_enabled":false,"gps":{"state":"disabled"},"model_3d":{"state":"not_connected"}}
+  "scenes": [
+    {
+      "id": "arrival",
+      "title": "Your Name Is on the Ledger",
+      "place": "Muradiye · Before the accounts close",
+      "photo_id": "photo-aerial",
+      "claim_ids": [
+        "claim-katib-keeper",
+        "claim-imaret-meals"
+      ],
+      "goal": "Find the two sacks before supplies go out. Start with the ledger you signed.",
+      "opening": [
+        {
+          "speaker": "The steward",
+          "text": "The ledger says twelve sacks. The grain store has ten. Cem handled the delivery. Give me an answer I can put in the record before supplies go out."
+        },
+        {
+          "speaker": "Yusuf · You",
+          "text": "I have been a clerk for seven days. Cem vouched for me. If I blame him, the numbers add up—and I might keep my job."
+        }
+      ],
+      "task": {
+        "kind": "document",
+        "prompt": "Open the morning ledger. What did you actually sign?",
+        "required": [
+          "tally"
+        ]
+      },
+      "after": [
+        {
+          "speaker": "You",
+          "text": "“Check the types of goods.” I remember that note, but the official ledger says only “grain.” Find Cem at the madrasa."
+        }
+      ],
+      "next": "courtyard"
+    },
+    {
+      "id": "courtyard",
+      "title": "The One Who Vouched for You",
+      "place": "Madrasa · By the octagonal pool",
+      "photo_id": "photo-courtyard",
+      "claim_ids": [
+        "claim-medrese-space",
+        "claim-medrese-change"
+      ],
+      "goal": "Use the photo to find Cem’s meeting place. Then decide whether to buy him time.",
+      "opening": [
+        {
+          "speaker": "Cem",
+          "text": "There were two kinds of goods. Grain went to the store; flour went to the kitchen. I left the loading slip by the octagonal pool, across from the classroom. Read it before you let them take me."
+        }
+      ],
+      "task": {
+        "kind": "inspect",
+        "prompt": "Find the octagonal pool across from the classroom. Tap a numbered spot on the photo or choose a spot below.",
+        "required": [
+          "pool"
+        ],
+        "hotspots": [
+          {
+            "id": "pool",
+            "x": 49,
+            "y": 88,
+            "label": "White pool in the courtyard",
+            "text": "An octagonal marble pool, shown at the courtyard’s center in the publication. You found the meeting place, but that does not prove who moved the sacks.",
+            "claim_id": "claim-medrese-space"
+          },
+          {
+            "id": "iwan",
+            "x": 51,
+            "y": 56,
+            "label": "Tall arch ahead",
+            "text": "The teaching iwan faces the courtyard. Use it as another landmark.",
+            "claim_id": "claim-medrese-space"
+          },
+          {
+            "id": "glass",
+            "x": 52,
+            "y": 10,
+            "label": "Glass roof above",
+            "text": "The steel-and-glass roof was added later. It is not a clue from the 1430s.",
+            "claim_id": "claim-medrese-change"
+          }
+        ]
+      },
+      "after": [
+        {
+          "speaker": "You",
+          "text": "The slip says ten sacks of grain and two of flour. Did I copy the total as grain? But did the flour reach the kitchen?"
+        }
+      ],
+      "decision": {
+        "id": "friend",
+        "prompt": "A guard is closing in. Cem grabs your sleeve.",
+        "options": [
+          {
+            "id": "vouch",
+            "label": "Vouch for him in your own name",
+            "cost": 2,
+            "detail": "Buy two more minutes to check the records. You take responsibility, and Cem stays with you.",
+            "effects": {
+              "friend": "with_you",
+              "authority": -1
+            }
+          },
+          {
+            "id": "detain",
+            "label": "Let the guard take him for now",
+            "cost": 0,
+            "detail": "Keep time to check the accounts. The slip stays behind, but Cem cannot help you.",
+            "effects": {
+              "friend": "detained",
+              "authority": 1
+            }
+          }
+        ]
+      },
+      "next": "fountain"
+    },
+    {
+      "id": "fountain",
+      "title": "The Two Cup Niches",
+      "place": "West fountain · Halime",
+      "photo_id": "photo-fountain",
+      "claim_ids": [
+        "claim-madrasa-fountain",
+        "claim-fountain-repair"
+      ],
+      "goal": "Find the fountain’s two cup niches. Help Halime serve water so she can stay and give her statement.",
+      "opening": [
+        {
+          "speaker": "Halime",
+          "text": "Two sacks of flour? I saw them. But tell me: do you want the truth, or just a signature for your ledger?"
+        },
+        {
+          "speaker": "Halime",
+          "text": "First, find the shared cups—one on the left and one on the right. Help me serve the people here, and I’ll go with you to the kitchen."
+        }
+      ],
+      "task": {
+        "kind": "inspect",
+        "prompt": "Find the two small niches in the brickwork where the shared cups go.",
+        "required": [
+          "cup-left",
+          "cup-right"
+        ],
+        "hotspots": [
+          {
+            "id": "cup-left",
+            "x": 33,
+            "y": 55,
+            "label": "Square niche on the left",
+            "text": "Left cup niche. The publication describes both niches as places for drinking cups, not hidden storage.",
+            "claim_id": "claim-madrasa-fountain"
+          },
+          {
+            "id": "cup-right",
+            "x": 66,
+            "y": 57,
+            "label": "Square niche on the right",
+            "text": "Right cup niche. People could take water and share cups here. The scene about serving visitors is fictional.",
+            "claim_id": "claim-madrasa-fountain"
+          },
+          {
+            "id": "tap",
+            "x": 49,
+            "y": 88,
+            "label": "Panel and spout below",
+            "text": "The spout and brickwork are shown as they look today. This photo cannot tell us how the water system worked in the story’s time.",
+            "claim_id": "claim-madrasa-fountain"
+          }
+        ]
+      },
+      "after": [
+        {
+          "speaker": "You",
+          "text": "I point out both niches. Halime still will not sign. “If you can own your mistake, then I can put my name to this.”"
+        }
+      ],
+      "decision": {
+        "id": "witness",
+        "prompt": "The accounts are nearly due. Will you stay and help her?",
+        "options": [
+          {
+            "id": "help",
+            "label": "Stay and ask her to sign with you",
+            "cost": 2,
+            "detail": "Get a statement identifying the delivery person. It costs time and may make you late.",
+            "effects": {
+              "witness": true
+            }
+          },
+          {
+            "id": "hurry",
+            "label": "Ask where the kitchen is and hurry on",
+            "cost": 0,
+            "detail": "Keep tracking the goods, but she will not identify the delivery person.",
+            "effects": {
+              "witness": false
+            }
+          }
+        ]
+      },
+      "next": "imaret"
+    },
+    {
+      "id": "imaret",
+      "title": "The Kitchen Missing from the Ledger",
+      "place": "Imaret · By the window",
+      "photo_id": "photo-imaret-front",
+      "claim_ids": [
+        "claim-imaret-architecture",
+        "claim-katib-keeper"
+      ],
+      "goal": "Find the star pattern to locate the story’s receipt. Then sort the two goods into the right records.",
+      "opening": [
+        {
+          "speaker": "Kitchen helper",
+          "text": "The person who brought the flour left the receipt by the star above the window. We received two sacks, but the slip does not say who brought them."
+        },
+        {
+          "speaker": "You",
+          "text": "If we check only the grain store, the kitchen might as well not exist. Meals do not appear by themselves on a page."
+        }
+      ],
+      "task": {
+        "kind": "inspect-sort",
+        "prompt": "Find the star pattern above the window. The modern sign is not a story clue.",
+        "required": [
+          "star"
+        ],
+        "hotspots": [
+          {
+            "id": "star",
+            "x": 37,
+            "y": 46,
+            "label": "Patterned brick above the narrow window",
+            "text": "The star and geometric brickwork are features recorded in the publication. The receipt’s hiding place is fictional; no artifact is hidden here.",
+            "claim_id": "claim-imaret-architecture"
+          },
+          {
+            "id": "sign",
+            "x": 51,
+            "y": 44,
+            "label": "Black sign",
+            "text": "A later restaurant sign. Do not use modern lettering to interpret events in the 1430s.",
+            "claim_id": "claim-imaret-architecture"
+          },
+          {
+            "id": "door",
+            "x": 86,
+            "y": 64,
+            "label": "Wooden door",
+            "text": "This is the entrance shown in a modern photo. It is not a surveyed route for historical deliveries.",
+            "claim_id": "claim-imaret-architecture"
+          }
+        ]
+      },
+      "after": [
+        {
+          "speaker": "You",
+          "text": "The kitchen received two sacks of flour. Compare the loading slip, grain count, and kitchen receipt. Do not rely on one total."
+        }
+      ],
+      "sorting": {
+        "cards": [
+          {
+            "id": "grain",
+            "label": "10 sacks of grain",
+            "destination": "store"
+          },
+          {
+            "id": "flour",
+            "label": "2 sacks of flour",
+            "destination": "kitchen"
+          }
+        ],
+        "destinations": [
+          {
+            "id": "store",
+            "label": "Grain store ledger"
+          },
+          {
+            "id": "kitchen",
+            "label": "Kitchen receipt book"
+          }
+        ],
+        "success": "12 = 10 + 2. Nothing is missing. You put two kinds of goods in one column."
+      },
+      "cost": 2,
+      "next": "reckoning"
+    },
+    {
+      "id": "reckoning",
+      "title": "The Blank Line",
+      "place": "Imaret · Accounts due",
+      "photo_id": "photo-imaret-inside",
+      "claim_ids": [
+        "claim-imaret-meals",
+        "claim-katib-keeper",
+        "claim-imaret-architecture"
+      ],
+      "goal": "Present an account others can check. Your name will stay on the page. Cem’s fate depends on what you keep.",
+      "opening": [
+        {
+          "speaker": "The steward",
+          "text": "Where are the two sacks?"
+        },
+        {
+          "speaker": "You",
+          "text": "They were in the kitchen all along. I recorded the wrong goods. I could copy a clean page and remove the morning ledger. Then no one would know."
+        }
+      ],
+      "task": {
+        "kind": "caseboard",
+        "prompt": "Choose the three records that account for all 12 sacks. Place them on the review board.",
+        "required": [
+          "loading-slip",
+          "kitchen-slip",
+          "tally"
+        ]
+      },
+      "after": [
+        {
+          "speaker": "The steward",
+          "text": "Nothing is missing. Now tell me: what happens to the original ledger—and to the apprentice?"
+        }
+      ],
+      "decision": {
+        "id": "final",
+        "prompt": "The final entry is yours.",
+        "options": [
+          {
+            "id": "confess",
+            "label": "Keep the original. Sign a correction.",
+            "cost": 1,
+            "detail": "Correct the stock record. Halime’s statement may clear Cem at once. Your probation will be reviewed.",
+            "effects": {}
+          },
+          {
+            "id": "erase",
+            "label": "Remove the original and submit a clean copy",
+            "cost": 0,
+            "detail": "Keep your job for now, but hide the source of the error. Cem will still face questions.",
+            "effects": {}
+          },
+          {
+            "id": "accuse",
+            "label": "Blame the kitchen for a missing entry",
+            "cost": 0,
+            "detail": "Hide your mistake. The kitchen staff will be investigated, and meal service may be disrupted.",
+            "effects": {}
+          }
+        ]
+      },
+      "next": null
+    }
+  ],
+  "task_policy": {
+    "priority": [
+      "published_manual",
+      "validated_ai",
+      "published_fallback"
+    ],
+    "ai_enabled": false,
+    "gps": {
+      "state": "disabled"
+    },
+    "model_3d": {
+      "state": "not_connected"
+    }
+  }
 }

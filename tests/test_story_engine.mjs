@@ -36,11 +36,11 @@ test('Witness choice changes exoneration, not just score or ending wording',()=>
  assert.ok(!without.state.inventory.includes('witness'));
 });
 test('Friend detention persists through later scenes and the final outcome',()=>{
- const e=reachEnding('detain','help','confess');assert.equal(e.friend,'detained');assert.match(e.state.ending.friend,/获释/);assert.match(e.state.ending.friend,/记忆/);
+ const e=reachEnding('detain','help','confess');assert.equal(e.friend,'detained');assert.match(e.state.ending.friend,/released/);assert.match(e.state.ending.friend,/remember/);
 });
 test('Cover-up and blame create distinct career and service consequences',()=>{
  assert.equal(reachEnding('vouch','help','erase').state.ending.id,'clean-page');
- const e=reachEnding('detain','hurry','accuse');assert.equal(e.state.ending.id,'other-signature');assert.match(e.state.ending.service,/暂停/);
+ const e=reachEnding('detain','hurry','accuse');assert.equal(e.state.ending.id,'other-signature');assert.match(e.state.ending.service,/paused/);
 });
 test('Save and resume preserves evidence, choices, time and scene locks',()=>{
  const e=fresh();e.openTally();e.advance();e.inspect('pool');e.choose('vouch');e.advance();
