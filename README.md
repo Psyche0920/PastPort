@@ -10,6 +10,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Open `http://127.0.0.1:8000/prototype/`. The current desktop preview uses port 8765.
 
+The English game is at `/prototype/`; open `/prototype/index.zh.html` for Chinese. Both versions share progress and the same photos and game rules.
+
 ## Content and modules
 
 - `data/muradiye.json`: sourced heritage catalogue; 18 works and 16 fact/fiction claims.

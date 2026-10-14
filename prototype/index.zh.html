@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171e1a"><title>PastPort · 最后两袋</title><link rel="stylesheet" href="style.css"><script type="module" src="app.zh.js"></script></head>
+<body><header class="topbar"><a class="brand" href="#">P<span>PASTPORT</span></a><span class="location">BURSA / MURADİYE</span><nav class="language-switch" aria-label="选择语言"><a href="index.zh.html" aria-current="page">中文</a><a href="index.html">EN</a></nav><div class="header-actions"><button id="notebook-button">调查笔记 <span id="evidence-count">0</span></button><button id="map-button">遗址地图</button><button id="archive-button">照片档案</button><button id="restart-button" class="quiet">重新开始</button></div></header>
+<main id="app"><div class="loading">正在打开 Muradiye 的照片与故事…</div></main>
+<dialog id="notebook"><div class="dialog-head"><div><p class="eyebrow">FIELD NOTES</p><h2>你保留下来的东西</h2></div><button id="close-notebook" aria-label="关闭调查笔记">×</button></div><div id="notebook-body"></div></dialog>
+<dialog id="photo-dialog"><button id="close-photo" aria-label="关闭大图">×</button><img id="large-photo" alt=""><p id="large-caption"></p></dialog>
+<dialog id="site-map"><div class="dialog-head"><div><p class="eyebrow">MURADİYE / SPATIAL CONTEXT</p><h2>遗址与调查路线</h2></div><button id="close-map" aria-label="关闭遗址地图">×</button></div><div id="map-body"></div></dialog>
+<dialog id="archive"><div class="dialog-head"><div><p class="eyebrow">PHOTOGRAPHIC ARCHIVE</p><h2>93 张原始照片</h2></div><button id="close-archive" aria-label="关闭照片档案">×</button></div><label class="archive-label" for="photo-search">搜索文件名</label><input id="photo-search" type="search" placeholder="例如 ERD 或 DJI"><div id="archive-body"></div></dialog>
+<div id="toast" class="toast" role="status"></div><footer>人物与案情原创 · 遗址与照片有据 · 可完全在线游玩</footer></body></html>

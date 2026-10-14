@@ -4,6 +4,24 @@ import {readFileSync} from 'node:fs';
 import {StoryEngine} from '../prototype/engine.mjs';
 const chapter=JSON.parse(readFileSync(new URL('../data/muradiye-story.json',import.meta.url),'utf8'));
 const fresh=()=>new StoryEngine(chapter);
+const chapterZh=JSON.parse(readFileSync(new URL('../data/locales/zh/muradiye-story.json',import.meta.url),'utf8'));
+test('English and Chinese chapters share the same playable structure',()=>{
+ assert.equal(chapter.scenes.length,chapterZh.scenes.length);
+ assert.deepEqual(chapter.scenes.map(scene=>scene.id),chapterZh.scenes.map(scene=>scene.id));
+ for (const [en,zh] of chapter.scenes.map((scene,index)=>[scene,chapterZh.scenes[index]])) {
+  assert.deepEqual(en.task.required,zh.task.required);
+  assert.equal(en.task.kind,zh.task.kind);
+  assert.equal(en.decision?.options.map(option=>option.id).join(','),zh.decision?.options.map(option=>option.id).join(','));
+ }
+ assert.deepEqual(chapter.photos.map(photo=>photo.id),chapterZh.photos.map(photo=>photo.id));
+ assert.deepEqual(chapter.evidence.map(item=>item.id),chapterZh.evidence.map(item=>item.id));
+ for (const [en,zh] of chapter.scenes.map((scene,index)=>[scene,chapterZh.scenes[index]])) {
+  assert.equal(en.photo_id,zh.photo_id);
+  assert.deepEqual(en.claim_ids,zh.claim_ids);
+  assert.deepEqual(en.task.hotspots?.map(spot=>spot.id),zh.task.hotspots?.map(spot=>spot.id));
+ }
+ assert.notEqual(chapter.title,chapterZh.title);
+});
 function reachEnding(friend,witness,final) {
   const engine=fresh();engine.openTally();engine.advance();
   engine.inspect('pool');engine.choose(friend);engine.advance();
