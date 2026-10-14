@@ -1,6 +1,6 @@
 # 竞赛对齐与验收清单
 
-这份清单把 Terms and Conditions 与 PastPort Application 的要求转成项目验收项。条款说明最终权重可能另行公布；本表不是官方权重，也不伪造百分比。
+这份清单把 Terms and Conditions 与 Information Note 的要求转成项目验收项。条款说明最终权重可能另行公布；本表不是官方权重，也不伪造百分比。
 
 | 维度 | 首期验收证据 | 状态 |
 |---|---|---|
