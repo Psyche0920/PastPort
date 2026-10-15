@@ -7,5 +7,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
-# Supplied high-resolution inventory stays local; provenance and web photos are tracked.
-sources/inventory/*.pdf
+# Generated editorial state, raw inputs and release outputs stay outside Git.
+var/
+.ruff_cache/

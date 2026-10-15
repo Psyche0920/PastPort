@@ -1,53 +1,31 @@
-# PastPort · The Last Two Sacks
+# PastPort
 
-A photographic, online narrative prototype set in the Muradiye complex in Bursa. The player is a fictional probationary clerk whose own cargo classification has put his guarantor under suspicion. Five scenes combine real heritage photographs with clearly labeled fictional case documents, consequential choices, witness collection and ledger reconciliation.
+将官方遗产资料转化为有史实依据、有人物成长的互动游戏，并用同一制作流程复制到其他遗址。
 
-## Run
+**当前状态：架构与规范准备阶段。** `main` 尚无业务框架、LangGraph 服务或通用播放器；`tools/` 仅用于仓库检查。两个项目 Skill 已编写，尚未接入模型与运行时，也未完成真实效果评测。
 
-```bash
-python3 -m http.server 8000 --bind 127.0.0.1
-```
+| 从哪里开始 | 内容 |
+|---|---|
+| [产品需求 PRD](docs/PRD.md) | 产品逻辑、四模块职责、资料/故事底线、范围、分工、里程碑和验收 |
+| [Workflow 实现合同](docs/WORKFLOW.md) | 数据与状态、节点/API、恢复/预算、通用玩法、Skill 协议及 T1–T7 实施任务 |
+| [工程与 CI 规范](docs/ENGINEERING.md) | Coding Agent、代码质量、协作、当前检查与未来检查接入 |
+| [参考依据](docs/REFERENCES.md) | Muradiye 抽象方法、遗产系统与开源 Skill 源头、许可和采用边界 |
 
-Open `http://127.0.0.1:8000/prototype/`. The current desktop preview uses port 8765.
+项目 Skill：[资料审核](skills/evidence-review/SKILL.md)、[情节制作](skills/narrative/SKILL.md)。只按任务读取相关入口和范例。
 
-The English game is at `/prototype/`; open `/prototype/index.zh.html` for Chinese. Both versions share progress and the same photos and game rules.
+官方目录说明表与比赛条款保留在 `references/`，它们是来源材料，不代表内容已获审核通过。
 
-## Project docs
+## 分支与样本
 
-- [Documentation map: current Demo vs product plan](docs/README.md)
-- [Current Muradiye Demo references](docs/demo/README.md)
-- [Product-wide PRD and reusable-system target](docs/product/PRD.zh-CN.md) (Chinese)
-- [Osmangazi source directory guide](Osmangazi_Google_Drive_Directory_Guide.xlsx)
-- [CI and Copilot operating guide](docs/engineering/ci-and-copilot.md)
+- `main`：通用产品、框架与 Workflow 的规范及后续实现。
+- [demo-muradiye](https://github.com/Psyche0920/PastPort/tree/demo-muradiye)：完整中英 Demo、照片、数据、SQL、脚本和历史回归测试。main 只保留抽象参考，不复制 Demo。
 
-## Content and modules
+开发从实现合同的 **T1a：首个短样段的类型/Schema 与抽象映射** 开始；其他模式在接入前按 T1b 补齐，不先铺完整后台。Muradiye 的固定样本版本见 Workflow §2，用来对照兼容性；第二个官方同层级文件夹用于首次完整新项目试跑。
 
-- `data/muradiye.json`: sourced heritage catalogue; 18 works and 16 fact/fiction claims.
-- `data/muradiye-story.json`: versioned playable chapter, cast, five scenes, photographic hotspots, evidence and three major decisions.
-- `data/task-overrides.json`: published editorial task overrides take priority; runtime AI task generation remains unconnected.
-- `data/pastport.sqlite3`: relational catalogue plus the exact narrative content/hash and photo provenance.
-- `data/media_manifest.csv`, `data/drive_file_ids.csv`: 93 original Drive photographs with review states and stable IDs. The game additionally uses five locally extracted publication photographs with confirmed page/structure associations.
-- `prototype/engine.mjs`: deterministic task gates, evidence, irrevocable choices, story time and outcome rules.
-- `prototype/app.js`, `style.css`: photographic UI, notebook, sorting, evidence board, source views, site map and searchable original photo archive.
-- `sources/`: reference PDFs retained without edits; all game props and dialogue are original fiction.
-- `docs/`: story logic, content workflow, spatial limits and evaluation evidence.
-
-The main viewpoint stays fixed through a playthrough. Helping or detaining the apprentice changes later dialogue and relationship consequences. Helping the witness changes which evidence is available and whether the apprentice can be immediately cleared. Keeping, replacing or blaming the ledger changes the protagonist's career and service consequences. Story time is simulated, never a real-time countdown. Progress persists locally in the same browser origin.
-
-## Build and verify
+## 当前检查
 
 ```bash
-python3 scripts/build_database.py --replace
-python3 -m unittest discover -s tests -v
-node --test tests/test_story_engine.mjs
+python3 tools/check_repository.py
 ```
 
-The database builder imports the same narrative JSON used by the browser and validates historical references, local photo files, relational integrity and candidate-task priority. To re-export the five approved photographs from the inventory PDF, run `python3 scripts/extract_scene_photos.py` (PyMuPDF and Pillow required).
-
-## Scope
-
-This is the Muradiye pilot, not the complete Bursa archive. The five local photographs are contemporary views, not a visual reconstruction of the 1430s. Glass covers, restaurant signs and furnishings are not accepted as period clues. Fictional receipts, quantities and witness accounts are not historical documents. GPS, 3D, runtime LLM generation and an authenticated administration UI remain separate future integrations. Human-player engagement has not been validated by a playtest yet.
-
-## Source PDF storage
-
-The 319 MB high-resolution inventory PDF remains local under `sources/inventory/` and is excluded from Git. Its source link, size and SHA-256 are recorded in `sources/inventory/source-manifest.json`. The five scene JPEGs are included, so a fresh checkout can run the complete game without the PDF. Download the publication from the recorded organizer archive if you need page-level local references or photograph re-export.
+检查文件、链接、Skill 元数据及语法；不会启动游戏、调用模型或验证故事质量。本地新 CI 配置使用同一命令，尚待提交、推送并在 GitHub 上验证生效；本地通过不代表远端已通过。

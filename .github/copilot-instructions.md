@@ -1,7 +1,7 @@
 # PastPort Copilot Instructions
 
 Follow root AGENTS.md and load only task-relevant files and documentation.
-Use docs/engineering/ci-and-copilot.md for CI commands and review boundaries.
+Use docs/ENGINEERING.md for CI commands and review boundaries; docs/WORKFLOW.md for implementation tasks. main is at framework specification stage; the complete pilot stays on demo-muradiye.
 Prioritize correctness, evidence/rights approvals, budgets, safe migrations and isolated player state.
 Fix the actual failure without weakening tests; report only checks actually executed.
 Avoid full-repository context, repetitive logs and paid AI review for routine changes.

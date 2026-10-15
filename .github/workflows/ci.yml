@@ -30,29 +30,8 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24'
-      - name: Check Python syntax
-        run: python -m compileall -q scripts tests
-      - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          set -euo pipefail
-          while IFS= read -r -d '' file; do
-            node --check "$file"
-          done < <(git ls-files -z '*.js' '*.mjs')
-      - name: Check tracked JSON
-        run: |
-          python - <<'PY'
-          import json
-          import subprocess
-          from pathlib import Path
-
-          files = subprocess.check_output(["git", "ls-files", "-z", "*.json"]).decode().split("\0")
-          for name in filter(None, files):
-              json.loads(Path(name).read_text(encoding="utf-8"))
-          PY
+      - name: Check repository specifications and syntax
+        run: python3 tools/check_repository.py
       - name: Failure propagation probe (manual opt-in)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.failure_probe }}
         run: |
@@ -61,38 +40,10 @@ jobs:
           unittest.TestCase().fail("Intentional CI failure probe; no product code was changed.")
           PY
 
-  python-tests:
-    name: python-tests
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: '3.12'
-      - name: Run database regression tests with temporary databases
-        run: python -m unittest discover -s tests -v
-
-  player-tests:
-    name: player-tests
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24'
-      - name: Run deterministic story and locale regression tests
-        run: node --test tests/test_story_engine.mjs
-
   ci:
     name: ci
     if: ${{ always() }}
-    needs: [quality, python-tests, player-tests]
+    needs: [quality]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
