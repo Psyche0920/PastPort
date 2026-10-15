@@ -38,3 +38,9 @@ Configure the `ci` check as required on main when branch protection is available
 From Actions > PastPort CI > Run workflow, leave `failure_probe` false for a normal run. Set it true only for an intentional failure test. This raises a test failure in quality and must make the final ci job fail while ordinary product tests remain unchanged. A red run titled as a failure probe is expected; run a normal check afterward. No source mutation or model charge is involved.
 
 CI success is engineering evidence. It does not certify historical accuracy, publishing rights, route realism or player enjoyment. There is no deployment step in this workflow.
+
+## Account availability (checked 2026-10-15)
+
+GitHub settings report no Copilot Cloud Agent license for the signed-in owner. Cloud tasks cannot be assigned until an eligible license is available. Repository instructions are ready; no subscription was purchased. This does not establish whether every other Copilot surface is available.
+
+The private repository's branch protection page warns that rules will not be enforced under the current account arrangement. Do not treat the CI result as an enforced merge block. Use the team's manual review process until an eligible setup is explicitly approved; repository visibility and billing were not changed.
