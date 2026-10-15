@@ -177,9 +177,11 @@ flowchart LR
 
 ### 6.2 状态、恢复与工作台
 
-完整制作状态：`created → indexing → discovering → candidate_selected → researching → awaiting_evidence_review → generating → awaiting_content_review → assembling → ready_to_publish → published`。复用已验证索引或证据包时，可显式跳到 Discovery/Generation，并记录复用快照、入口校验及跳过原因；不能只改状态字段绕过前置条件。修改反馈回所属阶段；旁路为 `needs_changes / needs_review / budget_exhausted / failed / cancelled / no_feasible_story`。
+完整制作流程：登记与索引 → Discovery/方向选择 → 定向研究 → 资料审核 → 生成与修订 → 故事终审 → 装配校验 → 发布确认 → 发布。工程上用独立的 `node + status` 表示阶段与运行/等待状态，精确枚举及路由统一见 [Workflow 实现合同 §4](../implementation/workflow-contract.md#4-图状态节点与路由)。复用已验证索引或证据包时记录复用快照、入口校验及跳过原因，不能仅改状态字段绕过前置条件。修改反馈回所属阶段。
 
 每次迁移保存输入/输出版本、操作者、原因和累计耗用。审批绑定具体 hash；证据变更使相关故事审批失效。恢复依赖持久 checkpoint，业务服务再核审批与预算；外部副作用使用幂等键，远端响应未知时先核对/标记待处理，不盲目重试导致重复付费。人工等待与活动计算时间分开统计。
+
+恢复默认从失败节点内未完成的小步骤继续，复用输入版本和依赖仍有效的已完成产物；禁止因局部失败默认重跑整个项目。资料/反馈变更仅使关联证据、章节及后续审批/校验失效，预算和轮次不清零。具体恢复、缓存和故障验收见[实施框架 §6.3](../implementation/muradiye-to-reusable-framework.md#63-从失败步骤恢复按依赖局部返工)。
 
 工作台与 API 必须覆盖：项目/目录导入状态、run 创建查看取消、来源与主张/图片审核、候选与研究缺口、人工任务编辑与锁定、预览、批准、校验、发布回滚、玩家公开包读取及自愿反馈。草稿不走玩家公开接口。错误提示保留具体原因，不以虚假内容或通用成功提示替代故障。
 
@@ -198,6 +200,8 @@ flowchart LR
 
 来源顺序：官方 Drive 与出版物先登记索引；有界补充官方文化机构、遗产管理机构和学术来源。博客/聚合页只作寻源线索，不能独立支撑关键史实。源文件状态区分 `discovered / downloaded / parsed / failed`；大文件未获取、OCR 失败和图片未映射必须可见。
 
+当现有资料不足以支撑故事时，允许按明确缺口主动联网研究权威来源，再按同一证据流程审核入库。外部参考资料单列来源登记表，记录机构/作者、URL、原文定位、对应缺口/主张、支持/反证、许可、筛选状态及理由；区分官方提供与外部补充。具体来源清单逐项筛选后配置，建议类别及字段见[实施框架：外部补证](../implementation/muradiye-to-reusable-framework.md#外部补证官方材料不足时主动研究)。
+
 证据判断、人工审批、照片映射、内容性质、许可和索引质量独立：分别使用 `supported/qualified/conflicting/insufficient`、`pending/approved/changes_requested/rejected`、`unmapped/provisional/verified`、`historical_fact/interpretation/original_fiction`、`unknown/restricted/permitted_for_scope/open_license`、`extracted/needs_ocr/checked/failed`。官方提供不自动等于可再分发；缺许可或身份的图片不作为发布资产/指定答案。旧 approved/verified 标签只有存在对应审批证据才继承。
 
 **作者态数据库是编辑真相，版本化运行包是玩家读取真相。** 迁移前备份并记录 hash，扫描旧引用与审核依据，导入并标记 legacy，比较旧章节分支结果后切换。`--replace` 仅用于明确可重建的派生库，不能覆盖正式审批库。审批日志与 checkpoint 均不等于备份，需独立恢复验证。
@@ -214,6 +218,8 @@ flowchart LR
 | 数据访问 | Repository 隔离；SQLAlchemy/Alembic 是待评估实现选项，不强制重写旧 sqlite3；迁移可测试、可恢复 |
 
 目标布局：`src/pastport/{domain,application,ports,adapters,workflow,api}`；`skills/{evidence-review,narrative}`；`prototype/` 保留通用玩家端；`tests/` 存契约、规则、流程与集成测试。domain 不依赖 FastAPI、LangGraph 或供应商 SDK。Coding Agent 与代码质量要求见第 11 节；CI 具体规范见 [CI 与 Copilot 规范](../engineering/ci-and-copilot.md)。
+
+首期工程基线与逐项任务见 [Workflow 实现合同](../implementation/workflow-contract.md)：冻结包/节点协议、保存恢复、账本和通用玩法；Weng/Matt 通过版本化政策与 Skill 调整专业方法。规范中的流程是目标行为，完成状态以代码和验证记录为准。
 
 模型选型比较 2–3 个候选，用相同证据集与 Skill 测抽取定位、冲突/不足、图片未知、叙事机会、任务因果和局部改稿。建议至少 12 个案例，关键生成重复测稳定性；Weng/Matt 盲评，Weijia 记录版本、成功率、费用、人工修改分钟及 p50/p95 延迟。质量达标后选每个可交付包综合成本最低者，不写死供应商或“最优模型”。
 
@@ -233,9 +239,9 @@ flowchart LR
 |---|---|
 | M0 单位与契约 | 冻结官方文件夹映射、地点全集/取舍、首条空间序列、三包契约和代表 fixture；明确第二候选及缺口 |
 | M1 管线骨架 | Weng 建轻量索引，Matt 复审现故事，Weijia 用 fixture 跑编排；暂停重启、权限、计数与 CI 基础可验 |
-| M2 真实材料试跑 | 有限 Discovery/研究、证据逐条审批、候选可行或有依据放弃；记录真实成本 |
-| M3 Muradiye 闭环 | 共享底座数据化；从编辑、审批、装配、发布到玩家读取；现有分支不丢失 |
-| M4 第二项目复用 | 同层级另一独立建筑群资料项目，完整跑相同管线、装配器和底座；项目/存档隔离，无地点专用运行代码 |
+| M2 参考材料与模块接入 | 用 Muradiye 已有材料片段对照索引、Discovery/研究和审核接口；记录成本与缺口，不重新生成 Muradiye 全篇作为首次复用证明 |
+| M3 Muradiye 兼容 | 将现有故事适配至共享底座与装配合同；已有选择/证据/时间/中英文结果不丢失；新发布仍须真实审批 |
+| M4 第二项目首次完整试跑 | 同层级另一官方资料项目从原始目录完整跑自动管线、装配器和底座；到点人工审核后自动续跑，项目/存档隔离，无地点专用运行代码 |
 | M5 试玩与交付 | 移动端/键盘、路线依据、故障恢复、许可、干净环境复现、演示脚本与剩余限制 |
 
 无已确认截止时间，按依赖推进。共享契约确定后，三人可分别用 fixture 并行开发；不等全量 Bursa 入库。每个里程碑交可运行结果与验收证据。
@@ -274,7 +280,7 @@ GPS 拒绝授权仍可线上玩。3D 标注 `measured / evidence_based / artisti
 | 未决项 | 当前处理 | 必须决定的时点 / 负责 |
 |---|---|---|
 | 第二项目及章节规模、完整目录可用性、路线阈值 | 同层级具体建筑群优先；依据证据/照片/实际通行评估，不凭体量承诺 | M0 范围冻结 / Weng + Matt |
-| 外部来源白名单、候选评分、格式修复限额 | 有界研究；评分权重不冒充比赛权重；格式修复一次为建议 | 首次真实试跑前 / 三人 |
+| 外部来源清单、候选评分专业细化 | 实现合同给出等权评分及一次格式修复初值；外部来源经筛选后配置；所有默认值有版本 | 首次真实试跑前 / 三人 |
 | 模型/供应商、短期试跑限额、长期预算 | 无确定模型；质量门禁后比综合成本；调用前设现金/调用上限 | 首次付费调用前 / Weijia |
 | 依赖精确版本、部署认证、审批账号、备份/反馈保留 | 依赖锁定后复现；最小权限与最小反馈，落实实际操作者 | 对应功能开放前 / Weijia |
 | 申请承诺与比赛最终要求 | 当前固定主角；两角色、自适应展示、土耳其语是否必需另核对；评分权重未确认 | 内容冻结/提交前 / Matt + Weijia |
