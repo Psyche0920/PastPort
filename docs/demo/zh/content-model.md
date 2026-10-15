@@ -40,7 +40,7 @@
 
 ## 本地资料来源
 
-- 官方比赛条款与产品申请：`sources/official/ROOT&CODE Hackathon _ Terms and Conditions_ENG.pdf`、`PastPort_ROOT_CODE_Application.pdf`。
+- 官方比赛条款：`sources/official/ROOT&CODE Hackathon _ Terms and Conditions_ENG.pdf`。
 - 官方项目资料说明：`sources/official/ROOT&CODE HACKATHON - FOUNDATION HERITAGE INVENTORY PROJECT - INFORMATION NOTE.pdf`。
 - Bursa 图片文件夹：<https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh>。
 - Bursa 穆拉迪耶相片 Links 文件夹：<https://drive.google.com/drive/folders/1HbbB-StFjGefpePbEj52DctQnnyS_HOe>。
