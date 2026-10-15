@@ -2,6 +2,12 @@
 
 这是 Bursa 的 Muradiye 建筑群线上叙事试玩版。玩家扮演试任文书员优素福：一笔货物分类错误让替他担保的搬运学徒陷入嫌疑。玩家需要观察真实遗址照片、收集虚构案件单据、决定是否帮助证人，并核对谷物与面粉的去向。
 
+## 项目文档
+
+- [产品需求与交付验收标准](docs/PastPort_PRD.zh-CN.md)
+- [Osmangazi 官方资料目录说明表](Osmangazi_Google_Drive_Directory_Guide.xlsx)
+- [CI 与 Copilot 使用规范](docs/ci-and-copilot.md)
+
 ## 打开中文版
 
 先按下方方法启动本地网页服务，再打开 `http://127.0.0.1:8000/prototype/index.zh.html`。英文版入口为 `http://127.0.0.1:8000/prototype/`。页面右上方可切换语言；两种语言共用同一份本地游戏进度。
