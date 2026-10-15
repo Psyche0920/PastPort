@@ -12,11 +12,13 @@ Open `http://127.0.0.1:8000/prototype/`. The current desktop preview uses port 8
 
 The English game is at `/prototype/`; open `/prototype/index.zh.html` for Chinese. Both versions share progress and the same photos and game rules.
 
-## Project documentation
+## Project docs
 
-- [Product requirements and delivery criteria](docs/PastPort_PRD.zh-CN.md) (Chinese)
+- [Documentation map: current Demo vs product plan](docs/README.md)
+- [Current Muradiye Demo references](docs/demo/README.md)
+- [Product-wide PRD and reusable-system target](docs/product/PRD.zh-CN.md) (Chinese)
 - [Osmangazi source directory guide](Osmangazi_Google_Drive_Directory_Guide.xlsx)
-- [CI and Copilot operating guide](docs/ci-and-copilot.md)
+- [CI and Copilot operating guide](docs/engineering/ci-and-copilot.md)
 
 ## Content and modules
 

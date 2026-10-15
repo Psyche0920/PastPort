@@ -4,7 +4,7 @@
 首期：Muradiye 完整闭环 + 第二个官方资料文件夹对应项目的复用验证。
 用途：首期产品设计、研发实施与验收的完整规范；现有实现、目标要求与待确定参数分别标注。
 
-技术基线：LangGraph/Python 编排，LLM 负责研究与叙事，程序执行工具权限、预算与人工审核门禁；FastAPI、SQLite 和原生 HTML/CSS/JS 支撑制作与玩家端。本文定义产品、数据、架构、工作流、实施与验收；CI 运行规范单独维护，Coding Agent 与代码质量原则见第 11 节。Coding Agent 通过简短的 [AGENTS.md](../AGENTS.md) 按任务读取相关章节。
+技术基线：LangGraph/Python 编排，LLM 负责研究与叙事，程序执行工具权限、预算与人工审核门禁；FastAPI、SQLite 和原生 HTML/CSS/JS 支撑制作与玩家端。本文定义产品、数据、架构、工作流、实施与验收；CI 运行规范单独维护，Coding Agent 与代码质量原则见第 11 节。Coding Agent 通过简短的 [AGENTS.md](../../AGENTS.md) 按任务读取相关章节。
 
 阅读索引：[产品目标](#1-产品是什么要证明什么) · [项目与空间](#2-游戏单位与官方资料如何对应) · [范围与基线](#3-首期范围与现有基线) · [玩家体验](#4-玩家体验与内容标准) · [架构契约](#5-四模块架构与交接) · [AI 工作流](#6-ai-制作工作流) · [数据与技术](#7-数据治理与技术路线) · [分工计划](#8-分工与实施顺序) · [验收风险](#9-验收风险与完成标准) · [后续与未决](#10-后续接口与未决项) · [研发协作](#11-研发协作与代码质量) · [资料依据](#12-资料依据与维护责任)
 
@@ -38,7 +38,7 @@ PastPort 将真实 vakıf 遗产资料转化为照片观察、证据推理、人
 | 路线与章节 | 项目内一组连续探索地点及其对应故事；一个项目可有多条路线和章节 | `Route` / `Chapter` |
 | 场景与任务 | 玩家在具体地点进行的观察、对话、推理或选择；同一地点可有多个场景 | `Scene` / `Task` |
 
-当前 Drive 入口为 [I. ve II. Cilt - Osmangazi](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1)。目录表记录了 15 个一级文件夹，内部文件清单抽样核实了 8 个。具体目录见 [Excel 说明表](../Osmangazi_Google_Drive_Directory_Guide.xlsx)。文件大小和目录形态只说明材料规模，不能据此认定每个文件夹都已足够支撑完整游戏。
+当前 Drive 入口为 [I. ve II. Cilt - Osmangazi](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1)。目录表记录了 15 个一级文件夹，内部文件清单抽样核实了 8 个。具体目录见 [Excel 说明表](../../Osmangazi_Google_Drive_Directory_Guide.xlsx)。文件大小和目录形态只说明材料规模，不能据此认定每个文件夹都已足够支撑完整游戏。
 
 - **具体建筑群 / 遗址文件夹**：如 II. Murat、Hamzabey，优先作为一项目一组现实相邻地点的候选。
 - **专题文件夹**：如教育建筑、清真寺与墓园，仍对应一个制作项目；先拆清实际地点，再组织项目内路线。不能把同一专题中分散的地点硬串成一次连续游览。
@@ -80,7 +80,7 @@ P0 就要模拟游客的连续探索体验，**从资料筛选和情节设计开
 | 代码与数据 | 原生 JS 玩家页、确定性引擎、JSON/SQLite/seed SQL；存在地点与场景 ID 硬编码、中英重复实现和多份作者态内容 |
 | 审核与制作 | 有数据模型、导入脚本及空人工任务覆盖入口；尚无运行中的 LangGraph 制作流程、认证工作台或完整发布链 |
 | 地图与扩展 | 现有示意地图；城市动态路线、GPS、3D 未接入；顺路游览仍须核验 |
-| 自动化检查 | 数据库 5/5、故事引擎 8/8；[CI 接入 PR #1](https://github.com/Psyche0920/PastPort/pull/1) 的检查与故障演练记录见独立 [CI 规范](ci-and-copilot.md)，合并状态以 PR 为准。浏览器、真实模型、现场路线和真人验收仍未完成 |
+| 自动化检查 | 数据库 5/5、故事引擎 8/8；[CI 接入 PR #1](https://github.com/Psyche0920/PastPort/pull/1) 的检查与故障演练记录见独立 [CI 规范](../engineering/ci-and-copilot.md)，合并状态以 PR 为准。浏览器、真实模型、现场路线和真人验收仍未完成 |
 
 主要技术债：把 `courtyard/imaret/witness/final` 等专用分支与结局文本改成通用规则数据；存档按项目/包隔离；合并中英规则实现；新增主张默认 pending；人工、AI 和 fallback 使用同样的门禁；作者态与发布态收敛为下文约定。
 
@@ -213,7 +213,7 @@ flowchart LR
 | 发布 / 部署 | 不可变包、JSON manifest、hash、原子发布与回滚；本地优先，公开时落实认证、HTTPS、持久存储和备份 |
 | 数据访问 | Repository 隔离；SQLAlchemy/Alembic 是待评估实现选项，不强制重写旧 sqlite3；迁移可测试、可恢复 |
 
-目标布局：`src/pastport/{domain,application,ports,adapters,workflow,api}`；`skills/{evidence-review,narrative}`；`prototype/` 保留通用玩家端；`tests/` 存契约、规则、流程与集成测试。domain 不依赖 FastAPI、LangGraph 或供应商 SDK。Coding Agent 与代码质量要求见第 11 节；CI 具体规范见 [CI 与 Copilot 规范](ci-and-copilot.md)。
+目标布局：`src/pastport/{domain,application,ports,adapters,workflow,api}`；`skills/{evidence-review,narrative}`；`prototype/` 保留通用玩家端；`tests/` 存契约、规则、流程与集成测试。domain 不依赖 FastAPI、LangGraph 或供应商 SDK。Coding Agent 与代码质量要求见第 11 节；CI 具体规范见 [CI 与 Copilot 规范](../engineering/ci-and-copilot.md)。
 
 模型选型比较 2–3 个候选，用相同证据集与 Skill 测抽取定位、冲突/不足、图片未知、叙事机会、任务因果和局部改稿。建议至少 12 个案例，关键生成重复测稳定性；Weng/Matt 盲评，Weijia 记录版本、成功率、费用、人工修改分钟及 p50/p95 延迟。质量达标后选每个可交付包综合成本最低者，不写死供应商或“最优模型”。
 
@@ -254,7 +254,7 @@ flowchart LR
 | AC-08 发布与更新 | 绑定终审版本/hash；发布失败保留旧版；回滚可用；存档固定版本、升级有提示；已知不合规资产能停用 | Weijia |
 | AC-09 UI 与语言 | 360–430px、键盘与等效文本观察能完成主线；中英答案/后果一致；缺图/保存失败有可用处理 | Matt |
 | AC-10 成本与模型 | 报告合格包数、质量缺陷、费用、人工分钟、延迟；无伪引用；不以低价抵消硬门禁失败 | 三人 |
-| AC-11 工程交付 | [CI 规范](ci-and-copilot.md) 中当前要求的检查通过；干净检出可启动双项目；来源/许可可查，编辑发布可操作；CI 通过不冒充历史审核 | Weijia + 各模块负责人 |
+| AC-11 工程交付 | [CI 规范](../engineering/ci-and-copilot.md) 中当前要求的检查通过；干净检出可启动双项目；来源/许可可查，编辑发布可操作；CI 通过不冒充历史审核 | Weijia + 各模块负责人 |
 | AC-12 试玩 | 目标 5–8 名实际试玩；记录卡点、完成、人物后果/遗产理解、提示与重玩意愿；修复所有无法继续的问题 | Matt |
 | AC-13 制作入口 | 原始文件夹走登记索引；有效索引进入 Discovery；有效审批快照可复用；来源 hash/范围/审批失配时不能跳过核验 | Weng + Weijia |
 | AC-14 开发性价比 | 用至少一个局部任务与一个高风险任务核对上下文分级；必要测试均执行；记录可得的调用/费用和人工返工，未知用量不伪报实测 | Weijia |
@@ -282,7 +282,7 @@ GPS 拒绝授权仍可线上玩。3D 标注 `measured / evidence_based / artisti
 
 ## 11. 研发协作与代码质量
 
-本节定义 Coding Agent、协作交接与代码质量要求。CI 的工作流、账号能力和实际运行状态单独记录于 [CI 与 Copilot 规范](ci-and-copilot.md)。功能开发使用的 Coding Agent 与产品内部的 Database/Story Agent 分开管理：前者修改代码，后者在受控运行时制作内容。
+本节定义 Coding Agent、协作交接与代码质量要求。CI 的工作流、账号能力和实际运行状态单独记录于 [CI 与 Copilot 规范](../engineering/ci-and-copilot.md)。功能开发使用的 Coding Agent 与产品内部的 Database/Story Agent 分开管理：前者修改代码，后者在受控运行时制作内容。
 
 ### 11.1 仓库、分支与 PR
 
@@ -375,7 +375,7 @@ Weijia 维护工程门禁与跨模块交付，各负责人对所属模块的实�
 ## 12. 资料依据与维护责任
 
 - 首要资料：[官方出版物](https://www.vakifkatilim.com.tr/tr/hakkimizda/medya-merkezi/yayinlarimiz)、[照片总目录](https://drive.google.com/drive/folders/1U-C6TeECHhlx5C15G_rhgx5f_-iJbXlM)、[Osmangazi 卷册目录](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1)。逐文件可用性以来源清单和审核记录为准。
-- 目录核验辅助材料：[Osmangazi 目录说明表](../Osmangazi_Google_Drive_Directory_Guide.xlsx)。目录名称已登记不等于内部材料全部核验。
+- 目录核验辅助材料：[Osmangazi 目录说明表](../../Osmangazi_Google_Drive_Directory_Guide.xlsx)。目录名称已登记不等于内部材料全部核验。
 - Demo 实现核对文件：`README.md`、`prototype/engine.mjs`、`data/muradiye-story.json`、`tests/test_database.py`、`tests/test_story_engine.mjs`。第 3 节记录 2026-10-15 的验证基线，不代表目标能力全部实现。
 - 比赛要求：官方 Terms、Information Note 与提交的 Application；端到端可运行、多作品发现、来源与视觉资料、编辑扩充、可访问性等要求须在提交前逐项对照有效原件，评分权重未知不虚构。
 

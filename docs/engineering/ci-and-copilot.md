@@ -6,7 +6,7 @@
 
 CI 配置与简短 Copilot 指引在 [CI 接入 PR #1](https://github.com/Psyche0920/PastPort/pull/1) 中提交；最终验证运行记录为 [GitHub Actions run](https://github.com/Psyche0920/PastPort/actions/runs/38731112889)。PR 是否合并、默认分支实际启用状态以 GitHub 为准。账号设置曾显示 Copilot Cloud Agent 许可证不可用，私有仓库分支保护也受套餐限制；其他 Copilot 功能需分别核对。不得把配置文件存在误报为 GitHub 已强制执行。
 
-实际工作流定义：[`../.github/workflows/ci.yml`](../.github/workflows/ci.yml)。
+实际工作流定义：[`../../.github/workflows/ci.yml`](../../.github/workflows/ci.yml)。
 
 ## GitHub Actions 与 Copilot 的使用方式
 

@@ -4,9 +4,11 @@
 
 ## 项目文档
 
-- [产品需求与交付验收标准](docs/PastPort_PRD.zh-CN.md)
+- [文档导航：当前 Demo 与产品规划的边界](docs/README.md)
+- [Muradiye 当前 Demo 资料](docs/demo/README.md)
+- [全产品 PRD 与可复用系统目标](docs/product/PRD.zh-CN.md)
 - [Osmangazi 官方资料目录说明表](Osmangazi_Google_Drive_Directory_Guide.xlsx)
-- [CI 与 Copilot 使用规范](docs/ci-and-copilot.md)
+- [CI 与 Copilot 使用规范](docs/engineering/ci-and-copilot.md)
 
 ## 打开中文版
 
