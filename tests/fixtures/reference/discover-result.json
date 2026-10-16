@@ -1,0 +1,68 @@
+{
+  "outcome": "completed",
+  "payload": {
+    "project_id": "fixture-project",
+    "schema_version": "0.1.0",
+    "content_version": "1",
+    "candidates": [
+      {
+        "candidate_id": "candidate-1",
+        "premise": "An invented delivery needs a location and carrier.",
+        "source_refs": [
+          {
+            "artifact_id": "index-1",
+            "project_id": "fixture-project",
+            "kind": "source_index",
+            "schema_version": "0.1.0",
+            "content_version": "1",
+            "sha256": "3518e7ab1a6f40acde886ce3dac078001d60dbd680ac9adb4506c94d01d94225"
+          }
+        ],
+        "supported_opportunities": [
+          "Compare stock location and carrier identity."
+        ],
+        "blocking_gaps": [],
+        "proposed_player_actions": [
+          "Observe hatch; choose whether to assist witness."
+        ],
+        "human_work_estimate_minutes": null,
+        "dimension_scores": [
+          {
+            "dimension": "evidence",
+            "score": 2,
+            "reason": "Uncalibrated synthetic example only"
+          },
+          {
+            "dimension": "visual",
+            "score": 2,
+            "reason": "Uncalibrated synthetic example only"
+          },
+          {
+            "dimension": "character",
+            "score": 2,
+            "reason": "Uncalibrated synthetic example only"
+          },
+          {
+            "dimension": "solvability",
+            "score": 2,
+            "reason": "Uncalibrated synthetic example only"
+          },
+          {
+            "dimension": "spatial",
+            "score": 2,
+            "reason": "Uncalibrated synthetic example only"
+          }
+        ],
+        "recommendation_reason": "Minimal contract example, not a validated recommendation.",
+        "reversal_conditions": [
+          "A real source does not support the required distinction."
+        ]
+      }
+    ],
+    "unresolved_items": []
+  },
+  "issues": [],
+  "evidence_requests": [],
+  "changed_ids": [],
+  "reason": "Synthetic contract result; no production evaluation."
+}

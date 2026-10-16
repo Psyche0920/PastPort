@@ -1,0 +1,1 @@
+"""Dependency-injected module boundaries."""

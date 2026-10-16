@@ -29,9 +29,19 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
-          python-version: '3.12'
+          python-version-file: '.python-version'
       - name: Check repository specifications and syntax
         run: python3 tools/check_repository.py
+      - name: Install locked contract tooling
+        run: |
+          python -m pip install uv==0.12.8
+          uv sync --locked --group dev
+      - name: Check contract quality and generated schemas
+        run: |
+          uv run --no-sync ruff check .
+          uv run --no-sync ruff format --check .
+          uv run --no-sync mypy --strict src/pastport tools/check_contracts.py tests
+          uv run --no-sync python tools/check_contracts.py
       - name: Failure propagation probe (manual opt-in)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.failure_probe }}
         run: |
@@ -40,10 +50,28 @@ jobs:
           unittest.TestCase().fail("Intentional CI failure probe; no product code was changed.")
           PY
 
+  python-tests:
+    name: python-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version-file: '.python-version'
+      - name: Install locked contract tooling
+        run: |
+          python -m pip install uv==0.12.8
+          uv sync --locked --group dev
+      - name: Run offline contract tests
+        run: uv run --no-sync pytest
+
   ci:
     name: ci
     if: ${{ always() }}
-    needs: [quality]
+    needs: [quality, python-tests]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

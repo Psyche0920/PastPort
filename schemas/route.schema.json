@@ -1,0 +1,220 @@
+{
+  "$defs": {
+    "Place": {
+      "additionalProperties": false,
+      "properties": {
+        "building_id": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Building Id"
+        },
+        "site_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Site Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "site_id",
+        "building_id"
+      ],
+      "title": "Place",
+      "type": "object"
+    },
+    "SourceLocator": {
+      "additionalProperties": false,
+      "properties": {
+        "file_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "File Sha256",
+          "type": "string"
+        },
+        "page_index": {
+          "anyOf": [
+            {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Page Index"
+        },
+        "paragraph_or_region": {
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Paragraph Or Region"
+        },
+        "printed_page": {
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Printed Page"
+        },
+        "source_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_version": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Source Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "source_version",
+        "file_sha256",
+        "page_index",
+        "printed_page",
+        "paragraph_or_region"
+      ],
+      "title": "SourceLocator",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:route",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Candidate Id",
+      "type": "string"
+    },
+    "content_version": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Content Version",
+      "type": "string"
+    },
+    "edge_refs": {
+      "items": {
+        "maxLength": 160,
+        "minLength": 1,
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+        "type": "string"
+      },
+      "title": "Edge Refs",
+      "type": "array"
+    },
+    "entry_refs": {
+      "items": {
+        "$ref": "#/$defs/SourceLocator"
+      },
+      "title": "Entry Refs",
+      "type": "array"
+    },
+    "exit_refs": {
+      "items": {
+        "$ref": "#/$defs/SourceLocator"
+      },
+      "title": "Exit Refs",
+      "type": "array"
+    },
+    "ordered_places": {
+      "items": {
+        "$ref": "#/$defs/Place"
+      },
+      "minItems": 1,
+      "title": "Ordered Places",
+      "type": "array"
+    },
+    "project_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "route_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Route Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Scope Hash",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "$ref": "#/$defs/SourceLocator"
+      },
+      "minItems": 1,
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "unknowns": {
+      "items": {
+        "maxLength": 10000,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "title": "Unknowns",
+      "type": "array"
+    }
+  },
+  "required": [
+    "project_id",
+    "schema_version",
+    "content_version",
+    "route_id",
+    "candidate_id",
+    "scope_hash",
+    "ordered_places",
+    "edge_refs",
+    "entry_refs",
+    "exit_refs",
+    "source_refs",
+    "unknowns"
+  ],
+  "title": "RouteRecord",
+  "type": "object"
+}

@@ -1,15 +1,17 @@
 # Workflow 实现合同：以 Muradiye 为参考
 
-状态：首期工程基线；本文定义待实现行为，不表示代码已经完成。本文落实现有 PRD，不扩展产品范围。正文用中文解释，代码、字段、API、错误码和 Skill 输出使用英文。团队分工沿用 PRD：Weng 负责证据，Matt（Mert）负责故事与玩家体验，Weijia 负责整合；对外姓名仍需团队核对。
+状态：首期工程基线 v1.1，2026-10-16 指导文件修订；本文定义待实现行为，不表示代码已经完成。本文落实现有 PRD，不扩展产品范围。正文用中文解释，代码、字段、API、错误码和 Skill 输出使用英文。团队分工沿用 PRD：Weng 负责证据，Matt 负责故事与玩家体验（旧材料称 Mert），Weijia 负责整合；对外姓名仍需团队核对。
 
-按任务读取：T1 看 §3/9/14/15；T2 看 §5/7/8；T3 看 §4/6/15–17；T4 看 §8；T5 看 §10/16/18 与对应 Skill；T6 看 §9/11；T7 看 §12 和 PRD 验收。不要求每次把整篇加入模型上下文。
+按任务读取：共享接口和分工先看 §19；T1 看 §3/9/14/15/19；T2 看 §5/7/8；T3 看 §4/6/15–17；T4 看 §8；T5 看 §10/16/18 与对应 Skill；T6 看 §9/11；T7 看 §12 和 PRD 验收。不要求每次把整篇加入模型上下文。
 
 ## 1. 阅读与实现边界
 
 - 产品目标、四模块边界与内容审核要求见 [PRD](PRD.md)；制作方法与资料补证见[参考依据](REFERENCES.md#5-muradiye-抽象样本与制作方法)。本文唯一维护工程字段、节点协议、恢复计数和实施任务；Skill 调用与质量协议已合并为 §14–18。
-- 首先实现一个可保存、可审核、可恢复的纵向流程，再接真实模型与外部研究。Muradiye 用于兼容性和规则对照；第二个官方同层级文件夹用于第一次新项目完整制作验证。
+- 工程实施先实现一个可保存、可审核、可恢复的纵向流程，再接真实模型与外部研究。此前允许按 PRD §13 用经人工审阅的有限材料做内部设计样段；不把设计观察当作工程/自动生成验收。Muradiye 用于兼容性和规则对照；第二个官方同层级文件夹用于第一次新项目完整制作验证。
 - 冻结 ID、版本/hash、审批权限、节点协议、状态和隔离规则。Weng/Matt 后续通过版本化政策与 Skill 调整来源标准、评分、任务与文案；结构改变走 Schema 版本升级。
 - 一次只实现第 12 节的一个任务。Coding Agent 任务单只带目标、相关节号、输入样例、受影响路径和验收；不重复加载整份对话或全部资料。
+
+指导文件修订不自动授权编码；用户随后已明确授权 T1a 合同层实施。后续任务继续按明确任务指令推进。首个任务先形成跨模块最小共享合同及必要样例，再按任务连接框架；后续可独立优化各模块。首期模块最小接口与 Workflow 连通不以真人体验验收作为前置条件；完整后台和内容扩张仍受产品验收约束。变更覆盖与待验证项见[PRD 架构评审与优化闭环](PRD.md#13-架构评审与优化闭环)。
 
 ## 2. Muradiye 抽象参考与兼容目标
 
@@ -52,7 +54,7 @@ Python 3.12 起步，FastAPI、Pydantic 2、LangGraph；SQLite 用标准库 Repo
 | 包 | payload 必备字段 | 对外完成条件 |
 |---|---|---|
 | `EvidencePackage` | project_id、source_folder_id、scope、sources、sites、claims、assets、spatial_edges、route_refs、coverage、unresolved_items | 被故事引用的关键事实/媒体/空间/许可及选中路线逐项批准；包审核清单包含所需条目的当前版本/hash |
-| `NarrativePackage` | project_id、evidence_package_hash、candidate_id、protagonist、characters、routes、scenes、props、decisions、endings、initial_state、locales、fiction_notice | 事实引用有效；规则可执行；故事整体终审绑定完整 payload hash |
+| `NarrativePackage` | project_id、schema_version、content_version、evidence_package_hash、candidate_id、routes、game、fiction_notice；game 统一收纳人物、场景、规则、结果、语言和初始状态 | 事实引用有效；规则可执行；故事整体终审绑定完整 payload hash |
 | `RuntimePackage` | project_id、package_id、schema_version、content_version、runtime_compatibility、evidence_package_hash、narrative_package_hash、game、media_manifest | 装配检查通过；发布确认绑定该包 hash 与当前终审记录 |
 
 候选索引是独立 `SourceIndex`，含来源引用、候选地点/主张和各自状态；Discovery 读取它，不能要求先有已批准 EvidencePackage。正式故事生成才要求批准证据。`qualified` 主张仅能采用人工明确批准的限定措辞；conflicting/insufficient 不作为确定史实或答案。
@@ -93,7 +95,7 @@ RunStatus 固定为 `queued / running / waiting_review / needs_changes / needs_r
 | inventory_sources | 文件夹快照 → SourceManifest（含下载/失败状态） | extract_candidates |
 | extract_candidates | manifest + 原文 → SourceIndex（只抽取相关候选，保留覆盖清单） | discover_story |
 | discover_story | SourceIndex + 要求 → CandidateSet（方向与维度分数/缺口） | 有候选到 select_candidate；无候选且有具体缺口到 research_evidence(scope_gap) |
-| select_candidate | CandidateSet + 版本化政策 → SelectedCandidate | research_evidence(direction)；足够且有效的既有资料可复用，不能绕证据审核 |
+| select_candidate | CandidateSet + 版本化政策 + 人工方向确认 → SelectedCandidate | 首期未确认时 needs_review；确认后 research_evidence(direction)，仍须证据审核 |
 | research_evidence | SourceIndex + EvidenceRequest + 现有来源；direction 另需 SelectedCandidate → Findings、索引更新及必要的证据/路线候选 | scope_gap 更新索引后回 discover_story；direction 到 evidence_review |
 | evidence_review | 当前 evidence/RouteRecord 候选 + 所需引用清单 → 审核 interrupt；保存决定后重读审批并生成 approved_route_ref | 必审内容及路线均通过到 draft_narrative；否则定向补证或等待人决定 |
 | draft_narrative | 批准证据 + approved_route_ref + 选中方向 + 锁定字段/反馈 → NarrativePackage 候选或 EvidenceRequest | narrative_review；有新事实需求则回 research_evidence(direction) |
@@ -103,7 +105,9 @@ RunStatus 固定为 `queued / running / waiting_review / needs_changes / needs_r
 | publish_review | runtime hash + 检查报告 + 审批快照 → 发布 interrupt | publish_package 或退回指定责任节点 |
 | publish_package | 当前有效发布决定 + 不可变包 → ReleaseRecord + 当前发布指针 | published |
 
-Discovery 明确标为假设阶段；方向选择由 select_candidate 的确定性政策执行。缺少可追溯证据线索、核心图片可辨认性或基本空间方案的方向不能直接进入正式生成，可生成缺口请求。材料暂不可访问为 blocked；研究预算用完为 budget_exhausted；研究上限内所有方向均不可行为 no_feasible_story，并给各候选理由。部分文件失败可继续盘点，但不可静默当作“所有材料已读完”。
+Discovery 明确标为假设阶段；select_candidate 的确定性政策只做硬门槛过滤和推荐排序。首期 direction_selection=human_confirmed，由 Matt 通过认证命令确认方向，不能把模型评分包装成人类决定。该操作是制作方向决定，不新增第四个内容审批 gate，也不授予史实/发布资格。缺少可追溯证据线索、核心图片可辨认性或基本空间方案的方向不能直接进入正式生成，可生成缺口请求。材料暂不可访问为 blocked；研究预算用完为 budget_exhausted；研究上限内所有方向均不可行为 no_feasible_story，并给各候选理由。部分文件失败可继续盘点，但不可静默当作“所有材料已读完”。
+
+CandidateComparison 至少列 candidate_id、source_refs、supported_opportunities、blocking_gaps、proposed_player_actions、human_work_estimate（未知可 null）、dimension_scores/reasons、recommendation_reason、reversal_conditions。SelectedCandidate 绑定 CandidateSet hash、requirements/policy hash、选中 ID、actor_id、reason 和时间；旧比较更新后旧确认不能批准新方向。候选筛选失败不得由人工确认绕过硬门槛。只有积累真实人工选择和成品结果、审查偏差并显式变更政策后，才能启用自动方向选择。
 
 **无方向时的补证入口：** Discovery/索引发现可定位的范围内缺口（如某建筑功能的原文缺页或候选地点身份未明），以 purpose=scope_gap、candidate_id=null 进入同一个 research_evidence 节点；不伪造故事方向。问题须指向当前官方项目的资料/地点，禁止无目标全网找灵感。新增资料只更新候选索引，不自动获批，完成后返回 Discovery；有方向后以 purpose=direction 做定向核实。两种研究合计仍为每 run 最多 2 轮，共用所有调用和费用上限。
 
@@ -115,6 +119,8 @@ Discovery 明确标为假设阶段；方向选择由 select_candidate 的确定�
 
 三个固定审核 gate：evidence、narrative、publication。审核请求先以唯一 pending_review_id 和 target hash 存业务库，再进入专用 interrupt 节点；interrupt 前不做模型调用或发布。恢复使用相同 thread_id；P0 规定 thread_id 等于 run_id，审核节点读取已保存决定并验证 target hash 与当前状态一致。
 
+方向确认使用 select_candidate 节点及 needs_review 状态，保存独立 CandidateSelectionDecision，恢复仍经过同一命令/幂等机制；不伪造 ReviewDecision 或复用 evidence 批准。内容权限由 evidence/narrative/publication 三个 gate 决定。
+
 LangGraph 恢复时可能从被中断节点开头重新执行，不能假设从某一行继续。因此，业务写入要幂等、模型成果要先持久化、interrupt 位置保持稳定。暂停跨版本期间不修改原图结构；graph_version 不兼容时标 blocked，走显式迁移，不直接用新图解释旧 checkpoint。[官方中断说明](https://docs.langchain.com/oss/python/langgraph/interrupts)、[持久化说明](https://docs.langchain.com/oss/python/langgraph/persistence)。
 
 P0 为单应用实例、单图执行者；同项目同一时间一个可写 run，重复启动返回现有 run/409，不排第二条制作流水线。API 只校验并保存命令，worker 顺序消费；进程重启从业务命令记录与 checkpoint 恢复。数据库事务不跨模型/网络调用；checkpoint 与业务库分别存储，靠业务幂等记录协调，不假设两库一次提交。
@@ -123,6 +129,19 @@ P0 为单应用实例、单图执行者；同项目同一时间一个可写 run�
 
 Weng/Matt 可对具体条目提出修改，其他已批准条目保持原版本；所有被最终故事引用的必审条目满足条件才放行。故事内容发生任何变化都需要新的整体终审；未受影响条目审批可以复用，但不能把旧故事总审批套到新 hash。发布前还须重新检查来源停用与许可变化。
 
+### 5.1 变更影响与复审范围
+
+ChangeImpactReport 绑定 before_ref/after_ref，列 changed_ids、change_kinds、依赖闭包、affected_scene/task/locale_ids、reusable_decision_ids、invalidated_decision_ids、required_reviews、reason 和 analysis_status（complete/uncertain）。change_kinds 使用 fact/rule/character_causality/translation/media_presentation/rights；可多选。无法证明影响范围时标 uncertain 并扩大审查，不默认视为安全。
+
+| 变化 | 必须处理 | 可复用的内容 |
+|---|---|---|
+| 史实、解题前提、答案、人物因果 | 重核相应事实/规则和后续知识、时间、关系、结局；重新故事终审 | 与依赖闭包无关且版本未变的条目审批 |
+| 翻译或文字修正 | 核含义、提示、可访问性和 locale 版本；新故事 hash 仍需终审 | 未变事实审批；有依据的差异视图可缩短人审 |
+| 媒体裁切/尺寸或替代文本 | 核热点坐标、可见前提、等效信息、衍生 hash 和许可 | 未变且仍适用的来源主张审批 |
+| 许可、来源停用或真实通行变化 | 优先检查当前分发和受影响发布；停止不合规分发 | 只有重新核对后仍有效的记录 |
+
+自动报告帮助人定位差异；报告自身不是审批。新 RuntimePackage 必须重新机械校验并绑定新的发布决定，不能沿用旧包 hash 的批准。
+
 ## 6. 重试、局部返工和 token 账本
 
 三种计数彼此独立：研究轮（同一问题集合的一次范围补证或定向研究，两类合计最多 2 轮）、叙事修订轮（初稿之后的自动修改，最多 2 轮）、外部调用尝试（每次实际请求）。初稿不占修订轮；每轮开工先持久化 round_id，恢复同一轮不再次加一。换方向、换来源不清零。
@@ -130,6 +149,8 @@ Weng/Matt 可对具体条目提出修改，其他已批准条目保持原版本�
 同轮可包含多个查询/文件/章节，它们各有 ExecutionKey。技术失败且输入未变，继续该轮未完成步骤；新问题或新的修改要求是新一轮。达到轮数上限转 needs_review；费用/时间/调用预算上限转 budget_exhausted。人工也不能靠重复 resume 重置上限；额度调整单独记录授权与新上限，已花费用保留。
 
 问题集合在 round 开始时保存不可变 manifest；其内预先授权的查询/场景子步骤属于同一轮。执行中发现新的实质问题不得偷偷追加到已冻结集合绕过轮数，生成新的 EvidenceRequest/RevisionRequest；如果只为既定问题补抓一个来源，仍可在该轮的工具预算内进行，须保留关联原因。
+
+每个问题还记录 stop_reason（supported_enough/conflicting/inaccessible/no_progress/budget_exhausted/round_limit）和依据；轮数用完不等于研究充分。首期两轮硬上限不变。需要扩展自动轮数时，先显式修改政策并实现/批准 run 迁移；记录旧/新政策、追加额度、授权人、理由及累计使用量，旧计数与账本不清零。此扩展流程未实现前一律 needs_review，不能直接多跑。问题分组按可回答目标形成，禁止为规避上限提前塞入无关问题。
 
 BudgetPolicy 必填 max_model_requests、max_input_tokens、max_output_tokens、max_search_requests、max_fetch_requests、max_active_seconds、max_cost_microusd；没有预算或价格依据就不付费运行。调用前预留保守的最大可能消耗，返回后结算并释放剩余；上下文超限先用检索选取相关原文，不能截断必需证据或自动增加预算。价格、模型、采样参数及 Skill hash 固定到 run，禁止静默换供应商。
 
@@ -162,6 +183,12 @@ ExecutionKey = project_id + node + unit_id + 输入 hash + Skill/Schema/政策/�
 
 服务重启先对账 pending/running/unknown 步骤，再调度图。不能只依赖 checkpoint 猜测远端是否执行；也不能因恢复业务事实而跳过 target hash/权限检查。T3 验收必须注入上述故障点并记录外部调用次数，而非只测正常 interrupt/resume。
 
+### 6.2 共享执行服务与权威来源
+
+P0 是单个模块化后端。ExecutionService 统一步骤键、状态、结果持久化与重放；UsageLedger 统一预留/结算/未知结果；ReviewService 统一认证、版本检查与审批；PublicationService 统一发布完整性和指针切换。节点通过用例调用它们，不各自复制恢复代码。接口只设在存储、供应商、工具等真实边界，禁止为每个节点再造一套框架。
+
+业务库的审批、命令、执行记录与费用账本是业务权威；不可变文件以记录的 hash 核验；checkpoint 是计算恢复位置。两者不一致时先按 §6.1 对账：已有成功产物可推进 checkpoint，但 checkpoint 的“成功”不能补造缺失审批、账单或产物。无法对账则 blocked/unknown_outcome 交人处理，不自动选择看起来更新的一方。业务库、产物和 checkpoint 应有对应恢复清单；从备份恢复时仍须对账，不把 checkpoint 当成备份。
+
 ## 7. 持久化合同
 
 业务库 `var/editorial.sqlite3`，checkpoint `var/checkpoints.sqlite3`，不可变产物 `var/artifacts/`，发布目录 `var/releases/`；均不入 Git。现有 `data/pastport.sqlite3` 是 legacy 参考，不能 `--replace` 覆盖新编辑库。正式迁移先备份并记录 hash；测试用临时目录。固定 SQLite 外键、WAL、短事务，写锁等待初始 5 秒。
@@ -174,6 +201,7 @@ ExecutionKey = project_id + node + unit_id + 输入 hash + Skill/Schema/政策/�
 | artifacts / artifact_dependencies | artifact_id PK、kind、project_id、版本、hash、path；consumer_id/version→dependency_id/version/hash |
 | review_requests / review_decisions | request_id；gate/target/hash；decision_id 唯一；理由、真实 actor、时间，追加写入 |
 | workflow_runs / execution_units | run_id；graph/policy refs、node/status、revision、取消标记；run+ExecutionKey 唯一，保存产物引用和失败状态 |
+| candidate_selections | selection_id 唯一；run/project、candidate_set hash、candidate_id、policy/requirements hash、actor、reason、时间；追加写入 |
 | commands / run_events | command_id 唯一、run、expected revision、payload hash、pending/applied/failed；事件保存序号、类型、原因和操作者 |
 | budgets / usage_ledger | run 预算、预留/已结算/未知费用、round ID；每次请求 operation_id 唯一，记录模型配置、usage、供应商 request ID |
 | releases | project_id+release_id；runtime hash、审核 ID、状态；项目发布指针用 expected_old_release 做并发比较 |
@@ -190,6 +218,7 @@ FastAPI `/api/v1`；写操作均要求认证和 Idempotency-Key，相同 key+bod
 |---|---|
 | POST /projects | provider、folder_id、name、requirements → 201 ProjectView；重复目录返回已有项目 |
 | POST /projects/{id}/runs | budget_policy、policy_ref、可选可复用 ArtifactRef → 202 RunView |
+| POST /runs/{id}/candidate-selections | candidate_set hash、candidate_id、reason、expected_revision → 保存认证人的方向确认并排队续跑；不授予内容批准 |
 | GET /runs/{id}、GET /runs/{id}/events?after= | 当前节点/状态/缺口/计数/产物链接/可执行动作；事件游标轮询，P0 不要求 SSE |
 | GET /runs/{id}/reviews | 待审内容、原文定位、模型判断/理由、版本/hash 和锁定字段 |
 | POST /runs/{id}/review-decisions | request_id、逐项/整体决定、target hash、reason、expected_revision → 保存并排队自动续跑 |
@@ -204,11 +233,23 @@ FastAPI `/api/v1`；写操作均要求认证和 Idempotency-Key，相同 key+bod
 
 最小原生 JS 工作台只有：项目/来源导入状态、运行时间线与费用、证据逐项审核、故事预览/修改/锁定、包检查与发布确认。API 完成同时给可操作页面，不能交付一条必须手工改 DB 才能继续的流水线。开发态真人账户与权限配置示例不包含实际口令。
 
+### 8.1 决策视图与内部预览
+
+最小视图按人的决定组织，不按数据库表展开：证据页并排显示原文/区域、主张、支持/反证和版本；候选页展示推荐、缺口、人工工作与推翻条件；预览页展示玩家当前知道什么以及后续读取位置；影响页展示 ChangeImpactReport；发布页只汇总阻塞、责任人和当前快照。
+
+预览复用玩家解释器。保存一段合法动作序列及起始包 hash，可重放到目标场景，查看规则 guard、effects、once_key 和玩家反馈，并比较两个选择后的状态差异。任意注入的调试状态必须有独立标记，不能保存为正式玩家进度、替代可达性证明或充当内容审批。人工锁定和未获证据边界仍有效。
+
+预览身份为 draft/test/release 的显式区分，合成内容标 test，真实但未审内容标 draft。预览不开放匿名读取、发布按钮不绕门禁。T4 首段只做样段必需视图；完整后台在真实样段质量检查后扩展，不提前建设通用后台平台。
+
 ## 9. 通用玩法合同与一个真实映射例
 
-玩家状态：project_id、release_id、chapter_id、schema_version、current_scene_id、elapsed_minutes、observations（scene→spot ID 集合）、completed_task_ids、decisions（decision→option）、inventory（prop ID 集合）、assignments、selected_evidence、variables、ending_id。variables 只允许已声明的 bool/int/str；存档键包含项目和发布版本。跨版本存档默认要求重新开始；显式迁移需独立映射/验证，不自动忽略版本错误。
+玩家状态：project_id、release_id、package_hash、chapter_id、schema_version、revision、current_scene_id、elapsed_minutes、observations（scene→spot ID 集合）、completed_task_ids、decisions（decision→option）、inventory（prop ID 集合）、assignments（task→card/destination）、selected_evidence（task→prop ID 集合）、variables、unlocked_scene_ids、applied_rule_keys、processed_actions、ending_id。variables 只允许包中声明的 bool/int/str；新增字段均属待实现合同。revision 初始 0；解锁集合从包的 initial_state 读取，初始场景必须在其中；applied_rule_keys 初始为空集合；processed_actions 初始为空映射，记录 action_id→payload_hash/feedback/event_ids，与状态一起持久化。集合序列化为稳定排序的唯一 ID 数组；存档身份包含项目、发布、章节、Schema 和包 hash。
+
+同一发布身份不能覆盖为不同内容；加载时校验身份、类型、ID/声明变量和版本。保存失败保留当前内存状态并提示重试，不声称已持久化。跨版本默认提示继续仍可用的旧版本或明确重开；迁移需独立映射/验证，不静默清空。测试/草稿的命名空间不得与正式发布存档混用。
 
 任务用 discriminated union：document（required_prop_ids）、inspect（asset_id、spots、required_spot_ids）、inspect-sort（观察要求加 cards/destinations/answer_map）、caseboard（required_prop_ids 与 exact_set 规则）。热点坐标为原图归一化 0–10000 整数，x/y 都校验范围；每个热点含等效文本按钮。文案只在 locales 中，规则引用稳定 key，不能分别在中英文文件写答案和后果。
+
+场景含 tasks 列表、required_task_ids、next_scene_ids；每项任务有全章节唯一 task_id、prerequisite_task_ids 和可选 guard。T1a 可只启用单任务场景；声明多任务能力前须校验依赖无环、任务存在、前提可达和完成聚合。Legacy Adapter 将旧单个 task 转为长度为 1 的列表，不把 Muradiye 的复合任务当作所有项目模板。inspect-sort 首期保留兼容，后续按实际材料需要组合观察/分类；不因预留多任务结构就立即增加全部 Handler。
 
 条件首期仅 `all / any / not / has_evidence / observed_all / choice_equals / variable_equals / elapsed_gt`，使用有类型参数的树。效果首期 `grant_item / set_variable / set_relationship / add_story_time / unlock_scene / resolve_ending`；关系写到声明的 string variable。每个 rule 有 event、guard、effects、once_key；重复触发不得重复加时间或发物件。游戏动作 event 仅 document_opened/spot_observed/sorting_submitted/board_submitted/option_chosen/task_completed；rule 和 event 不允许包内任意代码。
 
@@ -222,13 +263,14 @@ FastAPI `/api/v1`；写操作均要求认证和 Idempotency-Key，相同 key+bod
 | 最终选择 confess、有/无 witness | 结局表分别匹配 signed-truth/unfinished-truth；同一结果再按 friend 决定关系文本、elapsed_gt(6) 决定服务反馈 |
 | erase / accuse | 按数据优先匹配两个结局规则；行为与旧 resolveEnding 对照，不写选项专名到解释器中 |
 
-结局按显式 priority 首个匹配，末尾必须有可解释 fallback；每个结果含 career/friend/service/growth 文案与可声明条件变体。装配器只校验规则与引用，不写这些结果。玩家操作先通过 Handler 校验，再在一份新状态上计算全部效果，成功后一次提交；失败不能留下半次动作。界面加载失败、缺图或保存失败须可见且提供合理的继续/重试操作。
+结局按显式 priority 首个匹配，末尾必须有一个可解释 fallback；每个结果含 outcomes 列表，每项为稳定 outcome_id、label_key、text_key 和可选条件变体。Muradiye 的 career/friend/service/growth 显式映射为四个条目，其他项目按材料使用不同结果维度；解释器不得识别这些维度名。变体按 priority、variant_id 顺序取首个匹配，未匹配用本项 text_key；不是将多条文案随机拼接。fallback 最后评估且不能掩盖必需证据缺失或非法状态。装配器只校验规则与引用，不写这些结果。玩家操作先通过 Handler 校验，再在一份新状态上计算全部效果，成功后一次提交；失败不能留下半次动作。界面加载失败、缺图或保存失败须可见且提供合理的继续/重试操作。
 
 以下是从 courtyard 实际行为抽出的规则片段（字段约定示例，不是完整游戏包；Legacy Adapter 还要补全来源/审批/语言等外层内容）：
 
 ```json
 {
   "rule_id": "courtyard-task-evidence",
+  "priority": 0,
   "event": "task_completed",
   "target_id": "courtyard-inspect",
   "guard": {
@@ -244,6 +286,30 @@ FastAPI `/api/v1`；写操作均要求认证和 Idempotency-Key，相同 key+bod
 ```
 
 condition/effect 的 `kind` 为判别字段，target_id 对应事件对象。all/any 带 conditions 数组（至少 1 项），not 带 condition；has_evidence 带 item_id，choice_equals 带 decision_id/option_id，variable_equals 带 name/value，elapsed_gt 带 minutes。grant_item 带 item_id；set_variable/set_relationship 带 name/value；add_story_time 带非负 minutes；unlock_scene 带 scene_id；resolve_ending 带 ending_table_id。未声明 kind、未知 ID、类型不匹配或循环规则均为 blocking，不静默跳过。
+
+### 9.1 动作、规则与提交顺序
+
+唯一状态转换边界为 `apply_action(package, previous_state, action) → next_state + emitted_events + feedback + trace`。Action 含 action_id、expected_revision、kind（open_document/observe/submit_sorting/submit_evidence/choose/advance）、target_id 和按 kind 定型的参数，运行器校验来源场景、任务前提、已获物件和选项；内容包不能传入任意 state patch。重复 action_id 必须核对动作 payload hash；相同 payload 返回当前状态与原动作反馈，不回滚到旧状态，也不再次产生效果；不同 payload 返回 ACTION_ID_CONFLICT。已处理动作先检查幂等结果，再检查 revision，避免合法重试被误判为过期。
+
+| 顺序 | 固定语义 |
+|---|---|
+| 1 验证 | 包/存档身份、动作参数、expected_revision、当前场景与前提均有效后，才创建工作状态副本 |
+| 2 原始动作 | Handler 更新观察、提交或选择；只有未完成→完成的转换才追加 task_completed；已提交选择改成另一个选项报错 |
+| 3 事件 | 先原始动作事件，再新完成任务事件，按 Handler 的固定顺序 FIFO 处理；同一事件不会递归重入 |
+| 4 guard | 对每个事件，用该事件开始时的状态快照一次求出全部匹配规则；同一事件中前一规则的效果不改变后一规则是否匹配 |
+| 5 effects | 按 priority 升序、rule_id ASCII 字典序执行；priority 为非负整数。写同一变量为不同值或解析不同结局为 EFFECT_CONFLICT，整次动作不提交；相同值可合并，物件/解锁取集合并集，时间按规则累计 |
+| 6 去重 | rule_id 和 once_key 各自在包内唯一；已执行 once_key 不重放。成功效果与去重标记在同一工作状态中提交，恢复后不重新收费或加故事时间 |
+| 7 结束 | 队列成功处理后一次提交状态、动作去重记录、revision 和反馈；失败丢弃工作状态，原状态不变 |
+
+首期效果不生成新事件，不能直接触发模型或脚本；任务完成事件只由合法 Handler 状态转换产生。后续增加派生事件须单独升级能力/合同，规定环检测与处理上限。能力描述固定 max_events_per_action、max_effects_per_action、max_condition_depth；装配和运行共同拒绝超限，不通过截断假装成功。具体初值在 T1a 样例中冻结，此处不声明任意包已可运行。
+
+相同观察或相同已提交选项即使换 action_id，也不能再次完成任务、加时间或触发一次性效果。新动作的幂等记录可更新，但语义状态不重复改变。解锁场景只增加可进入资格，不自动移动；移动仅到 current_scene.next_scene_ids 与 unlocked_scene_ids 的交集，并满足 required_task_ids 和必需选择。任意 scene_id 跳转仅可作为标记清楚的内部调试，不是玩家动作。
+
+### 9.2 共享语义与兼容验证
+
+JS 解释器同时供浏览器和无界面规则路径检查使用；Python 装配器负责 Schema、引用、审批及资源校验，不独立实现第二套游戏语义。未来确需其他语言解释器，先共用固定向量：包 hash、初始状态、动作序列、预期状态/事件/错误。中英只改变 locale，动作结果必须相同。
+
+T1a/T6 必须覆盖：刷新恢复后 once_key 仍生效；动作重试/冲突；同事件 guard 快照；同字段效果冲突原子回滚；非法跳场；未获证据提交；跨项目/版本/hash 存档；相同规则的中英文结果；条件变体优先级；多任务能力未支持时明确拒绝。完整路径覆盖仍需可达性检查与真人试玩，不以字段齐全代替可玩性。
 
 ## 10. 模型、Skill 与专业政策
 
@@ -266,13 +332,13 @@ ModelGateway 仅暴露 generate(ModelRequest[T])→ModelResult[T]；request 固�
 
 研究模式的 ModelGateway 输出是 `SkillResult[EvidenceFindings]`，可携带类型化 ToolRequest；应用内 ToolExecutor 分别调用 SearchGateway/SourceReader 并返回 ToolResultRef。每次生成或工具调用都是可持久化小步骤，共用现有 ExecutionKey/预算/取消/恢复规则；不用给主图再增加一个总控 Agent，也不把“允许联网”理解为无界 function-calling 循环。详细执行顺序及停止条件按§16 的调用协议。
 
-每个关键遗产推理任务的 authoring report 保存 heritage_refs、property_used、player_premises、inference、accepted_answer、character_goal、effect_ids、later_read_points、removal_test/substitution_test；仅用于制作审核，不暴露成玩家填写表单。Mert 以[具体校准范例](../skills/narrative/references/design-calibration.md)检查推理/人物/后果；Weng 以[资料校准范例](../skills/evidence-review/references/review-examples.md)检查事实、时间、图像与许可。只点真实照片领取无关虚构物件不能作为核心遗产推理的通过依据。
+每个关键遗产推理任务的 authoring report 保存 heritage_refs、property_used、player_premises、inference、accepted_answer、character_goal、effect_ids、later_read_points、removal_test/substitution_test；仅用于制作审核，不暴露成玩家填写表单。Matt 以[具体校准范例](../skills/narrative/references/design-calibration.md)检查推理/人物/后果；Weng 以[资料校准范例](../skills/evidence-review/references/review-examples.md)检查事实、时间、图像与许可。只点真实照片领取无关虚构物件不能作为核心遗产推理的通过依据。
 
 源文或关键叙事变更将关联翻译标为 outdated；共享规则不变也须复核对应文案，locale 完整且处于当前版本才能发布。新报告字段按 T1a/T1b 所需范围形成强类型/JSON Schema 并提供合法/非法完整样例，不将本 Markdown 片段冒充已执行合同测试。
 
 | 政策 | 可运行初始值 | 后续负责人 |
 |---|---|---|
-| 候选评分 | 证据、可视觉化、人物冲突、任务可解性、空间连续性各 0–4 等权；缺口数单列；先排除硬门槛失败，再按分数，平分按稳定 candidate_id | Matt 调评分与样例，Weng 调证据/空间硬门槛；仅为项目初值 |
+| 候选评分 | 五维 0–4 等权仅用于推荐排序，逐项附依据/缺口；首期由 Matt 确认方向，平分排序不等于质量胜出；自动选择须后续显式启用 | Matt 校准人工选择与成品结果；Weng 校准证据/空间硬门槛 |
 | 证据判断 | supported/qualified/conflicting/insufficient，附支持/反证和原文；关键条目由人确认 | Weng 调来源等级、冲突与限定表述标准 |
 | 叙事检查 | 每个主线任务具线索→推理→人物目标→状态后果；照片实际参与推理；虚构边界；路线连续；能通关 | Matt 调趣味性、节奏、角色成长与提示；不改通用字段权限 |
 | 外部研究 | 本库与官方提供优先；缺口触发权威补充；新域名通过可配置访问策略，来源登记后进入同一审批链 | Weng 筛机构与许可，Weijia 实现访问边界 |
@@ -285,33 +351,39 @@ ModelGateway 仅暴露 generate(ModelRequest[T])→ModelResult[T]；request 固�
 
 发布使用项目锁，先完整写不可变 release 目录，再用业务库事务比较旧指针并切换新版本；写文件成功但指针未切换仅为未发布孤立产物，可恢复/清理。发布操作 ID 唯一；指针已指向同 release 时视为已完成。包写入失败保留旧版本，回滚重新核许可与兼容。公开资源统一由获准 release 路径提供，不能把 var 或 sources 整体作为静态目录。
 
+停用指针及旧 release 资源读取都要执行发布状态检查；不能只从列表隐藏版本却仍从公共 URL 分发已停用素材。客户端在在线打开/恢复时核对 release 状态，明确区分 unavailable、retired 与网络未知，保留存档供后续处理。缓存/离线副本无法保证即时撤回；P0 不增加持久离线包功能，不声称技术可删除玩家已有副本。公开部署前确定缓存刷新/失效策略和权限范围，许可不支持的缓存方式不得启用。
+
 ## 12. Code Agent 实施任务与验收
 
-当前全部任务仍为待实施；主分支不存在表中拟建的 src、播放器或业务测试。
+T1a 的共享合同已实现，见 [合同交接](CONTRACTS.md)；T1b–T7 仍待实施。主分支有 src 合同、Schema 和离线契约测试，尚无运行中的 Workflow、数据库服务或播放器。
+
+2026-10-16：先完成规范修订，随后按授权实现 T1a；仅 T1a 的合同层可本地验收。本文其余服务行为仍是目标；CI 配置已接入本地合同检查，远端未核验，动作向量未由玩家运行核心执行。
 
 拟建目录：`src/pastport/{domain,application,ports,adapters,workflow,api}` 为 Python 后端；`player/` 为从合同实现的通用解释器与渲染器；`schemas/` 为导出合同；`tests/fixtures/reference/` 为最小获准样例。领域层不依赖 FastAPI、LangGraph 或供应商 SDK。不得将 Demo 的 prototype/data/scripts/tests 整体复制回 main，也不以整个 Demo 为新业务库的种子。
 
-每项以单一目标提交；实际用户授权后才 push。共同质量遵循 [CI 规范](ENGINEERING.md)。下表是待完成的任务，不表示当前检查已存在。
+每项以单一目标提交；实际用户授权后才 push。共同质量遵循 [CI 规范](ENGINEERING.md)。下表保留实施任务与验收要求；T1a 合同层已交付，其余任务及实际运行能力仍待完成。
 
 | 任务 | 相关路径/产物 | 必须证明什么 |
 |---|---|---|
-| T1a 首个样段合同 | src/pastport/domain、schemas、tests/fixtures/reference；最小三包与一条成功路径的强类型映射 | 一个有依据的观察任务＋一次选择＋后续状态读取的完整样例；ID/hash、路线/证据审批、预算和控制结果可表达；成功/非法样例可机器验证，不复制整套 Demo |
+| T1a 首个样段合同 | src/pastport/domain、schemas、tests/fixtures/reference；最小三包、动作状态合同与一条成功路径映射 | 一次有依据的观察/推理＋一次有代价选择＋后续可见读取；ID/hash、审批、预算可表达；§9 的去重/顺序/冲突/恢复向量可机器验证；不复制 Demo |
 | T1b 按需补齐合同 | 进入对应模式/Handler/工具前补其请求、结果和 Schema | §17 对应用例通过；原始完整需求保留；未实现能力明确拒绝，不用自由字典/占位成功掩盖 |
 | T2 建编辑库与用例 | ports/repositories、adapters/sqlite、migrations、application/reviews | 临时库迁移；旧库不变；事务、项目隔离、不可变版本、审核过期/权限错误明确 |
 | T3 图与恢复骨架 | workflow、application/runner、fake ModelGateway/ToolExecutor | 不依赖真实模型跑完三次审核与类型化研究循环；Skill→Node 路由和工具拒绝/空转分支明确；进程重启不重复已成功步骤；超限/取消不清计数 |
-| T4 最小工作台与命令恢复 | api、原生编辑页面、认证/命令消费 | 从页面创建到审核/预览/发布；重复/过期/越权命令被正确处理；不手改库续跑 |
-| T5a 真实材料最小样段 | 两 Skill 的加载/版本、来源/模型 adapters、最小预览 | 按 §18 对照样段；真实照片＋证据依赖推理＋人物选择＋后续可见状态；记录 Weng/Mert 判断、真实玩家理解、修改和费用；未运行情境不得标通过 |
+| T4 最小工作台与命令恢复 | api、原生编辑页面、认证/命令消费 | 候选确认、原文对照、合法路径预览、修改影响、发布阻塞可操作；命令幂等/权限有效；首段仅支持样段，完整后台后置 |
+| T5a 真实材料最小样段 | 两 Skill 的加载/版本、来源/模型 adapters、最小预览 | 按 §18 对照样段；真实照片＋证据依赖推理＋人物选择＋后续可见状态；记录 Weng/Matt 判断、真实玩家理解、修改和费用；未运行情境不得标通过 |
 | T5b 扩展制作能力 | 完整资料索引/外部研究适配器、政策配置、章节生成/修改 | 扩至原始目录输入、Discovery、定向补证、多场景一致性；不能靠扩大上下文掩盖样段质量失败 |
 | T6 通用运行底座与装配 | application/assembly、新建 player/ 通用 interpreter/render；参考 fixture 的显式映射 | 解释器从标准包运行，不依赖 Demo 页面/数据库；固定样本三次选择共 12 种组合及时间边界用于兼容对照；证据发放由包驱动，中英共享规则、刷新不串档 |
-| T7 第二官方目录验收 | 新项目数据包、运行报告、人工试玩记录 | 同一图/Schema/装配器/底座生成新游戏；无第二遗址专用 if；缺口真实报告；达到 PRD 的可玩与证据门槛 |
+| T7 第二官方目录验收 | 新项目数据包、差异与扩展报告、运行/试玩记录 | 材料支持的推理依据/任务组合/角色目标/结果维度至少一项不同；同一底座，扩展有依据；无地点专用 if；不能仅换皮或强塞运货模板 |
 
 先 T1a→T2/T3 的样段必需部分→T5a＋T6 最小 Handler/预览；T1b 在每项新能力实现前补齐对应合同，不要求首次开工就写完全部模式和可选玩法。随后扩至完整 T3/T4/T5b/T6，最后 T7。T3 首段也必须验证三个人审关口、预算/权限拒绝及成功步骤恢复，不能以“薄切片”为由绕门禁。短期 fake 预览标“模拟生成”，不冒充真实资料生产；框架骨架与新遗址完整可玩分开验收。T5a 缺模型凭据/预算时暂停付费部分，其他工程任务可继续。
 
-T1a 完成条件限于能机器验证的样段：三包包含各自必需字段，只使用当前片段的最小有效数据；引用、审批与版本绑定完整。暂不实现的模式、复杂条件/Handler 和非必需扩展不塞进未定形字段；通过能力声明与显式 unsupported 错误阻止使用。后续 T1b 按同一合同版本策略扩展，并保持旧样例兼容。
+T1a 完成条件限于能机器验证的合同样段（不包含玩家实际执行）：三包包含各自必需字段，只使用当前片段的最小有效数据；引用、审批与版本绑定完整。暂不实现的模式、复杂条件/Handler 和非必需扩展不塞进未定形字段；通过能力声明与显式 unsupported 错误阻止使用。后续 T1b 按同一合同版本策略扩展，并保持旧样例兼容。
 
 关键反例必须覆盖：来源 hash 变化使审批过期；错误图片/未授权资产被拒；文档中的现代特征不被当历史事实；节点/进程中断后已完成小步骤不重复；研究和修订总次数准确；发布响应未知不重复副作用；跨项目不可读草稿/存档；帮助证人的收益和耗时都实际改变后果；局部改稿不破坏其他场景的信息/时间因果。真人试玩单列，不由模型自评分代替。
 
 T1a/T1b 样例须附固定 reference_commit、原始文件路径、对应任务/选择/后果 ID、依赖来源与许可状态、映射理由和预期状态变化；每个样例都通过当前 Schema。能用不含媒体的纯规则样例时不复制图片，需要视觉素材则仅取获准的最小衍生样本。T6 兼容项与体验改进项分开：原有执行语义用于对照；修复硬编码、照片只是装饰等弱点时须记录明确的行为变化和新验收，不静默改变或盲目保留旧设计。
+
+阶段停止条件：T1a 的合同存在歧义先修合同；T3 权限/预算/恢复不可靠时不付费扩大；T5a 核心推理或玩家后果理解失败时不扩大章节和后台，只改相关因果闭包；第二项目需要硬编码时先评估通用扩展或材料范围，不以换皮作为通过。缺真人/资料/预算输入时记录待办和负责人，其他已授权任务可独立推进。
 
 ## 13. 开工前还需输入什么
 
@@ -408,11 +480,11 @@ ToolRequest 是 kind 判别联合，每次至多一个操作：
 
 每个关键任务的报告除原有字段外，还必须有：`player_action_id, premise_source_ids, inference_steps, consequence_read_scene_id, observable_feedback, counterexample`。引用必须指到真实场景/动作/状态；只写“推动人物成长”不算依据。
 
-Mert 的初始验收用一个短样段做对照，不先要求完整新游戏：
+Matt 的初始验收用一个短样段做对照，不先要求完整新游戏：
 
 - **原型 A：** 现有 Muradiye 相近片段或只点图领虚构线索的基线，明确其局限。
 - **原型 B：** 同一材料/相近长度和界面，增加有证据前提的推理与可读人物后果；不靠更多提示、不同模型或更多制作时间冒充方法优势，差异单列。
-- Weng 核两版的史实/图片/许可/空间边界；Mert 按具体事件评审，保存原稿、模型稿、人改稿和修改理由；模型自评只能推荐。
+- Weng 核两版的史实/图片/许可/空间边界；Matt 按具体事件评审，保存原稿、模型稿、人改稿和修改理由；模型自评只能推荐。
 - 用户试玩交错 A/B 顺序；小样本为探索记录，允许偏好不同，不据此声称统计显著。P0 完整试玩仍按 PRD 的样本目标执行，样段不另造一套强制大样本要求。
 
 不引导答案的观察问题：玩家下一步打算做什么、用了哪条遗址信息、为什么这样推断、选择牺牲了什么、后面哪里看到了后果。记录是否靠主持人代操作/解释，以及原话证据；结束后再收“想不想继续”和原因。目标是查出设计失败，不能给玩家先讲设计意图再算理解成功。
@@ -422,3 +494,72 @@ Mert 的初始验收用一个短样段做对照，不先要求完整新游戏：
 14 个现有校准情境仍须真实执行。记录 `case_id, input_snapshot, skill/policy/model_version, generated_output, observed_behavior, reviewer_decision, correction, measured_usage, latency, evaluation_status`；evaluation_status 初始 not_run，区分 fixture_passed/model_evaluated/player_observed。没有实际运行不能填 passed，没有费用数据不能填 0。不通过时只改受影响规则/章节并复测相关因果闭包，保留其他有效结果。
 
 上述能修正验收方法；在真实样段和用户试玩之前，“有趣”“稳定产出”仍是待验证目标，不能靠写规则保证。
+
+### 18.1 制作效率记录
+
+每次样段比较保存 ProductionEvaluation：evaluation_id、project/run/artifact refs、baseline_ref、started_at、first_playable_at（未完成可 null）、human_review_minutes、human_edit_minutes、revision_count、affected_scene_ids、measured_external_cost、accepted_package_count、quality_blockers、player_observation_refs、measurement_status。未知值为 null/unknown，不用 0 冒充；费用分币种并保留来源，人工时间与现金分列，不将两者合成未经声明的价格。
+
+对照保留原稿、模型稿、人改稿、批准稿以及修改理由；记录材料范围、界面、提示、模型配置和制作时间的差异，不能把更多人工投入误记为 AI 方法优势。先观察质量底线和人工负担，再讨论扩大自动化；小样段无法证明机构付费意愿，商业验证另列待决项。
+
+
+## 19. 模块接口与独立交付合同
+
+本节将 §3 的产物模型、§4 的图节点与 §14–15 的模型协议连接起来。接口是进程内应用/领域边界，P0 不据此拆微服务或为每个方法增加 HTTP 接口。首期接口已在 T1a 形成 Python 类型、Protocol 和 Schema，见合同交接；运行适配器和 Workflow 仍待实现，不能把方法签名当成已接通服务。
+
+### 19.1 模块入口与交接
+
+每项操作使用独立请求/结果 DTO；表中名称为唯一业务含义，不允许模块各自定义同义包。需要 ArtifactRef 的入口由应用解析/校验权限并提供不可变视图；模型 SkillResult 与模块返回值分层，不让模型直接创建可信存储引用。
+
+| 边界 / 操作 | 请求内容 | 返回产物 | 调用与权限 |
+|---|---|---|---|
+| EvidencePort.inventory | FolderInput、scope/policy refs | SourceManifestDraft、来源获取状态/issues | 外部读取走受控 SourceReader；不自动批准 |
+| EvidencePort.index | 已登记 manifest/source refs、范围与提取能力 | SourceIndexDraft、locator/覆盖/失败状态 | 普通解析可确定性执行，复杂抽取使用 Gateway |
+| EvidencePort.research | SourceIndex 视图、EvidenceRequest、SelectedCandidate（direction 时必需）、已有成果 | EvidenceFindings、claims/assets/RouteRecord 候选、未决缺口 | 仅受控工具可调用；返回 review_ready 或具体阻塞，不返回人类批准 |
+| NarrativePort.discover | SourceIndex 视图、ProjectRequirements、RuntimeCapabilities | CandidateSetDraft、依据/缺口/推荐理由 | 可读未审材料的状态，不能当正式事实 |
+| NarrativePort.draft | 已核验批准证据/路线视图、选定方向、要求、能力、锁定字段 | NarrativeDraft、AuthoringReport 或 EvidenceRequest | 正式输入门禁由应用先检查，产物仍是草稿 |
+| NarrativePort.revise | draft 输入加当前故事视图、RevisionRequest、影响报告 | 新 NarrativeDraft、变更/依赖报告或 EvidenceRequest | 不覆盖锁定项；内容变更重新按合同审核 |
+| NarrativePort.review | 故事/证据视图、要求和能力 | NarrativeReview、具体缺陷/反例 | 专业建议，不产生 ReviewDecision；仅按需调用 |
+| AssemblyService.assemble | 批准的 EvidencePackage/NarrativePackage、RuntimeCapabilities、当前审批与许可核验结果 | RuntimePackage 候选、ValidationReport | 确定性操作；无模型改稿；由发布服务再次核验发布资格 |
+| PackageValidator.validate | RuntimePackage、资源引用、能力及校验范围 | ValidationReport：已检查项、阻塞、未验证项 | 静态校验与 JS 无界面路径校验分列；不谎报全路径证明 |
+| PlayerRuntime | 已校验包、PlayerState、Action | 下一状态、events、feedback、trace | 以 §9 为唯一语义，纯游戏动作不读编辑 DB、不调用 LLM |
+
+证据专业 review 是 EvidencePort 内按 §14 运行的受控评估模式，仍返回 findings/建议；来源、主张的人工审核统一由 ReviewService 提供。方向选择由 CandidateSelection 用例处理。发布/回滚由 PublicationService 处理。不得把这些权威操作下放给内容模块或模型。
+
+### 19.2 共用执行上下文和持久化责任
+
+异步 I/O 入口使用异步调用约定；确定性装配/规则验证不为形式统一而强制联网或异步。ExecutionContext 包含 project_id、run_id、operation_id、execution_key、input refs/hash、policy/model/skill refs、deadline、预算预留引用、取消信号和已授权能力；认证主体由服务端注入。模块不能自增预算、更改身份或忽略取消。
+
+模块接收不可变输入，返回类型化候选；应用层校验输出、分配 ID/version/hash、持久化产物及 execution result 后再更新 Workflow 引用。外部调用响应及 usage 必须先由共享执行/Gateway 机制落盘，不等到整节点成功才保存。模块可通过受限端口写阶段成果，不能直接写审批表、他人产物或 checkpoint。大文件通过受控 artifact/source 端口读取，不能把全量字节塞进图状态。
+
+可预期结果区分 completed、research_required、changes_required、blocked、no_feasible_story，并由应用映射至 §15/NodeResult；NodeResult.ok 对应 completed，命名适配集中在一处。类型/不变式错误是明确失败，外部网络/供应商异常由适配器转成现有 WorkflowError/ErrorEnvelope；取消传播至执行者并保留消耗事实。模块不自行套重试循环，共享执行服务按 §6 重试，避免两层重试放大调用数。
+
+success 的含义必须是“本次声明的操作结果完整并已验证”，不是“史实已批准”或“故事有趣”。数据不足返回可消费的部分成果和缺口，不伪造完整包。未实现操作返回 CAPABILITY_UNSUPPORTED；配置缺失返回明确 blocked，禁止默认空列表/空包当完成。
+
+### 19.3 替换、版本与能力协商
+
+框架的 composition root 显式注入 EvidencePort、NarrativePort、ModelGateway、SourceReader、仓储/产物、审核和发布服务；禁止模块通过全局单例或反向 import 获取另一模块实现。各模块以配置选择已注册实现，不建设任意代码上传/动态插件平台。fake 与真实实现遵守同一接口；fake 仅在显式测试配置和隔离路径运行，不能作为真实故障 fallback。
+
+RuntimeCapabilities 唯一声明受支持的 schema/contract 版本、task/condition/effect/event kinds、执行上限与 locale 能力。叙事生成前读取，装配/玩家加载时再校验。未知能力明确拒绝，不能静默跳过。细节值与所有首期 DTO 在 T1 冻结，真实模块接入前必须有完整正反例。
+
+变更分为：模块内部优化（接口不变，更新实现/Skill 版本与评测记录）；向后兼容扩展（明确默认值、能力声明和消费者升级顺序）；破坏性变更（新 contract/schema 版本，显式 adapter/迁移或拒绝旧包）。禁止“新增可选字段”自动宣称兼容：当前严格拒绝额外字段，必须验证实际消费者。hash 身份随实际内容/依赖更新，旧审批和缓存不跨版本盲用。
+
+共享 DTO、错误码和 Schema 由框架维护并经受影响模块负责人确认；模块内部类型可独立，边界转换由所属 adapter 负责。禁止各模块复制共享类型、使用自由字典逃避合同，或直接读取别的模块私有表。任何变更必须能说明生产者和消费者分别何时升级。
+
+### 19.4 独立开发与集成验收
+
+T1a 冻结所有首期模块的最小连通接口及一条完整 fixture 路径；T1b 补充尚未启用的专业模式和玩法能力。接口存在不要求所有模式立即实现，但完整框架验收使用到的入口必须真实可执行。不得只给每个方法占位抛错就声称骨架接通。
+
+每个模块交接包包含：合同版本、支持操作/能力、配置入口、有效/非法输入、预期结果或错误、依赖引用、运行方法、实际验收结果与未验证项。模块契约测试在隔离环境独立运行；集成方只依赖这些公开接口和固定 fixture，不要求研究者等故事写好或叙事者等真实索引全部完成。
+
+集成至少验证：合法路径；证据不足返回研究请求；审批/hash 过期拒绝；预算/工具权限拒绝；取消和重启不重复已成功调用；非法输出不流入下一模块；更换一个适配器不修改其他模块；两项目不共享草稿/存档；生成包由同一 JS 核心解释。fixture 可证明接口协作，真实 provider/图片/故事质量仍各自验收。
+
+实施顺序：共享合同和 fixtures → 各模块最小适配器及共享执行/审批/存储 → Workflow 连通及必要操作入口 → 按模块逐一接入真实能力和质量优化。各模块可在合同冻结后分工开发；图编排与游戏运行核心由明确负责人维护，接口破坏不得作为模块内部优化偷偷交付。框架完成定义以 PRD §13.6 为准。
+
+
+### 19.5 T1a 冻结基线 0.1.0
+
+[合同交接](CONTRACTS.md) 与 src/pastport 中的可执行类型是本版字段依据，导出 Schema 不手工维护。T1a 已提供首期模块请求/返回、Protocol、三包 hash/依赖/审批绑定校验、严格正反样例及未来动作向量。身份认证、当前许可、预算执行、真实图和 JS 运行器均未由这些 DTO 实现。
+
+本版兼容说明：NarrativePackage 使用 game 收纳共用玩法，RuntimePackage 直接使用同一 GameContent；逻辑映射在 JSON 中使用有类型条目数组，内部使用不可变 tuple。首期能力 t1a-single-task 只支持 inspect/caseboard 单任务场景；document、inspect-sort、多任务依赖和对应未声明 action/event 在 T1b 接入前明确拒绝。声明的限额为每动作 2 个事件、64 个效果、条件深度 8；运行时执行留给 T6。
+
+动作合同的事件 ID 固定为 action_id:从 0 开始的序号，第一次完成任务返回任务 feedback_key；同动作重试返回原反馈而不重新完成任务。本地向量的 evaluation_status 仍为 not_run；只通过结构/引用检查，不把它写成已验证执行语义。测试批准仅存在隔离 fixture，不能作为真实数据库审批凭证。

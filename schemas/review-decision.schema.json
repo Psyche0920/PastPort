@@ -1,0 +1,92 @@
+{
+  "$id": "urn:pastport:contract:0.1.0:review-decision",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Actor Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "approved",
+        "changes_requested",
+        "rejected"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "decision_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "environment": {
+      "enum": [
+        "test",
+        "production"
+      ],
+      "title": "Environment",
+      "type": "string"
+    },
+    "gate": {
+      "enum": [
+        "evidence",
+        "narrative",
+        "publication"
+      ],
+      "title": "Gate",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 10000,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Reason",
+      "type": "string"
+    },
+    "target_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Target Hash",
+      "type": "string"
+    },
+    "target_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Target Id",
+      "type": "string"
+    },
+    "target_version": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Target Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision_id",
+    "gate",
+    "target_id",
+    "target_version",
+    "target_hash",
+    "decision",
+    "reason",
+    "actor_id",
+    "created_at",
+    "environment"
+  ],
+  "title": "ReviewDecision",
+  "type": "object"
+}

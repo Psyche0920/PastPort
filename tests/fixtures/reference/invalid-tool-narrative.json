@@ -1,0 +1,524 @@
+{
+  "request_id": "skill-1",
+  "skill": "narrative",
+  "mode": "draft",
+  "input_refs": [
+    {
+      "artifact_id": "evidence-1",
+      "project_id": "fixture-project",
+      "kind": "evidence",
+      "schema_version": "0.1.0",
+      "content_version": "1",
+      "sha256": "0b23127909ff7973760a577b9e3dd30fdcba1467a3fcafd4c52ea9ef96259562"
+    }
+  ],
+  "decision": "request_tool",
+  "reason_code": "FIXTURE_COMPLETE",
+  "reason": "Typed synthetic draft only",
+  "payload": {
+    "package": {
+      "project_id": "fixture-project",
+      "schema_version": "0.1.0",
+      "content_version": "1",
+      "evidence_package_hash": "0b23127909ff7973760a577b9e3dd30fdcba1467a3fcafd4c52ea9ef96259562",
+      "candidate_id": "candidate-1",
+      "routes": [
+        {
+          "artifact_id": "route-1",
+          "project_id": "fixture-project",
+          "kind": "route",
+          "schema_version": "0.1.0",
+          "content_version": "1",
+          "sha256": "f368f19d22a47b71ddb49c3263bc28c34e123fff73c668d296316c2e8772648a"
+        }
+      ],
+      "game": {
+        "chapter_id": "chapter-1",
+        "protagonist": "hero",
+        "characters": [
+          {
+            "character_id": "hero",
+            "name_key": "hero-name",
+            "goal_key": "hero-goal"
+          }
+        ],
+        "scenes": [
+          {
+            "scene_id": "observe-scene",
+            "site_id": "site-1",
+            "title_key": "observe-title",
+            "body_key": "observe-body",
+            "tasks": [
+              {
+                "task_id": "inspect-hatch",
+                "objective_key": "goal-observe",
+                "prerequisite_task_ids": [],
+                "guard": null,
+                "evidence_refs": [
+                  "claim-kitchen"
+                ],
+                "character_goal_link": "hero",
+                "feedback_key": "observe-feedback",
+                "hint_keys": [
+                  "hint"
+                ],
+                "accessibility_key": "alternative",
+                "kind": "inspect",
+                "asset_id": "asset-hatch",
+                "spots": [
+                  {
+                    "spot_id": "hatch",
+                    "x": 5000,
+                    "y": 5000,
+                    "text_key": "photo-detail",
+                    "claim_ids": [
+                      "claim-kitchen"
+                    ]
+                  }
+                ],
+                "required_spot_ids": [
+                  "hatch"
+                ]
+              }
+            ],
+            "required_task_ids": [
+              "inspect-hatch"
+            ],
+            "decision_id": "witness-choice",
+            "next_scene_ids": [
+              "later-scene"
+            ],
+            "feedback": []
+          },
+          {
+            "scene_id": "later-scene",
+            "site_id": "site-1",
+            "title_key": "later-title",
+            "body_key": "later-body",
+            "tasks": [
+              {
+                "task_id": "check-record",
+                "objective_key": "goal-board",
+                "prerequisite_task_ids": [],
+                "guard": null,
+                "evidence_refs": [
+                  "claim-kitchen"
+                ],
+                "character_goal_link": "hero",
+                "feedback_key": "board-feedback",
+                "hint_keys": [
+                  "hint"
+                ],
+                "accessibility_key": "alternative",
+                "kind": "caseboard",
+                "required_prop_ids": [
+                  "delivery-note"
+                ],
+                "answer_rule": "exact_set"
+              }
+            ],
+            "required_task_ids": [
+              "check-record"
+            ],
+            "decision_id": null,
+            "next_scene_ids": [],
+            "feedback": [
+              {
+                "feedback_id": "help-feedback",
+                "guard": {
+                  "kind": "choice_equals",
+                  "decision_id": "witness-choice",
+                  "option_id": "help"
+                },
+                "text_key": "with-witness"
+              },
+              {
+                "feedback_id": "hurry-feedback",
+                "guard": {
+                  "kind": "choice_equals",
+                  "decision_id": "witness-choice",
+                  "option_id": "hurry"
+                },
+                "text_key": "without-witness"
+              }
+            ]
+          }
+        ],
+        "props": [
+          {
+            "prop_id": "delivery-note",
+            "text_key": "record",
+            "content_kind": "original_fiction"
+          }
+        ],
+        "decisions": [
+          {
+            "decision_id": "witness-choice",
+            "options": [
+              {
+                "option_id": "help",
+                "text_key": "help"
+              },
+              {
+                "option_id": "hurry",
+                "text_key": "hurry"
+              }
+            ]
+          }
+        ],
+        "variables": [
+          {
+            "name": "witness",
+            "initial": false
+          }
+        ],
+        "rules": [
+          {
+            "rule_id": "grant-note",
+            "priority": 0,
+            "event": "task_completed",
+            "target_id": "inspect-hatch",
+            "guard": {
+              "kind": "observed_all",
+              "scene_id": "observe-scene",
+              "spot_ids": [
+                "hatch"
+              ]
+            },
+            "effects": [
+              {
+                "kind": "grant_item",
+                "item_id": "delivery-note"
+              }
+            ],
+            "once_key": "once:grant-note"
+          },
+          {
+            "rule_id": "assist-witness",
+            "priority": 0,
+            "event": "option_chosen",
+            "target_id": "witness-choice",
+            "guard": {
+              "kind": "choice_equals",
+              "decision_id": "witness-choice",
+              "option_id": "help"
+            },
+            "effects": [
+              {
+                "kind": "set_variable",
+                "name": "witness",
+                "value": true
+              },
+              {
+                "kind": "add_story_time",
+                "minutes": 2
+              },
+              {
+                "kind": "unlock_scene",
+                "scene_id": "later-scene"
+              }
+            ],
+            "once_key": "once:assist-witness"
+          },
+          {
+            "rule_id": "leave-witness",
+            "priority": 0,
+            "event": "option_chosen",
+            "target_id": "witness-choice",
+            "guard": {
+              "kind": "choice_equals",
+              "decision_id": "witness-choice",
+              "option_id": "hurry"
+            },
+            "effects": [
+              {
+                "kind": "unlock_scene",
+                "scene_id": "later-scene"
+              }
+            ],
+            "once_key": "once:leave-witness"
+          },
+          {
+            "rule_id": "finish-record",
+            "priority": 0,
+            "event": "task_completed",
+            "target_id": "check-record",
+            "guard": {
+              "kind": "has_evidence",
+              "item_id": "delivery-note"
+            },
+            "effects": [
+              {
+                "kind": "resolve_ending",
+                "ending_table_id": "delivery-endings"
+              }
+            ],
+            "once_key": "once:finish-record"
+          }
+        ],
+        "endings": [
+          {
+            "ending_table_id": "delivery-endings",
+            "endings": [
+              {
+                "ending_id": "default",
+                "priority": 100,
+                "guard": null,
+                "fallback": true,
+                "outcomes": [
+                  {
+                    "outcome_id": "delivery",
+                    "label_key": "outcome-label",
+                    "text_key": "outcome-base",
+                    "variants": [
+                      {
+                        "variant_id": "helped",
+                        "priority": 0,
+                        "guard": {
+                          "kind": "choice_equals",
+                          "decision_id": "witness-choice",
+                          "option_id": "help"
+                        },
+                        "text_key": "outcome-help"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "initial_state": {
+          "current_scene_id": "observe-scene",
+          "inventory": [],
+          "unlocked_scene_ids": [
+            "observe-scene"
+          ],
+          "elapsed_minutes": 0
+        },
+        "locales": [
+          {
+            "locale": "en",
+            "entries": [
+              {
+                "key": "alternative",
+                "text": "Text alternative: the kitchen hatch receives flour."
+              },
+              {
+                "key": "board-feedback",
+                "text": "The stock location is accounted for."
+              },
+              {
+                "key": "goal-board",
+                "text": "Submit the delivery note."
+              },
+              {
+                "key": "goal-observe",
+                "text": "Find the flour receiving point."
+              },
+              {
+                "key": "help",
+                "text": "Spend two story minutes assisting the witness."
+              },
+              {
+                "key": "hero-goal",
+                "text": "Correct a delivery without abandoning a witness."
+              },
+              {
+                "key": "hero-name",
+                "text": "Apprentice"
+              },
+              {
+                "key": "hint",
+                "text": "Compare the service label with the record."
+              },
+              {
+                "key": "hurry",
+                "text": "Preserve time and proceed without the witness."
+              },
+              {
+                "key": "later-body",
+                "text": "Choose the record that establishes the delivery location."
+              },
+              {
+                "key": "later-title",
+                "text": "Account for the delivery"
+              },
+              {
+                "key": "observe-body",
+                "text": "Synthetic test: decide what the sign permits you to infer."
+              },
+              {
+                "key": "observe-feedback",
+                "text": "You can locate the delivery; the carrier remains uncertain."
+              },
+              {
+                "key": "observe-title",
+                "text": "Read the service hatch"
+              },
+              {
+                "key": "outcome-base",
+                "text": "Delivery location established; carrier unresolved."
+              },
+              {
+                "key": "outcome-help",
+                "text": "The witness identifies the carrier after your assistance."
+              },
+              {
+                "key": "outcome-label",
+                "text": "Delivery outcome"
+              },
+              {
+                "key": "photo-detail",
+                "text": "The kitchen service hatch receives flour."
+              },
+              {
+                "key": "record",
+                "text": "Fictional delivery note: flour reached the service hatch."
+              },
+              {
+                "key": "with-witness",
+                "text": "The witness is present and identifies the carrier; two story minutes were spent."
+              },
+              {
+                "key": "without-witness",
+                "text": "The location is known, but no witness identifies the carrier."
+              }
+            ]
+          },
+          {
+            "locale": "zh",
+            "entries": [
+              {
+                "key": "alternative",
+                "text": "等效文字观察：厨房窗口接收面粉。"
+              },
+              {
+                "key": "board-feedback",
+                "text": "货物位置已核对。"
+              },
+              {
+                "key": "goal-board",
+                "text": "提交交付单。"
+              },
+              {
+                "key": "goal-observe",
+                "text": "找到面粉接收点。"
+              },
+              {
+                "key": "help",
+                "text": "花两分钟故事时间陪同证人。"
+              },
+              {
+                "key": "hero-goal",
+                "text": "核对交付，并决定是否陪同证人。"
+              },
+              {
+                "key": "hero-name",
+                "text": "学徒"
+              },
+              {
+                "key": "hint",
+                "text": "将服务标识与记录比较。"
+              },
+              {
+                "key": "hurry",
+                "text": "保留时间，不陪同证人而继续。"
+              },
+              {
+                "key": "later-body",
+                "text": "选择能确认交付地点的记录。"
+              },
+              {
+                "key": "later-title",
+                "text": "核对交付"
+              },
+              {
+                "key": "observe-body",
+                "text": "合成测试：判断标识支持什么结论。"
+              },
+              {
+                "key": "observe-feedback",
+                "text": "你能确定交付地点；承运人仍未确定。"
+              },
+              {
+                "key": "observe-title",
+                "text": "观察服务窗口"
+              },
+              {
+                "key": "outcome-base",
+                "text": "交付地点确认；承运人未确认。"
+              },
+              {
+                "key": "outcome-help",
+                "text": "在你协助后，证人确认了承运人。"
+              },
+              {
+                "key": "outcome-label",
+                "text": "交付结果"
+              },
+              {
+                "key": "photo-detail",
+                "text": "厨房窗口接收面粉。"
+              },
+              {
+                "key": "record",
+                "text": "虚构交付单：面粉已抵达窗口。"
+              },
+              {
+                "key": "with-witness",
+                "text": "证人在场并确认承运人；已花两分钟故事时间。"
+              },
+              {
+                "key": "without-witness",
+                "text": "交付地点已知，但没有证人确认承运人。"
+              }
+            ]
+          }
+        ]
+      },
+      "fiction_notice": "All people, quantities, source text and images are synthetic; this is not an approved heritage chapter."
+    },
+    "authoring_report": [
+      {
+        "task_id": "inspect-hatch",
+        "player_action_id": "observe-1",
+        "heritage_refs": [
+          "claim-kitchen"
+        ],
+        "property_used": "Synthetic institutional function label",
+        "premise_source_ids": [
+          "source-1"
+        ],
+        "player_premises": [
+          "The hatch receives flour."
+        ],
+        "inference_steps": [
+          "The flour record belongs to the kitchen service location."
+        ],
+        "accepted_answer": "delivery-note",
+        "character_goal": "hero",
+        "effect_ids": [
+          "grant-note"
+        ],
+        "consequence_read_scene_id": "later-scene",
+        "observable_feedback": "Location resolved; carrier depends on the witness choice.",
+        "removal_test": "Removing the label removes the location premise.",
+        "substitution_test": "A different label changes the supported location.",
+        "counterexample": "A stock record alone does not identify the carrier."
+      }
+    ],
+    "unresolved_items": []
+  },
+  "issues": [],
+  "changed_ids": [],
+  "evidence_requests": [],
+  "tool_request": {
+    "kind": "search_web",
+    "question_id": "question-1",
+    "query": "query",
+    "source_id": null,
+    "site_ids": [],
+    "limit": 1
+  }
+}

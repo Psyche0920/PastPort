@@ -7,7 +7,7 @@
 | 来源 | 可确认的做法 | PastPort 采用什么 | 当前不采用什么 |
 |---|---|---|---|
 | [EMOTIVE 官方工具](https://www.emotiveproject.eu/pages/what-we-do/tools/index.html)与[方法介绍](https://www.emotiveproject.eu/pages/what-we-do/methodology/index.html) | 遗址/博物馆故事创作与发布，分镜和可视化场景工具，以及现场/远程体验；有 Çatalhöyük 案例 | 先用小分镜验证故事与遗物，再生产完整体验；创作者与玩家端分开；同一叙事内容可服务线上与现场 | P0 不引入 AR、360°/3D、多玩家或其整套工具。没有核验到可直接纳入本仓库的统一源码许可 |
-| [CHESS 作者团队的方法论文](https://mw2015.museumsandtheweb.com/paper/the-museum-as-digital-storyteller-collaborative-participatory-creation-of-interactive-digital-experiences/index.html) | 脚本、空间绑定、多媒体制作和编辑；以实物、路径与访客需要共同检查故事；描述了 Acropolis 和 Çatalhöyük 创作工作 | 将空间绑定提前为故事约束；Weng/Mert 共看同一段样例，减少分工后反复转交；目标用户先作为设计要求记录 | 不把其现场个性化/AR 作为我们的首期要求；论文方法可供讨论，不等于源码授权 |
+| [CHESS 作者团队的方法论文](https://mw2015.museumsandtheweb.com/paper/the-museum-as-digital-storyteller-collaborative-participatory-creation-of-interactive-digital-experiences/index.html) | 脚本、空间绑定、多媒体制作和编辑；以实物、路径与访客需要共同检查故事；描述了 Acropolis 和 Çatalhöyük 创作工作 | 将空间绑定提前为故事约束；Weng/Matt 共看同一段样例，减少分工后反复转交；目标用户先作为设计要求记录 | 不把其现场个性化/AR 作为我们的首期要求；论文方法可供讨论，不等于源码授权 |
 | [Narralive 作者论文](https://arxiv.org/abs/1912.01368)，[全文](https://arxiv.org/pdf/1912.01368) | Web Storyboard Editor 与移动 Player 分离，面向文化遗产故事制作；论文报告跨情境应用与评价 | 通用播放器与可编辑故事内容分开，先验证可玩的最小片段；内容生产与运行逻辑通过包衔接 | 不因论文开放就声称完整工具开源/可商用；本次未核验可复用源码及许可 |
 | [GIFT / Blast Theory 官方介绍](https://www.blasttheory.co.uk/projects/gift/) | 以博物馆实物与人际情感连接组织体验；经公开原型迭代；官网提供源码入口 | 任务要让玩家关心一个人、实物或后果；短指令与注意力回到实物；保留真实试玩 | 不照搬拍照、录音、分享和个人数据收集；未核源码许可，不导入代码 |
 | [UNICHE 官网](https://uniche-eccch.eu/) | 自述整合内容仓库、创作环境、体验应用和评价工具，面向文化遗产场景 | 作为架构覆盖检查：资料、创作、运行、评价都应有交付物 | 仅核官网介绍；不据此认定其成熟度、开源范围或自动化能力，也不为模仿新增业务模块 |
@@ -41,7 +41,7 @@
 ## 4. 已决定写进 PastPort 的改进
 
 1. **三张业务关系图分开。** 来源/证据关系、故事任务/人物状态、实际地点邻接分别建模；相互引用，但不能把故事分支当步行路线。LangGraph 是制作状态图，另有用途，不承担游客导航。
-2. **先做能玩的短分镜。** T3 骨架后先用真实材料做一个“真实线索→玩家推理→人物选择→后续状态”的样段，Weng/Mert 共同看；通过再扩大内容和后台投入。依然使用同一预算、审核、装配和底座合同。
+2. **先做能玩的短分镜。** T3 骨架后先用真实材料做一个“真实线索→玩家推理→人物选择→后续状态”的样段，Weng/Matt 共同看；通过再扩大内容和后台投入。依然使用同一预算、审核、装配和底座合同。
 3. **建立遗产不可替换性检查。** 对关键遗产推理任务，列出换图/删历史信息会改变什么推理。仅“点击纹饰拿虚构账单”可作定位过场，不能计入核心遗产推理的合格任务。
 4. **用前置条件与效果描述任务。** 素材、答案、人物目标、状态变化、后续读取处一一对应；结局解释必须对应真正执行过的状态。
 5. **小规模校准后再扩大自动化。** 用 Muradiye 的具体优劣样例校准两套 Skill；模型自评是候选判断，真人试玩与最终内容审核保留。

@@ -1,0 +1,208 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_version": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Content Version",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "source_manifest",
+            "source_index",
+            "candidate_set",
+            "route",
+            "evidence",
+            "narrative",
+            "runtime",
+            "policy",
+            "skill",
+            "model_config",
+            "requirements",
+            "report"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "project_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Project Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "project_id",
+        "kind",
+        "schema_version",
+        "content_version",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Artifact Id"
+        },
+        "code": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "json_pointer": {
+          "pattern": "^(?:/.*)?$",
+          "title": "Json Pointer",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        },
+        "owner": {
+          "enum": [
+            "evidence",
+            "narrative",
+            "assembly",
+            "runtime",
+            "workflow"
+          ],
+          "title": "Owner",
+          "type": "string"
+        },
+        "remediation": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Remediation",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocking",
+            "warning"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "owner",
+        "artifact_id",
+        "json_pointer",
+        "message",
+        "remediation"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:node-result",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ValidationIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "next_action": {
+      "anyOf": [
+        {
+          "enum": [
+            "register_project",
+            "inventory_sources",
+            "extract_candidates",
+            "discover_story",
+            "select_candidate",
+            "research_evidence",
+            "evidence_review",
+            "draft_narrative",
+            "narrative_review",
+            "assemble_package",
+            "validate_package",
+            "publish_review",
+            "publish_package"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Next Action"
+    },
+    "outcome": {
+      "enum": [
+        "ok",
+        "research_required",
+        "changes_required",
+        "blocked",
+        "no_feasible_story"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "output_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Output Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "outcome",
+    "output_refs",
+    "issues",
+    "next_action"
+  ],
+  "title": "NodeResult",
+  "type": "object"
+}

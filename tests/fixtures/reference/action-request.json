@@ -1,0 +1,12 @@
+{
+  "project_id": "fixture-project",
+  "release_id": "release-test-1",
+  "package_hash": "989d63ba5af39a2cb702c451ca173ec951c5d5bffdb534032d98a46f70484098",
+  "action": {
+    "action_id": "observe-1",
+    "expected_revision": 0,
+    "kind": "observe",
+    "target_id": "inspect-hatch",
+    "spot_id": "hatch"
+  }
+}

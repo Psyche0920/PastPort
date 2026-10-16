@@ -1,0 +1,242 @@
+{
+  "$defs": {
+    "Advance": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "advance",
+          "title": "Kind",
+          "type": "string"
+        },
+        "target_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "expected_revision",
+        "target_id",
+        "kind"
+      ],
+      "title": "Advance",
+      "type": "object"
+    },
+    "Choose": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "choose",
+          "title": "Kind",
+          "type": "string"
+        },
+        "option_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Option Id",
+          "type": "string"
+        },
+        "target_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "expected_revision",
+        "target_id",
+        "kind",
+        "option_id"
+      ],
+      "title": "Choose",
+      "type": "object"
+    },
+    "Observe": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "observe",
+          "title": "Kind",
+          "type": "string"
+        },
+        "spot_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Spot Id",
+          "type": "string"
+        },
+        "target_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "expected_revision",
+        "target_id",
+        "kind",
+        "spot_id"
+      ],
+      "title": "Observe",
+      "type": "object"
+    },
+    "SubmitEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "submit_evidence",
+          "title": "Kind",
+          "type": "string"
+        },
+        "prop_ids": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Prop Ids",
+          "type": "array"
+        },
+        "target_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "expected_revision",
+        "target_id",
+        "kind",
+        "prop_ids"
+      ],
+      "title": "SubmitEvidence",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:action-request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "discriminator": {
+        "mapping": {
+          "advance": "#/$defs/Advance",
+          "choose": "#/$defs/Choose",
+          "observe": "#/$defs/Observe",
+          "submit_evidence": "#/$defs/SubmitEvidence"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Observe"
+        },
+        {
+          "$ref": "#/$defs/Choose"
+        },
+        {
+          "$ref": "#/$defs/SubmitEvidence"
+        },
+        {
+          "$ref": "#/$defs/Advance"
+        }
+      ],
+      "title": "Action"
+    },
+    "package_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Package Hash",
+      "type": "string"
+    },
+    "project_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "release_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Release Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "release_id",
+    "package_hash",
+    "action"
+  ],
+  "title": "ActionRequest",
+  "type": "object"
+}

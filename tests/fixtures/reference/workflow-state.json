@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1.0",
+  "project_id": "fixture-project",
+  "run_id": "run-1",
+  "graph_version": "graph-0.1.0",
+  "policy_ref": {
+    "artifact_id": "policy-1",
+    "project_id": "fixture-project",
+    "kind": "policy",
+    "schema_version": "0.1.0",
+    "content_version": "1",
+    "sha256": "e5f8b5273e2b1563b3be9cc5c00680b76b5a2c0a8139044d608a85481c481254"
+  },
+  "revision": 0,
+  "node": "register_project",
+  "status": "queued",
+  "index_ref": null,
+  "evidence_ref": null,
+  "narrative_ref": null,
+  "runtime_ref": null,
+  "approved_route_ref": null,
+  "selected_candidate_id": null,
+  "pending_review_id": null,
+  "pending_request_id": null,
+  "research_rounds_started": 0,
+  "narrative_revisions_started": 0,
+  "budget_id": "budget-1",
+  "usage_ledger_id": "ledger-1",
+  "dirty_target_ids": [],
+  "last_error": null
+}

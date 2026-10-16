@@ -1,0 +1,356 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_version": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Content Version",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "source_manifest",
+            "source_index",
+            "candidate_set",
+            "route",
+            "evidence",
+            "narrative",
+            "runtime",
+            "policy",
+            "skill",
+            "model_config",
+            "requirements",
+            "report"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "project_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Project Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "project_id",
+        "kind",
+        "schema_version",
+        "content_version",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "WorkflowError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "field_path": {
+          "title": "Field Path",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        },
+        "owner": {
+          "enum": [
+            "evidence",
+            "narrative",
+            "assembly",
+            "runtime",
+            "workflow"
+          ],
+          "title": "Owner",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "owner",
+        "field_path"
+      ],
+      "title": "WorkflowError",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:workflow-state",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "approved_route_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "budget_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Budget Id",
+      "type": "string"
+    },
+    "dirty_target_ids": {
+      "items": {
+        "maxLength": 160,
+        "minLength": 1,
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+        "type": "string"
+      },
+      "title": "Dirty Target Ids",
+      "type": "array"
+    },
+    "evidence_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "graph_version": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Graph Version",
+      "type": "string"
+    },
+    "index_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "last_error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WorkflowError"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "narrative_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "narrative_revisions_started": {
+      "maximum": 2,
+      "minimum": 0,
+      "title": "Narrative Revisions Started",
+      "type": "integer"
+    },
+    "node": {
+      "enum": [
+        "register_project",
+        "inventory_sources",
+        "extract_candidates",
+        "discover_story",
+        "select_candidate",
+        "research_evidence",
+        "evidence_review",
+        "draft_narrative",
+        "narrative_review",
+        "assemble_package",
+        "validate_package",
+        "publish_review",
+        "publish_package"
+      ],
+      "title": "Node",
+      "type": "string"
+    },
+    "pending_request_id": {
+      "anyOf": [
+        {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Pending Request Id"
+    },
+    "pending_review_id": {
+      "anyOf": [
+        {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Pending Review Id"
+    },
+    "policy_ref": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "project_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "research_rounds_started": {
+      "maximum": 2,
+      "minimum": 0,
+      "title": "Research Rounds Started",
+      "type": "integer"
+    },
+    "revision": {
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "run_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "runtime_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema_version": {
+      "const": "0.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "selected_candidate_id": {
+      "anyOf": [
+        {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Selected Candidate Id"
+    },
+    "status": {
+      "enum": [
+        "queued",
+        "running",
+        "waiting_review",
+        "needs_changes",
+        "needs_review",
+        "budget_exhausted",
+        "blocked",
+        "failed",
+        "cancelled",
+        "no_feasible_story",
+        "published"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "usage_ledger_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Usage Ledger Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "project_id",
+    "run_id",
+    "graph_version",
+    "policy_ref",
+    "revision",
+    "node",
+    "status",
+    "index_ref",
+    "evidence_ref",
+    "narrative_ref",
+    "runtime_ref",
+    "approved_route_ref",
+    "selected_candidate_id",
+    "pending_review_id",
+    "pending_request_id",
+    "research_rounds_started",
+    "narrative_revisions_started",
+    "budget_id",
+    "usage_ledger_id",
+    "dirty_target_ids",
+    "last_error"
+  ],
+  "title": "WorkflowState",
+  "type": "object"
+}

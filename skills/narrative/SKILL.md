@@ -2,8 +2,8 @@
 name: narrative
 description: Discover, draft or revise evidence-grounded PastPort heritage games with playable tasks, character consequences and continuous spatial progression. Use for story candidates and narrative review; not for approving history, changing engine code or publishing packages.
 metadata:
-  version: "0.3.0"
-  owner: Mert
+  version: "0.4.0"
+  owner: Matt
 ---
 
 # Heritage narrative production
@@ -39,9 +39,9 @@ Use the mode-specific request in the skill protocol. Discover requires an index,
 
 ## Deliverables
 
-Discover: candidate IDs, premise, character arc, evidence/index refs, pivotal task opportunity, route/coverage proposal, five dimension scores with reasons, hard failures and research gaps. Deterministic policy selects; model scores do not prove fun.
+Discover: candidate IDs, premise, character arc, evidence/index refs, pivotal task opportunity, route/coverage proposal, five dimension scores with reasons, hard failures and research gaps. The deterministic policy filters and ranks recommendations; the first pilot requires an authenticated human direction confirmation. Include supported opportunities, blocked premises, proposed player actions, estimated human work (unknown when unmeasured), recommendation reasons and conditions that would reverse the recommendation. Model scores cannot approve a direction or prove fun.
 
-Draft/revise: candidate NarrativePackage and an authoring-only quality report with task→heritage→character links, inference premises/answers, heritage-removal checks, choice consequences/read points, changed IDs, EvidenceRequests, unresolved issues and concise revision reasons. The application validates this report before persistence. Keep editorial notes out of player dialogue. English and Chinese locales share one answer/state model.
+Draft/revise: candidate NarrativePackage and an authoring-only quality report with task→heritage→character links, inference premises/answers, heritage-removal checks, choice consequences/read points, changed IDs, EvidenceRequests, unresolved issues and concise revision reasons. The application validates this report before persistence. Keep editorial notes out of player dialogue. English and Chinese locales share one answer/state model. Use declared outcome IDs and locale keys; career/friend/service/growth are legacy examples, not mandatory dimensions for every site. Task composition and rule effects must stay within declared runtime capabilities.
 
 All modes return the canonical SkillResult envelope. Use complete/research_required/changes_required/review_required/blocked/no_feasible_story as applicable; request_tool is forbidden in narrative modes. Do not return pass/revise/continue aliases or choose a graph node. In review, complete means the report is complete, not that a human approved the story; use changes_required for concrete corrections and research_required for missing evidence. Never average away unsupported facts, rights blockers, inaccessible clues or broken paths. Do not emit human approval, run scripts or publish.
 

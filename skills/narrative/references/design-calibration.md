@@ -42,9 +42,9 @@ After factual, rights, route and logic blockers are cleared, rate clarity, curio
 
 A pivotal task below 2 for heritage reasoning, motivation or consequences needs revision with an identified cause. Critical evidence/logic failures cannot be offset by good prose. Preserve disagreements between model recommendation and human judgment.
 
-## Mert's first pilot
+## Matt's first pilot
 
-After workflow recovery works with fixtures, generate one short playable beat from real source excerpts before building the full editing UI. It must contain a relevant image, an evidence-dependent inference, an NPC choice and a later visible result. Use normal evidence/story/publication gates for any public package; internal preview never masquerades as approved history. Record Weng's evidence corrections and Mert's design changes separately.
+After workflow recovery works with fixtures, generate one short playable beat from real source excerpts before building the full editing UI. It must contain a relevant image, an evidence-dependent inference, an NPC choice and a later visible result. Use normal evidence/story/publication gates for any public package; internal preview never masquerades as approved history. Record Weng's evidence corrections and Matt's design changes separately.
 
 Evaluate N01–N07 using saved input/output/config snapshots. Then run a real player session without explaining the intended answer: observe whether the player can state why the clue matters and what their choice changed. No such model trial or player session has been completed merely by writing these cases.
 

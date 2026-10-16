@@ -4,11 +4,13 @@
 
 ## 当前阶段与分支
 
-`main` 用于通用框架、Workflow 与制作规范，目前未进入业务实现；`demo-muradiye` 保存完整历史 Demo。仅保留这两个长期分支；不因本次整理新建分支。未来需要工作分支时按用户授权创建短期分支，交付后清理。
+`main` 用于通用框架、Workflow 与制作规范，目前已实现 T1a 合同层，业务服务尚未实现；`demo-muradiye` 保存完整历史 Demo。仅保留这两个长期分支；不因本次整理新建分支。未来需要工作分支时按用户授权创建短期分支，交付后清理。
 
-主分支 CI 当前只执行 `quality`（Markdown 本地链接/锚点、Skill 基本元数据、JSON 与 Python 语法）和汇总 `ci`；没有业务测试 job，不报告 5/5、8/8 等 Demo 测试为主分支能力。GitHub 远端仍是本次变更推送前的配置，保护规则是否启用以实际设置为准。旧 PR/运行记录不作为新 main 的验证结果。
+主分支本地 CI 配置现为 `quality`（仓库结构、Ruff、strict mypy、Schema/样例）、`python-tests`（T1a 离线契约）及汇总 `ci`；没有业务服务/播放器测试，不报告 Demo 的通过记录为主分支能力。GitHub 远端仍是本次变更推送前的配置，保护规则是否启用以实际设置为准。旧 PR/运行记录不作为新 main 的验证结果。
 
 实际定义：[ci.yml](../.github/workflows/ci.yml)；可本地复现的检查：[check_repository.py](../tools/check_repository.py)。
+
+2026-10-16 先完成指导文件修订，再按用户授权实施 T1a：共享合同与离线测试已形成，CI 已增加对应配置；实际业务运行器、数据库/图服务仍未实现。请求仅完善指导文件时仍只编辑文档，不能据实施清单自动开始编码。
 
 ## GitHub Actions 与 Copilot 的使用方式
 
@@ -36,15 +38,15 @@
 
 PR 和默认分支 push 执行确定性检查，允许手动运行同一套检查。合并队列只有实际启用时才配置 `merge_group`。默认测试离线、不需要供应商密钥、不抓完整 Drive、不调用付费模型。
 
-Python/Node 版本与依赖精确锁定，由干净检出安装；不能复用开发者全局环境。Python 3.12 及当前受支持的 Node LTS 是选择起点，确认依赖兼容后把精确版本写入仓库。锁文件变更必须审查，不能安装失败后静默升级版本。
+Python/Node 版本与依赖精确锁定，由干净检出安装；不能复用开发者全局环境。T1a 固定 Python 3.12.12、uv 0.12.8 和 uv.lock 精确依赖；Node 版本在引入玩家端时再确认和锁定。锁文件变更必须审查，不能安装失败后静默升级版本。
 
 以下为实施阶段必须逐步接入的目标检查，当前覆盖以文首为准。
 
 | Check | 执行与覆盖 | 失败条件 |
 |---|---|---|
 | `quality` | Python `ruff check`、`ruff format --check`、新模块 `mypy --strict`；JS lint/格式检查；Markdown 相对链接、JSON/Schema 基本检查 | 规则/类型错误、断链、无效 Schema；不得自动修后当原提交通过 |
-| `python-tests`（待实现） | 框架新增 pytest 测领域、适配器和临时 SQLite 集成；fixture Gateway 测流程、审批、预算、取消恢复 | 任一测试失败、隐藏联网、真实库写入或必需用例被跳过 |
-| `player-tests` | Node 规则测试；兼容版本、中英等价、关键分支、重复动作、存档隔离 | 分支后果/答案漂移、跨包污染、无法恢复 |
+| `python-tests` | 当前执行 T1a 类型化样例、hash/审批绑定、错误与模块端口契约；临时 SQLite、真实图/预算和恢复测试待后续接入 | 任一测试失败、隐藏联网、真实库写入或必需用例被跳过 |
+| `player-tests` | 同一个 JS 解释器的 Node 规则向量；事件快照、冲突回滚、once_key/动作幂等、版本/hash 隔离、中英等价和关键分支 | 语义漂移、重复效果、非法跳场、跨包污染或无法恢复 |
 | `package-tests` | 双项目 fixture 跑同一装配器；检查引用、审批 hash、媒体/许可、路由引用、兼容性；加载包跑关键规则路径 | 无效包被放行、任一 fixture 不可完成、地点专用运行代码依赖 |
 | `browser-smoke` | 用固定测试服务和小型媒体，桌面/移动视口完成主线、语言切换、刷新恢复；键盘操作测试 | 关键 UI 路径无法完成、错误反馈缺失；自动检查不替代人工无障碍验收 |
 | `ci` | 固定汇总检查，依赖本次适用的所有 jobs；无条件运行并验证结果 | 任一必需 job 失败/取消或意外跳过；不能仅因汇总 job 启动便标成功 |
@@ -72,10 +74,10 @@ CI 通过表示工程检查通过，不自动批准史实或公开素材。游�
 ## 当前 CI 的复现方式
 
 ```bash
-python3 tools/check_repository.py
+uv run --no-sync python tools/check_repository.py
 ```
 
-检查不调用模型、不联网访问来源、不写业务数据库，也不声称框架已运行。历史 Demo 的数据库/Node 回归命令只在 Demo checkout 内运行；不以零测试通过冒充主分支验收。
+该命令只检查仓库结构。T1a 新增命令及范围见 [合同交接](CONTRACTS.md)：执行 Ruff、strict mypy、check_contracts.py 和 pytest；当前均不调用模型、不访问业务网络、不写业务数据库，也不声称完整框架已运行。历史 Demo 的数据库/Node 回归命令只在 Demo checkout 内运行；不以零测试通过冒充主分支验收。
 
 Actions 的 failure_probe 仍是手动 opt-in 故障探针：开启时 quality 与 ci 必须失败，用于验证失败传播；正常提交不启用。此处结构和本地检查可验证，远端运行与强制保护需要推送后的真实记录。
 
@@ -157,7 +159,16 @@ python3 -m unittest discover -s tests -v
 node --test tests/test_story_engine.mjs
 ```
 
-新增工具配置进入仓库后统一命令为 `ruff check .`、`ruff format --check .`、`mypy --strict src/pastport` 和 `pytest`；JS 的 lint/浏览器命令写入确定的 package scripts。以上新增命令是落地要求，当前未配置时不得报告已运行/通过。
+当前 T1a 已配置 Ruff/mypy/pytest；统一命令为 `ruff check .`、`ruff format --check .`、`mypy --strict src/pastport` 和 `pytest`；JS 的 lint/浏览器命令待玩家端实现后写入 package scripts；当前不得报告 JS/浏览器已通过。
+
+### 架构实现约束
+
+- P0 为模块化单体，节点调度应用用例。执行记录、费用账本、审核和发布服务集中维护，职责和恢复权威见 Workflow §6.2；不为逻辑模块分别引入微服务、队列或独立权限系统。
+- Repository、模型、来源读取和发布存储使用真实边界接口；规则求值、规范化及转换可使用有类型的纯函数，由领域模型与服务组织。避免只有一层转发且无替换/隔离价值的 ABC/类层级。
+- 浏览器与无界面路径验证共用 JS 运行核心；Python 不另写一套条件/效果解释器。跨语言实现只有通过共享语义向量后才能声明兼容。
+- 先合并中英规则与语言资源，再按实际复杂度评估 TypeScript/框架迁移；不把 UI 全量重写当成复用的前置条件。新增技术须说明解决的已观察问题。
+- 发布包/审批 hash 的变更与内容影响报告一起审查。文件小改不自动等于低风险；文字变化触及解题前提时仍按关键内容处理。
+- 一次只落实已授权任务及必要依赖。真实材料、provider、浏览器和真人验证分别记录；文档修订只报告规范一致性结果，不扩写为功能验收。
 
 ### 合并与里程碑完成清单
 

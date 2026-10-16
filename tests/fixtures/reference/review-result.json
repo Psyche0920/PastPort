@@ -1,0 +1,20 @@
+{
+  "outcome": "completed",
+  "payload": {
+    "narrative_ref": {
+      "artifact_id": "narrative-1",
+      "project_id": "fixture-project",
+      "kind": "narrative",
+      "schema_version": "0.1.0",
+      "content_version": "1",
+      "sha256": "ef7b7b8ace1e979210eee34834937918abf5f3b904d3597630afb9023bb3f3db"
+    },
+    "issues": [],
+    "counterexamples": [],
+    "human_review_required": true
+  },
+  "issues": [],
+  "evidence_requests": [],
+  "changed_ids": [],
+  "reason": "Synthetic contract result; no production evaluation."
+}

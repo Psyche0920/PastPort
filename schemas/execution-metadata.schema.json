@@ -1,0 +1,239 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "content_version": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Content Version",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "source_manifest",
+            "source_index",
+            "candidate_set",
+            "route",
+            "evidence",
+            "narrative",
+            "runtime",
+            "policy",
+            "skill",
+            "model_config",
+            "requirements",
+            "report"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "project_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Project Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "0.1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "project_id",
+        "kind",
+        "schema_version",
+        "content_version",
+        "sha256"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "RemainingLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "active_seconds": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Active Seconds",
+          "type": "integer"
+        },
+        "cost_microusd": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Cost Microusd",
+          "type": "integer"
+        },
+        "fetch_requests": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Fetch Requests",
+          "type": "integer"
+        },
+        "input_tokens": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "model_requests": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Model Requests",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "search_requests": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "title": "Search Requests",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model_requests",
+        "input_tokens",
+        "output_tokens",
+        "search_requests",
+        "fetch_requests",
+        "active_seconds",
+        "cost_microusd"
+      ],
+      "title": "RemainingLimits",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:execution-metadata",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Actor Id",
+      "type": "string"
+    },
+    "allowed_tools": {
+      "items": {
+        "enum": [
+          "lookup_local",
+          "search_web",
+          "read_source"
+        ],
+        "type": "string"
+      },
+      "title": "Allowed Tools",
+      "type": "array"
+    },
+    "budget_reservation_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Budget Reservation Id",
+      "type": "string"
+    },
+    "deadline": {
+      "format": "date-time",
+      "title": "Deadline",
+      "type": "string"
+    },
+    "execution_key": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Execution Key",
+      "type": "string"
+    },
+    "input_refs": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "title": "Input Refs",
+      "type": "array"
+    },
+    "model_config_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "operation_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "policy_ref": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "project_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "remaining_limits": {
+      "$ref": "#/$defs/RemainingLimits"
+    },
+    "run_id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "skill_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "run_id",
+    "operation_id",
+    "execution_key",
+    "input_refs",
+    "policy_ref",
+    "skill_ref",
+    "model_config_ref",
+    "budget_reservation_id",
+    "actor_id",
+    "deadline",
+    "remaining_limits",
+    "allowed_tools"
+  ],
+  "title": "ExecutionMetadata",
+  "type": "object"
+}

@@ -1,0 +1,128 @@
+{
+  "$defs": {
+    "ValidationIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Artifact Id"
+        },
+        "code": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "json_pointer": {
+          "pattern": "^(?:/.*)?$",
+          "title": "Json Pointer",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        },
+        "owner": {
+          "enum": [
+            "evidence",
+            "narrative",
+            "assembly",
+            "runtime",
+            "workflow"
+          ],
+          "title": "Owner",
+          "type": "string"
+        },
+        "remediation": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Remediation",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocking",
+            "warning"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "owner",
+        "artifact_id",
+        "json_pointer",
+        "message",
+        "remediation"
+      ],
+      "title": "ValidationIssue",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:validation-report",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Artifact Hash",
+      "type": "string"
+    },
+    "checked": {
+      "items": {
+        "enum": [
+          "schema",
+          "references",
+          "review_bindings",
+          "media_hashes",
+          "rule_paths"
+        ],
+        "type": "string"
+      },
+      "title": "Checked",
+      "type": "array"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/ValidationIssue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "unverified": {
+      "items": {
+        "maxLength": 10000,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "title": "Unverified",
+      "type": "array"
+    }
+  },
+  "required": [
+    "artifact_hash",
+    "checked",
+    "issues",
+    "unverified"
+  ],
+  "title": "ValidationReport",
+  "type": "object"
+}
