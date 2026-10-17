@@ -1,189 +1,189 @@
-"""离线检查规范文件；这不是产品运行时测试。"""
-# 本脚本离线检查规范文件，不会启动或测试产品运行时。
+"""Offline checks for repository guidance; this is not a product runtime test."""
+# This script checks repository guidance offline; it does not start or test the product runtime.
 from __future__ import annotations
 
-# ast 用于检查 Python 语法；json 用于解析 JSON 文件。
+# ast parses Python syntax; json parses JSON files.
 import ast
 import json
 import os
-# 正则、Unicode 分类及 URL 解码用于 Markdown 规则检查。
+# Regular expressions, Unicode categories, and URL decoding support Markdown checks.
 import re
 import sys
 import unicodedata
-# dataclass 定义结果结构；Path 处理文件系统路径。
+# dataclass defines the result structure; Path handles filesystem paths.
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import unquote
 
 
-# 检查结果是不可变对象，包含出错文件及原因。
+# An immutable finding records the file and reason for an issue.
 @dataclass(frozen=True)
 class Finding:
     path: Path
     message: str
 
 
-# 仓库检查器把本地检查与 CI 检查统一到同一实现。
+# The repository checker uses one implementation for local and CI checks.
 class RepositoryChecker:
     """Keep local and CI planning checks identical without third-party packages."""
 
-        # 将根目录规范为绝对路径，并准备问题列表。
+        # Resolve the repository root and prepare the findings list.
     def __init__(self, root: Path) -> None:
         self.root = root.resolve()
         self.findings: list[Finding] = []
 
-        # 扫描仓库并返回发现的问题。
+        # Scan the repository and return any findings.
     def check(self) -> tuple[Finding, ...]:
-        # 清空旧结果，确保每轮检查相互独立。
+        # Clear prior results so each run is independent.
         self.findings.clear()
-        # 排除依赖、版本控制、运行数据及缓存目录。
+        # Skip dependencies, version control, runtime data, and cache directories.
         excluded = {'.git', '.venv', 'node_modules', '__pycache__', 'var', '.pytest_cache', '.mypy_cache', '.ruff_cache'}
-        # 递归遍历仓库目录。
+        # Walk the repository recursively.
         for folder, directories, names in os.walk(self.root):
-            # 原地过滤目录，并排序以保证检查顺序稳定。
+            # Filter directories in place and sort them for stable output.
             directories[:] = sorted(name for name in directories if name not in excluded)
-            # 对文件名排序，让输出结果稳定。
+            # Sort filenames to keep output stable.
             for name in sorted(names):
-                # 组合当前目录和文件名得到文件路径。
+                # Build the file path from the current folder and filename.
                 path = Path(folder) / name
-                # 只检查 Markdown、JSON 和 Python 文件。
+                # Check Markdown, JSON, and Python files only.
                 if path.suffix not in {'.md', '.json', '.py'}:
                     continue
-                # 读取或解析失败时记录问题，然后继续检查其他文件。
+                # Record read or parse failures and continue with the remaining files.
                 try:
-                    # 目标文件统一按 UTF-8 读取。
+                    # Read every target as UTF-8.
                     text = path.read_text(encoding='utf-8')
-                    # JSON 文件只做语法解析。
+                    # Parse JSON syntax only.
                     if path.suffix == '.json':
                         json.loads(text)
-                    # Python 文件只解析语法，不会执行。
+                    # Parse Python syntax without executing the file.
                     elif path.suffix == '.py':
                         ast.parse(text, filename=str(path))
-                    # Markdown 文件交由专用检查方法处理。
+                    # Delegate Markdown files to the dedicated checker.
                     else:
                         self._check_markdown(path, text)
-                # 收集常见读取、编码、解析和语法错误。
+                # Collect common I/O, encoding, parsing, and syntax errors.
                 except (OSError, UnicodeError, ValueError, SyntaxError) as error:
                     self.findings.append(Finding(path, str(error)))
-        # 返回不可变的问题集合。
+        # Return an immutable collection of findings.
         return tuple(self.findings)
 
-    # 静态工具方法不需要访问检查器实例。
-    # 把 Markdown 标题转换成用于链接比对的锚点形式。
+    # This utility does not need access to a checker instance.
+    # Convert a Markdown heading into an anchor for link comparison.
     @staticmethod
     def _slug(value: str) -> str:
-        # 小写化，并用连字符替换空格。
+        # Lowercase the value and replace spaces with hyphens.
         value = value.lower().replace(' ', '-')
-        # 去掉标点和符号，保留连字符与下划线。
+        # Remove punctuation and symbols while preserving hyphens and underscores.
         return ''.join(char for char in value if char in '-_' or not unicodedata.category(char).startswith(('P', 'S')))
 
-    # 静态工具方法：提取代码围栏之外的正文行。
+    # Extract prose lines outside fenced code blocks.
     @staticmethod
     def _prose_lines(text: str) -> tuple[list[str], bool]:
-        # lines 存正文；marker 记录当前是否位于代码块内。
+        # lines stores prose; marker tracks whether a code block is open.
         lines: list[str] = []
         marker = ''
-        # 按行扫描文本，识别 Markdown 代码围栏。
+        # Scan the text line by line for Markdown fences.
         for line in text.splitlines():
-            # 代码块可以使用至少三个反引号或波浪号。
+            # A code fence uses at least three backticks or tildes.
             fence = re.match(r'^\s*(`{3,}|~{3,})', line)
             if fence:
-                # 记录当前围栏标记及长度。
+                # Record the current fence marker and its length.
                 current = fence.group(1)
-                # 尚未进入代码块时，这一行开启代码块。
+                # If no block is open, this line opens one.
                 if not marker:
                     marker = current
-                # 同类且长度足够的围栏关闭代码块。
+                # A matching fence of sufficient length closes the block.
                 elif current[0] == marker[0] and len(current) >= len(marker):
                     marker = ''
-                # 围栏标记本身不加入正文。
+                # Do not include fence markers in prose.
                 continue
-            # 仅保留代码块外的行。
+            # Keep lines outside code blocks only.
             if not marker:
                 lines.append(line)
-        # 返回正文行及代码围栏是否未闭合。
+        # Return prose lines and whether a fence remains open.
         return lines, bool(marker)
 
-    # 从目标 Markdown 标题计算锚点，供本地链接校验使用。
+    # Build heading anchors for local Markdown link validation.
     def _anchors(self, path: Path) -> set[str]:
-        # 忽略代码块里的伪标题。
+        # Ignore heading-like text inside code blocks.
         lines, _ = self._prose_lines(path.read_text(encoding='utf-8'))
-        # 统计重名标题，生成序号后缀。
+        # Count duplicate headings and add numeric suffixes.
         counts: dict[str, int] = {}
         result: set[str] = set()
-        # 检查每一行是否为 Markdown 标题。
+        # Check each line for a Markdown heading.
         for line in lines:
-            # 支持一至六级标题。
+            # Support heading levels one through six.
             heading = re.match(r'^#{1,6}\s+(.+)', line)
             if heading:
-                # 根据标题内容生成基础锚点。
+                # Generate the base anchor from the heading text.
                 slug = self._slug(heading.group(1))
-                # 读取该标题此前出现的次数。
+                # Get the number of earlier occurrences of this heading.
                 count = counts.get(slug, 0)
-                # 首次出现不加序号，重复标题按顺序加后缀。
+                # Leave the first anchor unchanged and suffix later duplicates in order.
                 result.add(slug if count == 0 else f'{slug}-{count}')
                 counts[slug] = count + 1
         return result
 
-    # 检查 Markdown 的代码围栏、本地链接及 Skill 元数据。
+    # Check Markdown fences, local links, and Skill metadata.
     def _check_markdown(self, path: Path, text: str) -> None:
-        # 先排除代码示例，避免把示例链接当成真实链接。
+        # Exclude code examples so sample links are not treated as real links.
         lines, unclosed = self._prose_lines(text)
-        # 未闭合代码围栏说明文档格式有问题。
+        # An unclosed code fence indicates malformed documentation.
         if unclosed:
             self.findings.append(Finding(path, 'Unclosed code fence'))
-        # 查找正文中的 Markdown 链接目标。
+        # Find Markdown link targets in prose.
         for href in re.findall(r'\]\((<[^>]+>|[^)]+)\)', '\n'.join(lines)):
-            # 去掉尖括号链接写法外层的括号。
+            # Remove optional angle brackets around a link target.
             href = href.strip('<>')
-            # 跳过 https:、mailto: 等外部 URI 链接。
+            # Skip external URI schemes such as https: and mailto:.
             if re.match(r'^[A-Za-z][A-Za-z0-9+.-]*:', href):
                 continue
-            # 解码 URL，并拆出相对文件路径和章节锚点。
+            # Decode the URL and separate the relative path from its anchor.
             relative, _, fragment = unquote(href).partition('#')
-            # 相对当前文档解析；只有锚点时目标就是当前文件。
+            # Resolve relative to this document; an anchor-only link targets this file.
             target = (path.parent / relative).resolve() if relative else path
-            # 先确认本地目标存在。
+            # Confirm that the local target exists.
             if not target.exists():
                 self.findings.append(Finding(path, f'Missing local link: {href}'))
-            # 对 Markdown 文件的章节链接继续验证锚点。
+            # Validate the anchor when the target is a Markdown file.
             elif fragment and target.is_file() and target.suffix == '.md' and fragment not in self._anchors(target):
                 self.findings.append(Finding(path, f'Missing section: {href}'))
-        # SKILL.md 还需包含符合约定的 frontmatter。
+        # SKILL.md files must also contain the required frontmatter.
         if path.name == 'SKILL.md':
-            # frontmatter 必须位于文件开头并由 --- 包围。
+            # Frontmatter must be at the start of the file and enclosed by --- lines.
             frontmatter = re.match(r'\A---\n(.*?)\n---\n', text, re.DOTALL)
-            # 缺少 frontmatter 时无法检查其中字段。
+            # Fields cannot be checked when frontmatter is missing.
             if not frontmatter:
                 self.findings.append(Finding(path, 'Missing Skill frontmatter'))
                 return
-            # 提取 Skill 名称，格式限小写字母、数字和连字符。
+            # Extract the Skill name; allow lowercase letters, digits, and hyphens.
             name = re.search(r'^name:\s*([a-z0-9-]+)\s*$', frontmatter.group(1), re.MULTILINE)
-            # description 必须存在且非空。
+            # The description must exist and be non-empty.
             description = re.search(r'^description:\s*(\S[^\n]*)$', frontmatter.group(1), re.MULTILINE)
-            # Skill 名称须与父目录名一致，并且要有描述。
+            # Require the Skill name to match its parent folder and include a description.
             if not name or name.group(1) != path.parent.name or not description:
                 self.findings.append(Finding(path, 'Skill name/description missing or folder name mismatch'))
 
 
-# 命令行入口：运行检查并返回进程退出状态。
+# Command-line entry point: run checks and return the process exit status.
 def main() -> int:
-    # 脚本位于 tools/ 下，因此其父目录就是仓库根目录。
+    # The script is in tools/, so its grandparent is the repository root.
     root = Path(__file__).resolve().parents[1]
-    # 实例化检查器并执行检查。
+    # Create the checker and run it.
     findings = RepositoryChecker(root).check()
-    # 按仓库相对路径逐条打印问题。
+    # Print each finding with its repository-relative path.
     for finding in findings:
         print(f'{finding.path.relative_to(root)}: {finding.message}')
-    # 有任何发现都返回失败状态，供 CI 识别。
+    # Return failure when findings exist so CI can detect them.
     if findings:
         return 1
-    # 通过信息明确检查范围不包含运行时、模型及玩家行为。
+    # State clearly that runtime, model, and player behavior are outside this check.
     print('Repository structure checks passed. Runtime, model and player behavior were not tested.')
     return 0
 
 
-# 只有直接运行此文件时才启动命令行检查。
+# Run the command-line checks only when this file is executed directly.
 if __name__ == '__main__':
-    # 将检查返回值传给操作系统作为退出码。
+    # Return the check result as the process exit code.
     sys.exit(main())
