@@ -4,13 +4,26 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pastport"
-version = "0.1.0"
-description = "Versioned contracts for evidence-grounded heritage games"
+version = "0.2.0"
+description = "Typed editorial workflow for evidence-grounded heritage games"
 requires-python = ">=3.12,<3.13"
-dependencies = ["pydantic==2.12.3"]
+dependencies = [
+    "fastapi==0.143.2",
+    "httpx==0.28.1",
+    "langgraph==1.2.15",
+    "langgraph-checkpoint-sqlite==3.1.2",
+    "pydantic==2.12.3",
+    "uvicorn==0.54.0",
+]
 
 [dependency-groups]
-dev = ["pytest==8.4.2", "mypy==1.18.2", "ruff==0.14.1", "jsonschema==4.25.1", "types-jsonschema==4.25.1.20251009"]
+dev = [
+    "pytest==8.4.2",
+    "mypy==1.18.2",
+    "ruff==0.14.1",
+    "jsonschema==4.25.1",
+    "types-jsonschema==4.25.1.20251009",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pastport"]
@@ -27,7 +40,7 @@ plugins = ["pydantic.mypy"]
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-include = ["src/**/*.py", "tests/**/*.py", "tools/check_contracts.py"]
+include = ["src/**/*.py", "tests/**/*.py", "tools/check_contracts.py", "tools/check_handoff.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

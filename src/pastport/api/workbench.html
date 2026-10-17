@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PastPort · Editorial workbench</title>
+    <link rel="stylesheet" href="/static/workbench/workbench.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <small>PASTPORT / CONTENT OPERATIONS</small>
+        <h1>Editorial workbench</h1>
+        <p>
+          Read the evidence. Review the exact version. Play its consequences.
+        </p>
+        <p id="mode" class="notice">
+          Connect to an authenticated private workspace.
+        </p>
+        <p id="context" class="identity"></p>
+      </header>
+      <section aria-label="Connection">
+        <label
+          >Access token<input
+            id="token"
+            type="password"
+            autocomplete="off" /></label
+        ><button id="connect">Connect</button
+        ><button id="disconnect" class="secondary" hidden>Disconnect</button>
+        <p id="message" role="status" aria-live="polite"></p>
+        <button id="retryCommand" hidden>
+          Retry the exact pending request
+        </button>
+      </section>
+      <div id="workspace" hidden>
+        <nav aria-label="Workspace sections">
+          <button data-section="overview" aria-current="page">Overview</button
+          ><button data-section="evidence">Evidence</button
+          ><button data-section="story">Story and changes</button
+          ><button data-section="play">Play preview</button
+          ><button data-section="review">Review and release</button
+          ><button data-section="activity">Activity and budget</button>
+        </nav>
+        <section id="overview">
+          <h2>Project and workflow</h2>
+          <div class="row">
+            <div>
+              <label
+                >Accessible projects<select id="projects">
+                  <option value="">Select a project</option>
+                </select></label
+              ><label
+                >Project ID<input
+                  id="projectId"
+                  value="example-project" /></label
+              ><label
+                >Project name<input
+                  id="projectName"
+                  value="Example heritage project" /></label
+              ><label
+                >Registered local source folder ID<input
+                  id="folderId"
+                  value="local-fixture" /></label
+              ><button id="createProject">Create project</button>
+              <details>
+                <summary>Run budget</summary>
+                <div id="runBudget"></div>
+              </details>
+              <button id="createRun">Start run</button>
+            </div>
+            <div>
+              <label>Run ID<input id="runId" /></label
+              ><button id="refresh">Load / refresh run</button>
+              <div id="runSummary"></div>
+              <button id="cancel" class="secondary">Cancel run</button
+              ><button id="resume" class="secondary">Resume blocked run</button
+              ><label
+                >Command reason<input
+                  id="commandReason"
+                  value="Requested from workbench"
+              /></label>
+            </div>
+          </div>
+          <div id="candidates"></div>
+        </section>
+        <section id="evidence" hidden>
+          <h2>Evidence and original sources</h2>
+          <div class="row">
+            <div id="claims"></div>
+            <div>
+              <h3>Original text and location</h3>
+              <div id="sourceContent" aria-live="polite"></div>
+            </div>
+          </div>
+          <details>
+            <summary>Artifact diagnostics</summary>
+            <div id="artifacts"></div>
+            <pre id="artifactDetails"></pre>
+          </details>
+        </section>
+        <section id="story" hidden>
+          <h2>Story and changes</h2>
+          <p>
+            Text edits retain evidence and route bindings. New factual premises
+            require evidence review.
+          </p>
+          <div id="storyContent"></div>
+          <div id="storyEditor"></div>
+          <button id="reloadDraft" class="secondary">
+            Discard unsaved edits and reload current saved draft
+          </button>
+          <label>Reason for this edit<input id="editReason" /></label
+          ><label
+            ><input id="factsChanged" type="checkbox" style="width: auto" />This
+            edit introduces or changes factual premises</label
+          ><button id="saveStory">Save revised draft for fresh review</button
+          ><label
+            >Locked fields (JSON pointers, one per line)<textarea
+              id="lockPaths"
+              placeholder="/package/game/scenes/0/body_key"
+            ></textarea></label
+          ><button id="saveLocks" class="secondary">Set field locks</button>
+          <h3>Compare saved versions</h3>
+          <label>Before version<select id="beforeVersion"></select></label
+          ><button id="compareChanges">Compare with current draft</button>
+          <div id="changeImpact"></div>
+          <details>
+            <summary>Complete draft JSON — advanced editing</summary>
+            <textarea
+              id="draftJSON"
+              aria-label="Complete story draft JSON"
+            ></textarea
+            ><button id="applyDraftJSON" class="secondary">
+              Load JSON into the edit form
+            </button>
+          </details>
+        </section>
+        <section id="play" hidden>
+          <h2>Play preview</h2>
+          <p>
+            Draft/test sessions never grant approval or overwrite release saves.
+          </p>
+          <button id="newPreview">Open current draft preview</button
+          ><label>Preview ID<input id="previewId" autocomplete="off" /></label
+          ><button id="restorePreview" class="secondary">Restore preview</button
+          ><button id="openRelease" class="secondary">
+            Open current private release</button
+          ><label
+            >Private release save ID<input
+              id="saveId"
+              value="workbench-1" /></label
+          ><label
+            >Game language<select id="gameLanguage">
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+            </select></label
+          >
+          <div id="playerBinding" class="identity"></div>
+          <p id="playerStatus" role="status" aria-live="polite"></p>
+          <div id="playerContent"></div>
+          <button id="retryPlayer" hidden>Retry the same player action</button
+          ><button id="reloadPlayer" class="secondary" hidden>
+            Reload confirmed player state
+          </button>
+          <details>
+            <summary>Legal replay and branch comparison</summary>
+            <p>
+              A branch starts a new isolated preview and replays only successful
+              actions. It does not inject state or grant reachability.
+            </p>
+            <label
+              >Actions to replay from the recorded prefix<input
+                id="replayLength"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="All recorded actions"
+            /></label>
+            <button id="forkPreview" class="secondary">
+              Replay recorded prefix into a new preview
+            </button>
+            <div id="branchDifference"></div>
+            <label
+              >Replay record<textarea id="replayRecord" readonly></textarea>
+            </label>
+          </details>
+          <details>
+            <summary>Last rule trace</summary>
+            <pre id="ruleTrace"></pre>
+          </details>
+        </section>
+        <section id="review" hidden>
+          <h2>Review and release</h2>
+          <p>
+            Decisions bind to the displayed version and hash. Playing a chapter
+            is not approval.
+          </p>
+          <div id="reviews"></div>
+          <label
+            >Publication changes go to<select id="reworkOwner">
+              <option value="">Choose the responsible module</option>
+              <option value="evidence">Evidence</option>
+              <option value="narrative">Narrative</option>
+              <option value="assembly">Assembly</option>
+            </select></label
+          ><button id="saveReviews">Save decisions</button>
+          <div id="releaseSummary"></div>
+          <div id="reviewHistory"></div>
+          <details>
+            <summary>Request a bounded narrative action</summary>
+            <label
+              >Action<select id="narrativeAction">
+                <option value="revise">Revise</option>
+                <option value="review">Professional review</option>
+              </select></label
+            ><label>Feedback<textarea id="narrativeFeedback"></textarea></label
+            ><label
+              >Target IDs (one per line)<textarea
+                id="narrativeTargets"
+              ></textarea></label
+            ><button id="requestNarrative">Submit narrative request</button>
+          </details>
+          <details>
+            <summary>Revoke a review</summary>
+            <label>Decision<select id="revokeDecision"></select></label
+            ><label>Reason<input id="revokeReason" /></label
+            ><button id="revokeReview">Revoke selected decision</button>
+          </details>
+        </section>
+        <section id="activity" hidden>
+          <h2>Activity and budget</h2>
+          <div id="budgetSummary"></div>
+          <div id="events"></div>
+          <details>
+            <summary>Budget diagnostics</summary>
+            <pre id="budget"></pre>
+          </details>
+          <h3>Recovery and authorization</h3>
+          <p>
+            Budget and reconciliation commands require operator authority.
+            Recovery retains history.
+          </p>
+          <button id="loadInterventions">Load operator records</button>
+          <pre id="interventionDetails"></pre>
+          <details>
+            <summary>Change budget limits</summary>
+            <div id="budgetFields"></div>
+            <label>Reason<input id="budgetReason" /></label
+            ><button id="amendBudget">Save authorized limits</button>
+          </details>
+          <details>
+            <summary>Reconcile unknown usage</summary>
+            <label
+              >Unknown reservation<select
+                id="unknownReservation"
+              ></select></label
+            ><label
+              >Resolution<select id="resolutionAction">
+                <option value="recover">Recover saved response</option>
+                <option value="retry">
+                  Confirmed not executed: allow bounded retry
+                </option>
+                <option value="settle">Record actual usage</option>
+              </select></label
+            >
+            <div id="usageFields"></div>
+            <label>Provider request ID<input id="providerRequestId" /></label
+            ><label
+              >Evidence type<select id="evidenceKind">
+                <option value="provider_receipt">Provider receipt</option>
+                <option value="local_execution_record">
+                  Local execution record
+                </option>
+              </select></label
+            ><label>Evidence reference<input id="evidenceReference" /></label
+            ><label
+              >Evidence checked<textarea
+                id="evidenceDescription"
+              ></textarea></label
+            ><label>Reason<input id="reconciliationReason" /></label
+            ><button id="reconcileUsage">Save reconciliation</button>
+          </details>
+          <details>
+            <summary>Resubmit a revoked review</summary>
+            <button id="loadRevocations">Load revoked decisions</button
+            ><label
+              >Revoked decision<select id="revokedDecision"></select></label
+            ><label>Reason<input id="resubmissionReason" /></label
+            ><button id="resubmitReview">Request fresh review</button>
+          </details>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/static/workbench/workbench.mjs"></script>
+  </body>
+</html>

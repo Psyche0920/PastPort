@@ -30,8 +30,10 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version-file: '.python-version'
-      - name: Check repository specifications and syntax
-        run: python3 tools/check_repository.py
+      - name: Check repository specifications and handoff documentation
+        run: |
+          python3 tools/check_repository.py
+          python3 tools/check_handoff.py
       - name: Install locked contract tooling
         run: |
           python -m pip install uv==0.12.8
@@ -40,8 +42,9 @@ jobs:
         run: |
           uv run --no-sync ruff check .
           uv run --no-sync ruff format --check .
-          uv run --no-sync mypy --strict src/pastport tools/check_contracts.py tests
+          uv run --no-sync mypy --strict src/pastport tools/check_contracts.py tools/check_handoff.py tests
           uv run --no-sync python tools/check_contracts.py
+          uv run --no-sync python -m pastport.development.player_contracts --check
       - name: Failure propagation probe (manual opt-in)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.failure_probe }}
         run: |
@@ -53,7 +56,7 @@ jobs:
   python-tests:
     name: python-tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -65,13 +68,54 @@ jobs:
         run: |
           python -m pip install uv==0.12.8
           uv sync --locked --group dev
-      - name: Run offline contract tests
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '26.10.0'
+          package-manager-cache: false
+      - name: Run offline contracts and shared player components
         run: uv run --no-sync pytest
+      - name: Run F9 offline module acceptance kit
+        run: >-
+          uv run --no-sync python -m pastport.development.module_acceptance
+          --evidence-version bundled-f9-1 --narrative-version bundled-f9-1
+          --resource-version bundled-local-1
+          --output acceptance-artifacts/offline.json
+      - name: Run F9 approval budget and crash fault gates
+        run: >-
+          uv run --no-sync python -m pastport.development.fault_acceptance
+          --output acceptance-artifacts/faults.json
+
+  browser-tests:
+    name: browser-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version-file: '.python-version'
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: '26.10.0'
+          package-manager-cache: false
+      - name: Install locked tooling
+        run: |
+          python -m pip install uv==0.12.8
+          uv sync --locked --group dev
+          npm ci --ignore-scripts --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Check native frontend and real browser workflow
+        run: |
+          npm run check:js
+          npm run format:check
+          uv run --no-sync python -m pastport.development.browser_check
 
   ci:
     name: ci
     if: ${{ always() }}
-    needs: [quality, python-tests]
+    needs: [quality, python-tests, browser-tests]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

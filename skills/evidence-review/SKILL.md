@@ -12,10 +12,10 @@ Produce clear evidence judgments with traceable support, contrary evidence and m
 
 ## Read selectively
 
-- Interfaces and permissions: [workflow contract](../../docs/WORKFLOW.md), sections 3–6 as needed.
-- Mode-specific inputs, result enums and tool loop: [skill protocol](../../docs/WORKFLOW.md), sections 14–16. Read the row for the current mode.
+- Interfaces and permissions: [workflow contract](../../docs/README.md#6-workflow-reviews-edits-and-bounded-routing), current guide §§4–6 and 9 as needed.
+- Mode-specific inputs, result enums and tool loop: [skill protocol](../../docs/README.md#7-skill-protocol-and-content-quality-boundary), current guide §§7–8. Read the row for the current mode.
 - For ambiguous images, conflicting claims or calibration: [review examples](references/review-examples.md).
-- Origins and adoption decisions: [reference review](../../docs/REFERENCES.md); do not reload it per claim.
+- Professional content constraints: [reference review](../../docs/README.md#7-skill-protocol-and-content-quality-boundary); do not reload it per claim.
 
 ## Inputs and boundary
 

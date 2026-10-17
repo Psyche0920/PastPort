@@ -8,6 +8,10 @@ The behavior reference is demo-muradiye commit `656f2ba81875855e51e12fab3862629d
 
 Inspect the synthetic hatch and obtain a fictional delivery record; choose whether to spend two story minutes assisting a witness; the next scene's feedback reads that choice. Both branches keep the delivery location known but differ on carrier identification. This demonstrates expressible data dependencies, not that the game is enjoyable or the inference is historically valid.
 
-Five `vector-*.json` files specify future JS behavior. Their `evaluation_status` remains `not_run`. The separate conflict runtime introduces two inconsistent variable writes; the expected future result is an atomic EFFECT_CONFLICT. Merely validating these documents does not execute the vectors.
+Five `vector-*.json` files freeze JS behavior. Their declarative template metadata `evaluation_status` remains `not_run`; F7 now executes all five against the shared JS interpreter and reports actual outcomes separately. The conflict runtime introduces inconsistent writes and must produce atomic EFFECT_CONFLICT. Merely validating the documents still does not execute them. See [F7 checks](../../../docs/README.md#10-game-runtime-actions-and-saves).
 
 The fixture uses `environment=test`, `distribution_scope=internal_preview` and synthetic actors. Never import these approvals into an authoritative editorial DB or export them for public play. A real chapter must receive real source, asset/route, narrative and publication decisions.
+
+## Resource reader registration
+
+`resources.json` explicitly registers the synthetic source and SVG by project, identity, version, raw-byte hash and local path. It is the local reader configuration for F3, not a runtime package template or a grant of production rights. Test mode may rebind fixture-project registrations to a synthetic test project; production does not enable that mapping. Runtime media paths are generated from asset identity/hash and may differ from the historical runtime.json wire sample.

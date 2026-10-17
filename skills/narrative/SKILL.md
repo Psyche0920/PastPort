@@ -12,10 +12,10 @@ Create an experience in which understanding heritage changes a decision, relatio
 
 ## Read selectively
 
-- Interfaces and rules: [workflow contract](../../docs/WORKFLOW.md), sections 3–4 and 9–10 as needed.
-- Mode inputs and control-result mapping: [skill protocol](../../docs/WORKFLOW.md), sections 14–15; use section 18 for actual quality evaluation.
+- Interfaces and rules: [workflow contract](../../docs/README.md#6-workflow-reviews-edits-and-bounded-routing), current guide §§4–7 and 10 as needed.
+- Mode inputs and control-result mapping: [skill protocol](../../docs/README.md#7-skill-protocol-and-content-quality-boundary), current guide §7; runtime limits are in §10.
 - For pivotal puzzles, character integration or review: [design calibration](references/design-calibration.md).
-- Research origins: [reference review](../../docs/REFERENCES.md); read when changing the method, not per scene.
+- Professional content constraints: [reference review](../../docs/README.md#7-skill-protocol-and-content-quality-boundary); read when changing the method, not per scene.
 
 ## Inputs and modes
 

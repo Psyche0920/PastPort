@@ -1,0 +1,17 @@
+{
+  "name": "pastport-workbench-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:browser": "python -m pastport.development.browser_check",
+    "check:js": "node tools/check_javascript.mjs",
+    "format:check": "prettier --check \"src/pastport/api/*.{mjs,css,html}\" \"tests/browser/*.mjs\" tools/check_javascript.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "prettier": "3.6.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
