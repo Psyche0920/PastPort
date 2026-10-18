@@ -1,0 +1,688 @@
+{
+  "version": "muradiye-walk-1",
+  "chapter_id": "chapter-record-and-service",
+  "art_notice": "依据现存建筑照片创作的历史氛围场景；建筑内部、陈设与通路含艺术推断，不是测绘复原。",
+  "route_notice": "顺序沿用原故事。经学学校在清真寺西侧、施食所在东北的相对关系有文献依据；门位、路宽与实际通行路径仍待核实。本图不能用于现场导航。",
+  "scenes": [
+    {
+      "scene_id": "arrival",
+      "atlas": [
+        100,
+        100
+      ],
+      "label": "施食所 · 核账前",
+      "spawn": [
+        16,
+        94
+      ],
+      "boundary": [
+        [
+          2,
+          82
+        ],
+        [
+          23,
+          78
+        ],
+        [
+          38,
+          76
+        ],
+        [
+          98,
+          80
+        ],
+        [
+          98,
+          98
+        ],
+        [
+          2,
+          98
+        ]
+      ],
+      "obstacles": [
+        [
+          [
+            27,
+            77
+          ],
+          [
+            33,
+            77
+          ],
+          [
+            33,
+            84
+          ],
+          [
+            27,
+            84
+          ]
+        ]
+      ],
+      "objects": [
+        {
+          "id": "steward",
+          "kind": "npc",
+          "label": "管事",
+          "sprite": 2,
+          "point": [
+            72,
+            84
+          ],
+          "approach": [
+            67,
+            90
+          ],
+          "action": "talk"
+        },
+        {
+          "id": "ledger",
+          "kind": "prop",
+          "label": "展开签收账",
+          "glyph": "▤",
+          "point": [
+            56,
+            72
+          ],
+          "approach": [
+            56,
+            86
+          ],
+          "action": "document"
+        },
+        {
+          "id": "exit",
+          "kind": "exit",
+          "label": "前往经学学校",
+          "point": [
+            8,
+            79
+          ],
+          "approach": [
+            8,
+            88
+          ],
+          "action": "advance"
+        }
+      ]
+    },
+    {
+      "scene_id": "courtyard",
+      "atlas": [
+        0,
+        0
+      ],
+      "label": "经学学校 · 八角池旁",
+      "spawn": [
+        18,
+        92
+      ],
+      "boundary": [
+        [
+          2,
+          79
+        ],
+        [
+          30,
+          74
+        ],
+        [
+          88,
+          74
+        ],
+        [
+          98,
+          81
+        ],
+        [
+          98,
+          98
+        ],
+        [
+          2,
+          98
+        ]
+      ],
+      "obstacles": [
+        [
+          [
+            43,
+            76
+          ],
+          [
+            77,
+            76
+          ],
+          [
+            86,
+            84
+          ],
+          [
+            84,
+            94
+          ],
+          [
+            48,
+            96
+          ],
+          [
+            39,
+            90
+          ],
+          [
+            39,
+            83
+          ]
+        ]
+      ],
+      "occlusion": [
+        [
+          43,
+          76
+        ],
+        [
+          77,
+          76
+        ],
+        [
+          86,
+          84
+        ],
+        [
+          84,
+          94
+        ],
+        [
+          48,
+          96
+        ],
+        [
+          39,
+          90
+        ],
+        [
+          39,
+          83
+        ]
+      ],
+      "objects": [
+        {
+          "id": "cem",
+          "kind": "npc",
+          "label": "杰姆",
+          "sprite": 0,
+          "point": [
+            32,
+            85
+          ],
+          "approach": [
+            28,
+            92
+          ],
+          "action": "talk"
+        },
+        {
+          "id": "pool",
+          "kind": "clue",
+          "label": "八角水池 · 查找装车单",
+          "point": [
+            60,
+            79
+          ],
+          "approach": [
+            36,
+            91
+          ],
+          "action": "inspect",
+          "observation": "pool"
+        },
+        {
+          "id": "iwan",
+          "kind": "clue",
+          "label": "课堂 iwan",
+          "point": [
+            57,
+            42
+          ],
+          "approach": [
+            34,
+            78
+          ],
+          "action": "inspect",
+          "observation": "iwan"
+        },
+        {
+          "id": "exit",
+          "kind": "exit",
+          "label": "前往西端喷泉",
+          "point": [
+            9,
+            78
+          ],
+          "approach": [
+            9,
+            87
+          ],
+          "action": "advance"
+        }
+      ]
+    },
+    {
+      "scene_id": "fountain",
+      "atlas": [
+        100,
+        0
+      ],
+      "label": "西端喷泉 · 哈丽梅",
+      "spawn": [
+        16,
+        94
+      ],
+      "boundary": [
+        [
+          2,
+          88
+        ],
+        [
+          21,
+          86
+        ],
+        [
+          72,
+          86
+        ],
+        [
+          98,
+          88
+        ],
+        [
+          98,
+          99
+        ],
+        [
+          2,
+          99
+        ]
+      ],
+      "obstacles": [],
+      "objects": [
+        {
+          "id": "halime",
+          "kind": "npc",
+          "label": "哈丽梅",
+          "sprite": 1,
+          "point": [
+            76,
+            91
+          ],
+          "approach": [
+            70,
+            96
+          ],
+          "action": "talk"
+        },
+        {
+          "id": "cup-left",
+          "kind": "clue",
+          "label": "左侧杯槽",
+          "point": [
+            36,
+            55
+          ],
+          "approach": [
+            35,
+            93
+          ],
+          "action": "inspect",
+          "observation": "cup-left"
+        },
+        {
+          "id": "cup-right",
+          "kind": "clue",
+          "label": "右侧杯槽",
+          "point": [
+            60,
+            57
+          ],
+          "approach": [
+            59,
+            93
+          ],
+          "action": "inspect",
+          "observation": "cup-right"
+        },
+        {
+          "id": "exit",
+          "kind": "exit",
+          "label": "前往施食所",
+          "point": [
+            94,
+            83
+          ],
+          "approach": [
+            93,
+            94
+          ],
+          "action": "advance"
+        },
+        {
+          "id": "cem-companion",
+          "kind": "npc",
+          "label": "杰姆",
+          "sprite": 0,
+          "point": [
+            87,
+            94
+          ],
+          "approach": [
+            85,
+            96
+          ],
+          "action": "talk",
+          "when": {
+            "decision": "friend",
+            "value": "vouch"
+          },
+          "lines": [
+            {
+              "speaker": "杰姆",
+              "text": "麦粒进仓，面粉送厨房。装车单还在你手里。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scene_id": "imaret",
+      "atlas": [
+        0,
+        100
+      ],
+      "label": "施食所 · 收料入口",
+      "spawn": [
+        16,
+        93
+      ],
+      "boundary": [
+        [
+          2,
+          87
+        ],
+        [
+          35,
+          82
+        ],
+        [
+          70,
+          83
+        ],
+        [
+          98,
+          88
+        ],
+        [
+          98,
+          99
+        ],
+        [
+          2,
+          99
+        ]
+      ],
+      "obstacles": [],
+      "objects": [
+        {
+          "id": "cook",
+          "kind": "npc",
+          "label": "厨房帮手",
+          "sprite": 3,
+          "point": [
+            67,
+            89
+          ],
+          "approach": [
+            61,
+            95
+          ],
+          "action": "talk"
+        },
+        {
+          "id": "star",
+          "kind": "clue",
+          "label": "星形砖饰 · 查找收料单",
+          "point": [
+            43,
+            40
+          ],
+          "approach": [
+            43,
+            90
+          ],
+          "action": "inspect",
+          "observation": "star"
+        },
+        {
+          "id": "sorting",
+          "kind": "prop",
+          "label": "麦粒与面粉 · 分账",
+          "glyph": "▥",
+          "point": [
+            22,
+            76
+          ],
+          "approach": [
+            23,
+            92
+          ],
+          "action": "sorting"
+        },
+        {
+          "id": "exit",
+          "kind": "exit",
+          "label": "进入施食所交账",
+          "point": [
+            88,
+            73
+          ],
+          "approach": [
+            88,
+            94
+          ],
+          "action": "advance"
+        },
+        {
+          "id": "cem-companion",
+          "kind": "npc",
+          "label": "杰姆",
+          "sprite": 0,
+          "point": [
+            51,
+            91
+          ],
+          "approach": [
+            47,
+            95
+          ],
+          "action": "talk",
+          "when": {
+            "decision": "friend",
+            "value": "vouch"
+          },
+          "lines": [
+            {
+              "speaker": "杰姆",
+              "text": "我把装车单带来了。请把两种货分别核对。"
+            }
+          ]
+        },
+        {
+          "id": "halime-companion",
+          "kind": "npc",
+          "label": "哈丽梅",
+          "sprite": 1,
+          "point": [
+            80,
+            91
+          ],
+          "approach": [
+            75,
+            96
+          ],
+          "action": "talk",
+          "when": {
+            "decision": "witness",
+            "value": "help"
+          },
+          "lines": [
+            {
+              "speaker": "哈丽梅",
+              "text": "我可以辨认搬运者，但收了多少还要看厨房的账。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scene_id": "reckoning",
+      "atlas": [
+        100,
+        100
+      ],
+      "label": "施食所 · 最后落笔的人",
+      "spawn": [
+        16,
+        94
+      ],
+      "boundary": [
+        [
+          2,
+          82
+        ],
+        [
+          23,
+          78
+        ],
+        [
+          38,
+          76
+        ],
+        [
+          98,
+          80
+        ],
+        [
+          98,
+          98
+        ],
+        [
+          2,
+          98
+        ]
+      ],
+      "obstacles": [
+        [
+          [
+            27,
+            77
+          ],
+          [
+            33,
+            77
+          ],
+          [
+            33,
+            84
+          ],
+          [
+            27,
+            84
+          ]
+        ]
+      ],
+      "objects": [
+        {
+          "id": "steward",
+          "kind": "npc",
+          "label": "管事",
+          "sprite": 2,
+          "point": [
+            72,
+            84
+          ],
+          "approach": [
+            67,
+            90
+          ],
+          "action": "talk"
+        },
+        {
+          "id": "board",
+          "kind": "prop",
+          "label": "把三份材料摆上核账桌",
+          "glyph": "▤",
+          "point": [
+            56,
+            72
+          ],
+          "approach": [
+            56,
+            86
+          ],
+          "action": "caseboard"
+        },
+        {
+          "id": "cem-companion",
+          "kind": "npc",
+          "label": "杰姆",
+          "sprite": 0,
+          "point": [
+            79,
+            94
+          ],
+          "approach": [
+            74,
+            96
+          ],
+          "action": "talk",
+          "when": {
+            "decision": "friend",
+            "value": "vouch"
+          },
+          "lines": [
+            {
+              "speaker": "杰姆",
+              "text": "我仍在这里。把原账、装车单和收料单放在一起。"
+            }
+          ]
+        },
+        {
+          "id": "halime-companion",
+          "kind": "npc",
+          "label": "哈丽梅",
+          "sprite": 1,
+          "point": [
+            89,
+            88
+          ],
+          "approach": [
+            86,
+            94
+          ],
+          "action": "talk",
+          "when": {
+            "decision": "witness",
+            "value": "help"
+          },
+          "lines": [
+            {
+              "speaker": "哈丽梅",
+              "text": "具名证词已经留在你的笔记里。最后怎样落笔，由你决定。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

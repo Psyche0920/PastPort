@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171c1a">
+  <title>PastPort · Inside Muradiye</title>
+  <link rel="stylesheet" href="immersive.css">
+  <script type="module" src="immersive.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#scene-nav">跳至场景选择</a>
+  <header class="masthead">
+    <a class="brand" href="index.zh.html" aria-label="PastPort 故事首页"><span class="brand-mark">P</span> PASTPORT<span class="edition">SPACES</span></a>
+    <nav class="view-switch" aria-label="观看方式">
+      <button id="tour-mode" aria-pressed="true">360° 实景</button>
+      <button id="photo-mode" aria-pressed="false">照片探索</button>
+    </nav>
+    <div class="header-actions"><button id="sources-button" aria-haspopup="dialog">来源 <span>↗</span></button><button id="focus-button" aria-pressed="false">专注观看</button><button id="fullscreen-button" aria-label="进入全屏">⛶</button></div>
+  </header>
+  <main id="experience">
+    <section id="tour-view" class="scene-view" aria-label="Muradiye 当代实景全景">
+      <iframe id="panorama" title="Bursa 官方 Muradiye 360 度实景漫游" allow="fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <div class="scene-heading chrome"><span class="eyebrow">BURSA, TÜRKİYE / MURADİYE</span><h1>置身历史之中</h1><p>转动视线，慢慢看见一座建筑。</p></div>
+      <aside class="entry-card chrome"><span class="eyebrow">YOUR ENTRY POINT · 漫游入口</span><h2 id="entry-title"></h2><p id="entry-description"></p><span class="capture-label">当代实景 · 官方全景中的原生箭头可继续前进</span></aside>
+      <div class="tour-help chrome"><span>↔ 拖动环视　·　滚轮缩放</span><a id="external-tour" target="_blank" rel="noreferrer">画面未显示？打开原站 ↗</a></div>
+    </section>
+    <section id="photo-view" class="scene-view" aria-label="出版物照片探索" hidden>
+      <div id="photo-viewport" tabindex="0" role="region" aria-label="可平移缩放的照片，方向键移动，加减键缩放">
+        <div id="photo-plane"><img id="archive-photo" alt="" draggable="false"><div id="photo-hotspots"></div></div>
+      </div>
+      <div class="photo-heading chrome"><span class="eyebrow">THE PHOTOGRAPHIC ARCHIVE</span><h1 id="photo-title"></h1><p id="photo-caption"></p></div>
+      <aside id="observation" class="observation chrome" aria-live="polite"><span class="eyebrow">LOOK CLOSER · 细看</span><h2 id="observation-title">在画面中寻找细节</h2><p id="observation-text">点击金色标记，阅读现有章节里的建筑观察。</p></aside>
+      <div class="photo-tools chrome" aria-label="照片视角控制"><button id="zoom-out" aria-label="缩小照片">−</button><button id="reset-photo">复位</button><button id="zoom-in" aria-label="放大照片">＋</button></div>
+    </section>
+  </main>
+  <footer class="bottom-bar chrome">
+    <div class="collection"><span class="eyebrow" id="collection-label">THE LIVING ARCHIVE</span><span id="collection-subtitle">选择一个入口，自由探索</span></div>
+    <nav id="scene-nav" aria-label="场景选择"></nav>
+    <a class="story-link" href="index.zh.html">进入故事 <span>→</span></a>
+  </footer>
+  <p id="status" class="status" role="status" hidden></p>
+  <dialog id="sources-dialog" aria-labelledby="sources-title">
+    <div class="dialog-heading"><span class="eyebrow">PROVENANCE</span><button id="close-sources" aria-label="关闭来源">×</button></div>
+    <h2 id="sources-title">看见真实，也知道出处。</h2>
+    <p>360° 画面来自 Bursa 市政府公开提供的 Muradiye 虚拟游览，建筑群游览的摄影署名为 Bursa Panorama。这里嵌入原站播放器，保留其标识、热点及控制。</p>
+    <a href="https://www.bursa.bel.tr/sayfa/sanal-turlar-1429" target="_blank" rel="noreferrer">Bursa 市政府 · 虚拟游览目录 ↗</a>
+    <a href="https://www.bursa.bel.tr/panorama/sanaltarihimekan/muradiye/index.html" target="_blank" rel="noreferrer">Muradiye 全景原站 ↗</a>
+    <p>画面是当代实景，包含后期修复和陈设。它提供空间体验，不代表 1430 年代复原。陵墓漫游也不作为既有故事中的同期地点。选择的是官方漫游入口，室内视点由画面中的白色箭头进入。</p>
+    <h3>PastPort 已有照片</h3><p>照片探索读取本项目五张出版物衍生图、页码和原有热点。浏览此页不会改变故事存档或发放证据。</p>
+    <p id="photo-provenance"></p>
+    <p class="fine">原站内容依赖联网，其版权仍属于原权利人。嵌入不代表取得下载、修改或再分发全景图的授权；正式发布前需确认使用范围。原站不可用时仍可探索本地照片。</p>
+  </dialog>
+  <noscript><p class="no-script">请启用 JavaScript，或<a href="https://www.bursa.bel.tr/panorama/sanaltarihimekan/muradiye/index.html">打开官方漫游</a>。</p></noscript>
+</body>
+</html>

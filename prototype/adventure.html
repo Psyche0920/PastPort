@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#18302c"><title>PastPort · 最后两袋 · 可行走剧场</title><link rel="stylesheet" href="adventure.css"><script type="module" src="adventure.mjs"></script></head>
+<body>
+  <main id="viewport" aria-label="可行走的穆拉迪耶调查场景" tabindex="0">
+    <div id="world"><div id="landscape"></div><div id="atmosphere" aria-hidden="true"></div><div id="objects"></div><div id="occlusion" aria-hidden="true"></div><div id="destination" hidden aria-hidden="true"></div><div id="player" aria-label="优素福"><div class="shadow"></div><div class="sprite"></div></div></div>
+  </main>
+  <header class="hud top"><div><div class="wordmark">PASTP<span>O</span>RT <span id="location"></span></div><p id="quest"></p><p id="status"></p></div><nav><button id="map-toggle" aria-label="展开调查路线">⌖<span>路线</span></button><button id="notes-toggle" aria-label="打开调查笔记">▤<span>笔记 <b id="count">0</b></span></button><button id="source-toggle" aria-label="查看资料与画面出处">◇<span>资料</span></button><button id="settings-toggle" aria-label="打开设置">⚙<span>设置</span></button></nav></header>
+  <aside id="minimap" aria-label="场景位置示意，非实测地图"><svg viewBox="0 0 100 64" aria-hidden="true"><path d="M7 10H93V57H7Z M20 10V28H80V10 M36 36H64V47H36Z"/><circle id="map-dot" cx="20" cy="50" r="2.5"/></svg></aside>
+  <aside class="hud bottom"><div id="inventory" aria-label="随身证据"></div><div class="controls"><span id="time"></span><span>点击地面 / 方向键移动 · 走近自动交互</span><small>历史背景下的原创故事 · 场景为艺术化演绎</small></div></aside>
+  <section id="dialogue" hidden aria-label="人物对话" aria-live="polite"></section>
+  <div id="toast" role="status"></div>
+  <dialog id="panel"><button id="close-panel" class="close" aria-label="关闭窗口">×</button><div id="panel-body"></div></dialog>
+  <section id="loading"><p class="eyebrow">PASTPORT / BURSA</p><h1>最后两袋</h1><p id="load-message">正在打开庭院与案件…</p></section>
+  <div id="scene-curtain" aria-hidden="true"></div>
+</body></html>
