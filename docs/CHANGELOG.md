@@ -4,6 +4,15 @@ Owner: Wehan/Weijia. Major verified deliveries from the current baseline only; e
 
 Use a full-date heading and `MM.DD-owner-function` entry. Record delivery, scope/status, verification/evidence and remaining limits. Link to a PR/revision/report when available; never invent a link or claim a local check proves remote CI, professional approval or player acceptance. Keep all entries here, without per-change files.
 
+## 2026-10-20
+
+### 10.20-weng-evidence-extraction
+
+- Delivery: Initial data extraction tool `tools/extract_bursa_sources.py`, SQLite heritage database schema, and evidence module documentation in `skills/evidence-review/README.md`.
+- Scope/status: Ingested official Bursa heritage sources from `var/sources/archive.zip` without committing multi-gigabyte raw binaries. Extracted 31 heritage sites with bilingual descriptions across İznik, Orhangazi, and Yıldırım; registered 105 image assets with SHA-256 digests; created `var/bursa_evidence.db`.
+- Verification: `tools/extract_bursa_sources.py` executed cleanly; `tools/check_repository.py` and `tools/check_handoff.py` passed offline repository gates.
+- Limits: Preprocessing and local database ingestion only. Formal `EvidencePort` adapter implementation (`EVD-01`) and integration with the narrative reference matrix remain in progress.
+
 ## 2026-10-17
 
 ### 10.17-wehan-team-workflow
