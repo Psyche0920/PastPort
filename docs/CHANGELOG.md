@@ -4,6 +4,15 @@ Owner: Wehan/Weijia. Major verified deliveries from the current baseline only; e
 
 Use a full-date heading and `MM.DD-owner-function` entry. Record delivery, scope/status, verification/evidence and remaining limits. Link to a PR/revision/report when available; never invent a link or claim a local check proves remote CI, professional approval or player acceptance. Keep all entries here, without per-change files.
 
+## 2026-10-21
+
+### 10.21-weng-branch-a-handclick-pipeline
+
+- Delivery: Branch A 360 panorama extraction tool `tools/extract_panorama.py`, mock IDML generator `tools/create_mock_idml.py`, test database ingest tool `tools/ingest_test_cluster.py`, spherical coordinate converter `tools/spot_converter.py`, and manual hotspot authoring tool `tools/branch_a_handclick.py`. Documented in `skills/evidence-review/README.md`.
+- Scope/status: Implemented end-to-end Branch A pipeline for interactive 360 panorama hotspot placement without AI dependencies. Extracted 4096x2048 equirectangular panorama from VR Studio tour export to `var/sources/panoramas/turing_lab_room.jpg`. Generated and ingested mock Turing Retro-Computing Lab into isolated `var/test_evidence.db` with registered site, asset, and 4 claims. Built bidirectional `(yaw, pitch) <-> (x, y)` converter and produced verified PastPort `Spot` contract mapped to target artifact claims.
+- Verification: `tools/extract_panorama.py`, `tools/create_mock_idml.py`, `tools/ingest_test_cluster.py`, `tools/spot_converter.py`, and `tools/branch_a_handclick.py` executed cleanly; `tools/check_repository.py` and `tools/check_handoff.py` passed offline repository gates on `branch-a-handclick`.
+- Limits: Manual hand-click authoring and local test database verification only. Production Bursa site panorama capture, formal `EvidencePort` adapter integration (`EVD-01`), and multi-scene narrative gameplay testing remain in progress.
+
 ## 2026-10-20
 
 ### 10.20-weng-evidence-extraction
