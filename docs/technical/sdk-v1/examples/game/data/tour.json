@@ -1,0 +1,75 @@
+{
+  "contract_family": "pastport-sdk",
+  "schema_version": "1.0.0",
+  "kind": "tour",
+  "project_id": "fixture-project",
+  "artifact_id": "tour-fixture",
+  "content_version": "v1",
+  "source_schema_version": 4,
+  "tour_id": "fixture-tour",
+  "first_view_id": "view-one",
+  "views": [
+    {
+      "view_id": "view-one",
+      "name": "First fixture viewpoint",
+      "original_asset": {
+        "resource_id": "pano-one",
+        "version": "v1",
+        "sha256": "571fece2b97d4470df65e8e90382cc9366d393fbbada693e39dd0e6eec9e761c"
+      },
+      "panorama_revision": 1,
+      "initial_view": {
+        "yaw": 0,
+        "pitch": 0,
+        "hfov": 95
+      }
+    },
+    {
+      "view_id": "view-two",
+      "name": "Second fixture viewpoint",
+      "original_asset": {
+        "resource_id": "pano-two",
+        "version": "v1",
+        "sha256": "4e8cd713c4fb0d95431fea763e8a1ab3674069ae940ad4758c379c5465a47535"
+      },
+      "panorama_revision": 1,
+      "initial_view": {
+        "yaw": 0,
+        "pitch": 0,
+        "hfov": 95
+      }
+    }
+  ],
+  "connections": [
+    {
+      "connection_id": "one-to-two",
+      "from_view_id": "view-one",
+      "to_view_id": "view-two",
+      "departure": {
+        "yaw": 0,
+        "pitch": 0,
+        "hfov": 95
+      },
+      "arrival": {
+        "yaw": 0,
+        "pitch": 0,
+        "hfov": 95
+      }
+    },
+    {
+      "connection_id": "two-to-one",
+      "from_view_id": "view-two",
+      "to_view_id": "view-one",
+      "departure": {
+        "yaw": 0,
+        "pitch": 0,
+        "hfov": 95
+      },
+      "arrival": {
+        "yaw": 0,
+        "pitch": 0,
+        "hfov": 95
+      }
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "project_id": "fixture-project",
+  "schema_version": "0.2.0",
+  "content_version": "1",
+  "source_folder_id": "local-fixture",
+  "scope": [
+    "site-1"
+  ],
+  "sources": [
+    {
+      "source_id": "source-1",
+      "version": "1",
+      "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+      "origin": "synthetic",
+      "title": "Invented service court fixture",
+      "uri": "fixture:synthetic-source.txt",
+      "acquisition_state": "parsed",
+      "extraction_state": "checked"
+    }
+  ],
+  "sites": [
+    {
+      "site_id": "site-1",
+      "name": "Invented service court"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim-kitchen",
+      "version": "1",
+      "text": "In this invented fixture, flour belongs at the kitchen service hatch.",
+      "site_id": "site-1",
+      "structure_id": null,
+      "time_scope": "Synthetic test scenario only",
+      "content_kind": "interpretation",
+      "support": [
+        {
+          "source_id": "source-1",
+          "source_version": "1",
+          "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+          "page_index": null,
+          "printed_page": null,
+          "paragraph_or_region": "paragraph 1"
+        }
+      ],
+      "refute": [],
+      "judgment": "supported",
+      "reason": "Explicit in the synthetic source paragraph.",
+      "approved_wording": null
+    },
+    {
+      "claim_id": "claim-stock",
+      "version": "1",
+      "text": "In this synthetic fixture, a stock record alone does not identify the carrier.",
+      "site_id": "site-1",
+      "structure_id": null,
+      "time_scope": "Synthetic test scenario only",
+      "content_kind": "interpretation",
+      "support": [
+        {
+          "source_id": "source-1",
+          "source_version": "1",
+          "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+          "page_index": null,
+          "printed_page": null,
+          "paragraph_or_region": "paragraph 1"
+        }
+      ],
+      "refute": [],
+      "judgment": "supported",
+      "reason": "Explicit in the synthetic source paragraph.",
+      "approved_wording": null
+    }
+  ],
+  "assets": [
+    {
+      "asset_id": "asset-hatch",
+      "version": "1",
+      "original_sha256": "4134c62dd0ff71146858c5352385ee634cace2c5e93c6b5b916c1f1713f80f36",
+      "derivative_sha256": "4134c62dd0ff71146858c5352385ee634cace2c5e93c6b5b916c1f1713f80f36",
+      "source_locator": {
+        "source_id": "source-1",
+        "source_version": "1",
+        "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+        "page_index": null,
+        "printed_page": null,
+        "paragraph_or_region": "paragraph 1"
+      },
+      "site_id": "site-1",
+      "structure_id": null,
+      "mapping_state": "verified",
+      "rights_state": "permitted_for_scope",
+      "allowed_uses": [
+        "internal_preview"
+      ],
+      "rights_basis": "Original synthetic SVG created for this test fixture; test approval only.",
+      "alt_text": "Synthetic service hatch diagram; no historical photograph."
+    },
+    {
+      "asset_id": "pano-one",
+      "version": "v1",
+      "original_sha256": "571fece2b97d4470df65e8e90382cc9366d393fbbada693e39dd0e6eec9e761c",
+      "derivative_sha256": "571fece2b97d4470df65e8e90382cc9366d393fbbada693e39dd0e6eec9e761c",
+      "source_locator": {
+        "source_id": "source-1",
+        "source_version": "1",
+        "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+        "page_index": null,
+        "printed_page": null,
+        "paragraph_or_region": "paragraph 1"
+      },
+      "site_id": "site-1",
+      "structure_id": null,
+      "mapping_state": "verified",
+      "rights_state": "permitted_for_scope",
+      "allowed_uses": [
+        "internal_preview"
+      ],
+      "rights_basis": "Original tiny synthetic PNG for offline protocol checks only; no real source, matching or style-transfer approval.",
+      "alt_text": "Synthetic color image for contract checks."
+    },
+    {
+      "asset_id": "pano-two",
+      "version": "v1",
+      "original_sha256": "4e8cd713c4fb0d95431fea763e8a1ab3674069ae940ad4758c379c5465a47535",
+      "derivative_sha256": "4e8cd713c4fb0d95431fea763e8a1ab3674069ae940ad4758c379c5465a47535",
+      "source_locator": {
+        "source_id": "source-1",
+        "source_version": "1",
+        "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+        "page_index": null,
+        "printed_page": null,
+        "paragraph_or_region": "paragraph 1"
+      },
+      "site_id": "site-1",
+      "structure_id": null,
+      "mapping_state": "verified",
+      "rights_state": "permitted_for_scope",
+      "allowed_uses": [
+        "internal_preview"
+      ],
+      "rights_basis": "Original tiny synthetic PNG for offline protocol checks only; no real source, matching or style-transfer approval.",
+      "alt_text": "Synthetic color image for contract checks."
+    },
+    {
+      "asset_id": "cartoon-one",
+      "version": "v1",
+      "original_sha256": "14fd759c881b63a6c2e6dba98ab8da511b203325d83dab4634e2e66bd98f7bf9",
+      "derivative_sha256": "14fd759c881b63a6c2e6dba98ab8da511b203325d83dab4634e2e66bd98f7bf9",
+      "source_locator": {
+        "source_id": "source-1",
+        "source_version": "1",
+        "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+        "page_index": null,
+        "printed_page": null,
+        "paragraph_or_region": "paragraph 1"
+      },
+      "site_id": "site-1",
+      "structure_id": null,
+      "mapping_state": "verified",
+      "rights_state": "permitted_for_scope",
+      "allowed_uses": [
+        "internal_preview"
+      ],
+      "rights_basis": "Original tiny synthetic PNG for offline protocol checks only; no real source, matching or style-transfer approval.",
+      "alt_text": "Synthetic color image for contract checks."
+    },
+    {
+      "asset_id": "source-image",
+      "version": "v1",
+      "original_sha256": "43bc9c694ab7e623e3bc007f4327e40b47bbc18a63afda00630719c08c1c7a94",
+      "derivative_sha256": "43bc9c694ab7e623e3bc007f4327e40b47bbc18a63afda00630719c08c1c7a94",
+      "source_locator": {
+        "source_id": "source-1",
+        "source_version": "1",
+        "file_sha256": "c9c5fe6191a94ebbc56c226d40e53ffd0a4536c7bbd23cf1078ebe6ab5f49f1b",
+        "page_index": null,
+        "printed_page": null,
+        "paragraph_or_region": "paragraph 1"
+      },
+      "site_id": "site-1",
+      "structure_id": null,
+      "mapping_state": "verified",
+      "rights_state": "permitted_for_scope",
+      "allowed_uses": [
+        "internal_preview"
+      ],
+      "rights_basis": "Original tiny synthetic PNG for offline protocol checks only; no real source, matching or style-transfer approval.",
+      "alt_text": "Synthetic color image for contract checks."
+    }
+  ],
+  "spatial_edges": [],
+  "route_refs": [
+    {
+      "artifact_id": "route-1",
+      "project_id": "fixture-project",
+      "kind": "route",
+      "schema_version": "0.2.0",
+      "content_version": "1",
+      "sha256": "c4d2a32db25b077675229ca36ac9120b934749b0c92f85d8f31a87bb9b0e1cc5"
+    }
+  ],
+  "coverage": [
+    {
+      "site_id": "site-1",
+      "disposition": "main",
+      "reason": "Single-site contract fixture"
+    }
+  ],
+  "unresolved_items": [],
+  "museum_ref": {
+    "artifact_id": "museum-fixture",
+    "project_id": "fixture-project",
+    "kind": "museum",
+    "schema_version": "1.0.0",
+    "content_version": "v1",
+    "sha256": "ddd5fd333666b59b0bf10fb8c6c1cf56c8f4b84f47f2a7080435f92aae248aa3"
+  }
+}

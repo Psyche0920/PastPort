@@ -34,4 +34,4 @@ For each case, compare the model's actual output with the expected boundary: cor
 
 Retain the exact input snapshot, Skill/policy/model hashes, actual output, human correction, latency/usage and whether external access occurred. Only revise the affected example/rule when a real failure warrants it. Local fixture success is not proof that a model researched the archive correctly.
 
-Protocol boundary cases (index without claim IDs, optional unknown fields, review-required versus approval, cached tool replay and inaccessible originals) are defined in the [Skill protocol](../../../docs/README.md#7-skill-protocol-and-content-quality-boundary). Use its canonical decision enum; do not invent mode-specific routing strings.
+Protocol boundary cases (index without claim IDs, optional unknown fields, review-required versus approval, cached tool replay and inaccessible originals) are defined in the [Skill protocol](../../../docs/IMPLEMENTATION_GUIDE.md#7-skill-protocol-and-content-quality-boundary). Use its canonical decision enum; do not invent mode-specific routing strings.

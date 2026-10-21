@@ -1,13 +1,17 @@
 # PastPort Decision Log
 
-Owner: Wehan/Weijia. Important decisions only; proposed decisions are not authority. The schema and replacement rule live in [PRD §15](README.md#15-coding-agent-and-documentation-rules). Current work is in [Active Plan](ACTIVE_PLAN.md); completed deliveries are in [Change Log](CHANGELOG.md). Start at the present baseline; do not reconstruct old decisions.
+Owner: wehan. Initial baseline: 2026-10-21. Requirements live in [PRD](PastPort_PRD_EN.md); current work is in [Active Plan](ACTIVE_PLAN.md). This file records significant accepted choices and reasons, without reproducing discussion history or defining another interface.
 
-For each new decision: `ID | date | status | owner | decision | reason/tradeoffs | affected scope | supersedes`.
+## D-001 — One bilingual specification
 
-## D-001 — Four-document collaboration and evidence-based completion
+Accepted, 2026-10-21. Product, technical and topic sections share one PRD in Chinese and English. Both editions use identical section/interface/acceptance IDs. Chinese meaning governs translation discrepancies. The implementation guide documents current executable behavior; plan, decisions and changelog stay short and link to the PRD. This reduces duplicate rules and team reading cost.
 
-- Date: 2026-10-17. Status: accepted. Decision owner: Weijia; explicitly approved in this task.
-- Decision: use the existing PRD/current guide plus separate Active Plan, Decision Log and Change Log. Route agents through short shared instructions and load relevant fragments only. Tasks need owner/dependencies/deliverable/acceptance/status; cross-module tasks use contract/reference checks, and player acceptance requires human feedback.
-- Reason/tradeoffs: one oversized file obscures current tasks and decision rationale; many stage/per-change documents add reading and drift. Four authorities keep these concerns discoverable while adding a small maintenance duty. Update only affected entries and link to evidence.
-- Affected scope: [PRD §15](README.md#15-coding-agent-and-documentation-rules), [Agent rules](../AGENTS.md), [Copilot rules](../.github/copilot-instructions.md), root/module navigation and documentation CI gate. Runtime contracts, approval rights and paid execution are unchanged.
-- Supersedes: the earlier repository convention forbidding current plan/decision/delivery records; no old decisions or changelogs are backfilled. If replaced, mark this entry superseded and link the new accepted record rather than rewriting its rationale.
+## D-002 — Shared host and reusable gameplay plugins
+
+Accepted, 2026-10-21. main owns common lifecycle, resources, authoritative saves, validated outcomes and story effects. Plugins own local mechanics/state/rendering under API 1.0.0. In-scope new games add plugins/configuration; new public capabilities require an explicit versioned host change. Existing wire 0.1.0 behavior and saves remain compatible. See [PRD 2.4](PastPort_PRD_EN.md#s2-4) and [3.3](PastPort_PRD_EN.md#s3-3).
+
+## D-003 — Automatic preparation and complete game delivery
+
+Accepted, 2026-10-21. wcheung reuses IDML/Links, matches panorama objects and attaches traceable text. maslan generates then filters tasks against that same museum, prepares exact plugins/resources and invokes shared deterministic assembly for a complete game bundle. Reuse compatible plugins first; automatic development/repair is bounded and may fail explicitly. Rights, budgets and publication authority remain enforced. See [PRD 1.5–1.6](PastPort_PRD_EN.md#s1-5) and [part 3](PastPort_PRD_EN.md#part-topic).
+
+For future significant changes record date, accepted/proposed status, owner, decision, rationale, affected version/sections and replacement relationship. A log entry does not grant approval, paid execution or deployment rights.
