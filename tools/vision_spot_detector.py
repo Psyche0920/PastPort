@@ -59,14 +59,51 @@ class VisionSpotDetector:
 
     def _call_mock(self, image_path: Path, claim_text: str) -> dict[str, object]:
         """Deterministic mock for offline CI and testing."""
-        # Simulated prediction on turing_lab_room.jpg:
-        # Ground truth terminal position on center desk: yaw ~12°, pitch ~-8° -> x ~ 5333, y ~ 4556
-        time.sleep(0.08)  # simulate processing
+        time.sleep(0.08)  # simulate model inference latency
+        low = claim_text.lower()
+        if any(w in low for w in ["deepblue", "terminal", "computer", "prototype", "artifact"]):
+            return {
+                "x": 5350,
+                "y": 4530,
+                "confidence": 0.94,
+                "label": "DeepBlue-Prototype #4 Mainframe Terminal",
+                "cost_usd": 0.00,
+            }
+        if any(w in low for w in ["chess", "blitz", "tournament", "grandmaster", "1996"]):
+            return {
+                "x": 6800,
+                "y": 4700,
+                "confidence": 0.88,
+                "label": "Grandmaster AI Chess Blitz Match Station",
+                "cost_usd": 0.00,
+            }
+        if any(w in low for w in ["architect", "vance", "systems", "constructed", "designed"]):
+            return {
+                "x": 2200,
+                "y": 5200,
+                "confidence": 0.85,
+                "label": "Dedication Plaque (Dr. Elena Vance)",
+                "cost_usd": 0.00,
+            }
+        if any(w in low for w in ["style", "industrial", "high-tech", "1987", "built"]):
+            return {
+                "x": 5000,
+                "y": 7200,
+                "confidence": 0.91,
+                "label": "High-Tech Industrial Architectural Structure",
+                "cost_usd": 0.00,
+            }
+
+        # Deterministic coordinate generation based on content hash for generic heritage claims
+        import hashlib
+        h = int(hashlib.md5(claim_text.encode("utf-8")).hexdigest()[:8], 16)
+        x = 1500 + (h % 7000)
+        y = 3500 + ((h >> 4) % 3000)
         return {
-            "x": 5350,
-            "y": 4530,
-            "confidence": 0.92,
-            "label": "DeepBlue-Prototype #4 Mainframe Terminal",
+            "x": x,
+            "y": y,
+            "confidence": 0.80,
+            "label": claim_text[:32],
             "cost_usd": 0.00,
         }
 

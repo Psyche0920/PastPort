@@ -4,12 +4,60 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sqlite3
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from tools.branch_a_handclick import create_handclick_spot
 from tools.branch_b_vision import create_vision_spot
-from tools.spot_converter import spot_angular_distance
+from tools.spot_converter import SphericalCoordinate, spot_angular_distance
+
+
+def get_or_create_handclick_spot(
+    db_path: Path,
+    claim_id: str,
+    yaw: float = 12.0,
+    pitch: float = -8.0,
+    spot_id: str = "spot-branch-a-manual",
+) -> dict[str, object]:
+    """Retrieve manual spot from SQLite scene_hotspots or calculate from spherical coords."""
+    conn = sqlite3.connect(db_path)
+    # Check if a manual spot already exists in the database
+    has_table = conn.execute(
+        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='scene_hotspots'"
+    ).fetchone()[0]
+    if has_table:
+        row = conn.execute(
+            "SELECT spot_id, site_id, x, y, yaw, pitch, label FROM scene_hotspots WHERE claim_id = ? AND authoring_method = 'manual_handclick'",
+            (claim_id,),
+        ).fetchone()
+        if row:
+            conn.close()
+            return {
+                "spot_id": row[0],
+                "site_id": row[1],
+                "x": row[2],
+                "y": row[3],
+                "spherical": {"yaw": row[4], "pitch": row[5]},
+                "claim_ids": [claim_id],
+                "authoring_method": "manual_handclick",
+                "source": "sqlite_database",
+            }
+
+    site_row = conn.execute("SELECT site_id FROM claims WHERE claim_id = ?", (claim_id,)).fetchone()
+    conn.close()
+    site_id = site_row[0] if site_row else "site-unknown"
+    coord = SphericalCoordinate(yaw=yaw, pitch=pitch)
+    x, y = coord.to_spot()
+    return {
+        "spot_id": spot_id,
+        "site_id": site_id,
+        "x": x,
+        "y": y,
+        "spherical": {"yaw": yaw, "pitch": pitch},
+        "claim_ids": [claim_id],
+        "authoring_method": "manual_handclick",
+        "source": "ground_truth_coordinates",
+    }
 
 
 def run_comparison(
@@ -30,7 +78,7 @@ def run_comparison(
     print("-" * 70)
 
     # 1. Execute Branch A (Hand-Click Ground Truth)
-    res_a = create_handclick_spot(
+    res_a = get_or_create_handclick_spot(
         db_path=db_path,
         claim_id=claim_id,
         yaw=hand_yaw,
