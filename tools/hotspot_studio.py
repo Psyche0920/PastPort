@@ -504,6 +504,20 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
 
+def open_browser(url: str) -> None:
+    try:
+        if Path("/proc/version").is_file() and "microsoft" in Path("/proc/version").read_text().lower():
+            import subprocess
+            subprocess.run(["cmd.exe", "/c", "start", url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return
+    except Exception:
+        pass
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+
+
 def run_studio(port: int = 8088, db_path: Path = Path("var/test_evidence.db")) -> None:
     handler = lambda *args, **kwargs: StudioHandler(*args, db_path=db_path, **kwargs)
     with socketserver.TCPServer(("127.0.0.1", port), handler) as httpd:
@@ -515,7 +529,7 @@ def run_studio(port: int = 8088, db_path: Path = Path("var/test_evidence.db")) -
         print(f"Database: {db_path}")
         print("Press Ctrl+C in terminal to stop.")
         print("=" * 70)
-        webbrowser.open(url)
+        open_browser(url)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
