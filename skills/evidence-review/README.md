@@ -50,10 +50,59 @@ The extracted database uses four relational tables.
 
 | Table Name | Primary Key | Description |
 |---|---|---|
-| `projects` | `project_id` | Project-level scope identifier (for example `bursa`). |
+| `projects` | `project_id` | Project-level scope identifier (for example `bursa` or `test-cluster`). |
 | `sources` | `source_id` | Registered source files with origin, filename, and SHA-256 digest. |
 | `sites` | `site_id` | Heritage monuments with district, category, and bilingual names/descriptions. |
-| `assets` | `asset_id` | Image assets with safe relative paths, media types, and SHA-256 digests. |
+| `assets` | `asset_id` | Image and panorama assets with safe relative paths, media types, and SHA-256 digests. |
+| `claims` | `claim_id` | Historical facts, architectural styles, and artifact records linked to sites. |
+| `scene_hotspots` | `spot_id` | Validated clickable spot contracts with normalized [0..10000] coordinates and spherical yaw/pitch. |
+
+## 360 Panorama Processing and Vision LLM Pipeline (Branch B)
+
+Branch B automates the hotspot authoring workflow by pairing multimodal vision models directly with the SQLite heritage claims and stitched 360 equirectangular panoramas.
+
+### 1. Panorama Asset Extraction
+High-resolution 360 equirectangular images (4096x2048) exported from VR Studio (`PastPort-VR-Studio/output/pastport-tour.zip`) are extracted using:
+
+```bash
+python tools/extract_panorama.py
+```
+
+This writes game-ready panoramas directly into `var/sources/panoramas/turing_lab_room.jpg`.
+
+### 2. Automated Vision Spot Detector
+Multimodal vision models analyze the 360 panorama and locate target heritage objects described in claims:
+
+```bash
+python tools/branch_b_vision.py --db var/test_evidence.db
+```
+
+- **Inputs**: Equirectangular 360 panorama image + heritage claims from SQLite.
+- **Model Prompting**: Model is instructed to predict normalized center coordinates `[x, y]` in `[0..10000]`, where `x` maps to yaw `[-180°..+180°]` and `y` maps to pitch `[-90°..+90°]`.
+- **Supported Backends**:
+  - `auto`: Automatically selects active API key or falls back to offline mock.
+  - `gemini`: Google `gemini-1.5-flash` via standard HTTPS.
+  - `openai`: OpenAI `gpt-4o-mini` via standard HTTPS.
+  - `mock`: Deterministic offline mode for local testing and CI gates.
+- **Output**: Automatically writes validated spot records directly into SQLite `scene_hotspots` with `authoring_method='vision_llm'`.
+
+### 3. Visual Verification Viewer (Hotspot Studio)
+To visually inspect and verify the spots detected by the Vision AI in a web browser:
+
+```bash
+python tools/hotspot_studio.py --db var/test_evidence.db
+```
+
+Open `http://localhost:8088`. Placed spots are loaded from `scene_hotspots`, rendered as interactive 360 pins, and marked with a `VISION AI` badge.
+
+### 4. Cross-Branch Accuracy Benchmark
+To verify Vision LLM spatial accuracy against human-authored ground truth:
+
+```bash
+python tools/compare_branches.py --db var/test_evidence.db
+```
+
+Computes great-circle angular distance on the 360 sphere. Pass threshold: angular error <= 15.0°.
 
 ## Next Steps and Adapter Interface
 

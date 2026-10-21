@@ -4,6 +4,15 @@ Owner: Wehan/Weijia. Major verified deliveries from the current baseline only; e
 
 Use a full-date heading and `MM.DD-owner-function` entry. Record delivery, scope/status, verification/evidence and remaining limits. Link to a PR/revision/report when available; never invent a link or claim a local check proves remote CI, professional approval or player acceptance. Keep all entries here, without per-change files.
 
+## 2026-10-22
+
+### 10.22-weng-branch-b-vision-pipeline
+
+- Delivery: Branch B Vision LLM automated spot detection pipeline (`tools/branch_b_vision.py`), multimodal spot detector (`tools/vision_spot_detector.py`), 360 verification studio viewer (`tools/hotspot_studio.py`), and cross-branch angular error benchmark (`tools/compare_branches.py`).
+- Scope/status: Automated the 360 hotspot authoring pipeline by pairing multimodal vision models (Gemini / OpenAI / deterministic mock) with equirectangular panoramas and SQLite heritage claims. Supports batch site execution, direct persistence to `scene_hotspots` with `authoring_method='vision_llm'`, visual verification in the 360 studio viewer, and automated accuracy benchmarking against human ground truth.
+- Verification: `tools/branch_b_vision.py` processed all test claims and persisted spots to `var/test_evidence.db`; `tools/compare_branches.py` passed with 0.77° great-circle angular error (threshold <= 15.0°); `tools/check_repository.py` and `tools/check_handoff.py` passed offline gates.
+- Limits: Local extraction, AI detection, and benchmark verification only. Live external API calls require environment keys (`GEMINI_API_KEY` / `OPENAI_API_KEY`). Joint integration with narrative reference (`INT-01`) remains pending.
+
 ## 2026-10-20
 
 ### 10.20-weng-evidence-extraction
