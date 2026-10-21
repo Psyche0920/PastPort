@@ -22,7 +22,8 @@ import time
 import urllib.parse
 import webbrowser
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT))
 from tools.spot_converter import SphericalCoordinate
 
 
@@ -167,28 +168,40 @@ HTML_PAGE = """<!doctype html>
     }
 
     async function loadSites() {
-      const sites = await api('/api/sites');
-      const sel = document.getElementById('select-site');
-      sel.innerHTML = '';
-      sites.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.site_id;
-        opt.textContent = `${s.name_en} (${s.district})`;
-        sel.appendChild(opt);
-      });
-      if (sites.length) {
-        sel.value = sites[0].site_id;
-        loadSite(sites[0].site_id);
+      try {
+        const sites = await api('/api/sites');
+        const sel = document.getElementById('select-site');
+        sel.innerHTML = '';
+        sites.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.site_id;
+          opt.textContent = `${s.name_en} (${s.district})`;
+          sel.appendChild(opt);
+        });
+        if (sites.length) {
+          sel.value = sites[0].site_id;
+          await loadSite(sites[0].site_id);
+        } else {
+          document.getElementById('claims-list').innerHTML = '<div class="empty-state">No sites found in database.</div>';
+        }
+        sel.onchange = () => loadSite(sel.value);
+      } catch (err) {
+        console.error('Failed to load sites:', err);
+        showToast('Failed to load sites: ' + err.message);
       }
-      sel.onchange = () => loadSite(sel.value);
     }
 
     async function loadSite(siteId) {
-      currentSite = await api(`/api/site/${encodeURIComponent(siteId)}`);
-      placedSpots = currentSite.hotspots || [];
-      renderClaims();
-      renderSpots();
-      initViewer(currentSite.panorama_url);
+      try {
+        currentSite = await api(`/api/site/${encodeURIComponent(siteId)}`);
+        placedSpots = currentSite.hotspots || [];
+        renderClaims();
+        renderSpots();
+        initViewer(currentSite.panorama_url);
+      } catch (err) {
+        console.error('Failed to load site:', err);
+        showToast('Failed to load site: ' + err.message);
+      }
     }
 
     function renderClaims() {
@@ -273,7 +286,19 @@ HTML_PAGE = """<!doctype html>
     }
 
     function initViewer(panoUrl) {
-      if (viewer) viewer.destroy();
+      if (typeof pannellum === 'undefined') {
+        console.error('Pannellum library is not available.');
+        showToast('Pannellum CDN library not loaded. Check internet access.');
+        return;
+      }
+      if (viewer) {
+        try {
+          viewer.destroy();
+        } catch (e) {
+          console.warn('Viewer destroy warning:', e);
+        }
+        viewer = null;
+      }
       const initialHotspots = placedSpots.map(s => ({
         id: s.spot_id,
         pitch: s.pitch,
@@ -282,15 +307,27 @@ HTML_PAGE = """<!doctype html>
         text: s.claim_text || s.label || s.spot_id
       }));
 
-      viewer = pannellum.viewer('viewer', {
-        type: 'equirectangular',
-        panorama: panoUrl,
-        autoLoad: true,
-        showZoomCtrl: true,
-        mouseZoom: true,
-        doubleClickZoom: false,
-        hotSpots: initialHotspots
-      });
+      try {
+        viewer = pannellum.viewer('viewer', {
+          type: 'equirectangular',
+          panorama: panoUrl,
+          autoLoad: true,
+          showZoomCtrl: true,
+          mouseZoom: true,
+          doubleClickZoom: false,
+          hotSpots: initialHotspots
+        });
+        viewer.on('error', function(err) {
+          console.error('Pannellum panorama error:', err);
+          showToast('Panorama load issue: ' + err);
+        });
+        viewer.on('load', function() {
+          console.log('Panorama loaded successfully from ' + panoUrl);
+        });
+      } catch (err) {
+        console.error('Failed to init Pannellum:', err);
+        showToast('Viewer init error: ' + err.message);
+      }
     }
 
     function placeHotspotFromCoords(coords) {
@@ -376,7 +413,6 @@ HTML_PAGE = """<!doctype html>
         placeHotspotFromCoords(coords);
       }
     });
-    }
 
     document.getElementById('btn-save').onclick = async () => {
       if (!currentSite) return;
@@ -465,7 +501,10 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
             asset_id = "asset-turing-room-pano-360"
             if asset_row:
                 asset_id = asset_row[0]
-                pano_url = f"/media/{asset_row[2]}"
+                clean_rel = asset_row[2]
+                if clean_rel.startswith("media/"):
+                    clean_rel = clean_rel[len("media/"):]
+                pano_url = f"/media/{clean_rel}"
 
             payload = {
                 "site_id": site_row[0],
@@ -494,15 +533,21 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         if path.startswith("/media/"):
-            rel_path = path.replace("/media/", "")
-            target_file = Path("var/sources") / rel_path
-            if not target_file.exists():
+            rel_path = path[len("/media/"):]
+            if rel_path.startswith("media/"):
+                rel_path = rel_path[len("media/"):]
+            target_file = (REPO_ROOT / "var/sources" / rel_path).resolve()
+            if not target_file.is_file():
                 # Fallback to test panorama
-                target_file = Path("var/sources/panoramas/turing_lab_room.jpg")
-            if target_file.exists():
+                target_file = REPO_ROOT / "var/sources/panoramas/turing_lab_room.jpg"
+            if target_file.is_file():
                 self.send_response(200)
                 self.send_header("Content-Type", "image/jpeg")
                 self.send_header("Content-Length", str(target_file.stat().st_size))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+                self.send_header("Access-Control-Allow-Headers", "*")
+                self.send_header("Cache-Control", "no-cache")
                 self.end_headers()
                 self.wfile.write(target_file.read_bytes())
                 return
@@ -549,11 +594,19 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
 
         self.send_error(404, "Not Found")
 
+    def do_OPTIONS(self) -> None:
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Range")
+        self.end_headers()
+
     def _send_json(self, data: object) -> None:
         body = json.dumps(data).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 
