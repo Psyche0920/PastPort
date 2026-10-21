@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PastPort · 360 Hotspot Visual Clicker (Branch A)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { background: #1f1f1f; padding: 12px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: 16px; font-weight: 600; color: #fff; }
+    header p { font-size: 13px; color: #aaa; }
+    #main { display: flex; flex: 1; overflow: hidden; position: relative; }
+    #viewer { flex: 1; height: 100%; }
+    #sidebar { width: 340px; background: #1a1a1a; border-left: 1px solid #333; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .card { background: #242424; border: 1px solid #383838; border-radius: 8px; padding: 14px; }
+    .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 8px; }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+    .stat-label { color: #aaa; }
+    .stat-val { font-family: monospace; font-weight: 600; color: #4fc3f7; }
+    pre { background: #151515; border: 1px solid #2a2a2a; border-radius: 6px; padding: 10px; font-size: 12px; color: #a5d6a7; overflow-x: auto; }
+    .btn { background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .btn:hover { background: #1565c0; }
+    .instruction { font-size: 13px; line-height: 1.5; color: #bbb; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>PastPort · 360 Hotspot Visual Clicker</h1>
+      <p>Click anywhere on the panorama to inspect coordinates and generate a PastPort Spot</p>
+    </div>
+    <label class="btn" style="cursor: pointer;">
+      Choose Pano JPG
+      <input id="file-input" type="file" accept="image/*" style="display: none;">
+    </label>
+  </header>
+
+  <div id="main">
+    <div id="viewer"></div>
+    <div id="sidebar">
+      <div class="card">
+        <h2>Instructions</h2>
+        <p class="instruction">
+          1. Look around the room by dragging.<br>
+          2. Click directly on the target object (e.g. the DeepBlue computer).<br>
+          3. The exact angle and PastPort (x, y) coordinates will calculate automatically below.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Viewer Spherical Angles</h2>
+        <div class="stat-row"><span class="stat-label">Yaw (Longitude):</span><span id="val-yaw" class="stat-val">0.00°</span></div>
+        <div class="stat-row"><span class="stat-label">Pitch (Latitude):</span><span id="val-pitch" class="stat-val">0.00°</span></div>
+      </div>
+
+      <div class="card">
+        <h2>PastPort Spot Coordinates</h2>
+        <div class="stat-row"><span class="stat-label">Spot X [0..10000]:</span><span id="val-x" class="stat-val">5000</span></div>
+        <div class="stat-row"><span class="stat-label">Spot Y [0..10000]:</span><span id="val-y" class="stat-val">5000</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Generated Spot Contract</h2>
+        <pre id="contract-json">// Click on an object to generate...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let viewer = null;
+    const defaultPano = "../var/sources/panoramas/turing_lab_room.jpg";
+
+    function initViewer(panoSrc) {
+      if (viewer) viewer.destroy();
+      viewer = pannellum.viewer('viewer', {
+        type: 'equirectangular',
+        panorama: panoSrc,
+        autoLoad: true,
+        showZoomCtrl: false,
+        mouseZoom: true,
+        hotSpots: []
+      });
+
+      viewer.on('mousedown', function(event) {
+        const coords = viewer.mouseEventToCoords(event);
+        if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
+        const pitch = coords[0];
+        const yaw = coords[1];
+
+        // Math: convert (yaw, pitch) to PastPort integer Spot [0..10000]
+        const x = Math.max(0, Math.min(10000, Math.round(((yaw + 180) / 360) * 10000)));
+        const y = Math.max(0, Math.min(10000, Math.round(((pitch + 90) / 180) * 10000)));
+
+        document.getElementById('val-yaw').textContent = yaw.toFixed(2) + '°';
+        document.getElementById('val-pitch').textContent = pitch.toFixed(2) + '°';
+        document.getElementById('val-x').textContent = x;
+        document.getElementById('val-y').textContent = y;
+
+        const contract = {
+          "spot_id": "spot-manual-turing-deepblue",
+          "x": x,
+          "y": y,
+          "spherical": { "yaw": Number(yaw.toFixed(2)), "pitch": Number(pitch.toFixed(2)) },
+          "text_key": "spot_turing_deepblue_desc",
+          "claim_ids": ["claim-turing-artifact-deepblue"],
+          "authoring_method": "visual_handclick"
+        };
+
+        document.getElementById('contract-json').textContent = JSON.stringify(contract, null, 2);
+      });
+    }
+
+    document.getElementById('file-input').onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      initViewer(url);
+    };
+
+    // Auto-load default
+    initViewer(defaultPano);
+  </script>
+</body>
+</html>

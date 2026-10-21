@@ -235,6 +235,24 @@ class BursaSourceExtractor:
                                 site.source_id,
                             ),
                         )
+                        # Extract and populate verified claims from official site descriptions
+                        desc = site.description_en if len(site.description_en) > 50 else site.description_tr
+                        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", desc) if 25 < len(s.strip()) < 350 and not s.strip().startswith("Sources:")]
+                        for i, s in enumerate(sentences[:10]):
+                            low = s.lower()
+                            if any(w in low for w in ["minaret", "dome", "mihrab", "minbar", "pulpit", "mosaic", "tile", "arch", "column", "portal", "narthex", "wall", "stone", "brick", "courtyard", "fountain", "şadırvan", "kubbe", "duvar"]):
+                                kind = "architectural_feature"
+                            elif any(w in low for w in ["century", "reign", "period", "yüzyıl", "dönem", "13", "14", "15", "16", "17", "18", "19"]):
+                                kind = "historical_date"
+                            else:
+                                kind = "historical_fact"
+                            cid = f"claim-{site.site_id}-{i+1:02d}"
+                            self.conn.execute(
+                                """INSERT OR REPLACE INTO claims
+                                   (claim_id, site_id, project_id, text, content_kind, time_scope, source_locator_ref, judgment, reason)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                (cid, site.site_id, site.project_id, s, kind, "historical", site.source_id, "supported", "Official Vakıf Eserleri Envanteri catalog"),
+                            )
 
             for img_path in img_files:
                 img_bytes = outer.read(img_path)
@@ -276,11 +294,12 @@ class BursaSourceExtractor:
             site_count = self.conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
             asset_count = self.conn.execute("SELECT COUNT(*) FROM assets").fetchone()[0]
             source_count = self.conn.execute("SELECT COUNT(*) FROM sources").fetchone()[0]
+            claim_count = self.conn.execute("SELECT COUNT(*) FROM claims").fetchone()[0]
 
-        return site_count, asset_count, source_count
+        return site_count, asset_count, source_count, claim_count
 
 
 if __name__ == "__main__":
     extractor = BursaSourceExtractor(Path("var/bursa_evidence.db"))
-    sites, assets, sources = extractor.process(Path("var/sources/archive.zip"))
-    print(f"Extracted {sites} sites, {assets} assets, and {sources} sources into var/bursa_evidence.db")
+    sites, assets, sources, claims = extractor.process(Path("var/sources/archive.zip"))
+    print(f"Extracted {sites} sites, {assets} assets, {sources} sources, and {claims} claims into var/bursa_evidence.db")
