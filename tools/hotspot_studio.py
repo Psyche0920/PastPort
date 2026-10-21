@@ -128,6 +128,9 @@ HTML_PAGE = """<!doctype html>
 
     <!-- Center: 360 viewer -->
     <div id="panel-viewer">
+      <div style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); padding: 6px 16px; border-radius: 20px; font-size: 12px; color: #e5e7eb; pointer-events: none; z-index: 10; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #60a5fa; font-weight: 600;">Drag</span> to look around &nbsp;·&nbsp; <span style="color: #34d399; font-weight: 600;">Double-click</span> or <span style="color: #34d399; font-weight: 600;">hold 0.5s</span> to place hotspot
+      </div>
       <div id="viewer" style="width: 100%; height: 100%;"></div>
     </div>
 
@@ -285,43 +288,94 @@ HTML_PAGE = """<!doctype html>
         autoLoad: true,
         showZoomCtrl: true,
         mouseZoom: true,
+        doubleClickZoom: false,
         hotSpots: initialHotspots
       });
+    }
 
-      viewer.on('mousedown', function(event) {
-        if (!selectedClaim) {
-          alert('Please select a claim from the left panel first.');
-          return;
+    function placeHotspotFromCoords(coords) {
+      if (!selectedClaim) {
+        alert('Please select a claim from the left panel first.');
+        return;
+      }
+      if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
+      const pitch = Number(coords[0].toFixed(2));
+      const yaw = Number(coords[1].toFixed(2));
+
+      // Coordinate conversion formula
+      const x = Math.max(0, Math.min(10000, Math.round(((yaw + 180) / 360) * 10000)));
+      const y = Math.max(0, Math.min(10000, Math.round(((pitch + 90) / 180) * 10000)));
+
+      const spotId = `spot-${currentSite.site_id.split('-').slice(-2).join('-')}-${Date.now().toString().slice(-4)}`;
+      const newSpot = {
+        spot_id: spotId,
+        site_id: currentSite.site_id,
+        asset_id: currentSite.asset_id,
+        claim_id: selectedClaim.claim_id,
+        claim_text: selectedClaim.text,
+        x: x,
+        y: y,
+        yaw: yaw,
+        pitch: pitch,
+        label: selectedClaim.text.slice(0, 32) + '...',
+        authoring_method: 'manual_handclick'
+      };
+
+      placedSpots.push(newSpot);
+      renderSpots();
+      refreshViewerHotspots();
+      showToast(`Tagged: ${selectedClaim.text.slice(0, 28)}...`);
+    }
+
+    // Gesture handling: Double-click or Long-press (500ms without dragging)
+    const viewerEl = document.getElementById('panel-viewer');
+    let downPos = null;
+    let isDragging = false;
+    let longPressTimer = null;
+
+    viewerEl.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('.pnlm-hotspot') || e.target.closest('button')) return;
+      isDragging = false;
+      downPos = { x: e.clientX, y: e.clientY };
+      clearTimeout(longPressTimer);
+      longPressTimer = setTimeout(() => {
+        if (!isDragging && downPos && viewer) {
+          const coords = viewer.mouseEventToCoords(e);
+          placeHotspotFromCoords(coords);
+          downPos = null;
         }
-        const coords = viewer.mouseEventToCoords(event);
-        if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
-        const pitch = Number(coords[0].toFixed(2));
-        const yaw = Number(coords[1].toFixed(2));
+      }, 500);
+    });
 
-        // Coordinate conversion formula
-        const x = Math.max(0, Math.min(10000, Math.round(((yaw + 180) / 360) * 10000)));
-        const y = Math.max(0, Math.min(10000, Math.round(((pitch + 90) / 180) * 10000)));
+    viewerEl.addEventListener('pointermove', (e) => {
+      if (downPos) {
+        const dx = Math.abs(e.clientX - downPos.x);
+        const dy = Math.abs(e.clientY - downPos.y);
+        if (dx > 6 || dy > 6) {
+          isDragging = true;
+          clearTimeout(longPressTimer);
+        }
+      }
+    });
 
-        const spotId = `spot-${currentSite.site_id.split('-').slice(-2).join('-')}-${Date.now().toString().slice(-4)}`;
-        const newSpot = {
-          spot_id: spotId,
-          site_id: currentSite.site_id,
-          asset_id: currentSite.asset_id,
-          claim_id: selectedClaim.claim_id,
-          claim_text: selectedClaim.text,
-          x: x,
-          y: y,
-          yaw: yaw,
-          pitch: pitch,
-          label: selectedClaim.text.slice(0, 32) + '...',
-          authoring_method: 'manual_handclick'
-        };
+    viewerEl.addEventListener('pointerup', () => {
+      clearTimeout(longPressTimer);
+      downPos = null;
+    });
 
-        placedSpots.push(newSpot);
-        renderSpots();
-        refreshViewerHotspots();
-        showToast(`Tagged: ${selectedClaim.text.slice(0, 28)}...`);
-      });
+    viewerEl.addEventListener('pointercancel', () => {
+      clearTimeout(longPressTimer);
+      downPos = null;
+    });
+
+    viewerEl.addEventListener('dblclick', (e) => {
+      if (e.target.closest('.pnlm-hotspot') || e.target.closest('button')) return;
+      clearTimeout(longPressTimer);
+      if (viewer) {
+        const coords = viewer.mouseEventToCoords(e);
+        placeHotspotFromCoords(coords);
+      }
+    });
     }
 
     document.getElementById('btn-save').onclick = async () => {
@@ -519,13 +573,14 @@ def open_browser(url: str) -> None:
 
 
 def run_studio(port: int = 8088, db_path: Path = Path("var/test_evidence.db")) -> None:
+    socketserver.TCPServer.allow_reuse_address = True
     handler = lambda *args, **kwargs: StudioHandler(*args, db_path=db_path, **kwargs)
-    with socketserver.TCPServer(("127.0.0.1", port), handler) as httpd:
-        url = f"http://127.0.0.1:{port}"
+    with socketserver.TCPServer(("0.0.0.0", port), handler) as httpd:
+        url = f"http://localhost:{port}"
         print("=" * 70)
         print("PASTPORT 360 HOTSPOT STUDIO RUNNING")
         print("=" * 70)
-        print(f"URL:      {url}")
+        print(f"URL:      {url} (or http://127.0.0.1:{port})")
         print(f"Database: {db_path}")
         print("Press Ctrl+C in terminal to stop.")
         print("=" * 70)
