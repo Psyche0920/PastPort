@@ -127,6 +127,8 @@ HTML_PAGE = """<!doctype html>
       <div class="controls-row">
         <label style="font-size: 12px; color: var(--text-muted);">Site:</label>
         <select id="select-site"></select>
+        <label id="label-asset" style="font-size: 12px; color: var(--text-muted); display: none;">Image:</label>
+        <select id="select-asset" style="display: none; max-width: 220px;" onchange="changeActiveAsset(this.value)"></select>
         <div class="mode-switch">
           <button id="mode-2d" class="mode-btn active" onclick="switchMode('2d')">🖼️ 2D Photo</button>
           <button id="mode-360" class="mode-btn" onclick="switchMode('360')">🌐 360 Sphere</button>
@@ -259,6 +261,26 @@ HTML_PAGE = """<!doctype html>
         renderClaims();
         renderSpots();
 
+        // Populate asset switcher if multiple images are available
+        const assetSel = document.getElementById('select-asset');
+        const assetLbl = document.getElementById('label-asset');
+        const assets = currentSite.site_assets || [];
+        if (assets.length > 1) {
+          assetLbl.style.display = 'inline-block';
+          assetSel.style.display = 'inline-block';
+          assetSel.innerHTML = '';
+          assets.forEach((a, idx) => {
+            const opt = document.createElement('option');
+            opt.value = a.url;
+            opt.textContent = `${idx + 1}/${assets.length}: ${a.file_name}`;
+            assetSel.appendChild(opt);
+          });
+          assetSel.value = currentSite.panorama_url;
+        } else {
+          assetLbl.style.display = 'none';
+          assetSel.style.display = 'none';
+        }
+
         // Load image into 2D view
         const img = document.getElementById('photo-img');
         img.src = currentSite.panorama_url;
@@ -276,6 +298,24 @@ HTML_PAGE = """<!doctype html>
         console.error('Failed to load site:', err);
         showToast('Failed to load site: ' + err.message);
       }
+    }
+
+    function changeActiveAsset(url) {
+      if (!currentSite) return;
+      currentSite.panorama_url = url;
+      const matched = (currentSite.site_assets || []).find(a => a.url === url);
+      if (matched) {
+        currentSite.asset_id = matched.asset_id;
+      }
+      const img = document.getElementById('photo-img');
+      img.src = url;
+      img.onload = () => {
+        renderPhotoPins();
+      };
+      if (currentMode === '360') {
+        initPannellum(url);
+      }
+      showToast('Viewing image: ' + (matched?.file_name || url));
     }
 
     function renderClaims() {
@@ -594,18 +634,19 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                 (site_id,),
             ).fetchall()
 
-            # Resolve image asset: first check if placed hotspots used a specific asset
+            # Query all assets mapped to this site
+            all_site_assets = conn.execute(
+                "SELECT asset_id, file_name, relative_path FROM assets WHERE site_id = ? ORDER BY asset_id",
+                (site_id,),
+            ).fetchall()
+
             asset_row = None
-            if hotspots_rows and hotspots_rows[0][2]:
+            if all_site_assets:
+                asset_row = all_site_assets[0]
+            elif hotspots_rows and hotspots_rows[0][2]:
                 asset_row = conn.execute(
                     "SELECT asset_id, file_name, relative_path FROM assets WHERE asset_id = ? LIMIT 1",
                     (hotspots_rows[0][2],),
-                ).fetchone()
-
-            if not asset_row:
-                asset_row = conn.execute(
-                    "SELECT asset_id, file_name, relative_path FROM assets WHERE site_id = ? LIMIT 1",
-                    (site_id,),
                 ).fetchone()
 
             if not asset_row:
@@ -635,6 +676,14 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                 "asset_id": asset_id,
                 "panorama_url": pano_url,
                 "is_panorama": is_panorama,
+                "site_assets": [
+                    {
+                        "asset_id": a[0],
+                        "file_name": a[1],
+                        "url": f"/media/{a[2][len('media/'):] if a[2].startswith('media/') else a[2]}",
+                    }
+                    for a in all_site_assets
+                ],
                 "claims": [{"claim_id": c[0], "text": c[1], "content_kind": c[2]} for c in claims_rows],
                 "hotspots": [
                     {

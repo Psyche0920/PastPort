@@ -115,15 +115,28 @@ def run_vision_pipeline_for_site(
 
     if not resolved_pano or not resolved_pano.is_file():
         asset_row = conn.execute(
-            "SELECT asset_id, relative_path FROM assets WHERE site_id = ? OR media_type = 'image/jpeg' LIMIT 1",
+            "SELECT asset_id, relative_path FROM assets WHERE site_id = ? LIMIT 1",
             (site_id,),
         ).fetchone()
+        if not asset_row:
+            asset_row = conn.execute(
+                "SELECT asset_id, relative_path FROM assets WHERE media_type = 'image/jpeg' LIMIT 1"
+            ).fetchone()
+
         if asset_row:
             resolved_asset_id = asset_row[0]
-            clean_rel = asset_row[1].replace("media/", "")
-            candidate = repo_root / "var/sources" / clean_rel
-            if candidate.is_file():
-                resolved_pano = candidate
+            raw_path = asset_row[1]
+            candidates = [
+                repo_root / "var/sources" / raw_path,
+                repo_root / "var/sources/media" / raw_path,
+                repo_root / "var/sources/media/bursa" / Path(raw_path).name,
+                repo_root / "var/sources" / raw_path.replace("media/", ""),
+            ]
+            for cand in candidates:
+                if cand.is_file():
+                    resolved_pano = cand
+                    break
+
         if not resolved_pano or not resolved_pano.is_file():
             resolved_pano = repo_root / "var/sources/panoramas/turing_lab_room.jpg"
 
@@ -215,10 +228,10 @@ def run_vision_pipeline_for_site(
     print("=" * 70)
     return results
 
-
 def main() -> None:
+    default_db = "var/bursa_evidence.db" if Path("var/bursa_evidence.db").is_file() else "var/test_evidence.db"
     parser = argparse.ArgumentParser(description="PastPort Vision LLM Spot Detection Pipeline")
-    parser.add_argument("--db", default="var/test_evidence.db", help="Path to SQLite evidence database")
+    parser.add_argument("--db", default=default_db, help=f"Path to SQLite evidence database (default: {default_db})")
     parser.add_argument("--site", default=None, help="Site ID to batch process (default: all claims in first site)")
     parser.add_argument("--all", action="store_true", help="Process all sites across the entire database in batch")
     parser.add_argument("--claim", default=None, help="Process single target claim ID")

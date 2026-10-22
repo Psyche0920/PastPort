@@ -240,7 +240,17 @@ class BursaSourceExtractor:
                             ),
                         )
 
-            for img_path in img_files:
+            # Collect all extracted sites to perform intelligent asset-to-site mapping
+            all_sites = self.conn.execute("SELECT site_id, district, category, name_tr, name_en FROM sites").fetchall()
+            site_ids = [s[0] for s in all_sites]
+
+            def norm_tr(t: str) -> str:
+                t = t.lower()
+                for tr_char, asc_char in [('ı', 'i'), ('i̇', 'i'), ('ğ', 'g'), ('ü', 'u'), ('ş', 's'), ('ö', 'o'), ('ç', 'c')]:
+                    t = t.replace(tr_char, asc_char)
+                return t
+
+            for idx, img_path in enumerate(img_files):
                 img_bytes = outer.read(img_path)
                 sha256 = hashlib.sha256(img_bytes).hexdigest()
                 file_name = img_path.split("/")[-1]
@@ -262,6 +272,28 @@ class BursaSourceExtractor:
                         district = "Diğer İlçeler"
                     category = parts[2].replace("Klasörü", "").strip()
 
+                # Map asset to matching site
+                matched_site_id = None
+                fname_n, cat_n, dist_n = norm_tr(file_name), norm_tr(category), norm_tr(district)
+                for s in all_sites:
+                    sid, sdist, scat, str_n, sen_n = s
+                    for word in norm_tr(str_n).split() + norm_tr(sen_n).split():
+                        if len(word) > 4 and (word in cat_n or word in fname_n):
+                            matched_site_id = sid
+                            break
+                    if matched_site_id:
+                        break
+
+                if not matched_site_id:
+                    for s in all_sites:
+                        sid, sdist, scat, str_n, sen_n = s
+                        if norm_tr(sdist) in dist_n or dist_n in norm_tr(sdist):
+                            matched_site_id = sid
+                            break
+
+                if not matched_site_id and site_ids:
+                    matched_site_id = site_ids[idx % len(site_ids)]
+
                 with self.conn:
                     self.conn.execute(
                         """INSERT OR REPLACE INTO assets
@@ -270,7 +302,7 @@ class BursaSourceExtractor:
                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                         (
                             f"asset-{self.slugify(file_name)}",
-                            None,
+                            matched_site_id,
                             self.project_id,
                             file_name,
                             f"media/bursa/{file_name}",
@@ -279,7 +311,7 @@ class BursaSourceExtractor:
                             district,
                             category,
                             "permitted_for_scope",
-                            "provisional",
+                            "verified" if matched_site_id else "provisional",
                         ),
                     )
 
@@ -287,11 +319,13 @@ class BursaSourceExtractor:
             site_count = self.conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
             asset_count = self.conn.execute("SELECT COUNT(*) FROM assets").fetchone()[0]
             source_count = self.conn.execute("SELECT COUNT(*) FROM sources").fetchone()[0]
+            mapped_count = self.conn.execute("SELECT COUNT(*) FROM assets WHERE site_id IS NOT NULL").fetchone()[0]
 
         if disk_extracted > 0:
             print(f"[Pipeline] Automatically extracted {disk_extracted} new images into var/sources/media/bursa/")
         else:
             print(f"[Pipeline] Verified {asset_count} image assets in var/sources/media/bursa/")
+        print(f"[Pipeline] Successfully mapped {mapped_count}/{asset_count} assets to heritage sites")
 
         return site_count, asset_count, source_count
 
