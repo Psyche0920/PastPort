@@ -6,12 +6,12 @@ Use a full-date heading and `MM.DD-owner-function` entry. Record delivery, scope
 
 ## 2026-10-22
 
-### 10.22-weng-branch-b-vision-pipeline
+### 10.22-weng-evidence-pipeline-refinement
 
-- Delivery: Branch B Vision LLM automated spot detection pipeline (`tools/branch_b_vision.py`), multimodal spot detector (`tools/vision_spot_detector.py`), 360 verification studio viewer (`tools/hotspot_studio.py`), and cross-branch angular error benchmark (`tools/compare_branches.py`).
-- Scope/status: Automated the 360 hotspot authoring pipeline by pairing multimodal vision models (Gemini / OpenAI / deterministic mock) with equirectangular panoramas and SQLite heritage claims. Supports batch site execution, direct persistence to `scene_hotspots` with `authoring_method='vision_llm'`, visual verification in the 360 studio viewer, and automated accuracy benchmarking against human ground truth.
-- Verification: `tools/branch_b_vision.py` processed all test claims and persisted spots to `var/test_evidence.db`; `tools/compare_branches.py` passed with 0.77° great-circle angular error (threshold <= 15.0°); `tools/check_repository.py` and `tools/check_handoff.py` passed offline gates.
-- Limits: Local extraction, AI detection, and benchmark verification only. Live external API calls require environment keys (`GEMINI_API_KEY` / `OPENAI_API_KEY`). Joint integration with narrative reference (`INT-01`) remains pending.
+- Delivery: Unified Vision Hotspot Pipeline (`tools/vision_hotspot_pipeline.py`), interactive 360 Verification Studio (`tools/hotspot_studio.py`), rewritten operational skill (`skills/evidence-review/SKILL.md`), and comprehensive multi-location/multi-image workflow documentation in `skills/evidence-review/README.md`.
+- Scope/status: Consolidated the heritage evidence spatial mapping pipeline. Renamed vision tooling to descriptive pipeline, removed temporary cross-branch comparison scripts, added batch processing across all 31 official monuments in `var/bursa_evidence.db` (306 spots persisted to `scene_hotspots`), refined SKILL.md with explicit tool instructions and links to `.agents/agents/agent.md`, and documented multi-image routing workflows.
+- Verification: Batch pipeline ran across all 31 sites in `var/bursa_evidence.db`, generating 306 spots; Hotspot Studio verified at `http://localhost:8088`; `tools/check_repository.py` and `tools/check_handoff.py` passed offline gates.
+- Limits: Local extraction, multimodal detection, and studio verification only. Live external model calls require environment keys (`GEMINI_API_KEY` / `OPENAI_API_KEY`). Integration with narrative reference (`INT-01`) remains pending.
 
 ## 2026-10-20
 

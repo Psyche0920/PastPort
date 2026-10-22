@@ -1,7 +1,7 @@
-"""Branch B: Vision LLM Automated Spot Detection Tool.
+"""PastPort Vision Hotspot Pipeline: Automated Multimodal Spatial AI Detector.
 
-Uses multimodal vision models (Gemini / OpenAI / offline mock) to analyze a 360 panorama,
-locate the target artifact described in a SQLite claim, and generate a PastPort Spot.
+Uses multimodal vision models (Gemini / OpenAI / offline mock) to analyze 360 panoramas and 2D images,
+locate target heritage artifacts described in SQLite claims, and generate PastPort Spot contracts.
 """
 from __future__ import annotations
 
@@ -139,7 +139,7 @@ def run_vision_pipeline_for_site(
         return []
 
     print("=" * 70)
-    print("PASTPORT BRANCH B: VISION LLM AUTOMATED PIPELINE")
+    print("PASTPORT VISION LLM AUTOMATED PIPELINE")
     print("=" * 70)
     print(f"Site ID:     {site_id} ({site_name})")
     print(f"Panorama:    {resolved_pano} ({resolved_pano.stat().st_size:,} bytes)")
@@ -217,7 +217,7 @@ def run_vision_pipeline_for_site(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Branch B: Vision LLM Spot Detection Pipeline")
+    parser = argparse.ArgumentParser(description="PastPort Vision LLM Spot Detection Pipeline")
     parser.add_argument("--db", default="var/test_evidence.db", help="Path to SQLite evidence database")
     parser.add_argument("--site", default=None, help="Site ID to batch process (default: all claims in first site)")
     parser.add_argument("--all", action="store_true", help="Process all sites across the entire database in batch")
@@ -241,7 +241,7 @@ def main() -> None:
             mode=args.mode,
         )
         print("=" * 60)
-        print("BRANCH B: VISION LLM SINGLE SPOT RESULT")
+        print("PASTPORT: VISION LLM SINGLE SPOT RESULT")
         print("=" * 60)
         print(json.dumps(result, indent=2))
         spots = [result]

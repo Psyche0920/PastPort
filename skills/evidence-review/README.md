@@ -57,52 +57,109 @@ The extracted database uses four relational tables.
 | `claims` | `claim_id` | Historical facts, architectural styles, and artifact records linked to sites. |
 | `scene_hotspots` | `spot_id` | Validated clickable spot contracts with normalized [0..10000] coordinates and spherical yaw/pitch. |
 
-## 360 Panorama Processing and Vision LLM Pipeline (Branch B)
+## Multi-Location & Multi-Image Pipeline Workflow
 
-Branch B automates the hotspot authoring workflow by pairing multimodal vision models directly with the SQLite heritage claims and stitched 360 equirectangular panoramas.
+When scaling to real heritage archives (e.g., 31 monuments, 105 photographs, and 306 claims), the evidence pipeline operates in five automated stages:
 
-### 1. Panorama Asset Extraction
-High-resolution 360 equirectangular images (4096x2048) exported from VR Studio (`PastPort-VR-Studio/output/pastport-tour.zip`) are extracted using:
+```
+┌────────────────────────────────────────────────────────┐
+│  STAGE 1: Ingestion & Relational Linking               │
+│  - 31 Sites extracted (Yeşil Mosque, Ayasofya, etc.)   │
+│  - 105 Photos extracted from archive Links/            │
+│  - 306 Claims extracted from InDesign monographs       │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 2: Location-to-Asset Mapping                    │
+│  - InDesign IDML spreads link images and text frames.  │
+│  - Photos on spread #9 automatically belong to site #9.│
+│  - Stored in SQLite: assets.site_id = site.site_id     │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 3: Claim-to-Image Routing (Two-Phase Matching)  │
+│  A site has multiple photos (facade, mihrab, dome).    │
+│  For each claim (e.g., "The minaret is made of brick"):│
+│                                                        │
+│  Phase 3A: Candidate Relevance Filter                  │
+│  - Keyword match (claim: "minaret" -> photo: "facade") │
+│  - Or ask Vision LLM: "Which photo shows the minaret?" │
+│                                                        │
+│  Phase 3B: Spatial Localization                        │
+│  - Selected Image + Claim -> Vision LLM                │
+│  - Outputs normalized [x, y] in [0..10000]             │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 4: Database Persistence & Spot Contracts        │
+│  - Writes to SQLite scene_hotspots table:              │
+│    (spot_id, site_id, asset_id, claim_id, x, y, conf) │
+│  - Every spot explicitly binds its asset_id & claim_id │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│  STAGE 5: Visual Verification Studio                   │
+│  - Curators open the studio at http://localhost:8088   │
+│  - Inspect pins rendered on 360 panorama or 2D image   │
+│  - Spots marked with purple VISION AI badge            │
+└────────────────────────────────────────────────────────┘
+```
+
+## Tools and CLI Usage
+
+### 1. Ingestion Tool (`tools/extract_bursa_sources.py`)
+Extracts monuments, image asset references, and segmented claims from the raw archive into SQLite:
+
+```bash
+python tools/extract_bursa_sources.py
+```
+
+### 2. Panorama Extractor (`tools/extract_panorama.py`)
+Extracts stitched equirectangular 360 images from VR Studio tours:
 
 ```bash
 python tools/extract_panorama.py
 ```
 
-This writes game-ready panoramas directly into `var/sources/panoramas/turing_lab_room.jpg`.
-
-### 2. Automated Vision Spot Detector
-Multimodal vision models analyze the 360 panorama and locate target heritage objects described in claims:
+### 3. Vision Hotspot Pipeline (`tools/vision_hotspot_pipeline.py`)
+Automated multimodal spatial detector that reads claims from SQLite, runs vision detection, and saves spots directly to `scene_hotspots`:
 
 ```bash
-python tools/branch_b_vision.py --db var/test_evidence.db
+# Process a single monument
+python tools/vision_hotspot_pipeline.py --db var/bursa_evidence.db --site bursa-ye-i-l-green-mosque
+
+# Batch-process all 31 monuments in the database
+python tools/vision_hotspot_pipeline.py --db var/bursa_evidence.db --all
+
+# Export Spot contracts to JSON for the game engine
+python tools/vision_hotspot_pipeline.py --db var/test_evidence.db --export var/test_spots.json
 ```
 
-- **Inputs**: Equirectangular 360 panorama image + heritage claims from SQLite.
-- **Model Prompting**: Model is instructed to predict normalized center coordinates `[x, y]` in `[0..10000]`, where `x` maps to yaw `[-180°..+180°]` and `y` maps to pitch `[-90°..+90°]`.
-- **Supported Backends**:
+- **Supported Backends** (`--mode`):
   - `auto`: Automatically selects active API key or falls back to offline mock.
   - `gemini`: Google `gemini-1.5-flash` via standard HTTPS.
   - `openai`: OpenAI `gpt-4o-mini` via standard HTTPS.
-  - `mock`: Deterministic offline mode for local testing and CI gates.
-- **Output**: Automatically writes validated spot records directly into SQLite `scene_hotspots` with `authoring_method='vision_llm'`.
+  - `mock`: Deterministic offline spatial predictor for local testing and CI gates.
 
-### 3. Visual Verification Viewer (Hotspot Studio)
-To visually inspect and verify the spots detected by the Vision AI in a web browser:
-
-```bash
-python tools/hotspot_studio.py --db var/test_evidence.db
-```
-
-Open `http://localhost:8088`. Placed spots are loaded from `scene_hotspots`, rendered as interactive 360 pins, and marked with a `VISION AI` badge.
-
-### 4. Cross-Branch Accuracy Benchmark
-To verify Vision LLM spatial accuracy against human-authored ground truth:
+### 4. Verification Studio (`tools/hotspot_studio.py`)
+Web viewer for visual review and curation of placed hotspots:
 
 ```bash
-python tools/compare_branches.py --db var/test_evidence.db
+python tools/hotspot_studio.py --db var/bursa_evidence.db
 ```
 
-Computes great-circle angular distance on the 360 sphere. Pass threshold: angular error <= 15.0°.
+Open `http://localhost:8088`. Select any monument from the top dropdown to see its claims and interactive 360 spots.
+
+## Reference Sample (Demo Cluster)
+
+For offline verification without the full 2 GB archive, a synthetic reference cluster is provided:
+- Mock IDML package: `var/sources/turing_lab.idml` (created via `tools/create_mock_idml.py`).
+- 360 Panorama: `var/sources/panoramas/turing_lab_room.jpg`.
+- Test SQLite database: `var/test_evidence.db` (ingested via `tools/ingest_test_cluster.py`).
 
 ## Next Steps and Adapter Interface
 
