@@ -220,6 +220,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Branch B: Vision LLM Spot Detection Pipeline")
     parser.add_argument("--db", default="var/test_evidence.db", help="Path to SQLite evidence database")
     parser.add_argument("--site", default=None, help="Site ID to batch process (default: all claims in first site)")
+    parser.add_argument("--all", action="store_true", help="Process all sites across the entire database in batch")
     parser.add_argument("--claim", default=None, help="Process single target claim ID")
     parser.add_argument("--pano", default=None, help="Path to 360 panorama JPG (default: auto-detect from assets)")
     parser.add_argument("--mode", default="auto", choices=["auto", "gemini", "openai", "mock"], help="Detector backend")
@@ -244,6 +245,22 @@ def main() -> None:
         print("=" * 60)
         print(json.dumps(result, indent=2))
         spots = [result]
+    elif args.all:
+        # Process all sites in the database
+        conn = sqlite3.connect(db_path)
+        site_ids = [r[0] for r in conn.execute("SELECT site_id FROM sites ORDER BY site_id").fetchall()]
+        conn.close()
+        spots = []
+        for s_id in site_ids:
+            s_spots = run_vision_pipeline_for_site(
+                db_path=db_path,
+                site_id=s_id,
+                pano_path=pano_path,
+                mode=args.mode,
+                save_to_db=not args.no_save,
+            )
+            spots.extend(s_spots)
+        print(f"\n[Batch Complete] Processed {len(site_ids)} sites, generated {len(spots)} spots.")
     else:
         # Full site batch pipeline mode
         spots = run_vision_pipeline_for_site(
