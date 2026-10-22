@@ -109,37 +109,34 @@ def run_vision_pipeline_for_site(
             raise ValueError(f"Site '{site_id}' not found in database {db_path}")
         site_name = site_row[1]
 
-    # 2. Resolve panorama image and asset_id
+    # 2. Resolve image assets for this site
     repo_root = Path(__file__).resolve().parents[1]
-    resolved_asset_id = "asset-turing-room-pano-360"
-    resolved_pano = pano_path
+    asset_rows: list[tuple[str, str]] = []
 
-    if not resolved_pano or not resolved_pano.is_file():
-        asset_row = conn.execute(
-            "SELECT asset_id, relative_path FROM assets WHERE site_id = ? LIMIT 1",
+    if pano_path and pano_path.is_file():
+        asset_rows = [("asset-custom", str(pano_path))]
+    else:
+        db_assets = conn.execute(
+            "SELECT asset_id, relative_path FROM assets WHERE site_id = ? ORDER BY asset_id",
             (site_id,),
-        ).fetchone()
-        if not asset_row:
-            asset_row = conn.execute(
-                "SELECT asset_id, relative_path FROM assets WHERE media_type = 'image/jpeg' LIMIT 1"
-            ).fetchone()
+        ).fetchall()
+        asset_rows = [(r[0], r[1]) for r in db_assets]
 
-        if asset_row:
-            resolved_asset_id = asset_row[0]
-            raw_path = asset_row[1]
-            candidates = [
-                repo_root / "var/sources" / raw_path,
-                repo_root / "var/sources/media" / raw_path,
-                repo_root / "var/sources/media/bursa" / Path(raw_path).name,
-                repo_root / "var/sources" / raw_path.replace("media/", ""),
-            ]
-            for cand in candidates:
-                if cand.is_file():
-                    resolved_pano = cand
-                    break
+    resolved_assets: list[tuple[str, Path]] = []
+    for a_id, raw_path in asset_rows:
+        candidates = [
+            Path(raw_path),
+            repo_root / "var/sources" / raw_path,
+            repo_root / "var/sources/media" / raw_path,
+            repo_root / "var/sources/media/bursa" / Path(raw_path).name,
+            repo_root / "var/sources" / raw_path.replace("media/", ""),
+        ]
+        found_file = next((c for c in candidates if c.is_file()), None)
+        if found_file:
+            resolved_assets.append((a_id, found_file))
 
-        if not resolved_pano or not resolved_pano.is_file():
-            resolved_pano = repo_root / "var/sources/panoramas/turing_lab_room.jpg"
+    if not resolved_assets:
+        resolved_assets = [("asset-turing-room-pano-360", repo_root / "var/sources/panoramas/turing_lab_room.jpg")]
 
     # 3. Retrieve museum objects for this site (or fallback to architectural claims)
     objects = []
@@ -177,8 +174,8 @@ def run_vision_pipeline_for_site(
     print("PASTPORT VISION LLM AUTOMATED PIPELINE")
     print("=" * 70)
     print(f"Site ID:     {site_id} ({site_name})")
-    print(f"Panorama:    {resolved_pano} ({resolved_pano.stat().st_size:,} bytes)")
-    print(f"Targets:     {len(targets)} museum features to locate")
+    print(f"Assets:      {len(resolved_assets)} photographic views to scan")
+    print(f"Targets:     {len(targets)} museum objects to ground")
     print(f"Backend:     {mode}")
     print(f"Save to DB:  {save_to_db} -> {db_path}")
     print("-" * 70)
@@ -189,61 +186,79 @@ def run_vision_pipeline_for_site(
     if save_to_db:
         conn.execute(INIT_TABLE_SQL)
 
-    for idx, (target_id, prompt_text, default_label, claim_id) in enumerate(targets, 1):
-        detect_res = detector.detect(resolved_pano, prompt_text)
-        spot_x = int(detect_res["x"])
-        spot_y = int(detect_res["y"])
-        coord = SphericalCoordinate.from_spot(spot_x, spot_y)
-        spot_id = f"spot-vision-{target_id}"
-        label = default_label or str(detect_res.get("label", target_id))
-        is_obj = target_id.startswith("obj-")
-
-        spot_record = {
-            "spot_id": spot_id,
-            "site_id": site_id,
-            "asset_id": resolved_asset_id,
-            "object_id": target_id if is_obj else None,
-            "claim_id": claim_id or "claim-general",
-            "x": spot_x,
-            "y": spot_y,
-            "spherical": {"yaw": coord.yaw, "pitch": coord.pitch},
-            "label": label,
-            "text_key": f"{spot_id}_desc",
-            "claim_ids": [claim_id] if claim_id else [],
-            "authoring_method": "vision_spatial_grounding",
-            "vision_backend": detect_res.get("backend", mode),
-            "confidence": detect_res.get("confidence", 0.0),
-            "latency_ms": detect_res.get("latency_ms", 0.0),
-            "cost_usd": detect_res.get("cost_usd", 0.0),
+    candidates = [
+        {
+            "object_id": t[0],
+            "name": t[2],
+            "description": t[1],
+            "claim_id": t[3],
         }
-        results.append(spot_record)
+        for t in targets
+    ]
 
-        if save_to_db:
-            conn.execute(
-                """INSERT OR REPLACE INTO scene_hotspots
-                   (spot_id, site_id, asset_id, object_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    spot_id,
-                    site_id,
-                    resolved_asset_id,
-                    target_id if is_obj else None,
-                    claim_id or "claim-general",
-                    spot_x,
-                    spot_y,
-                    coord.yaw,
-                    coord.pitch,
-                    label,
-                    "vision_spatial_grounding",
-                    time.time(),
-                ),
+    for a_idx, (asset_id, asset_path) in enumerate(resolved_assets, 1):
+        print(f"\n--- Scanning Asset [{a_idx}/{len(resolved_assets)}]: {asset_path.name} ---")
+        detected_items = detector.detect_multi(asset_path, candidates)
+        if not detected_items:
+            print(f"  No target objects detected in {asset_path.name}.")
+            continue
+
+        for det in detected_items:
+            spot_x = int(det["x"])
+            spot_y = int(det["y"])
+            coord = SphericalCoordinate.from_spot(spot_x, spot_y)
+            obj_id = det["object_id"]
+            spot_id = f"spot-vision-{obj_id}-{asset_id[-6:]}"
+            label = det["name"]
+            is_obj = obj_id.startswith("obj-")
+
+            spot_record = {
+                "spot_id": spot_id,
+                "site_id": site_id,
+                "asset_id": asset_id,
+                "object_id": obj_id if is_obj else None,
+                "claim_id": det.get("claim_id") or "claim-general",
+                "x": spot_x,
+                "y": spot_y,
+                "spherical": {"yaw": coord.yaw, "pitch": coord.pitch},
+                "label": label,
+                "text_key": f"{spot_id}_desc",
+                "claim_ids": [det["claim_id"]] if det.get("claim_id") else [],
+                "authoring_method": "vision_spatial_grounding",
+                "vision_backend": det.get("backend", mode),
+                "confidence": det.get("confidence", 0.0),
+                "latency_ms": det.get("latency_ms", 0.0),
+                "cost_usd": det.get("cost_usd", 0.0),
+            }
+            results.append(spot_record)
+
+            if save_to_db:
+                conn.execute(
+                    """INSERT OR REPLACE INTO scene_hotspots
+                       (spot_id, site_id, asset_id, object_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        spot_id,
+                        site_id,
+                        asset_id,
+                        obj_id if is_obj else None,
+                        det.get("claim_id") or "claim-general",
+                        spot_x,
+                        spot_y,
+                        coord.yaw,
+                        coord.pitch,
+                        label,
+                        "vision_spatial_grounding",
+                        time.time(),
+                    ),
+                )
+                conn.commit()
+
+            print(
+                f"  VISIBLE: {label} -> Spot({spot_x}, {spot_y}) "
+                f"yaw={coord.yaw:+.1f}°, pitch={coord.pitch:+.1f}° | conf={det.get('confidence', 0):.2f} "
+                f"({det.get('description', '')[:40]})"
             )
-
-        print(
-            f"[{idx}/{len(targets)}] {label[:28]} -> Spot({spot_x}, {spot_y}) "
-            f"yaw={coord.yaw:+.1f}°, pitch={coord.pitch:+.1f}° | conf={detect_res.get('confidence', 0):.2f} "
-            f"({detect_res.get('latency_ms', 0):.0f}ms)"
-        )
 
     if save_to_db:
         conn.commit()

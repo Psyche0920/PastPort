@@ -62,7 +62,7 @@ class BursaSourceExtractor:
             "category": "Liturgical",
             "keywords": ("mihrab", "prayer niche", "mihrap", "kıble"),
             "default_x": 5000,
-            "default_y": 4800,
+            "default_y": 5200,
         },
         {
             "key": "minbar",
@@ -71,7 +71,7 @@ class BursaSourceExtractor:
             "category": "Liturgical",
             "keywords": ("minbar", "pulpit", "minber", "kündekari"),
             "default_x": 3800,
-            "default_y": 4600,
+            "default_y": 5400,
         },
         {
             "key": "dome",
@@ -80,7 +80,7 @@ class BursaSourceExtractor:
             "category": "Architecture",
             "keywords": ("dome", "cupola", "kubbe", "pendentive", "squinch"),
             "default_x": 5000,
-            "default_y": 7500,
+            "default_y": 2000,
         },
         {
             "key": "portal",
@@ -89,7 +89,7 @@ class BursaSourceExtractor:
             "category": "Structure",
             "keywords": ("portal", "entrance", "taç kapı", "gate", "cümle kapısı", "door"),
             "default_x": 5000,
-            "default_y": 4200,
+            "default_y": 5000,
         },
         {
             "key": "tile",
@@ -107,7 +107,7 @@ class BursaSourceExtractor:
             "category": "Epigraphy",
             "keywords": ("inscription", "kitabe", "calligraph", "epigraph", "charter", "vakfiye"),
             "default_x": 5000,
-            "default_y": 6200,
+            "default_y": 3800,
         },
         {
             "key": "courtyard",
@@ -116,7 +116,7 @@ class BursaSourceExtractor:
             "category": "Courtyard",
             "keywords": ("courtyard", "fountain", "şadırvan", "avlu", "pool", "havuz"),
             "default_x": 5000,
-            "default_y": 3200,
+            "default_y": 7200,
         },
         {
             "key": "tomb",
@@ -125,7 +125,7 @@ class BursaSourceExtractor:
             "category": "Funerary",
             "keywords": ("tomb", "sarcophagus", "cenotaph", "sanduka", "grave", "burial", "mezar"),
             "default_x": 5000,
-            "default_y": 4000,
+            "default_y": 6800,
         },
         {
             "key": "minaret",
@@ -134,7 +134,7 @@ class BursaSourceExtractor:
             "category": "Architecture",
             "keywords": ("minaret", "minare", "balcony", "şerefe"),
             "default_x": 7500,
-            "default_y": 8000,
+            "default_y": 2200,
         },
         {
             "key": "arch",
@@ -143,7 +143,7 @@ class BursaSourceExtractor:
             "category": "Structure",
             "keywords": ("arch", "arcade", "revak", "kemer", "column", "sütun", "vault"),
             "default_x": 3000,
-            "default_y": 5500,
+            "default_y": 4200,
         },
         {
             "key": "window",
@@ -152,7 +152,7 @@ class BursaSourceExtractor:
             "category": "Ornament",
             "keywords": ("window", "pencere", "plaster", "revzen", "grille", "parmaklık"),
             "default_x": 6800,
-            "default_y": 6000,
+            "default_y": 3500,
         },
     )
 
@@ -574,7 +574,7 @@ class BursaSourceExtractor:
                         x = max(1000, min(9000, int(obj["default_x"] + offset_x)))  # type: ignore[operator]
                         y = int(obj["default_y"])  # type: ignore[arg-type]
                         yaw = round((x / 10000.0) * 360.0 - 180.0, 2)
-                        pitch = round((y / 10000.0) * 180.0 - 90.0, 2)
+                        pitch = round(90.0 - (y / 10000.0) * 180.0, 2)
                         with self.conn:
                             self.conn.execute(
                                 """INSERT OR REPLACE INTO scene_hotspots

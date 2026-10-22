@@ -525,15 +525,35 @@ HTML_PAGE = """<!doctype html>
       const normX = Math.max(0, Math.min(10000, Math.round((clickX / rect.width) * 10000)));
       const normY = Math.max(0, Math.min(10000, Math.round((clickY / rect.height) * 10000)));
 
-      // Convert to yaw/pitch
+      // Convert to yaw/pitch per PRD Section 2.6.2 (pitch = 90 - 180*v)
       const yaw = Number(((normX / 10000) * 360 - 180).toFixed(2));
-      const pitch = Number(((normY / 10000) * 180 - 90).toFixed(2));
+      const pitch = Number((90 - (normY / 10000) * 180).toFixed(2));
 
-      const spotId = `spot-${currentSite.site_id.split('-').slice(-2).join('-')}-${Date.now().toString().slice(-4)}`;
       const labelText = selectedObject ? selectedObject.name_en : selectedClaim.text.slice(0, 32);
       const descText = selectedObject ? selectedObject.description_en : selectedClaim.text;
       const catText = selectedObject ? selectedObject.category : 'Feature';
 
+      // Check if this object already has a spot on this asset, or if a spot is currently selected
+      let targetSpot = placedSpots.find(s => selectedObject && s.object_id === selectedObject.object_id && (!s.asset_id || s.asset_id === currentSite.asset_id));
+      if (!targetSpot && selectedSpot && (!selectedSpot.asset_id || selectedSpot.asset_id === currentSite.asset_id)) {
+        targetSpot = selectedSpot;
+      }
+
+      if (targetSpot) {
+        // Calibrate / move existing spot to the clicked position
+        targetSpot.x = normX;
+        targetSpot.y = normY;
+        targetSpot.yaw = yaw;
+        targetSpot.pitch = pitch;
+        targetSpot.authoring_method = 'manual_calibrated';
+        renderSpots();
+        renderPhotoPins();
+        selectSpot(targetSpot);
+        showToast(`Calibrated pin position for: ${targetSpot.label}`);
+        return;
+      }
+
+      const spotId = `spot-${currentSite.site_id.split('-').slice(-2).join('-')}-${Date.now().toString().slice(-4)}`;
       const newSpot = {
         spot_id: spotId,
         site_id: currentSite.site_id,
@@ -547,7 +567,7 @@ HTML_PAGE = """<!doctype html>
         y: normY,
         yaw: yaw,
         pitch: pitch,
-        authoring_method: 'manual_handclick'
+        authoring_method: 'manual_calibrated'
       };
 
       placedSpots.push(newSpot);

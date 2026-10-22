@@ -18,7 +18,7 @@ class SphericalCoordinate:
         clamped_yaw = max(-180.0, min(180.0, self.yaw))
         clamped_pitch = max(-90.0, min(90.0, self.pitch))
         x = round(((clamped_yaw + 180.0) / 360.0) * 10000)
-        y = round(((clamped_pitch + 90.0) / 180.0) * 10000)
+        y = round(((90.0 - clamped_pitch) / 180.0) * 10000)
         return max(0, min(10000, x)), max(0, min(10000, y))
 
     @classmethod
@@ -27,7 +27,7 @@ class SphericalCoordinate:
         clamped_x = max(0, min(10000, x))
         clamped_y = max(0, min(10000, y))
         yaw = (clamped_x / 10000.0) * 360.0 - 180.0
-        pitch = (clamped_y / 10000.0) * 180.0 - 90.0
+        pitch = 90.0 - (clamped_y / 10000.0) * 180.0
         return cls(yaw=round(yaw, 2), pitch=round(pitch, 2))
 
 
