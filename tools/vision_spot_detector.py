@@ -43,6 +43,22 @@ def load_dotenv_if_present(env_path: Path) -> None:
             os.environ[key] = val
 
 
+def _encode_image_b64(image_path: Path, max_dim: int = 1600) -> str:
+    """Read image, auto-resize in memory if large (>2MB or >max_dim) to avoid gateway 503 errors, and base64-encode."""
+    try:
+        from PIL import Image
+        import io
+        with Image.open(image_path) as im:
+            if max(im.size) > max_dim or image_path.stat().st_size > 2 * 1024 * 1024:
+                im.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+                buf = io.BytesIO()
+                im.save(buf, format="JPEG", quality=85)
+                return base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception:
+        pass
+    return base64.b64encode(image_path.read_bytes()).decode("ascii")
+
+
 class VisionSpotDetector:
     def __init__(self, mode: str = "auto") -> None:
         """Mode can be 'auto', 'gemini', 'openai', or 'mock'."""
@@ -52,6 +68,17 @@ class VisionSpotDetector:
 
         self.gemini_key = os.environ.get("GEMINI_API_KEY", "")
         self.openai_key = os.environ.get("OPENAI_API_KEY", "")
+
+        self._last_call_time = 0.0
+        self._min_interval = 4.2  # Gemini free tier limit is 15 RPM (4.0s/req); 4.2s guarantees safety
+
+    def _rate_limit_wait(self) -> None:
+        """Enforce inter-request delay to stay strictly under Gemini's 15 RPM ceiling."""
+        elapsed = time.time() - self._last_call_time
+        if elapsed < self._min_interval:
+            wait_time = self._min_interval - elapsed
+            time.sleep(wait_time)
+        self._last_call_time = time.time()
 
     def detect(self, image_path: Path, claim_text: str) -> dict[str, object]:
         start = time.perf_counter()
@@ -107,9 +134,8 @@ class VisionSpotDetector:
         return results
 
     def _call_gemini_multi(self, image_path: Path, candidates: list[dict[str, str]]) -> list[dict[str, object]]:
-        """Send 1 single image and candidate list to Gemini 2.5 Flash."""
-        img_bytes = image_path.read_bytes()
-        b64_img = base64.b64encode(img_bytes).decode("ascii")
+        """Send 1 single image and candidate list to Gemini."""
+        b64_img = _encode_image_b64(image_path)
 
         cand_text = "\n".join(f"- {c['object_id']}: {c['name']} ({c.get('description', '')})" for c in candidates)
         prompt = (
@@ -125,7 +151,7 @@ class VisionSpotDetector:
             "If none of these specific objects are visible in this specific photo, return []."
         )
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_key}"
+        models_to_try = ["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-flash-latest"]
         payload = {
             "contents": [
                 {
@@ -138,55 +164,74 @@ class VisionSpotDetector:
             "generationConfig": {"response_mime_type": "application/json"}
         }
 
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                parsed = json.loads(text)
-                if isinstance(parsed, list):
-                    # Ensure matching candidate names/ids
-                    valid_ids = {c["object_id"]: c for c in candidates}
-                    valid_names = {c["name"].lower(): c for c in candidates}
-                    cleaned = []
-                    for item in parsed:
-                        oid = item.get("object_id")
-                        matched = valid_ids.get(oid) if oid else None
-                        if not matched:
-                            item_name = str(item.get("name", "")).lower()
-                            matched = valid_names.get(item_name)
-                            if not matched:
-                                for cand_name, c in valid_names.items():
-                                    if cand_name in item_name or item_name in cand_name:
-                                        matched = c
-                                        break
-                        if matched:
-                            cleaned.append({
-                                "object_id": matched["object_id"],
-                                "name": matched["name"],
-                                "claim_id": matched.get("claim_id"),
-                                "category": matched.get("category", "Architecture"),
-                                "x": int(item.get("x", 5000)),
-                                "y": int(item.get("y", 5000)),
-                                "confidence": float(item.get("confidence", 0.9)),
-                                "description": str(item.get("description", matched.get("description", ""))),
-                                "cost_usd": 0.0004,
-                            })
-                    return cleaned
-                return []
-        except Exception as error:
-            print(f"Gemini multi-object API call failed: {error}; falling back to mock.")
-            return self._call_mock_multi(image_path, candidates)
+        for model_name in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.gemini_key}"
+            for attempt in range(1, 3):
+                self._rate_limit_wait()
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                try:
+                    with urllib.request.urlopen(req, timeout=45) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        parsed = json.loads(text)
+                        if isinstance(parsed, list):
+                            # Ensure matching candidate names/ids
+                            valid_ids = {c["object_id"]: c for c in candidates}
+                            valid_names = {c["name"].lower(): c for c in candidates}
+                            cleaned = []
+                            for item in parsed:
+                                oid = item.get("object_id")
+                                matched = valid_ids.get(oid) if oid else None
+                                if not matched:
+                                    item_name = str(item.get("name", "")).lower()
+                                    matched = valid_names.get(item_name)
+                                    if not matched:
+                                        for cand_name, c in valid_names.items():
+                                            if cand_name in item_name or item_name in cand_name:
+                                                matched = c
+                                                break
+                                if matched:
+                                    cleaned.append({
+                                        "object_id": matched["object_id"],
+                                        "name": matched["name"],
+                                        "claim_id": matched.get("claim_id"),
+                                        "category": matched.get("category", "Architecture"),
+                                        "x": int(item.get("x", 5000)),
+                                        "y": int(item.get("y", 5000)),
+                                        "confidence": float(item.get("confidence", 0.9)),
+                                        "description": str(item.get("description", matched.get("description", ""))),
+                                        "cost_usd": 0.0004,
+                                    })
+                            return cleaned
+                        return []
+                except urllib.error.HTTPError as error:
+                    if error.code == 429:
+                        print(f"  [Quota 429 on {model_name}] Trying alternative model in pool...")
+                        break
+                    if error.code in (500, 502, 503, 504):
+                        if attempt < 2:
+                            print(f"  [HTTP {error.code}] Transient error on {model_name}. Retrying in 5s...")
+                            time.sleep(5.0)
+                            continue
+                except Exception as error:
+                    print(f"Gemini {model_name} call failed: {error}")
+                    break
+
+        if self.openai_key:
+            print("All Gemini models exhausted; attempting OpenAI fallback...")
+            return self._call_openai_multi(image_path, candidates)
+
+        print("All vision LLM endpoints exhausted; falling back to mock.")
+        return self._call_mock_multi(image_path, candidates)
 
     def _call_openai_multi(self, image_path: Path, candidates: list[dict[str, str]]) -> list[dict[str, object]]:
         """Send 1 single image and candidate list to OpenAI."""
-        img_bytes = image_path.read_bytes()
-        b64_img = base64.b64encode(img_bytes).decode("ascii")
+        b64_img = _encode_image_b64(image_path)
 
         cand_text = "\n".join(f"- {c['object_id']}: {c['name']} ({c.get('description', '')})" for c in candidates)
         prompt = (
@@ -317,10 +362,9 @@ class VisionSpotDetector:
 
     def _call_gemini(self, image_path: Path, claim_text: str) -> dict[str, object]:
         """Call Gemini Vision API via standard HTTPS."""
-        img_bytes = image_path.read_bytes()
-        b64_img = base64.b64encode(img_bytes).decode("ascii")
+        b64_img = _encode_image_b64(image_path)
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={self.gemini_key}"
+        models_to_try = ["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-flash-latest"]
         payload = {
             "contents": [
                 {
@@ -338,33 +382,49 @@ class VisionSpotDetector:
             "generationConfig": {"response_mime_type": "application/json"},
         }
 
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                parsed = json.loads(text)
-                return {
-                    "visible": bool(parsed.get("visible", True)),
-                    "x": int(parsed.get("x", 5000)),
-                    "y": int(parsed.get("y", 5000)),
-                    "confidence": float(parsed.get("confidence", 0.8)),
-                    "label": str(parsed.get("label", "detected_object")),
-                    "cost_usd": 0.0004,
-                }
-        except Exception as error:
-            print(f"Gemini API call failed: {error}; falling back to mock.")
-            return self._call_mock(image_path, claim_text)
+        for model_name in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.gemini_key}"
+            for attempt in range(1, 3):
+                self._rate_limit_wait()
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                try:
+                    with urllib.request.urlopen(req, timeout=45) as resp:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        parsed = json.loads(text)
+                        return {
+                            "visible": bool(parsed.get("visible", True)),
+                            "x": int(parsed.get("x", 5000)),
+                            "y": int(parsed.get("y", 5000)),
+                            "confidence": float(parsed.get("confidence", 0.8)),
+                            "label": str(parsed.get("label", "detected_object")),
+                            "cost_usd": 0.0004,
+                        }
+                except urllib.error.HTTPError as error:
+                    if error.code == 429:
+                        print(f"  [Quota 429 on {model_name}] Trying alternative model in pool...")
+                        break
+                    if error.code in (500, 502, 503, 504):
+                        if attempt < 2:
+                            time.sleep(5.0)
+                            continue
+                except Exception as error:
+                    print(f"Gemini {model_name} call failed: {error}")
+                    break
+
+        if self.openai_key:
+            return self._call_openai(image_path, claim_text)
+
+        return self._call_mock(image_path, claim_text)
 
     def _call_openai(self, image_path: Path, claim_text: str) -> dict[str, object]:
         """Call OpenAI Vision API via standard HTTPS."""
-        img_bytes = image_path.read_bytes()
-        b64_img = base64.b64encode(img_bytes).decode("ascii")
+        b64_img = _encode_image_b64(image_path)
 
         url = "https://api.openai.com/v1/chat/completions"
         payload = {

@@ -90,6 +90,8 @@ def run_vision_pipeline_for_site(
     pano_path: Path | None = None,
     mode: str = "auto",
     save_to_db: bool = True,
+    skip_existing: bool = True,
+    detector: VisionSpotDetector | None = None,
 ) -> list[dict[str, object]]:
     """Batch pipeline: detect spots for all claims of a site and save to SQLite."""
     conn = sqlite3.connect(db_path)
@@ -180,7 +182,8 @@ def run_vision_pipeline_for_site(
     print(f"Save to DB:  {save_to_db} -> {db_path}")
     print("-" * 70)
 
-    detector = VisionSpotDetector(mode=mode)
+    if detector is None:
+        detector = VisionSpotDetector(mode=mode)
     results: list[dict[str, object]] = []
 
     if save_to_db:
@@ -197,7 +200,24 @@ def run_vision_pipeline_for_site(
     ]
 
     for a_idx, (asset_id, asset_path) in enumerate(resolved_assets, 1):
+        if skip_existing:
+            existing_real = conn.execute(
+                "SELECT COUNT(*) FROM scene_hotspots WHERE site_id = ? AND asset_id = ? AND spot_id LIKE 'spot-vision-%' AND NOT (x = 5000 AND y = 4500)",
+                (site_id, asset_id),
+            ).fetchone()[0]
+            if existing_real > 0:
+                print(f"  [Skipped] Asset [{a_idx}/{len(resolved_assets)}] {asset_path.name} already has {existing_real} real vision spots.")
+                continue
+
         print(f"\n--- Scanning Asset [{a_idx}/{len(resolved_assets)}]: {asset_path.name} ---")
+        if save_to_db:
+            # Clean up old mock placeholder spots or obsolete synthetic seeds for this asset
+            conn.execute(
+                "DELETE FROM scene_hotspots WHERE site_id = ? AND asset_id = ? AND (spot_id NOT LIKE 'spot-vision-%' OR (x = 5000 AND y = 4500))",
+                (site_id, asset_id),
+            )
+            conn.commit()
+
         detected_items = detector.detect_multi(asset_path, candidates)
         if not detected_items:
             print(f"  No target objects detected in {asset_path.name}.")
@@ -277,6 +297,7 @@ def main() -> None:
     parser.add_argument("--claim", default=None, help="Process single target claim ID")
     parser.add_argument("--pano", default=None, help="Path to 360 panorama JPG (default: auto-detect from assets)")
     parser.add_argument("--mode", default="auto", choices=["auto", "gemini", "openai", "mock"], help="Detector backend")
+    parser.add_argument("--force", action="store_true", help="Re-scan and overwrite even if real spots already exist in DB")
     parser.add_argument("--no-save", action="store_true", help="Do not write results to SQLite scene_hotspots")
     parser.add_argument("--export", default=None, help="Optional output JSON path for Spot contracts")
     args = parser.parse_args()
@@ -304,13 +325,17 @@ def main() -> None:
         site_ids = [r[0] for r in conn.execute("SELECT site_id FROM sites ORDER BY site_id").fetchall()]
         conn.close()
         spots = []
-        for s_id in site_ids:
+        shared_detector = VisionSpotDetector(mode=args.mode)
+        for s_idx, s_id in enumerate(site_ids, 1):
+            print(f"\n[{s_idx}/{len(site_ids)}] Processing Monument: {s_id}")
             s_spots = run_vision_pipeline_for_site(
                 db_path=db_path,
                 site_id=s_id,
                 pano_path=pano_path,
                 mode=args.mode,
                 save_to_db=not args.no_save,
+                skip_existing=not args.force,
+                detector=shared_detector,
             )
             spots.extend(s_spots)
         print(f"\n[Batch Complete] Processed {len(site_ids)} sites, generated {len(spots)} spots.")
@@ -322,6 +347,7 @@ def main() -> None:
             pano_path=pano_path,
             mode=args.mode,
             save_to_db=not args.no_save,
+            skip_existing=not args.force,
         )
 
     if args.export:
