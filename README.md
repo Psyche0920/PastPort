@@ -1,3 +1,17 @@
+<div align="center">
+
+![PastPort — HERITAGE / INTERACTIVE SYSTEMS](docs/showcase/hero.svg)
+
+**A heritage framework for source-linked research, editorial workflows and interactive experiences. The 360° museum direction remains a development target.**
+
+[Explore the documentation](#project-documentation) · [Browse source](https://github.com/Psyche0920/PastPort/tree/main)
+
+</div>
+
+![PastPort conceptual workflow](docs/showcase/workflow.svg)
+
+<a id="project-documentation"></a>
+
 # PastPort
 
 Turn traceable heritage research into interactive games with characters, decisions, choices, and consequences. Python provides the workflow and shared services; native JavaScript implements game rules and browser playtests.
