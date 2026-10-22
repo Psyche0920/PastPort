@@ -59,6 +59,93 @@ def _encode_image_b64(image_path: Path, max_dim: int = 1600) -> str:
     return base64.b64encode(image_path.read_bytes()).decode("ascii")
 
 
+ARCHITECTURAL_SEMANTICS: dict[str, dict[str, str]] = {
+    "mihrab": {
+        "noun": "Prayer Niche (Mihrab)",
+        "adjectives": "concave semi-circular or polygonal wall niche with pointed arch or muqarnas hood, located on the interior Qibla wall",
+        "context": "INTERIOR ONLY (strictly inside the main prayer hall)",
+    },
+    "minbar": {
+        "noun": "Pulpit (Minbar)",
+        "adjectives": "steep wooden or marble ceremonial staircase pulpit with handrails and conical kiosk roof",
+        "context": "INTERIOR ONLY (located to the right of the interior Mihrab)",
+    },
+    "minaret": {
+        "noun": "Minaret Tower",
+        "adjectives": "tall, slender vertical masonry/brick cylindrical or polygonal tower, with projecting balcony (şerefe) and pointed conical cap",
+        "context": "EXTERIOR ONLY (attached to building exterior, rising high above roofline)",
+    },
+    "dome": {
+        "noun": "Roof Dome / Cupola",
+        "adjectives": "curved hemispherical, segmented, or polygonal masonry dome resting on squinches or drum",
+        "context": "EXTERIOR ROOF or INTERIOR CEILING",
+    },
+    "portal": {
+        "noun": "Monumental Entrance Portal (Taçkapı)",
+        "adjectives": "grand entrance doorway framed by carved stone borders, stalactite muqarnas vaulting, and wooden doors",
+        "context": "EXTERIOR FACADE / PORCH (main entrance of building)",
+    },
+    "arch": {
+        "noun": "Pointed / Horseshoe Arches & Columns",
+        "adjectives": "structural pointed masonry arches resting on cylindrical marble/stone columns with carved capitals",
+        "context": "PORTICO / COURTYARD ARCADE or INTERIOR NAVE",
+    },
+    "tile": {
+        "noun": "Glazed Tile Revetment (Çini)",
+        "adjectives": "colorful glazed ceramic decorative wall tiles (turquoise, cobalt blue, underglaze floral/geometric motifs)",
+        "context": "WALL SURFACES (interior lower walls, spandrels, or mihrab surrounds)",
+    },
+    "inscription": {
+        "noun": "Calligraphic Foundation Plaque (Kitabe)",
+        "adjectives": "rectangular carved marble or limestone inscription panel featuring relief Ottoman/Arabic calligraphy",
+        "context": "MOUNTED WALL / OVER-DOOR (typically above the entrance portal or windows)",
+    },
+    "sanduka": {
+        "noun": "Cenotaph / Sarcophagus (Sanduka)",
+        "adjectives": "raised rectangular wooden or marble burial chest/casket with peaked gabled ridge, draped with cloth or calligraphic tiles",
+        "context": "INTERIOR TOMB CHAMBER ONLY (inside enclosed burial room)",
+    },
+    "tomb": {
+        "noun": "Cenotaph / Sarcophagus (Sanduka)",
+        "adjectives": "raised rectangular wooden or marble burial chest/casket with peaked gabled ridge, draped with cloth or calligraphic tiles",
+        "context": "INTERIOR TOMB CHAMBER ONLY (inside enclosed burial room)",
+    },
+    "fountain": {
+        "noun": "Ablution Fountain (Şadırvan)",
+        "adjectives": "polygonal or circular central water basin surrounded by stone stools and covered by a domed canopy",
+        "context": "EXTERIOR COURTYARD ONLY",
+    },
+    "courtyard": {
+        "noun": "Courtyard & Fountain (Avlu / Şadırvan)",
+        "adjectives": "open-air stone-paved enclosed quadrangle or colonnaded portico with central water fountain",
+        "context": "EXTERIOR COURTYARD ONLY",
+    },
+    "window": {
+        "noun": "Stained Glass / Plaster Grille Window",
+        "adjectives": "arched window opening with decorative stone/plaster tracery, iron safety grilles, or colored glass",
+        "context": "FACADE WALL or CLERESTORY",
+    },
+}
+
+
+def _format_candidate_semantics(c: dict[str, str]) -> str:
+    """Format candidate with physical noun, visual adjectives, and interior/exterior context."""
+    text = f"{c['name']} {c.get('description', '')}".lower()
+    matched_sem = None
+    for key, sem in ARCHITECTURAL_SEMANTICS.items():
+        if key in text:
+            matched_sem = sem
+            break
+    if matched_sem:
+        return (
+            f"- [{c['object_id']}] {c['name']}:\n"
+            f"  * Physical Noun: {matched_sem['noun']}\n"
+            f"  * Visual Adjectives: {matched_sem['adjectives']}\n"
+            f"  * Spatial Constraint: {matched_sem['context']}"
+        )
+    return f"- [{c['object_id']}] {c['name']} ({c.get('description', '')})"
+
+
 class VisionSpotDetector:
     def __init__(self, mode: str = "auto") -> None:
         """Mode can be 'auto', 'gemini', 'openai', or 'mock'."""
@@ -137,21 +224,31 @@ class VisionSpotDetector:
         """Send 1 single image and candidate list to Gemini."""
         b64_img = _encode_image_b64(image_path)
 
-        cand_text = "\n".join(f"- {c['object_id']}: {c['name']} ({c.get('description', '')})" for c in candidates)
+        cand_text = "\n\n".join(_format_candidate_semantics(c) for c in candidates)
         prompt = (
-            "You are an expert spatial architectural vision grounding model.\n"
-            "Analyze this heritage photograph and locate any of the following physical architectural objects if clearly visible:\n\n"
+            "You are an expert architectural historian and spatial visual grounding model.\n"
+            "Analyze this heritage photograph.\n\n"
+            "STEP 1: DETERMINE CAMERA PERSPECTIVE\n"
+            "Identify if this photo is EXTERIOR (aerial drone, facade, street, garden) or INTERIOR (inside prayer hall, room, tomb chamber).\n\n"
+            "STEP 2: ENFORCE SPATIAL EXCLUSIVITY & NOUN/ADJECTIVE ACCURACY\n"
+            "- If the photo is EXTERIOR: Interior-only features (e.g. Mihrab prayer niche, interior sarcophagus/sanduka, minbar) are BEHIND SOLID WALLS and completely INVISIBLE. You MUST OMIT THEM!\n"
+            "- If the photo is INTERIOR: Exterior-only features (e.g. minaret tower, aerial roof dome, outdoor courtyard fountain) are INVISIBLE. You MUST OMIT THEM!\n"
+            "- A unique heritage object (like a single Mihrab, Minbar, or Inscription Plaque) exists in only ONE place. Do NOT tag it on multiple arbitrary walls.\n"
+            "- Verify both the Physical Noun and the Visual Adjectives for each candidate. Only return an object if its exact physical features are genuinely identifiable in this specific photo.\n\n"
             f"Candidate Objects:\n{cand_text}\n\n"
-            "Output ONLY a JSON array containing ONLY the objects that are actually VISIBLE in this image.\n"
-            "For each visible object, provide its object_id, normalized center coordinates [x, y] in [0, 10000] "
-            "(x=0 left, 10000 right; y=0 top/sky/ceiling, 10000 bottom/floor/ground), confidence, and brief description:\n"
+            "Output ONLY a JSON array containing ONLY genuinely visible objects:\n"
             "[\n"
-            '  {"object_id": "<exact object_id>", "name": "<name>", "x": <int 0..10000>, "y": <int 0..10000>, "confidence": <float 0..1>, "description": "<brief note>"}\n'
+            '  {"object_id": "<exact object_id>", "name": "<name>", "x": <int 0..10000>, "y": <int 0..10000>, "confidence": <float 0..1>, "description": "<exact visual features seen>"}\n'
             "]\n"
             "If none of these specific objects are visible in this specific photo, return []."
         )
 
-        models_to_try = ["gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-flash-latest"]
+        models_to_try = [
+            "gemini-2.5-flash",
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash",
+            "gemini-flash-latest",
+        ]
         payload = {
             "contents": [
                 {
