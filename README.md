@@ -1,13 +1,4 @@
-<!-- repository-badges:start -->
-<div align="center">
-
-[![Repository statistics snapshot: 2026-10-22](docs/showcase/repository-badges.svg)](https://github.com/Psyche0920/PastPort/graphs/contributors)
-
-<sub>Private-repository snapshot · 2026-10-22 · Open items include issues and pull requests. [Contributors](https://github.com/Psyche0920/PastPort/graphs/contributors) · [Forks](https://github.com/Psyche0920/PastPort/forks) · [Stars](https://github.com/Psyche0920/PastPort/stargazers) · [Issues](https://github.com/Psyche0920/PastPort/issues)</sub>
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Weijia_Han-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/weijia-han-6162581b5/)
-
-</div>
-<!-- repository-badges:end -->
+[![License: MIT](https://img.shields.io/badge/License-MIT-78C943?style=for-the-badge)](LICENSE)
 
 <div align="center">
 
@@ -82,3 +73,8 @@ uv run --no-sync python -m pastport.development.module_acceptance --output accep
 ```
 
 See sections 3 and 14 of the [Implementation Guide](docs/IMPLEMENTATION_GUIDE.md) for complete startup and test commands. Runtime logs use safe JSON on stderr; remote log collection, retention/rotation, and production deployment are not enabled. Do not commit, push, merge, make paid calls, or deploy without authorization.
+
+
+## Licensing
+
+Project code is available under the [MIT License](LICENSE). Third-party assets retain their original licenses and attribution requirements; this license does not relicense third-party media, datasets, model weights, or trademarks.
