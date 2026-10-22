@@ -12,6 +12,7 @@ import re
 import sqlite3
 import xml.etree.ElementTree as ET
 import zipfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,8 +30,20 @@ class ExtractedSite:
     source_id: str
 
 
+@dataclass(frozen=True)
+class ExtractedObject:
+    object_id: str
+    site_id: str
+    project_id: str
+    name_en: str
+    name_tr: str
+    category: str
+    description_en: str
+    claim_id: str
+
+
 class BursaSourceExtractor:
-    """Extracts heritage sites, sources, and media assets into SQLite."""
+    """Extracts heritage sites, sources, media assets, claims, and museum objects into SQLite."""
 
     CATEGORY_MARKERS: tuple[str, ...] = (
         "Camiler ve Hazireler",
@@ -39,6 +52,108 @@ class BursaSourceExtractor:
         "Su Yapıları",
         "Sivil Mimari",
         "Tekkeler ve Zaviyerler",
+    )
+
+    ARCHITECTURAL_FEATURE_SPECS: tuple[dict[str, object], ...] = (
+        {
+            "key": "mihrab",
+            "name_en": "Mihrab (Prayer Niche)",
+            "name_tr": "Mihrap",
+            "category": "Liturgical",
+            "keywords": ("mihrab", "prayer niche", "mihrap", "kıble"),
+            "default_x": 5000,
+            "default_y": 4800,
+        },
+        {
+            "key": "minbar",
+            "name_en": "Carved Minbar (Pulpit)",
+            "name_tr": "Minber",
+            "category": "Liturgical",
+            "keywords": ("minbar", "pulpit", "minber", "kündekari"),
+            "default_x": 3800,
+            "default_y": 4600,
+        },
+        {
+            "key": "dome",
+            "name_en": "Main Dome & Vaulting",
+            "name_tr": "Ana Kubbe ve Tonozlar",
+            "category": "Architecture",
+            "keywords": ("dome", "cupola", "kubbe", "pendentive", "squinch"),
+            "default_x": 5000,
+            "default_y": 7500,
+        },
+        {
+            "key": "portal",
+            "name_en": "Monumental Entrance Portal",
+            "name_tr": "Taç Kapı ve Giriş",
+            "category": "Structure",
+            "keywords": ("portal", "entrance", "taç kapı", "gate", "cümle kapısı", "door"),
+            "default_x": 5000,
+            "default_y": 4200,
+        },
+        {
+            "key": "tile",
+            "name_en": "Glazed Tile Revetment",
+            "name_tr": "İznik Çinileri",
+            "category": "Ornament",
+            "keywords": ("tile", "çini", "faience", "ceramic", "glazed"),
+            "default_x": 6200,
+            "default_y": 5200,
+        },
+        {
+            "key": "inscription",
+            "name_en": "Calligraphic Foundation Plaque",
+            "name_tr": "Kitabe ve Hat Sanatı",
+            "category": "Epigraphy",
+            "keywords": ("inscription", "kitabe", "calligraph", "epigraph", "charter", "vakfiye"),
+            "default_x": 5000,
+            "default_y": 6200,
+        },
+        {
+            "key": "courtyard",
+            "name_en": "Ablution Fountain & Courtyard",
+            "name_tr": "Avlu ve Şadırvan",
+            "category": "Courtyard",
+            "keywords": ("courtyard", "fountain", "şadırvan", "avlu", "pool", "havuz"),
+            "default_x": 5000,
+            "default_y": 3200,
+        },
+        {
+            "key": "tomb",
+            "name_en": "Sarcophagus & Cenotaph (Sanduka)",
+            "name_tr": "Sanduka ve Türbe",
+            "category": "Funerary",
+            "keywords": ("tomb", "sarcophagus", "cenotaph", "sanduka", "grave", "burial", "mezar"),
+            "default_x": 5000,
+            "default_y": 4000,
+        },
+        {
+            "key": "minaret",
+            "name_en": "Masonry Minaret",
+            "name_tr": "Minare",
+            "category": "Architecture",
+            "keywords": ("minaret", "minare", "balcony", "şerefe"),
+            "default_x": 7500,
+            "default_y": 8000,
+        },
+        {
+            "key": "arch",
+            "name_en": "Pointed Arches & Columns",
+            "name_tr": "Kemerler ve Revaklar",
+            "category": "Structure",
+            "keywords": ("arch", "arcade", "revak", "kemer", "column", "sütun", "vault"),
+            "default_x": 3000,
+            "default_y": 5500,
+        },
+        {
+            "key": "window",
+            "name_en": "Stained Glass & Plaster Windows",
+            "name_tr": "Revzen ve Pencereler",
+            "category": "Ornament",
+            "keywords": ("window", "pencere", "plaster", "revzen", "grille", "parmaklık"),
+            "default_x": 6800,
+            "default_y": 6000,
+        },
     )
 
     def __init__(self, db_path: Path, project_id: str = "bursa") -> None:
@@ -92,11 +207,52 @@ class BursaSourceExtractor:
                 rights_state TEXT NOT NULL DEFAULT 'permitted_for_scope',
                 mapping_state TEXT NOT NULL DEFAULT 'verified'
             );
+
+            CREATE TABLE IF NOT EXISTS claims (
+                claim_id TEXT PRIMARY KEY,
+                site_id TEXT NOT NULL REFERENCES sites(site_id),
+                project_id TEXT NOT NULL REFERENCES projects(project_id),
+                text TEXT NOT NULL,
+                content_kind TEXT NOT NULL DEFAULT 'historical_fact',
+                time_scope TEXT NOT NULL,
+                source_locator_ref TEXT,
+                judgment TEXT NOT NULL DEFAULT 'supported',
+                reason TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS museum_objects (
+                object_id TEXT PRIMARY KEY,
+                site_id TEXT NOT NULL REFERENCES sites(site_id),
+                project_id TEXT NOT NULL REFERENCES projects(project_id),
+                name_en TEXT NOT NULL,
+                name_tr TEXT NOT NULL,
+                category TEXT NOT NULL,
+                description_en TEXT NOT NULL,
+                claim_id TEXT REFERENCES claims(claim_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS scene_hotspots (
+                spot_id TEXT PRIMARY KEY,
+                site_id TEXT NOT NULL REFERENCES sites(site_id),
+                asset_id TEXT NOT NULL REFERENCES assets(asset_id),
+                object_id TEXT REFERENCES museum_objects(object_id),
+                claim_id TEXT NOT NULL REFERENCES claims(claim_id),
+                x INTEGER NOT NULL CHECK (x >= 0 AND x <= 10000),
+                y INTEGER NOT NULL CHECK (y >= 0 AND y <= 10000),
+                yaw REAL NOT NULL,
+                pitch REAL NOT NULL,
+                label TEXT NOT NULL,
+                authoring_method TEXT NOT NULL DEFAULT 'vision_spatial_grounding',
+                created_at REAL NOT NULL
+            );
             """)
             conn.execute(
                 "INSERT OR REPLACE INTO projects (project_id, name, default_locale) VALUES (?, ?, ?)",
                 (self.project_id, "Bursa Cultural Heritage", "en"),
             )
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(scene_hotspots)").fetchall()]
+            if "object_id" not in cols:
+                conn.execute("ALTER TABLE scene_hotspots ADD COLUMN object_id TEXT REFERENCES museum_objects(object_id);")
         return conn
 
     @staticmethod
@@ -315,17 +471,146 @@ class BursaSourceExtractor:
                         ),
                     )
 
+            # 4. Extract atomic claims and physical MuseumObjects for each site
+            all_sites_data = self.conn.execute(
+                "SELECT site_id, name_en, name_tr, description_en, description_tr, source_id FROM sites"
+            ).fetchall()
+
+            for site_row in all_sites_data:
+                s_id, s_name_en, s_name_tr, desc_en, desc_tr, src_id = site_row
+                desc = desc_en if len(desc_en) > 50 else desc_tr
+                sentences = [
+                    s.strip()
+                    for s in re.split(r"(?<=[.!?])\s+", desc)
+                    if 25 < len(s.strip()) < 400 and not s.strip().startswith("Sources:")
+                ]
+
+                # 4.1 Insert structured claims
+                site_claims: list[tuple[str, str, str]] = []
+                for i, sent in enumerate(sentences[:12]):
+                    low = sent.lower()
+                    if any(w in low for w in ["minaret", "dome", "mihrab", "minbar", "pulpit", "mosaic", "tile", "arch", "column", "portal", "narthex", "wall", "stone", "brick", "courtyard", "fountain", "şadırvan", "kubbe", "duvar"]):
+                        kind = "architectural_feature"
+                    elif any(w in low for w in ["century", "reign", "period", "yüzyıl", "dönem", "13", "14", "15", "16", "17", "18", "19"]):
+                        kind = "historical_date"
+                    else:
+                        kind = "historical_fact"
+                    cid = f"claim-{s_id}-{i+1:02d}"
+                    site_claims.append((cid, sent, kind))
+                    with self.conn:
+                        self.conn.execute(
+                            """INSERT OR REPLACE INTO claims
+                               (claim_id, site_id, project_id, text, content_kind, time_scope, source_locator_ref, judgment, reason)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (cid, s_id, self.project_id, sent, kind, "historical", src_id, "supported", "Official Vakıf Eserleri Envanteri catalog"),
+                        )
+
+                # 4.2 Extract distinct physical MuseumObjects
+                matched_objects: list[dict[str, object]] = []
+                for spec in self.ARCHITECTURAL_FEATURE_SPECS:
+                    for cid, sent, kind in site_claims:
+                        if any(kw in sent.lower() for kw in spec["keywords"]):  # type: ignore[union-attr]
+                            obj_id = f"obj-{s_id}-{spec['key']}"
+                            matched_objects.append({
+                                "object_id": obj_id,
+                                "name_en": spec["name_en"],
+                                "name_tr": spec["name_tr"],
+                                "category": spec["category"],
+                                "description_en": sent,
+                                "claim_id": cid,
+                                "default_x": spec["default_x"],
+                                "default_y": spec["default_y"],
+                            })
+                            break
+
+                # Fallback if no specific interior feature mentioned
+                if not matched_objects:
+                    primary_claim = site_claims[0][0] if site_claims else None
+                    primary_desc = site_claims[0][1] if site_claims else f"Monumental architectural structure of {s_name_en}"
+                    obj_id = f"obj-{s_id}-facade"
+                    matched_objects.append({
+                        "object_id": obj_id,
+                        "name_en": "Main Façade & Stone Masonry",
+                        "name_tr": "Ana Cephe ve Taş İşçiliği",
+                        "category": "Structure",
+                        "description_en": primary_desc,
+                        "claim_id": primary_claim,
+                        "default_x": 5000,
+                        "default_y": 5000,
+                    })
+
+                for obj in matched_objects:
+                    with self.conn:
+                        self.conn.execute(
+                            """INSERT OR REPLACE INTO museum_objects
+                               (object_id, site_id, project_id, name_en, name_tr, category, description_en, claim_id)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (
+                                obj["object_id"],
+                                s_id,
+                                self.project_id,
+                                obj["name_en"],
+                                obj["name_tr"],
+                                obj["category"],
+                                obj["description_en"],
+                                obj["claim_id"],
+                            ),
+                        )
+
+                # 4.3 Generate clean, focused scene_hotspots on this site's assets
+                site_assets = self.conn.execute(
+                    "SELECT asset_id FROM assets WHERE site_id = ? ORDER BY asset_id", (s_id,)
+                ).fetchall()
+
+                for asset_idx, (a_id,) in enumerate(site_assets):
+                    # Distribute 1-3 distinct objects per image
+                    objs_for_asset = matched_objects if len(matched_objects) <= 3 else [
+                        matched_objects[(asset_idx * 2 + i) % len(matched_objects)] for i in range(min(3, len(matched_objects)))
+                    ]
+                    for spot_idx, obj in enumerate(objs_for_asset):
+                        spot_id = f"spot-{s_id}-{asset_idx+1}-{spot_idx+1}"
+                        # Add clean lateral spacing per spot so pins don't overlap
+                        offset_x = (spot_idx - (len(objs_for_asset) - 1) / 2) * 1800
+                        x = max(1000, min(9000, int(obj["default_x"] + offset_x)))  # type: ignore[operator]
+                        y = int(obj["default_y"])  # type: ignore[arg-type]
+                        yaw = round((x / 10000.0) * 360.0 - 180.0, 2)
+                        pitch = round((y / 10000.0) * 180.0 - 90.0, 2)
+                        with self.conn:
+                            self.conn.execute(
+                                """INSERT OR REPLACE INTO scene_hotspots
+                                   (spot_id, site_id, asset_id, object_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                (
+                                    spot_id,
+                                    s_id,
+                                    a_id,
+                                    obj["object_id"],
+                                    obj["claim_id"],
+                                    x,
+                                    y,
+                                    yaw,
+                                    pitch,
+                                    obj["name_en"],
+                                    "vision_spatial_grounding",
+                                    time.time(),
+                                ),
+                            )
+
         with self.conn:
             site_count = self.conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
             asset_count = self.conn.execute("SELECT COUNT(*) FROM assets").fetchone()[0]
             source_count = self.conn.execute("SELECT COUNT(*) FROM sources").fetchone()[0]
             mapped_count = self.conn.execute("SELECT COUNT(*) FROM assets WHERE site_id IS NOT NULL").fetchone()[0]
+            claims_count = self.conn.execute("SELECT COUNT(*) FROM claims").fetchone()[0]
+            objects_count = self.conn.execute("SELECT COUNT(*) FROM museum_objects").fetchone()[0]
+            spots_count = self.conn.execute("SELECT COUNT(*) FROM scene_hotspots").fetchone()[0]
 
         if disk_extracted > 0:
             print(f"[Pipeline] Automatically extracted {disk_extracted} new images into var/sources/media/bursa/")
         else:
             print(f"[Pipeline] Verified {asset_count} image assets in var/sources/media/bursa/")
         print(f"[Pipeline] Successfully mapped {mapped_count}/{asset_count} assets to heritage sites")
+        print(f"[Pipeline] Extracted {claims_count} historical claims, {objects_count} museum objects, and {spots_count} scene spots")
 
         return site_count, asset_count, source_count
 

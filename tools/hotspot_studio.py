@@ -32,13 +32,14 @@ CREATE TABLE IF NOT EXISTS scene_hotspots (
     spot_id TEXT PRIMARY KEY,
     site_id TEXT NOT NULL REFERENCES sites(site_id),
     asset_id TEXT NOT NULL REFERENCES assets(asset_id),
+    object_id TEXT REFERENCES museum_objects(object_id),
     claim_id TEXT NOT NULL REFERENCES claims(claim_id),
     x INTEGER NOT NULL CHECK (x >= 0 AND x <= 10000),
     y INTEGER NOT NULL CHECK (y >= 0 AND y <= 10000),
     yaw REAL NOT NULL,
     pitch REAL NOT NULL,
     label TEXT NOT NULL,
-    authoring_method TEXT NOT NULL DEFAULT 'manual_handclick',
+    authoring_method TEXT NOT NULL DEFAULT 'vision_spatial_grounding',
     created_at REAL NOT NULL
 );
 """
@@ -85,6 +86,15 @@ HTML_PAGE = """<!doctype html>
     #panel-spots { width: 340px; background: var(--surface); border-left: 1px solid var(--surface-border); display: flex; flex-direction: column; overflow: hidden; }
     .panel-header { padding: 12px 16px; border-bottom: 1px solid var(--surface-border); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
     .panel-content { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .tab-header { display: flex; border-bottom: 1px solid var(--surface-border); background: #131317; }
+    .tab-btn { flex: 1; padding: 10px 8px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.02); }
+    .tab-btn.active { color: #60a5fa; border-bottom-color: #3b82f6; background: rgba(59,130,246,0.08); }
+    .object-card { background: #18181d; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; gap: 6px; }
+    .object-card:hover { border-color: #4b5563; }
+    .object-card.selected { border-color: #60a5fa; background: rgba(59, 130, 246, 0.08); }
+    .object-title { font-size: 13px; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: space-between; }
+    .object-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
     .claim-card { background: #18181d; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; cursor: pointer; transition: all 0.15s; }
     .claim-card:hover { border-color: #4b5563; }
     .claim-card.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.08); }
@@ -130,25 +140,28 @@ HTML_PAGE = """<!doctype html>
         <label id="label-asset" style="font-size: 12px; color: var(--text-muted); display: none;">Image:</label>
         <select id="select-asset" style="display: none; max-width: 220px;" onchange="changeActiveAsset(this.value)"></select>
         <div class="mode-switch">
-          <button id="mode-2d" class="mode-btn active" onclick="switchMode('2d')">🖼️ 2D Photo</button>
-          <button id="mode-360" class="mode-btn" onclick="switchMode('360')">🌐 360 Sphere</button>
+          <button id="mode-2d" class="mode-btn active" onclick="switchMode('2d')">2D Photo</button>
+          <button id="mode-360" class="mode-btn" onclick="switchMode('360')">360 Sphere</button>
         </div>
       </div>
     </div>
     <div class="controls-row">
-      <button id="btn-save" class="btn btn-save" onclick="saveHotspots()">💾 Save to SQLite</button>
-      <button id="btn-export" class="btn" onclick="exportContract()">📋 Export Spot Contract</button>
+      <button id="btn-save" class="btn btn-save" onclick="saveHotspots()">Save to SQLite</button>
+      <button id="btn-export" class="btn" onclick="exportContract()">Export Spot Contract</button>
     </div>
   </header>
 
   <div id="main">
-    <!-- Left: Claims list -->
+    <!-- Left: Objects & Claims -->
     <div id="panel-claims">
-      <div class="panel-header">
-        <span>Heritage Claims</span>
-        <span id="claim-count" style="font-size: 11px; color: var(--text-muted);">0 claims</span>
+      <div class="tab-header">
+        <button id="tab-btn-objects" class="tab-btn active" onclick="switchLeftTab('objects')">Objects (<span id="obj-count">0</span>)</button>
+        <button id="tab-btn-claims" class="tab-btn" onclick="switchLeftTab('claims')">Dossier (<span id="claim-count">0</span>)</button>
       </div>
-      <div id="claims-list" class="panel-content">
+      <div id="objects-list" class="panel-content">
+        <div class="empty-state">Loading objects from SQLite database...</div>
+      </div>
+      <div id="claims-list" class="panel-content" style="display: none;">
         <div class="empty-state">Loading claims from SQLite database...</div>
       </div>
     </div>
@@ -156,7 +169,7 @@ HTML_PAGE = """<!doctype html>
     <!-- Center: Visual Workspace -->
     <div id="panel-viewer">
       <div class="viewer-tip">
-        <span id="tip-text"><span style="color: #60a5fa; font-weight: 600;">Click photo</span> to place/calibrate hotspot for selected claim</span>
+        <span id="tip-text"><span style="color: #60a5fa; font-weight: 600;">Click photo</span> to place or calibrate hotspot for selected object</span>
       </div>
 
       <!-- 2D Photo Container -->
@@ -188,10 +201,12 @@ HTML_PAGE = """<!doctype html>
   <script>
     let viewer = null;
     let currentSite = null;
+    let selectedObject = null;
     let selectedClaim = null;
     let selectedSpot = null;
     let placedSpots = [];
     let currentMode = '2d';
+    let activeLeftTab = 'objects';
 
     async function api(path, options = {}) {
       const res = await fetch(path, options);
@@ -203,6 +218,14 @@ HTML_PAGE = """<!doctype html>
       t.textContent = msg;
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function switchLeftTab(tab) {
+      activeLeftTab = tab;
+      document.getElementById('tab-btn-objects').classList.toggle('active', tab === 'objects');
+      document.getElementById('tab-btn-claims').classList.toggle('active', tab === 'claims');
+      document.getElementById('objects-list').style.display = tab === 'objects' ? 'flex' : 'none';
+      document.getElementById('claims-list').style.display = tab === 'claims' ? 'flex' : 'none';
     }
 
     function switchMode(mode) {
@@ -217,7 +240,7 @@ HTML_PAGE = """<!doctype html>
       if (mode === '2d') {
         photoView.style.display = 'flex';
         panoView.style.display = 'none';
-        tipText.innerHTML = '<span style="color: #60a5fa; font-weight: 600;">Click photo</span> to place/calibrate hotspot for selected claim';
+        tipText.innerHTML = '<span style="color: #60a5fa; font-weight: 600;">Click photo</span> to place/calibrate hotspot for selected object';
         renderPhotoPins();
       } else {
         photoView.style.display = 'none';
@@ -237,7 +260,7 @@ HTML_PAGE = """<!doctype html>
         sites.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.site_id;
-          const spotBadge = s.spot_count > 0 ? ` [★ ${s.spot_count} spots]` : '';
+          const spotBadge = s.spot_count > 0 ? ` [${s.spot_count} spots]` : '';
           opt.textContent = `${s.name_en} (${s.district})${spotBadge}`;
           sel.appendChild(opt);
         });
@@ -258,6 +281,11 @@ HTML_PAGE = """<!doctype html>
       try {
         currentSite = await api(`/api/site/${encodeURIComponent(siteId)}`);
         placedSpots = currentSite.hotspots || [];
+        selectedObject = null;
+        selectedClaim = null;
+        selectedSpot = null;
+
+        renderObjects();
         renderClaims();
         renderSpots();
 
@@ -311,6 +339,7 @@ HTML_PAGE = """<!doctype html>
       img.src = url;
       img.onload = () => {
         renderPhotoPins();
+        renderSpots();
       };
       if (currentMode === '360') {
         initPannellum(url);
@@ -318,11 +347,55 @@ HTML_PAGE = """<!doctype html>
       showToast('Viewing image: ' + (matched?.file_name || url));
     }
 
+    function renderObjects() {
+      const list = document.getElementById('objects-list');
+      list.innerHTML = '';
+      const objects = currentSite.objects || [];
+      document.getElementById('obj-count').textContent = objects.length;
+
+      if (!objects.length) {
+        list.innerHTML = '<div class="empty-state">No architectural objects extracted for this monument.</div>';
+        return;
+      }
+
+      objects.forEach((obj) => {
+        const card = document.createElement('div');
+        card.id = `obj-card-${obj.object_id}`;
+        card.className = 'object-card' + (selectedObject?.object_id === obj.object_id ? ' selected' : '');
+        card.innerHTML = `
+          <div class="object-title">
+            <span>[Obj] ${obj.name_en}</span>
+            <span class="claim-badge badge-arch">${obj.category}</span>
+          </div>
+          <div class="object-desc">${obj.description_en}</div>
+        `;
+        card.onclick = () => {
+          selectedObject = obj;
+          document.querySelectorAll('.object-card').forEach(el => el.classList.remove('selected'));
+          card.classList.add('selected');
+
+          // Highlight matching pin on active image if exists
+          const matchingSpot = placedSpots.find(s => s.object_id === obj.object_id && (!s.asset_id || s.asset_id === currentSite.asset_id));
+          if (matchingSpot) {
+            selectSpot(matchingSpot);
+          } else {
+            showToast(`Selected: ${obj.name_en}. Click photo to place pin.`);
+          }
+        };
+        list.appendChild(card);
+      });
+
+      if (!selectedObject && objects.length) {
+        selectedObject = objects[0];
+        list.children[0]?.classList.add('selected');
+      }
+    }
+
     function renderClaims() {
       const list = document.getElementById('claims-list');
       list.innerHTML = '';
       const claims = currentSite.claims || [];
-      document.getElementById('claim-count').textContent = `${claims.length} claims`;
+      document.getElementById('claim-count').textContent = claims.length;
 
       if (!claims.length) {
         list.innerHTML = '<div class="empty-state">No claims found for this site.</div>';
@@ -345,36 +418,35 @@ HTML_PAGE = """<!doctype html>
         };
         list.appendChild(card);
       });
-
-      if (!selectedClaim && claims.length) {
-        selectedClaim = claims[0];
-        list.children[0]?.classList.add('selected');
-      }
     }
 
     function renderSpots() {
       const list = document.getElementById('spots-list');
       list.innerHTML = '';
-      document.getElementById('spot-count').textContent = `${placedSpots.length} spots`;
 
-      if (!placedSpots.length) {
-        list.innerHTML = '<div class="empty-state">Select a claim on the left, then click on the photo to place a spot.</div>';
+      // Only display spots placed on the currently active asset
+      const activeSpots = placedSpots.filter(s => !s.asset_id || s.asset_id === currentSite.asset_id);
+      document.getElementById('spot-count').textContent = `${activeSpots.length} spots`;
+
+      if (!activeSpots.length) {
+        list.innerHTML = '<div class="empty-state">No spots placed on this image yet.<br><br>Select a Museum Object on the left, then click the image to calibrate its inspection pin.</div>';
         return;
       }
 
-      placedSpots.forEach((s, idx) => {
+      activeSpots.forEach((s, idx) => {
         const card = document.createElement('div');
         card.id = `spot-card-${s.spot_id}`;
         card.className = 'spot-card' + (selectedSpot?.spot_id === s.spot_id ? ' selected' : '');
-        const methodBadge = s.authoring_method === 'vision_llm' ? '<span style="font-size:10px; background:rgba(139,92,246,0.2); color:#a78bfa; padding:2px 6px; border-radius:4px; font-weight:600;">VISION AI</span>' : '<span style="font-size:10px; background:rgba(59,130,246,0.2); color:#60a5fa; padding:2px 6px; border-radius:4px; font-weight:600;">MANUAL</span>';
+        const methodBadge = (s.authoring_method === 'vision_spatial_grounding' || s.authoring_method === 'vision_llm') ? '<span style="font-size:10px; background:rgba(139,92,246,0.2); color:#a78bfa; padding:2px 6px; border-radius:4px; font-weight:600;">OBJECT ANCHOR</span>' : '<span style="font-size:10px; background:rgba(59,130,246,0.2); color:#60a5fa; padding:2px 6px; border-radius:4px; font-weight:600;">MANUAL PIN</span>';
+        const displayTitle = s.label || s.object_name || s.spot_id;
         card.innerHTML = `
           <div class="spot-header">
-            <span>#${idx + 1} ${s.label || s.spot_id}</span>
-            <button style="background:none; border:none; color:#ef4444; cursor:pointer;" onclick="deleteSpot(event, ${idx})">✕</button>
+            <span>#${idx + 1} ${displayTitle}</span>
+            <button style="background:none; border:none; color:#ef4444; cursor:pointer;" onclick="deleteSpot(event, '${s.spot_id}')">✕</button>
           </div>
-          <div style="margin-bottom: 2px;">${methodBadge}</div>
+          <div style="margin-bottom: 2px;">${methodBadge} <span class="claim-badge badge-arch" style="margin-bottom:0;">${s.category || 'Feature'}</span></div>
           <div class="spot-meta">Spot(${s.x}, ${s.y}) · yaw=${s.yaw.toFixed(1)}°, pitch=${s.pitch.toFixed(1)}°</div>
-          <div class="spot-claim">${s.claim_text || s.claim_id}</div>
+          <div class="spot-claim">${s.description || s.claim_text || ''}</div>
         `;
         card.onclick = () => selectSpot(s);
         list.appendChild(card);
@@ -386,16 +458,16 @@ HTML_PAGE = """<!doctype html>
       document.querySelectorAll('.spot-card').forEach(el => el.classList.remove('selected'));
       document.getElementById(`spot-card-${spot.spot_id}`)?.classList.add('selected');
 
-      // Highlight claim
-      if (spot.claim_id) {
-        const claimObj = currentSite.claims.find(c => c.claim_id === spot.claim_id);
-        if (claimObj) {
-          selectedClaim = claimObj;
-          document.querySelectorAll('.claim-card').forEach(el => el.classList.remove('selected'));
-          const cCard = document.getElementById(`claim-card-${spot.claim_id}`);
-          if (cCard) {
-            cCard.classList.add('selected');
-            cCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Highlight corresponding Museum Object
+      if (spot.object_id) {
+        const obj = (currentSite.objects || []).find(o => o.object_id === spot.object_id);
+        if (obj) {
+          selectedObject = obj;
+          document.querySelectorAll('.object-card').forEach(el => el.classList.remove('selected'));
+          const oCard = document.getElementById(`obj-card-${spot.object_id}`);
+          if (oCard) {
+            oCard.classList.add('selected');
+            oCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         }
       }
@@ -416,16 +488,20 @@ HTML_PAGE = """<!doctype html>
       const img = document.getElementById('photo-img');
       if (!img.complete || img.naturalWidth === 0) return;
 
-      placedSpots.forEach((s, idx) => {
+      // Filter pins strictly to the currently viewed asset
+      const activeSpots = placedSpots.filter(s => !s.asset_id || s.asset_id === currentSite.asset_id);
+
+      activeSpots.forEach((s, idx) => {
         const pin = document.createElement('div');
         pin.id = `pin-${s.spot_id}`;
         pin.className = 'photo-pin' + (selectedSpot?.spot_id === s.spot_id ? ' selected' : '');
         pin.style.left = `${(s.x / 10000) * 100}%`;
         pin.style.top = `${(s.y / 10000) * 100}%`;
-        const aiClass = s.authoring_method === 'vision_llm' ? 'ai' : 'manual';
+        const aiClass = (s.authoring_method === 'vision_spatial_grounding' || s.authoring_method === 'vision_llm') ? 'ai' : 'manual';
+        const displayTitle = s.label || s.object_name || `Object #${idx + 1}`;
         pin.innerHTML = `
           <div class="pin-dot ${aiClass}"></div>
-          <div class="pin-label">#${idx + 1} ${s.label || s.spot_id}</div>
+          <div class="pin-label">#${idx + 1} ${displayTitle}</div>
         `;
         pin.onclick = (e) => {
           e.stopPropagation();
@@ -436,8 +512,9 @@ HTML_PAGE = """<!doctype html>
     }
 
     function onPhotoClick(e) {
-      if (!selectedClaim) {
-        alert('Please select a claim from the left panel first.');
+      const activeTarget = selectedObject || selectedClaim;
+      if (!activeTarget) {
+        alert('Please select a Museum Object from the left panel first.');
         return;
       }
       const img = document.getElementById('photo-img');
@@ -453,17 +530,23 @@ HTML_PAGE = """<!doctype html>
       const pitch = Number(((normY / 10000) * 180 - 90).toFixed(2));
 
       const spotId = `spot-${currentSite.site_id.split('-').slice(-2).join('-')}-${Date.now().toString().slice(-4)}`;
+      const labelText = selectedObject ? selectedObject.name_en : selectedClaim.text.slice(0, 32);
+      const descText = selectedObject ? selectedObject.description_en : selectedClaim.text;
+      const catText = selectedObject ? selectedObject.category : 'Feature';
+
       const newSpot = {
         spot_id: spotId,
         site_id: currentSite.site_id,
         asset_id: currentSite.asset_id,
-        claim_id: selectedClaim.claim_id,
-        claim_text: selectedClaim.text,
+        object_id: selectedObject?.object_id || null,
+        claim_id: selectedObject?.claim_id || selectedClaim?.claim_id || 'claim-general',
+        label: labelText,
+        description: descText,
+        category: catText,
         x: normX,
         y: normY,
         yaw: yaw,
         pitch: pitch,
-        label: selectedClaim.text.slice(0, 32) + '...',
         authoring_method: 'manual_handclick'
       };
 
@@ -471,12 +554,12 @@ HTML_PAGE = """<!doctype html>
       renderSpots();
       renderPhotoPins();
       selectSpot(newSpot);
-      showToast(`Placed spot for: ${selectedClaim.text.slice(0, 24)}...`);
+      showToast(`Placed pin for: ${labelText}`);
     }
 
-    window.deleteSpot = function(e, idx) {
+    window.deleteSpot = function(e, spotId) {
       e.stopPropagation();
-      placedSpots.splice(idx, 1);
+      placedSpots = placedSpots.filter(s => s.spot_id !== spotId);
       renderSpots();
       renderPhotoPins();
       refreshViewerHotspots();
@@ -486,13 +569,14 @@ HTML_PAGE = """<!doctype html>
       if (!viewer) return;
       const existing = viewer.getConfig().hotSpots || [];
       existing.forEach(hs => viewer.removeHotSpot(hs.id));
-      placedSpots.forEach(s => {
+      const activeSpots = placedSpots.filter(s => !s.asset_id || s.asset_id === currentSite.asset_id);
+      activeSpots.forEach(s => {
         viewer.addHotSpot({
           id: s.spot_id,
           pitch: s.pitch,
           yaw: s.yaw,
           type: 'info',
-          text: s.claim_text || s.label || s.spot_id
+          text: `${s.label || s.spot_id}: ${s.description || s.claim_text || ''}`
         });
       });
     }
@@ -506,12 +590,13 @@ HTML_PAGE = """<!doctype html>
         try { viewer.destroy(); } catch (e) {}
         viewer = null;
       }
-      const initialHotspots = placedSpots.map(s => ({
+      const activeSpots = placedSpots.filter(s => !s.asset_id || s.asset_id === currentSite.asset_id);
+      const initialHotspots = activeSpots.map(s => ({
         id: s.spot_id,
         pitch: s.pitch,
         yaw: s.yaw,
         type: 'info',
-        text: s.claim_text || s.label || s.spot_id
+        text: `${s.label || s.spot_id}: ${s.description || s.claim_text || ''}`
       }));
 
       try {
@@ -626,9 +711,24 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
             ).fetchall()
 
             conn.execute(INIT_TABLE_SQL)
+            objects_rows = []
+            try:
+                objects_rows = conn.execute(
+                    """SELECT object_id, name_en, name_tr, category, description_en, claim_id
+                       FROM museum_objects WHERE site_id = ? ORDER BY object_id""",
+                    (site_id,),
+                ).fetchall()
+            except sqlite3.OperationalError:
+                pass
+
             hotspots_rows = conn.execute(
-                """SELECT h.spot_id, h.site_id, h.asset_id, h.claim_id, h.x, h.y, h.yaw, h.pitch, h.label, h.authoring_method, c.text
+                """SELECT h.spot_id, h.site_id, h.asset_id, h.claim_id, h.x, h.y, h.yaw, h.pitch, h.label, h.authoring_method,
+                          COALESCE(mo.description_en, c.text, '') as desc_text,
+                          COALESCE(mo.name_en, h.label) as obj_name,
+                          COALESCE(mo.category, 'Feature') as category,
+                          h.object_id
                    FROM scene_hotspots h
+                   LEFT JOIN museum_objects mo ON h.object_id = mo.object_id
                    LEFT JOIN claims c ON h.claim_id = c.claim_id
                    WHERE h.site_id = ?""",
                 (site_id,),
@@ -684,6 +784,17 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                     }
                     for a in all_site_assets
                 ],
+                "objects": [
+                    {
+                        "object_id": o[0],
+                        "name_en": o[1],
+                        "name_tr": o[2],
+                        "category": o[3],
+                        "description_en": o[4],
+                        "claim_id": o[5],
+                    }
+                    for o in objects_rows
+                ],
                 "claims": [{"claim_id": c[0], "text": c[1], "content_kind": c[2]} for c in claims_rows],
                 "hotspots": [
                     {
@@ -695,9 +806,11 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                         "y": h[5],
                         "yaw": h[6],
                         "pitch": h[7],
-                        "label": h[8],
-                        "authoring_method": h[9] if len(h) > 9 else "manual_handclick",
-                        "claim_text": h[10] if (len(h) > 10 and h[10]) else h[8],
+                        "label": h[11] if (len(h) > 11 and h[11]) else h[8],
+                        "authoring_method": h[9] if len(h) > 9 else "vision_spatial_grounding",
+                        "description": h[10] if len(h) > 10 else "",
+                        "category": h[12] if len(h) > 12 else "Feature",
+                        "object_id": h[13] if len(h) > 13 else None,
                     }
                     for h in hotspots_rows
                 ],
@@ -755,13 +868,14 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                 for s in spots:
                     conn.execute(
                         """INSERT OR REPLACE INTO scene_hotspots
-                           (spot_id, site_id, asset_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                           (spot_id, site_id, asset_id, object_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                         (
                             s["spot_id"],
                             site_id,
                             s.get("asset_id", "asset-unknown"),
-                            s["claim_id"],
+                            s.get("object_id"),
+                            s.get("claim_id", ""),
                             int(s["x"]),
                             int(s["y"]),
                             float(s["yaw"]),

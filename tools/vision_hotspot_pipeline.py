@@ -22,13 +22,14 @@ CREATE TABLE IF NOT EXISTS scene_hotspots (
     spot_id TEXT PRIMARY KEY,
     site_id TEXT NOT NULL REFERENCES sites(site_id),
     asset_id TEXT NOT NULL REFERENCES assets(asset_id),
+    object_id TEXT REFERENCES museum_objects(object_id),
     claim_id TEXT NOT NULL REFERENCES claims(claim_id),
     x INTEGER NOT NULL CHECK (x >= 0 AND x <= 10000),
     y INTEGER NOT NULL CHECK (y >= 0 AND y <= 10000),
     yaw REAL NOT NULL,
     pitch REAL NOT NULL,
     label TEXT NOT NULL,
-    authoring_method TEXT NOT NULL DEFAULT 'vision_llm',
+    authoring_method TEXT NOT NULL DEFAULT 'vision_spatial_grounding',
     created_at REAL NOT NULL
 );
 """
@@ -140,15 +141,36 @@ def run_vision_pipeline_for_site(
         if not resolved_pano or not resolved_pano.is_file():
             resolved_pano = repo_root / "var/sources/panoramas/turing_lab_room.jpg"
 
-    # 3. Retrieve all claims for this site
-    claims = conn.execute(
-        "SELECT claim_id, text, content_kind FROM claims WHERE site_id = ?",
-        (site_id,),
-    ).fetchall()
+    # 3. Retrieve museum objects for this site (or fallback to architectural claims)
+    objects = []
+    try:
+        objects = conn.execute(
+            "SELECT object_id, name_en, category, description_en, claim_id FROM museum_objects WHERE site_id = ?",
+            (site_id,),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        pass
 
-    if not claims:
+    targets: list[tuple[str, str, str, str | None]] = []
+    if objects:
+        for obj_id, name_en, category, desc, cid in objects:
+            targets.append((obj_id, f"{name_en}: {desc}", name_en, cid))
+    else:
+        claims = conn.execute(
+            "SELECT claim_id, text, content_kind FROM claims WHERE site_id = ? AND content_kind = 'architectural_feature'",
+            (site_id,),
+        ).fetchall()
+        if not claims:
+            claims = conn.execute(
+                "SELECT claim_id, text, content_kind FROM claims WHERE site_id = ? LIMIT 3",
+                (site_id,),
+            ).fetchall()
+        for cid, text, kind in claims:
+            targets.append((cid, text, text[:32], cid))
+
+    if not targets:
         conn.close()
-        print(f"[Vision Pipeline] No claims found for site {site_id}")
+        print(f"[Vision Pipeline] No objects or claims found for site {site_id}")
         return []
 
     print("=" * 70)
@@ -156,7 +178,7 @@ def run_vision_pipeline_for_site(
     print("=" * 70)
     print(f"Site ID:     {site_id} ({site_name})")
     print(f"Panorama:    {resolved_pano} ({resolved_pano.stat().st_size:,} bytes)")
-    print(f"Claims:      {len(claims)} claims to process")
+    print(f"Targets:     {len(targets)} museum features to locate")
     print(f"Backend:     {mode}")
     print(f"Save to DB:  {save_to_db} -> {db_path}")
     print("-" * 70)
@@ -167,26 +189,28 @@ def run_vision_pipeline_for_site(
     if save_to_db:
         conn.execute(INIT_TABLE_SQL)
 
-    for idx, (cid, text, kind) in enumerate(claims, 1):
-        detect_res = detector.detect(resolved_pano, text)
+    for idx, (target_id, prompt_text, default_label, claim_id) in enumerate(targets, 1):
+        detect_res = detector.detect(resolved_pano, prompt_text)
         spot_x = int(detect_res["x"])
         spot_y = int(detect_res["y"])
         coord = SphericalCoordinate.from_spot(spot_x, spot_y)
-        spot_id = f"spot-vision-{cid}"
-        label = str(detect_res.get("label", text[:32]))
+        spot_id = f"spot-vision-{target_id}"
+        label = default_label or str(detect_res.get("label", target_id))
+        is_obj = target_id.startswith("obj-")
 
         spot_record = {
             "spot_id": spot_id,
             "site_id": site_id,
             "asset_id": resolved_asset_id,
-            "claim_id": cid,
+            "object_id": target_id if is_obj else None,
+            "claim_id": claim_id or "claim-general",
             "x": spot_x,
             "y": spot_y,
             "spherical": {"yaw": coord.yaw, "pitch": coord.pitch},
             "label": label,
             "text_key": f"{spot_id}_desc",
-            "claim_ids": [cid],
-            "authoring_method": "vision_llm",
+            "claim_ids": [claim_id] if claim_id else [],
+            "authoring_method": "vision_spatial_grounding",
             "vision_backend": detect_res.get("backend", mode),
             "confidence": detect_res.get("confidence", 0.0),
             "latency_ms": detect_res.get("latency_ms", 0.0),
@@ -197,25 +221,26 @@ def run_vision_pipeline_for_site(
         if save_to_db:
             conn.execute(
                 """INSERT OR REPLACE INTO scene_hotspots
-                   (spot_id, site_id, asset_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (spot_id, site_id, asset_id, object_id, claim_id, x, y, yaw, pitch, label, authoring_method, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     spot_id,
                     site_id,
                     resolved_asset_id,
-                    cid,
+                    target_id if is_obj else None,
+                    claim_id or "claim-general",
                     spot_x,
                     spot_y,
                     coord.yaw,
                     coord.pitch,
                     label,
-                    "vision_llm",
+                    "vision_spatial_grounding",
                     time.time(),
                 ),
             )
 
         print(
-            f"[{idx}/{len(claims)}] {cid[:28]} -> Spot({spot_x}, {spot_y}) "
+            f"[{idx}/{len(targets)}] {label[:28]} -> Spot({spot_x}, {spot_y}) "
             f"yaw={coord.yaw:+.1f}°, pitch={coord.pitch:+.1f}° | conf={detect_res.get('confidence', 0):.2f} "
             f"({detect_res.get('latency_ms', 0):.0f}ms)"
         )

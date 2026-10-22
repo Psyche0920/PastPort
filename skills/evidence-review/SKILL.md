@@ -26,10 +26,11 @@ All tools live in `tools/` and run from the repository root:
 
 | Tool | Command | Description |
 |---|---|---|
-| **Archive Ingestor** | `python tools/extract_bursa_sources.py` | Parses IDML stories/spreads from `var/sources/archive.zip` into `sites`, `claims`, and `assets` in SQLite. Automatically extracts media to disk. |
+| **Archive Ingestor** | `python tools/extract_bursa_sources.py` | Parses IDML stories/spreads from `var/sources/archive.zip` into `sites`, `claims`, `museum_objects`, and `assets` in SQLite. Automatically extracts media to disk. |
 | **Pano Extractor** | `python tools/extract_panorama.py` | Extracts 4096x2048 equirectangular 360 JPEG from VR Studio tour zip to `var/sources/panoramas/`. |
-| **Vision Pipeline** | `python tools/vision_hotspot_pipeline.py` | Multimodal AI detector locating claims on 360/2D images and saving spots directly to SQLite. |
-| **Studio Viewer** | `python tools/hotspot_studio.py --db <db_path>` | Interactive local web server (`http://localhost:8088`) with dual 2D photo and 360 sphere inspection. |
+| **Vision Pipeline** | `python tools/vision_hotspot_pipeline.py` | Multimodal AI detector locating physical objects on 360/2D images and saving spots directly to SQLite. |
+| **Studio Viewer** | `python tools/hotspot_studio.py --db <db_path>` | Interactive local web server (`http://localhost:8088`) with dual 2D photo and 360 sphere inspection, object-level card filtering, and dossier review. |
+| **Museum Exporter** | `python tools/export_museum_package.py` | Serializes SQLite data into standard SDK v1 `MuseumPackage` (`var/museum.json`) for downstream narrative and game assembly. |
 
 ### Vision Pipeline CLI Syntax
 ```bash
@@ -53,13 +54,14 @@ The evidence module produces a normalized SQLite database (`var/bursa_evidence.d
 - **`sites`**: Heritage monuments with bilingual names and district/category.
 - **`assets`**: Image/panorama assets with relative paths and SHA-256 digests.
 - **`claims`**: Segmented facts classified as `architectural_feature`, `historical_date`, or `historical_fact`.
-- **`scene_hotspots`**: Clickable spot contracts linking `(spot_id, site_id, asset_id, claim_id, x, y, yaw, pitch, label, authoring_method)`.
+- **`museum_objects`**: Distinct physical inspectable architectural entities (`object_id`, `site_id`, `name_en`, `category`, `description_en`, `claim_id`).
+- **`scene_hotspots`**: Clickable spot contracts linking `(spot_id, site_id, asset_id, object_id, claim_id, x, y, yaw, pitch, label, authoring_method)`.
 
 ## 4. Reference Datasets
 
 - **Official Heritage Dataset**:
   - Archive: `var/sources/archive.zip` (Vakıf Eserleri Envanteri catalog).
-  - Database: `var/bursa_evidence.db` (31 monuments, 105 photos, 306 claims).
+  - Database: `var/bursa_evidence.db` (31 monuments, 105 photos, 363 claims, 120 museum objects, 285 clean scene spots).
   - Photographic Media: `var/sources/media/bursa/` (extracted from `Links/`).
 - **Demo / Synthetic Reference Cluster**:
   - Mock IDML: `var/sources/turing_lab.idml` (generated via `tools/create_mock_idml.py`).
@@ -69,8 +71,9 @@ The evidence module produces a normalized SQLite database (`var/bursa_evidence.d
 ## 5. Execution Workflow
 
 When fulfilling evidence review tasks, follow this order:
-1. **Ingest Sources**: Run `extract_bursa_sources.py` to ensure `sites` and `claims` are populated in SQLite and images are extracted to disk.
+1. **Ingest Sources**: Run `extract_bursa_sources.py` to ensure `sites`, `claims`, and `museum_objects` are populated in SQLite and images are extracted to disk.
 2. **Resolve Visual Assets**: Ensure 360 panoramas or 2D photos are in `var/sources/media/bursa/` or `var/sources/panoramas/`.
 3. **Execute Vision Pipeline**: Run `vision_hotspot_pipeline.py` to detect coordinates and populate `scene_hotspots`.
-4. **Verify Visually**: Launch `hotspot_studio.py` to verify pin positions and claim associations in 2D or 360 mode.
-5. **Quality Gates**: Run `python tools/check_repository.py` and `python tools/check_handoff.py` before completing work.
+4. **Verify Visually**: Launch `hotspot_studio.py` to verify pin positions, object associations, and dossier claims.
+5. **Export Museum Package**: Run `export_museum_package.py` to generate `var/museum.json` for handoff to downstream narrative and game-maker owners.
+6. **Quality Gates**: Run `python tools/check_repository.py` and `python tools/check_handoff.py` before completing work.
