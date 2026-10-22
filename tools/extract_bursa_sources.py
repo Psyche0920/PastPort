@@ -198,6 +198,10 @@ class BursaSourceExtractor:
         return sites
 
     def process(self, archive_path: Path) -> tuple[int, int, int]:
+        media_output_dir = Path(__file__).resolve().parents[1] / "var/sources/media/bursa"
+        media_output_dir.mkdir(parents=True, exist_ok=True)
+        disk_extracted = 0
+
         with zipfile.ZipFile(archive_path) as outer:
             idml_files = [n for n in outer.namelist() if n.endswith(".idml")]
             img_files = [n for n in outer.namelist() if n.lower().endswith((".jpg", ".jpeg", ".png", ".tif"))]
@@ -240,6 +244,13 @@ class BursaSourceExtractor:
                 img_bytes = outer.read(img_path)
                 sha256 = hashlib.sha256(img_bytes).hexdigest()
                 file_name = img_path.split("/")[-1]
+
+                # Ensure image asset is physically extracted on disk for vision AI and studio viewing
+                target_disk_path = media_output_dir / file_name
+                if not target_disk_path.is_file():
+                    target_disk_path.write_bytes(img_bytes)
+                    disk_extracted += 1
+
                 parts = img_path.split("/")
                 district, category = "Bursa", "General"
                 if len(parts) >= 3:
@@ -276,6 +287,11 @@ class BursaSourceExtractor:
             site_count = self.conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
             asset_count = self.conn.execute("SELECT COUNT(*) FROM assets").fetchone()[0]
             source_count = self.conn.execute("SELECT COUNT(*) FROM sources").fetchone()[0]
+
+        if disk_extracted > 0:
+            print(f"[Pipeline] Automatically extracted {disk_extracted} new images into var/sources/media/bursa/")
+        else:
+            print(f"[Pipeline] Verified {asset_count} image assets in var/sources/media/bursa/")
 
         return site_count, asset_count, source_count
 
