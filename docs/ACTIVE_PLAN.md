@@ -1,30 +1,32 @@
 # PastPort Active Plan
 
-Plan owner: Wehan/Weijia. Current baseline: 2026-10-17. Read the current task plus relevant [PRD](README.md) sections/module README; [D-001](DECISION_LOG.md#d-001--four-document-collaboration-and-evidence-based-completion) defines the agreed collaboration structure. Full rules live in [PRD §15](README.md#15-coding-agent-and-documentation-rules), deliveries in [Change Log](CHANGELOG.md).
+Owner: wehan. Baseline: 2026-10-21. Specification: [PRD CN](PastPort_PRD_CN.md) / [PRD EN](PastPort_PRD_EN.md). Read [ownership and dependencies](PastPort_PRD_EN.md#s2-9), the assigned row and affected module code. This plan records work, not authorization or completion inferred from a document.
 
-## Current goal and limits
+## Goal and current boundary
 
-Enable Weng and Mert to validate their replaceable modules against a fixed reference counterpart, then validate both together on the shared workflow/player. Framework/reference checks establish infrastructure behavior; they do not certify formal module delivery, professional evidence/rights, paid providers or human gameplay quality. External owners' progress is unconfirmed; verification tasks below do not claim their implementations are missing or complete. Dates and owner availability need confirmation; no deadline is inferred.
-
-DOC-01 changed collaboration instructions and their offline gate. The current user task additionally authorizes committing and pushing this validated framework baseline to the shared repository; it does not authorize paid calls, production publication/deployment, merging other work or edits to official data. Shared wire 0.1.0 and gameplay profile t1a-single-task remain current (§1).
+Deliver the single-player cartoon-style 360° museum and complete game-making workflow. Existing main is wire 0.1.0 with native inspect/caseboard tasks. The target contracts and synthetic reference kit are available for parallel development; the generic plugin host and real-material integration remain implementation work. External owners' implementation progress is unconfirmed. No paid calls, production publication, commits, pushes or deployments are authorized by this plan.
 
 ## Current tasks
 
-| Task | Owner / acceptance owner | Dependencies | Deliverable | Acceptance | Status |
+| Task | Owner | Dependencies | Deliverable | Acceptance | Status |
 |---|---|---|---|---|---|
-| DOC-01 Shared collaboration rules | Wehan / Weijia | Agreed D-001; current codebase guide | Four authorities, shared Agent/Copilot routes, module delivery links and documentation gate | Structure/links, handoff tests, Ruff/strict typing for changed tooling; final diff | accepted (local documentation gate) |
-| BASE-01 Validate the complete shared framework baseline | Wehan / local engineering gates | Current code, locked dependencies, shared contracts and DOC-01 | Complete source/docs/CI baseline ready for team handoff; current verification | Full pytest, static/type/schema/JS checks, four-combination reference acceptance and synthetic real-browser workflow | accepted (local baseline gate) |
-| EVD-01 Verify formal evidence module | Weng / Weng + Wehan for integration | Trusted evidence factory/version and resource mapping; fixed reference narrative | Versioned evidence adapter and reproducible check result; known limits | Single evidence check plus selected-evidence/reference-narrative matrix using current §5 contracts | in_progress |
-| NAR-01 Verify formal narrative module | Mert / Mert + Wehan for integration | Trusted narrative factory/version; fixed reference evidence | Versioned narrative adapter and reproducible check result; known limits | Single narrative check plus reference-evidence/selected-narrative matrix using current §5 contracts | todo; external delivery status unconfirmed |
-| INT-01 Verify joint workflow/player | Wehan / Weng + Mert for respective boundaries | EVD-01, NAR-01; agreed contract/implementation revisions | Both selected factories run together, matching resources, private preview/save results and failure details | Existing four-combination runner passes for the exact declared revisions; public publication remains unavailable | todo |
-| PLAY-01 Validate one real playable slice | Mert / Mert; Weng approves evidence/rights | Compatible adapters/content inputs; traceable real material and permission for the test scope | A source-dependent inference, character choice and later visible consequence; human observations and prioritized fixes | Agree protocol/sample/threshold first; observe goal clarity, evidence use, consequences and blockers; record results separately from software checks | todo; protocol and input readiness unconfirmed |
+| DOC-BASE Initial bilingual specification | wehan | Reviewed integrated requirements | CN/EN PRD, navigation, current plan and reference attachments | Section/interface parity, links, cleanup and unchanged production code | accepted (documentation checks; legacy gates tracked separately) |
+| T0 Shared typed contracts | wehan | Fixed SDK/API reference | Strict models/Protocols, generated schemas and loaders | PRD C01; reject invalid/unknown data, preserve wire 0.1.0 | todo |
+| T1 Connected VR tour | wehan | Actual phone/tour sample | Existing-format connected ZIP and original panoramas | Identity, return links and real capture/navigation evidence | todo; single panorama user-confirmed |
+| T2 Source and museum pipeline | wcheung | Fixed contracts; T0 for integration; image gateway | IDML/Links reader, projection/matching/style transfer and museum output | C02–C05; real samples and explicit missing/ambiguous results | in_progress |
+| T3 Story and museum filtering | maslan | Fixed corpus/museum; real T2 output for integration | NarrativeDraft, FilterReport, PresentationPackage | C06; retained tasks executable with actual museum | todo; external delivery unconfirmed |
+| T4 Plugin and panorama host | wehan | T0 | Registry/isolation, lifecycle/actions/saves/results, panorama navigation | C08–C11/C15; real host plus old-package regression | todo |
+| T5 Plugins and game maker | maslan | Fixed API; T4 for integration | Existing-task adapter, distinct interaction, bounded plugin builder and complete game output | C07/C08/C11; default 3×3 non-rotating drag puzzle on actual host | todo |
+| T6 Complete automated assembly | wehan with wcheung/maslan | T2–T5 and real materials | Version-bound assembly, validation and recovery | C09/C12/C14; approval, budget, isolation and real playable slice | todo |
+| T7 Second project reuse | all three | T6 accepted | Another project using the same SDK/host | C13; no site-specific engine branches | todo |
+| ENG-DOC Documentation gate alignment | wehan | New documentation structure | Update legacy documentation gates and affected tests/CI discovery | Permit canonical bilingual PRD/reference material and explicit HTML anchors, reject obsolete duplicates; retain inventory/link checks | todo; code outside current documentation scope |
 
-## Continuation and blockers
+## Parallel work and handoff
 
-- DOC-01: local structure/links and handoff checks passed; 4 documentation-gate tests, Ruff lint/format and strict mypy for the 2 changed Python files passed. Delivery evidence is in [10.17-wehan-team-workflow](CHANGELOG.md#1017-wehan-team-workflow). This records local engineering verification, not a human content approval or remote CI run.
-- BASE-01: 422 Python tests passed; strict mypy passed on 109 files, 39 schemas/fixtures matched, player contracts and 18 JS modules/rendering checks passed, and Ruff/Prettier formatting passed. Reference module smoke/four-combination acceptance passed. The real-browser workflow passed using installed local Chromium via an explicit executable override; the default expected browser binary was absent. Fixed the browser test to wait for both the stage and its stable status before a version-bound preview. Git sharing and remote CI remain separately observable through the pushed revision/Actions; local checks do not establish formal-module or human acceptance.
-- EVD-01 / NAR-01: obtain factory entry, exact implementation revision, dependencies/resources, command/results and cancellation/cleanup limits from the module owner. Keep the other reference fixed; do not assume another owner's progress.
-- INT-01: run when both declared implementations are available; failed/skipped/not_run gates remain visible and return to the responsible owner. Commands and factory differences are in [PRD §5](README.md#5-independent-modules-and-composition).
-- PLAY-01: confirm protocol/participants and material readiness; no human experience acceptance is currently claimed. Findings become small tasks here; any important scope change also updates the PRD/Decision Log.
+wcheung and maslan can use fixed examples immediately while wehan implements T0. Test substitutes are not production adapters. Work in separate branches/worktrees, not three Agents writing one checkout. Shared types/schema/host files belong to wehan; business adapters and plugins have the ownership in PRD 2.9.
 
-Task fields: `owner | dependencies | deliverable | acceptance | status`. Use todo → in_progress → accepted; add awaiting_integration/verifying only when useful. On blocked/needs_changes, keep cause and next action. For incomplete sessions add affected paths and verification performed to this section. Do not copy transcripts, full test logs, completed-task history or the full PRD into the plan.
+Handoff records exact revision, contract/API versions, entry point, input hashes, relevant commands/results and remaining limits. Use todo → in_progress → awaiting_integration/verifying → accepted; blocked work retains cause and next action. Real-material, provider, browser, mobile and human-play results remain separate.
+
+## Open engineering issue
+
+`tools/check_handoff.py` currently rejects every extra file under docs/ and assumes the former four-document layout. `tools/check_repository.py` also recognizes heading-derived anchors only, so it falsely rejects valid explicit HTML anchor IDs used for bilingual section parity. Both limitations must be updated under ENG-DOC before the existing documentation gates can pass for this structure. Production/tooling code is intentionally outside the current documentation task. Do not suppress the gate or claim a passing CI result.

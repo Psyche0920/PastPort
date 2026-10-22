@@ -8,7 +8,7 @@ The behavior reference is demo-muradiye commit `656f2ba81875855e51e12fab3862629d
 
 Inspect the synthetic hatch and obtain a fictional delivery record; choose whether to spend two story minutes assisting a witness; the next scene's feedback reads that choice. Both branches keep the delivery location known but differ on carrier identification. This demonstrates expressible data dependencies, not that the game is enjoyable or the inference is historically valid.
 
-Five `vector-*.json` files freeze JS behavior. Their declarative template metadata `evaluation_status` remains `not_run`; F7 now executes all five against the shared JS interpreter and reports actual outcomes separately. The conflict runtime introduces inconsistent writes and must produce atomic EFFECT_CONFLICT. Merely validating the documents still does not execute them. See [F7 checks](../../../docs/README.md#10-game-runtime-actions-and-saves).
+Five `vector-*.json` files freeze JS behavior. Their declarative template metadata `evaluation_status` remains `not_run`; F7 now executes all five against the shared JS interpreter and reports actual outcomes separately. The conflict runtime introduces inconsistent writes and must produce atomic EFFECT_CONFLICT. Merely validating the documents still does not execute them. See [F7 checks](../../../docs/IMPLEMENTATION_GUIDE.md#10-game-runtime-actions-and-saves).
 
 The fixture uses `environment=test`, `distribution_scope=internal_preview` and synthetic actors. Never import these approvals into an authoritative editorial DB or export them for public play. A real chapter must receive real source, asset/route, narrative and publication decisions.
 

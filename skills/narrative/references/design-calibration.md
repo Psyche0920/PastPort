@@ -48,4 +48,4 @@ After workflow recovery works with fixtures, generate one short playable beat fr
 
 Evaluate N01–N07 using saved input/output/config snapshots. Then run a real player session without explaining the intended answer: observe whether the player can state why the clue matters and what their choice changed. No such model trial or player session has been completed merely by writing these cases.
 
-Use the canonical input/result protocol and the [quality pilot requirements](../../../docs/README.md#7-skill-protocol-and-content-quality-boundary) for mode-specific fields, observable action/consequence evidence, A/B ordering and not_run/model/player status. Do not add a second scoring/approval workflow inside this reference.
+Use the canonical input/result protocol and the [quality pilot requirements](../../../docs/IMPLEMENTATION_GUIDE.md#7-skill-protocol-and-content-quality-boundary) for mode-specific fields, observable action/consequence evidence, A/B ordering and not_run/model/player status. Do not add a second scoring/approval workflow inside this reference.

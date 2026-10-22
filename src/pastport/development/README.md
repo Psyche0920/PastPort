@@ -1,6 +1,6 @@
 # development — Offline acceptance and generated-contract tools
 
-Trusted local tooling with temporary synthetic data; does not certify professional content or deployment. Framework owner: Wehan/Weijia. Evidence/narrative professional implementations remain their respective owners' responsibility; see [current guide](../../../docs/README.md#2-architecture-ownership-and-module-map). Start at [module_acceptance.py](module_acceptance.py); import from the module's public boundary, not a sibling adapter's internals.
+Trusted local tooling with temporary synthetic data; does not certify professional content or deployment. Framework owner: wehan. Evidence/narrative professional implementations remain their respective owners' responsibility; see [current guide](../../../docs/PastPort_PRD_EN.md#s2-9-1). Start at [module_acceptance.py](module_acceptance.py); import from the module's public boundary, not a sibling adapter's internals.
 
 ## Files and responsibilities
 
@@ -26,4 +26,4 @@ From repository root after installing locked dependencies:
 uv run --no-sync pytest tests/test_module_check.py tests/test_module_acceptance.py tests/test_fault_acceptance.py
 ```
 
-[Current guide](../../../docs/README.md): contracts/composition §§4–5; workflow/recovery §§6–9; runtime/workbench/API §§10–12; logging/checks §§13–15. Preserve typed errors, cancellation, cleanup, exact identities and shared approval/budget authority. Library-only packages have no independent service/factory. Formal module/real-material/paid/human acceptance requires its own evidence. Keep this file inventory current; shared delivery records belong in [Change Log](../../../docs/CHANGELOG.md), not module histories.
+[Current guide](../../../docs/IMPLEMENTATION_GUIDE.md): contracts/composition §§4–5; workflow/recovery §§6–9; runtime/workbench/API §§10–12; logging/checks §§13–14; development rules in PRD 2.11. Preserve typed errors, cancellation, cleanup, exact identities and shared approval/budget authority. Library-only packages have no independent service/factory. Formal module/real-material/paid/human acceptance requires its own evidence. Keep this file inventory current; shared delivery records belong in [Change Log](../../../docs/CHANGELOG.md), not module histories.

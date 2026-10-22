@@ -1,0 +1,210 @@
+{
+  "plugin_id": "pastport.match-pairs",
+  "plugin_version": "1.0.0",
+  "plugin_api_version": "1.0.0",
+  "runtime_profile": "single-player-plugins-v1",
+  "required_host_capabilities": [
+    "surface-2d",
+    "pointer",
+    "keyboard",
+    "touch",
+    "task-state-v1",
+    "task-result-v1"
+  ],
+  "logic_entry": "plugins/pastport.match-pairs/1.0.0/logic.mjs",
+  "view_entry": "plugins/pastport.match-pairs/1.0.0/view.mjs",
+  "schemas": {
+    "config": {
+      "type": "object",
+      "properties": {
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "left_id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+                "maxLength": 160,
+                "minLength": 1
+              },
+              "right_id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+                "maxLength": 160,
+                "minLength": 1
+              },
+              "left_text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "right_text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "left_id",
+              "right_id",
+              "left_text",
+              "right_text"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "pairs"
+      ],
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "select_pair"
+        },
+        "left_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "maxLength": 160,
+          "minLength": 1
+        },
+        "right_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "maxLength": 160,
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "left_id",
+        "right_id"
+      ],
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "matched_left_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+            "maxLength": 160,
+            "minLength": 1
+          },
+          "minItems": 0,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "matched_left_ids",
+        "attempts"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "running",
+            "completed",
+            "failed",
+            "aborted"
+          ]
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+              "maxLength": 160,
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "outcome",
+        "score"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "completed",
+                  "failed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "outcome": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+                "maxLength": 160,
+                "minLength": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "outcome": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "resource_ids": [],
+  "license": "Original synthetic protocol example; distribution follows the project license.",
+  "files": [
+    {
+      "path": "plugins/pastport.match-pairs/1.0.0/logic.mjs",
+      "role": "logic",
+      "sha256": "64673c116ff227873ed85e6ffe21fc1da1edca737dd05b27aab1c5be92f4b1b9",
+      "size_bytes": 3178
+    },
+    {
+      "path": "plugins/pastport.match-pairs/1.0.0/view.mjs",
+      "role": "view",
+      "sha256": "fc35922b052bd2f4bbd1d7aac2591a190796971468db5775e186141b914017c8",
+      "size_bytes": 1622
+    }
+  ]
+}

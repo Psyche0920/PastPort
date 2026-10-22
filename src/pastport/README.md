@@ -1,6 +1,6 @@
 # PastPort package entry points
 
-The package composes a typed editorial workflow with a shared JS runtime. [Root README](../../README.md) indexes every logical module; [the current guide](../../docs/README.md) owns startup, interfaces, operations and checks. Owner: Wehan/Weijia. Imports must not configure logging, start a service or grant approval.
+The package composes a typed editorial workflow with a shared JS runtime. [Root README](../../README.md) indexes every logical module; [the current guide](../../docs/IMPLEMENTATION_GUIDE.md) owns startup, interfaces, operations and checks. Owner: wehan. Imports must not configure logging, start a service or grant approval.
 
 | File | Purpose |
 |---|---|

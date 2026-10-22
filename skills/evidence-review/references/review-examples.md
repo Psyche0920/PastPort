@@ -43,4 +43,4 @@ For each model run:
 2. **Enforce Database Schema Integrity**: Verify that all generated spots populate `scene_hotspots` in SQLite (`var/bursa_evidence.db` or `var/test_evidence.db`) and match the `Spot` contract schema.
 3. **Audit Critical Failures**: Unsupported claims, fabricated locators, and misaligned spatial pins block production release.
 4. **Follow Engineering Guidelines**: Maintain strict compliance with [.agents/agents/agent.md](../../../.agents/agents/agent.md).
-
+5. **Protocol Boundary Cases**: Reference the [Skill protocol](../../../docs/PastPort_PRD_EN.md#s2-6-3) or [IMPLEMENTATION_GUIDE.md](../../../docs/IMPLEMENTATION_GUIDE.md#7-skill-protocol-and-content-quality-boundary). Use canonical decision enums without inventing mode-specific routing strings.
