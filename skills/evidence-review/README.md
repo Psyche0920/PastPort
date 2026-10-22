@@ -135,15 +135,18 @@ python tools/vision_hotspot_pipeline.py --db var/bursa_evidence.db --site bursa-
 # Batch-process all 31 monuments in the database
 python tools/vision_hotspot_pipeline.py --db var/bursa_evidence.db --all
 
-# Export Spot contracts to JSON for the game engine
+# Export Spot contracts to JSON for downstream modules
 python tools/vision_hotspot_pipeline.py --db var/test_evidence.db --export var/test_spots.json
 ```
 
 - **Supported Backends** (`--mode`):
-  - `auto`: Automatically selects active API key or falls back to offline mock.
-  - `gemini`: Google `gemini-1.5-flash` via standard HTTPS.
+  - `auto`: Automatically uses Gemini with dynamic multi-model failover pool (`gemini-3.5-flash`, `gemini-flash-lite-latest`, `gemini-flash-latest`), falling back to OpenAI if configured, or offline deterministic mock.
+  - `gemini`: Google Gemini vision models with 4.2s pacing interval (`14.3 RPM < 15 RPM` limit) and auto-failover across model quota pools.
   - `openai`: OpenAI `gpt-4o-mini` via standard HTTPS.
   - `mock`: Deterministic offline spatial predictor for local testing and CI gates.
+
+- **Automatic Image Downscaling**:
+  High-resolution drone photos (>2MB or >1600px) are automatically downscaled in memory to 1600px max dimension (~480 KB) before transmission, preventing HTTP 503 gateway timeouts while preserving normalized $[0..10000]$ coordinate precision.
 
 ### 4. Verification Studio (`tools/hotspot_studio.py`)
 Web viewer for visual review and curation of placed hotspots:
@@ -152,7 +155,14 @@ Web viewer for visual review and curation of placed hotspots:
 python tools/hotspot_studio.py --db var/bursa_evidence.db
 ```
 
-Open `http://localhost:8088`. Select any monument from the top dropdown to see its claims and interactive 360 spots.
+Open `http://localhost:8088`. Select any monument from the top dropdown to see its extracted architectural objects, dossier claims, and interactive pins on 2D images or 360 spheres.
+
+### 5. SDK Package Exporter (`tools/export_museum_package.py`)
+Exports verified monument views, museum objects, and physical anchors to an SDK v1 `MuseumPackage`:
+
+```bash
+python tools/export_museum_package.py --db var/bursa_evidence.db --output var/museum.json
+```
 
 ## Reference Sample (Demo Cluster)
 
