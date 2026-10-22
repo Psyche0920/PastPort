@@ -1,3 +1,14 @@
+<!-- repository-badges:start -->
+<div align="center">
+
+[![Repository statistics snapshot: 2026-10-22](docs/showcase/repository-badges.svg)](https://github.com/Psyche0920/PastPort/graphs/contributors)
+
+<sub>Private-repository snapshot · 2026-10-22 · Open items include issues and pull requests. [Contributors](https://github.com/Psyche0920/PastPort/graphs/contributors) · [Forks](https://github.com/Psyche0920/PastPort/forks) · [Stars](https://github.com/Psyche0920/PastPort/stargazers) · [Issues](https://github.com/Psyche0920/PastPort/issues)</sub>
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Weijia_Han-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/weijia-han-6162581b5/)
+
+</div>
+<!-- repository-badges:end -->
+
 <div align="center">
 
 ![PastPort — HERITAGE / INTERACTIVE SYSTEMS](docs/showcase/hero.svg)
@@ -9,6 +20,16 @@
 </div>
 
 ![PastPort conceptual workflow](docs/showcase/workflow.svg)
+
+## A window into the prototype
+
+These screenshots come from the **Muradiye UI trial branch**, an experimental heritage scene. They illustrate the prototype, not completed main-branch museum integration.
+
+![Muradiye heritage scene and character encounter](https://github.com/Psyche0920/PastPort/blob/6e65a44b2d4fc26d8a925775d317a3660a609d8a/output/browser/automatic-encounter.jpg?raw=true)
+
+![Observation matching in the Muradiye prototype](https://github.com/Psyche0920/PastPort/blob/6e65a44b2d4fc26d8a925775d317a3660a609d8a/output/browser/observation-match.jpg?raw=true)
+
+[Explore the UI trial branch](https://github.com/Psyche0920/PastPort/tree/demo-muradiye-ui-trial) · [Adventure prototype source](https://github.com/Psyche0920/PastPort/blob/6e65a44b2d4fc26d8a925775d317a3660a609d8a/prototype/adventure.html) · [Immersive prototype source](https://github.com/Psyche0920/PastPort/blob/6e65a44b2d4fc26d8a925775d317a3660a609d8a/prototype/immersive.html)
 
 <a id="project-documentation"></a>
 
