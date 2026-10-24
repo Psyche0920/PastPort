@@ -1,3 +1,7 @@
+> **Active on this branch:** [Photo-to-PDF and editable IDML automation](modules/pdf_evidence/README.md).
+> Input is a heritage PDF plus multi-angle photographs. This module does not include a review
+> backend, VR matching or a downstream data API. The framework overview below describes main.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-78C943?style=for-the-badge)](LICENSE)
 
 <div align="center">

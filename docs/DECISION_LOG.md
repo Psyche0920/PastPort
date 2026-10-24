@@ -15,3 +15,11 @@ Accepted, 2026-10-21. main owns common lifecycle, resources, authoritative saves
 Accepted, 2026-10-21. wcheung reuses IDML/Links, matches panorama objects and attaches traceable text. maslan generates then filters tasks against that same museum, prepares exact plugins/resources and invokes shared deterministic assembly for a complete game bundle. Reuse compatible plugins first; automatic development/repair is bounded and may fail explicitly. Rights, budgets and publication authority remain enforced. See [PRD 1.5–1.6](PastPort_PRD_EN.md#s1-5) and [part 3](PastPort_PRD_EN.md#part-topic).
 
 For future significant changes record date, accepted/proposed status, owner, decision, rationale, affected version/sections and replacement relationship. A log entry does not grant approval, paid execution or deployment rights.
+
+## 2026-10-24 — Photo preparation ends at PDF and IDML
+
+The user confirmed an independent photo-to-document workflow: historical PDF and multi-angle
+proxy photographs produce a comparison PDF and editable IDML. No review backend, VR stage or
+structured downstream handoff is included. Internal caches and metering remain necessary runtime
+records. The next phase reads the resulting PDF as an ordinary source document. This replaces
+the broader review/handoff scope in the earlier preparation PRD; main and the VR branch stay unchanged.

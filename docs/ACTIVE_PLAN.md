@@ -30,3 +30,13 @@ Handoff records exact revision, contract/API versions, entry point, input hashes
 ## Open engineering issue
 
 `tools/check_handoff.py` currently rejects every extra file under docs/ and assumes the former four-document layout. `tools/check_repository.py` also recognizes heading-derived anchors only, so it falsely rejects valid explicit HTML anchor IDs used for bilingual section parity. Both limitations must be updated under ENG-DOC before the existing documentation gates can pass for this structure. Production/tooling code is intentionally outside the current documentation task. Do not suppress the gate or claim a passing CI result.
+
+## Photo document generation — confirmed scope revision
+
+| Task | Owner | Dependencies | Deliverable | Acceptance | Status |
+| --- | --- | --- | --- | --- | --- |
+| PDF-DOC | wehan | Original mapping demo; official IDML/PDF format; finite Codex grant | Independent `modules/pdf_evidence` photo + historical PDF pipeline, generating PDF and editable IDML only | Shared layout, exact provenance, stable photo-object numbers, atomic paired export; no VR, review service or downstream API | implemented locally; offline complete graph and repeat run verified; strict mypy (41 files), Ruff and rendered PDF checked; IDML XML/media closure checked; full real model and native InDesign validation pending; implementation ready for user trial |
+
+This row follows the user's latest explicit reduction of scope and supersedes the review-workbench
+and structured-handoff implementation tasks in the earlier preparation specification. Native
+InDesign and a complete fresh real-material run remain separate evidence requirements.

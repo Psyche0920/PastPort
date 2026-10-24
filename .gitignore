@@ -13,3 +13,11 @@ var/
 node_modules/
 browser-artifacts/
 acceptance-artifacts/
+
+# Independent document-generation runtime; never commit operator grants or source media.
+modules/pdf_evidence/.runtime/
+modules/pdf_evidence/.venv/
+modules/pdf_evidence/my-grant.json
+modules/pdf_evidence/src/*.egg-info/
+modules/pdf_evidence/.mypy_cache/
+modules/pdf_evidence/.ruff_cache/

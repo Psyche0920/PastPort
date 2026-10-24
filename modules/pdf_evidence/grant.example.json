@@ -1,0 +1,9 @@
+{
+  "grant_ref": "documents:trial-1",
+  "project_id": "my-photo-documents",
+  "model_id": "gpt-6.1-sol",
+  "effort": "medium",
+  "max_calls": 20,
+  "max_recorded_tokens": 250000,
+  "timeout_seconds": 180
+}
