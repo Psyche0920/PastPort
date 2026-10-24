@@ -91,6 +91,55 @@ flowchart TD
 
 LangGraph checkpoint state holds run identity, input hashes, configuration version, result references, attempt counters and errors. File assets, quoted evidence, review decisions and human overrides live in registered storage/business records. A checkpoint cannot approve content or undo a committed edit. Persist business output before graph advancement; reconcile replay by idempotency key.
 
+### 3.1 Concrete module boundaries for the first implementation
+
+The initial executable is one local process with one project writer and one fixed graph per run. The HTTP service submits commands to the application; it does not start a second graph owner for the same project. Use a process lock plus transactional command claiming. Separate checkpoint and editorial SQLite files: restoring graph state must not restore over editorial decisions.
+
+| Module | Owns | Calls through ports | Must not own |
+|---|---|---|---|
+| `domain` | Validated IDs, refs, regions, evidence scopes, revisions and immutable result types | Nothing outside the domain | SQL, paths to user files, SDK clients, graph routing |
+| `application.inputs` | Input registration and project/version consistency | Asset store, PDF reader, tour reader | Provider calls or tour-script execution |
+| `application.recognition` | Inventory reconciliation, persistent identity links and per-view dispositions | Semantic execution, projection, identity repository | Allocating identity from model array order |
+| `application.evidence` | Passage retrieval, quote selectors, subject/scope validation and draft creation | Corpus repository, semantic execution | Updating original quotations during copy edits |
+| `application.editorial` | Human text/position overrides, conflict checks and effective-value resolution | Editorial unit of work | Checkpoint state as approval authority |
+| `application.exports` | One-revision snapshot, reference closure and staged export | Snapshot repository, asset store, main bridge | Reading arbitrary live rows during a frozen export |
+| `workflow` | Fixed stage scheduling, joins, attempts and cancellation | Application stage services | Raw SQL, direct provider calls or historical judgments |
+| `adapters` | Files, SQLite, PDF/projection libraries, model transport and usage receipts | External libraries | Global business policy or a second identity system |
+| `api` and `web` | Transport validation, editing controls and Pannellum integration | Application use cases | Historical source reassignment by marker drag |
+| `integration` | Main-specific DTO conversion and frozen reference validation | Registered resources and counterpart types | Parallel definitions of canonical main SDK types |
+
+These are package responsibilities, not a requirement for one class/file per row. Group cohesive small services; introduce a Protocol only at an actual I/O, persistence or replaceable execution boundary. Construct adapters in the composition root and inject them inward. Keep framework-specific request/context objects outside domain services.
+
+### 3.2 Internal port operations and ownership
+
+The following operation names are standalone design contracts, not additions to main's public API. Every request/result is an explicit immutable dataclass or strict Pydantic model; JSON decoding is validated at the adapter edge.
+
+| Port | Minimum operations and typed result | Authority |
+|---|---|---|
+| Asset store | Register bytes → immutable asset ref; open registered ref → bounded byte stream | Asset hash/version and project scope |
+| PDF reader | Extract registered document/profile → page/text/image-region references and extraction issues | Exact source representation, not inferred subjects |
+| Tour reader | Import registered tour/profile → tour draft and import issues | Source IDs, view/media identity and connections |
+| Projection | Derive views → transform-bound references; map selected region → spherical location | Coordinate convention and transforms |
+| Semantic executor | Execute typed stage request plus execution grant → validated proposal and usage receipt | Allowed image/input references, output schema, budget and cancellation |
+| Editorial repository/unit of work | Resolve identities; commit proposals; save expected-version override; read effective records | Business revisions, unique keys, human authority and audit |
+| Snapshot repository | Freeze expected project revision → immutable snapshot ref | A consistent read of included effective values |
+| Stage repository | Claim stage/input key; record attempt; complete with result refs; record failure | Durable stage receipts before checkpoint advancement |
+| Main bridge | Convert snapshot → candidate SDK payloads; validate → compatibility findings | Pinned external schema and cross-reference rules |
+
+Keep proposal generation and proposal application separate. The executor cannot call edit services or allocate persistent object numbers. The application checks supplied refs and reconciles identities before committing proposals. An uncertain model response never triggers entity merge, history approval or a destructive rewrite implicitly.
+
+### 3.3 Graph execution and recovery contract
+
+For the first runnable slice use a sequential fixed graph, preserving the stages in section 5. This avoids a premature parallel scheduler. When PDF and tour preparation later run concurrently, recognition starts only after both result references are durably present; use an explicit all-predecessor join, not separate edges that can launch matching twice.
+
+The first graph state needs only the project/run identity and graph-definition version; stage services read bound inputs and receipts from the business repository. Larger typed state is permitted only for a demonstrated scheduling need. Do not checkpoint raw images, API secrets, whole documents or live human override values.
+
+Run states are queued, running, completed, completed_with_gaps, failed, cancelled and recovery_required. Stage receipts distinguish pending, running, completed, failed, cancelled and dispatch_unknown. A model transport timeout with uncertain dispatch becomes dispatch_unknown/recovery_required; it is not an automatic free retry. A failed record can create an explicit coverage gap while other validated records continue. Run completion and public artifact state are separate axes.
+
+Within one stage: verify bindings/cancellation → reuse matching successful receipt or claim work → reserve bounded execution if needed → persist response and usage → validate typed output → commit result references → checkpoint/advance. A restart after business commit but before checkpoint reads the saved receipt instead of repeating the effect. Permanent malformed input fails directly; transient pre-dispatch errors have bounded retry; schema repair consumes the same explicit stage budget.
+
+The graph starts on registered command submission, not on opening a VR page or clicking a marker. Viewing/editing existing results remains available when no generation worker is running. Any later autonomous agent is encapsulated inside the semantic-execution boundary and has no direct editorial or publication authority.
+
 ## 4. Main interface and compatibility contract
 
 ### 4.1 Required public handoff
@@ -130,6 +179,35 @@ Keep offline `build(fixtures: Path)` distinct from application `build(services: 
 - `ready_for_review` is not human historical or publication approval. AI candidates may appear in an explicitly labelled draft preview; they must not automatically become confirmed public anchors.
 - Multiple appearances of one object share `object_id` but have distinct anchor/view identities. Local editor numeric labels map to stable string IDs; array order is not identity.
 - Detailed source/claim scopes, drafts, human overrides, audit events and visibility reasons are local editorial records. Export only fields admitted by the shared schema; use registered references for richer evidence.
+
+### 4.4 Exact compatibility gaps and integration dependencies
+
+| Boundary | Inspected target/current difference | Standalone implementation decision | Main integration condition |
+|---|---|---|---|
+| Shared Python museum DTOs | Target schema/PRD defines museum types; inspected main ports do not yet supply the target MuseumPort methods | Keep validated internal records; serialize through one bridge against the frozen schema | Use owner-generated shared types once available; prove equivalent serialized payloads |
+| Image execution | Current main ModelRequest has research/story roles and input refs; target asks for typed image/candidate-view support | Define injected image-stage execution with explicit assets/output schema and metering | Shared owner supplies compatible media request, stage grants and gateway capability; no direct paid SDK bypass |
+| Rich editorial records | SDK object/entry/anchor schemas reject extra fields | Retain identity candidates, overrides and review history in project storage | Export admitted fields and resolvable evidence refs only |
+| Bare panoramas | Main tour requires first view, stable views and explicit connections | Raw images require an explicit supported import profile; no invented links | Validate exact TourPackage semantics, including departure/arrival conventions |
+| Draft preview | Candidates and unbound scene targets are useful in the demo | Show local target state truthfully without fabricated evidence | Export only valid source-backed objects; retain candidate/visual-check status |
+| Live popup text | Demo reads newest effective copy | Editing updates the live project revision | Frozen MuseumEntry text changes only through a new snapshot/version |
+| Coordinate conventions | Local storage and renderer can accept wider values than the shared anchor schema | New API, model validation and UI consistently enforce SDK bounds | Validate projected markers and cross-view hashes, not just angle ranges |
+| Photographic preview | Main's larger product includes cartoon-style display | Deliver honest photographic display with registered assets first | Preserve display_kind; do not declare stylization complete |
+
+The bridge maps scoped scene IDs to SDK string IDs, maintains stable object/view/anchor aliases and validates each referenced source record. `SourceRecord.association_state` admits linked/candidate/text_only/image_only; internal visibility outcomes such as occluded or not_inspected must not be inserted into this enum. SDK museum state admits draft/ready_for_review; run failures and approval states stay outside that field.
+
+Schema acceptance is necessary but insufficient. Validate project equality across all refs; unique objects/views/anchors; entry/anchor object existence; view/connection closure; source IDs; source/tour version/hash bindings; available media and claim references. A rejected entity must also remove or explain dependent exported entries/anchors. Do not leave dangling references while claiming a valid subset.
+
+### 4.5 Compatibility receipt and fixed counterpart
+
+Record the main commit, PRD/schema/checker file hashes, standalone code version, export snapshot/ref/hash, bridge version and each check result. Keep structural validation, semantic cross-reference checks, real-material/browser checks and main runtime integration as separate results. A schema-valid JSON fixture cannot establish implemented MuseumPort or runtime support.
+
+The first coding task freezes the small permitted reference schema/examples/checker from the recorded main commit, with provenance, before independent work advances. These are counterpart resources; they are not a copy of main's application. Refresh the reference deliberately when main changes, then rerun compatibility checks. Any changed shared type/grant/API needs an explicit owner-approved integration adjustment.
+
+### 4.6 Architecture slice acceptance and next implementation task
+
+The design boundary is ready for W01–W04 implementation when: domain imports are framework-free; application services have concrete typed I/O; one composition root owns resources; identity and human edits are editorial authority; stage receipt/checkpoint recovery is explicit; all public exports pass through the main bridge; and unavailable shared image/museum APIs remain declared integration dependencies.
+
+Implement next: freeze counterpart → typed run/input/identity/override/stage records → transactional repository and stable display-number allocation → injected fixed LangGraph stage runner → meaningful restart/conflict/idempotency checks. Use explicit offline counterparts for this first slice. Real PDF/tour ingestion and real-image calls follow; neither has been implemented by writing these architecture sections.
 
 ## 5. Fixed workflow stages
 
@@ -342,3 +420,10 @@ This section is a review of the first draft against the inspected PRD, demo impl
 | P1 | Generic success language obscured what had actually been exercised | A graph fixture could be presented as a working museum matcher | Definition of done separates offline architecture, real provider/material, browser and second-site checks |
 
 The revised implementation priority is: fixed counterparts and typed state → persistent identity/overrides → checkpointed graph and bounded execution → actual PDF/tour/projection path → real semantic/evidence path → review/VR editing → full rerun and compatibility → second-site validation → main integration. The code should implement this plan rather than rebuild or transplant the old main application.
+
+
+## Standalone Codex subscription adapter decision
+
+The user approved local Codex SDK execution using each operator's existing ChatGPT login. The standalone adapter implements the existing scene-inspection/evidence/draft ports with explicit model selection, bounded image attachments, strict structured output conversion, a persistent subscription call grant, authentic SDK token receipts, deadline/cancellation and no implicit API-key/provider fallback. It does not share credentials or alter the main gateway contract.
+
+Subscription token receipts do not report the exact remaining subscription allowance or billed USD. A recorded-token threshold stops subsequent dispatches and is not a hard per-call token ceiling. Unknown usage remains recovery-required across restarts. Main integration still requires its shared execution grant/usage bridge; this local adapter cannot be presented as evidence that the main gateway or dollar-budget acceptance already passes.

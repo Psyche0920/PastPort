@@ -1,0 +1,9 @@
+{
+  "grant_ref": "local-codex:1",
+  "project_id": "muradiye-demo",
+  "model_id": "gpt-6.1-sol",
+  "effort": "medium",
+  "max_calls": 80,
+  "max_recorded_tokens": 1000000,
+  "timeout_seconds": 180
+}
