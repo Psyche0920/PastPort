@@ -67,8 +67,8 @@ class StudioOptions(DomainModel):
     scene_format: Literal["tour_360", "model_3d"] = "tour_360"
     mapping_mode: Literal["same_site", "demo_substitution"] = "same_site"
     large_pdf: bool = False
-    max_calls: Annotated[int, Field(ge=1, le=100)] = 80
-    max_recorded_tokens: Annotated[int, Field(ge=1, le=10_000_000)] = 1_000_000
+    max_calls: Annotated[int, Field(ge=1, le=100)] = 20
+    max_recorded_tokens: Annotated[int, Field(ge=1, le=10_000_000)] = 250_000
     authorize_model: Literal[True]
 
 

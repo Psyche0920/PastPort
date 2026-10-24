@@ -16,6 +16,7 @@ Evidence: 25 behavioral tests, strict typing, Ruff lint/format, JavaScript synta
 
 Status: implemented on the standalone branch; localhost-only, not main-integrated or cloud-deployed.
 
+- Set new browser-run defaults to 20 calls / 250,000 recorded tokens after user approval; existing grants remain unchanged. Large inputs may stop with explicit budget gaps.
 - Added a Chinese upload/generate portal with PDF and 360 HTML/folder/ZIP selection or drag/drop, finite model authorization/settings, persisted job/stage progress and project-scoped result links.
 - Reused the existing fixed build, VR popups, drag-save and evidence editor; existing-project rebuilds preserve applicable human overrides. Interrupted jobs stop for reconciliation, with no automatic uncertain redispatch.
 - Added bounded streamed uploads, safe archive extraction, single-job admission and local origin/host boundaries. Uploaded tour scripts and arbitrary host paths are not exposed.
