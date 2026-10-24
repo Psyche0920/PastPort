@@ -1,0 +1,1382 @@
+{
+  "title": "PastPort blind independent visual rematch — full 39-target inventory",
+  "date": "2026-10-24",
+  "coordinate_system": {
+    "width": 4096,
+    "height": 2048,
+    "origin": "top-left",
+    "x_direction": "right",
+    "y_direction": "down",
+    "units": "panorama pixels",
+    "accuracy": "Approximate visual anchors, generally within tens of pixels for close distinct items and less precise for distant/occluded items; no calibrated localization error is claimed."
+  },
+  "method": {
+    "permitted_inputs": [
+      "20 source files output/matching_database/media/photo-01.jpg through photo-20.jpg",
+      "/private/tmp/pastport-vr-scene-1.jpg",
+      "/private/tmp/pastport-vr-scene-2.jpg",
+      "output/matching_database/modern_objects.csv (target IDs/names; notes treated only as hypotheses)"
+    ],
+    "inspection": "Every source photo was inspected individually. Both complete panoramas and original-resolution detail crops were inspected; one in-memory seam reconstruction was used. No prior review, saved coordinates, database, build script or rationale was read.",
+    "identity_policy": "Exact object identity requires matching visual form plus distinctive neighboring geometry. Continuous assemblies receive representative anchors for visible sections. Components retain separate anchors. Category resemblance and uncertain candidates are not confirmed exact appearances. Scene 2 seam fragments are not counted as separate doors.",
+    "appearance_policy": "Appearances list independently confirmed visible regions in each supplied scene. A continuous surface has representative anchors, not a pixel-by-pixel enumeration. Empty appearances mean not independently located, not rejected or proven absent.",
+    "scope": "Only this report and its JSON counterpart were created; no application data or existing artifacts were modified."
+  },
+  "revisions": [
+    "The first-pass rounded estimates for previously identified primary targets are retained. Newly separated components receive their own anchors rather than inheriting a group coordinate.",
+    "The laptop support and wireless mouse are now separately anchored after closer inspection; this refines the previous setup-level match.",
+    "Source Photo 05 belongs to the staircase-end Crane B; it is not the same crane/hook as Photos 01/12/16. Both referents are explicitly retained under the affected inventory rows without falsely merging them.",
+    "Source Photo 13 tree and Photos 12/16 tree are distinct objects. Both first-pass tree estimates are retained as separate referents, while the inventory same-tree hypothesis is flagged.",
+    "The side planted trough in Photo 15 and end trough in Photo 01 have separate visible segments; their physical continuity is not established.",
+    "No previous abstention for Photo 17 shoes or its unique floor cover has been promoted to an exact object match."
+  ],
+  "targets": [
+    {
+      "target_id": 1,
+      "inventory_name": "笔记本电脑",
+      "english_name": "Laptop",
+      "source_photos": [
+        9,
+        18
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 3790,
+          "y": 1425,
+          "anchor_description": "Laptop keyboard and open display",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 2145,
+          "y": 1095,
+          "anchor_description": "Distant open laptop on the upholstered support",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Photo 09 matches the open laptop on the upholstered support beside the mouse and dark armchair. Scene 2 shows the same seating arrangement at a distance.",
+      "identity_notes": "Photo 18 resembles this laptop but has no unique device identifier. Its screen shows Scene 2; a screen depiction is not a physical laptop appearance in Scene 2."
+    },
+    {
+      "target_id": 2,
+      "inventory_name": "无线鼠标",
+      "english_name": "Wireless mouse",
+      "source_photos": [
+        9
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 3745,
+          "y": 1355,
+          "anchor_description": "Dark mouse behind laptop",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "A separate dark mouse is visible behind the laptop on the upholstered support in Scene 1.",
+      "identity_notes": "Scene 2 is too distant to resolve the mouse individually."
+    },
+    {
+      "target_id": 3,
+      "inventory_name": "电脑下方的方形软凳",
+      "english_name": "Square upholstered stool supporting laptop",
+      "source_photos": [
+        9
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 3570,
+          "y": 1415,
+          "anchor_description": "Upholstered support below laptop",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 2155,
+          "y": 1120,
+          "anchor_description": "Distant upholstered support below laptop",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "The laptop rests on the matching upholstered support with a front face and rounded corners. The same support is visible between the two dark chairs in Scene 2.",
+      "identity_notes": "Projection and lighting make its outline appear wider and greyer in the panorama; identity is supported by the complete laptop/mouse/chair arrangement."
+    },
+    {
+      "target_id": 4,
+      "inventory_name": "深色单人扶手椅",
+      "english_name": "Dark single armchair",
+      "source_photos": [
+        19
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 3140,
+          "y": 1390,
+          "anchor_description": "Armchair to the left of laptop support",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 2200,
+          "y": 1140,
+          "anchor_description": "Near dark armchair beside wood-clad room",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Rounded dark armchair beside the wood-clad room; adjoining glass rail, nearby door and laptop support agree.",
+      "identity_notes": "The chair on the other side of the laptop support is a separate similar chair. Photos 09/18 alone do not establish that every chair they show is this chair."
+    },
+    {
+      "target_id": 5,
+      "inventory_name": "深色背包",
+      "english_name": "Dark backpack",
+      "source_photos": [
+        19
+      ],
+      "match_status": "not_located",
+      "appearances": [],
+      "uncertain_candidates": [
+        {
+          "scene": 1,
+          "x": 4050,
+          "y": 1350,
+          "anchor_description": "Dark fabric on the other armchair; cannot identify as backpack",
+          "confidence": "low",
+          "match_level": "uncertain"
+        }
+      ],
+      "conflicting_referents": [],
+      "evidence": "Photo 19 clearly shows a zippered bag in the foreground. No panorama view resolves that bag or its zipper/strap configuration.",
+      "identity_notes": "Absence of a confirmed location does not prove physical absence. The dark fabric on another chair is insufficient."
+    },
+    {
+      "target_id": 6,
+      "inventory_name": "B.1.61旁白色实心门",
+      "english_name": "White solid door beside B.1.61",
+      "source_photos": [
+        10,
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 760,
+          "y": 1070,
+          "anchor_description": "White door panel beside black glass door",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 850,
+          "y": 1100,
+          "anchor_description": "White server-room door",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Door closer, round knob, neighboring B.1.61 sign, pillar controls and adjacent black glass door agree.",
+      "identity_notes": "The white door in Photo 02 is a different door on the opposite corridor wall segment; it is not merged into this ID."
+    },
+    {
+      "target_id": 7,
+      "inventory_name": "B.1.61房间标牌",
+      "english_name": "B.1.61 room sign",
+      "source_photos": [
+        8,
+        10,
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 800,
+          "y": 1007,
+          "anchor_description": "Small room sign to right of white door",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 1065,
+          "y": 975,
+          "anchor_description": "B.1.61 sign",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Small framed sign beside the white door matches the close-up layout and room identifier.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 8,
+      "inventory_name": "黑框玻璃双扇门",
+      "english_name": "Black-framed glass double door",
+      "source_photos": [
+        11,
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 600,
+          "y": 1050,
+          "anchor_description": "Black glass door assembly",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 200,
+          "y": 1100,
+          "anchor_description": "Left seam fragment of door assembly",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 4010,
+          "y": 1030,
+          "anchor_description": "Right seam fragment of same door assembly",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Black frames, stair railing behind the glass, adjacent pillar controls and white door establish the door assembly.",
+      "identity_notes": "Scene 2 cuts this one assembly across the panorama seam; the two fragments are not separate doors. The distant glass door in Photo 02 is a separate doorway."
+    },
+    {
+      "target_id": 9,
+      "inventory_name": "黑色喇叭喷口灭火器",
+      "english_name": "Fire extinguisher with black discharge horn",
+      "source_photos": [
+        7,
+        10,
+        11,
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 661,
+          "y": 1095,
+          "anchor_description": "Horn-type extinguisher on door pillar",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 475,
+          "y": 1490,
+          "anchor_description": "Horn-type extinguisher below smoke control",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Black rigid horn, red handle and bottle are mounted on the concrete pillar below the smoke control, beside the glass and white doors.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 10,
+      "inventory_name": "黑色软管式灭火器",
+      "english_name": "Fire extinguisher with flexible black hose",
+      "source_photos": [
+        2,
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 489,
+          "y": 1045,
+          "anchor_description": "Hose-type extinguisher on white-wall-side pillar",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 3715,
+          "y": 1110,
+          "anchor_description": "Hose-type extinguisher beside corridor door",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Separate extinguisher beside the other white door; its flexible looped hose and wall position differ from ID 9.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 11,
+      "inventory_name": "橙色排烟控制面板",
+      "english_name": "Orange smoke-extraction control panel",
+      "source_photos": [
+        3,
+        10,
+        11,
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 665,
+          "y": 1018,
+          "anchor_description": "Small orange control on glass-door pillar",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 545,
+          "y": 1055,
+          "anchor_description": "Orange RAUCHABZUG control",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Orange RAUCHABZUG housing, green indicator and conduit above; a separate white key switch sits below.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 12,
+      "inventory_name": "排烟面板下方钥匙开关",
+      "english_name": "Key switch below smoke control",
+      "source_photos": [
+        3,
+        10,
+        11
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 665,
+          "y": 1033,
+          "anchor_description": "White switch below orange control",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 537,
+          "y": 1155,
+          "anchor_description": "Separate white key switch",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "White square switch with circular key cylinder lies immediately below the orange control. It is anchored separately from the panel.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 13,
+      "inventory_name": "白墙上的橙色控制盒",
+      "english_name": "Orange control box on white wall",
+      "source_photos": [
+        2,
+        12
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 367,
+          "y": 1060,
+          "anchor_description": "Orange box on white side wall",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 3630,
+          "y": 975,
+          "anchor_description": "Orange control box below wall notices",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Orange box is mounted on a white wall below wall notices, along the narrow corridor by the crane column.",
+      "identity_notes": "This is not the RAUCHABZUG panel on the concrete pillar, ID 11."
+    },
+    {
+      "target_id": 14,
+      "inventory_name": "玻璃门上方绿色出口标志",
+      "english_name": "Green exit sign above glass door",
+      "source_photos": [
+        11
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 2,
+          "x": 4060,
+          "y": 610,
+          "anchor_description": "Green exit sign above glass door",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [
+        {
+          "scene": 1,
+          "x": 565,
+          "y": 905,
+          "anchor_description": "Small bright patch above door; symbol not resolved",
+          "confidence": "low",
+          "match_level": "uncertain"
+        }
+      ],
+      "conflicting_referents": [],
+      "evidence": "Green running-person/arrow sign is directly visible above the black door in Scene 2 near the right panorama edge.",
+      "identity_notes": "A tiny bright patch in the expected Scene 1 assembly cannot be resolved as the same green sign."
+    },
+    {
+      "target_id": 15,
+      "inventory_name": "上层回廊玻璃护栏",
+      "english_name": "Upper-gallery glass guardrail",
+      "source_photos": [
+        1,
+        2,
+        5,
+        12,
+        13,
+        15,
+        16,
+        19
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 1500,
+          "y": 1280,
+          "anchor_description": "Left foreground gallery glass rail",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 1,
+          "x": 3400,
+          "y": 1210,
+          "anchor_description": "Rail in front of wood-clad room",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2860,
+          "y": 1200,
+          "anchor_description": "Foreground atrium guardrail",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Transparent panels, metal top rail and repeated vertical dark safety marks run around the upper atrium gallery.",
+      "identity_notes": "This is a continuous assembly: anchors represent visible sections, not new objects for each panel."
+    },
+    {
+      "target_id": 16,
+      "inventory_name": "屋脊中央长条天窗",
+      "english_name": "Central longitudinal roof skylight",
+      "source_photos": [
+        4,
+        16,
+        20
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2050,
+          "y": 450,
+          "anchor_description": "Central visible ridge glazing",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 1,
+          "x": 4090,
+          "y": 470,
+          "anchor_description": "Same ridge strip at seam",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2320,
+          "y": 340,
+          "anchor_description": "Ridge glazing behind foreground beam",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Paired glazed strip follows the roof ridge, bounded by corrugated slopes and repeated steel cross members.",
+      "identity_notes": "The roof strip is confirmed. Individual glazing panes/spans in Photos 04 and 20 cannot be uniquely assigned."
+    },
+    {
+      "target_id": 17,
+      "inventory_name": "两侧不透明波纹屋面",
+      "english_name": "Opaque corrugated roof slopes",
+      "source_photos": [
+        4,
+        16,
+        20
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 900,
+          "y": 350,
+          "anchor_description": "One opaque roof slope",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 1,
+          "x": 3100,
+          "y": 350,
+          "anchor_description": "Opposite opaque roof slope",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 1810,
+          "y": 470,
+          "anchor_description": "Visible corrugated slope left of ridge",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2940,
+          "y": 470,
+          "anchor_description": "Visible corrugated slope right of ridge",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Both opaque roof slopes show closely spaced parallel ribs and purple illumination; they are separate from the glazing.",
+      "identity_notes": "Confirms the continuous roof surfaces; not a unique match of every repeated roof panel."
+    },
+    {
+      "target_id": 18,
+      "inventory_name": "屋顶钢桁架及支撑",
+      "english_name": "Roof steel trusses and supports",
+      "source_photos": [
+        4,
+        16,
+        20
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 900,
+          "y": 460,
+          "anchor_description": "Steel roof support and diagonal brace",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 1,
+          "x": 3200,
+          "y": 450,
+          "anchor_description": "Opposite roof support",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2840,
+          "y": 700,
+          "anchor_description": "Roof support behind foreground warning beam",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Grey rafters, diagonal braces and repeated cross members visibly support the roof slopes and ridge.",
+      "identity_notes": "The foreground hazard-striped beam is anchored separately under ID 22."
+    },
+    {
+      "target_id": 19,
+      "inventory_name": "红色桥式吊车",
+      "english_name": "Red overhead bridge crane",
+      "source_photos": [
+        1,
+        12,
+        16
+      ],
+      "match_status": "mixed_identity",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 4090,
+          "y": 920,
+          "anchor_description": "Crane A trolley at seam",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 1,
+          "x": 100,
+          "y": 940,
+          "anchor_description": "Crane A bridge right-hand seam section",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 3160,
+          "y": 855,
+          "anchor_description": "Crane A trolley and bridge",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [
+        {
+          "description": "Different crane at staircase end",
+          "source_photos": [
+            5
+          ],
+          "appearances": [
+            {
+              "scene": 1,
+              "x": 2090,
+              "y": 970,
+              "anchor_description": "Opposite-end red crane above staircase",
+              "confidence": "high",
+              "match_level": "exact_object"
+            }
+          ],
+          "evidence": "It lies above the stepped seating at the other end of the hall, while Crane A lies above the tree/orange cabin end."
+        }
+      ],
+      "evidence": "Crane A has a red trolley and bridge above a triangular yellow block; orange cabin and tree-end gallery establish its location.",
+      "identity_notes": "The inventory hypothesis combining Photo 05 with Photos 01/12/16 is rejected as a same-object inference. Photo 05 shows Crane B. Both are real visible cranes; the stable ID is retained and referents remain separate."
+    },
+    {
+      "target_id": 20,
+      "inventory_name": "黄色吊钩滑轮组",
+      "english_name": "Yellow pulley block and hook",
+      "source_photos": [
+        1,
+        12,
+        16
+      ],
+      "match_status": "mixed_identity",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 35,
+          "y": 975,
+          "anchor_description": "Crane A yellow block near panorama seam",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 3190,
+          "y": 925,
+          "anchor_description": "Crane A yellow pulley block and hook",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [
+        {
+          "description": "Different suspended block at staircase end",
+          "source_photos": [
+            5
+          ],
+          "appearances": [
+            {
+              "scene": 1,
+              "x": 2087,
+              "y": 1040,
+              "anchor_description": "Small yellow block above staircase",
+              "confidence": "high",
+              "match_level": "exact_object"
+            }
+          ],
+          "evidence": "Block hangs from Crane B above stepped seating and differs in location/visible profile from Crane A block."
+        }
+      ],
+      "evidence": "Crane A triangular yellow pulley casing and dark curved hook are visible below its bridge.",
+      "identity_notes": "Photo 05 depicts the other-end Crane B suspended block; do not merge it with this Crane A component."
+    },
+    {
+      "target_id": 21,
+      "inventory_name": "门上方银色通风管道",
+      "english_name": "Silver ventilation duct above doors",
+      "source_photos": [
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 610,
+          "y": 625,
+          "anchor_description": "Round outlet on high silver duct",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [
+        {
+          "scene": 2,
+          "x": 600,
+          "y": 90,
+          "anchor_description": "Overhead metallic services; specific duct segment uncertain",
+          "confidence": "low",
+          "match_level": "category_only"
+        }
+      ],
+      "conflicting_referents": [],
+      "evidence": "High silver cylindrical duct and its projecting round outlet match the distinct segment above the server/glass-door assembly.",
+      "identity_notes": "Scene 2 contains overhead shiny pipes and ducts, but projection/occlusion prevents independent identification of this specific source segment."
+    },
+    {
+      "target_id": 22,
+      "inventory_name": "门上方黄黑警示横梁",
+      "english_name": "Yellow-black warning beam above doors",
+      "source_photos": [
+        14
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 650,
+          "y": 950,
+          "anchor_description": "Warning-striped beam in front of server/glass doors",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 2500,
+          "y": 590,
+          "anchor_description": "Close overhead warning-striped girder",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Grey girder with diagonal warning strips lies in front of the identified door assembly; its close overhead underside is visible from Scene 2.",
+      "identity_notes": "Photo 06 contains another similar beam by the wood room. That similar beam is not merged into this specific door-side segment."
+    },
+    {
+      "target_id": 23,
+      "inventory_name": "铆接式组合钢柱",
+      "english_name": "Riveted built-up steel column",
+      "source_photos": [
+        12
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 415,
+          "y": 1040,
+          "anchor_description": "Crane-side column partly behind planting",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 3390,
+          "y": 1070,
+          "anchor_description": "Riveted column with rectangular openings",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Rectangular openings, bolted/riveted connection plates, crane-side orange cabin and narrow corridor identify this particular column.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 24,
+      "inventory_name": "带竖向灯带的圆柱",
+      "english_name": "Round column with vertical light strip",
+      "source_photos": [
+        6
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2600,
+          "y": 1040,
+          "anchor_description": "Lit round column beneath wood-room edge",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 2040,
+          "y": 1055,
+          "anchor_description": "Distant lit column beneath left wood-room corner",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Round column below the wood-room corner has a vertical illuminated strip and stands beside the matching glass doorway and warning beam.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 25,
+      "inventory_name": "中庭尽端宽阶梯",
+      "english_name": "Wide staircase at atrium end",
+      "source_photos": [
+        5
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2085,
+          "y": 1100,
+          "anchor_description": "Stepped seating/staircase",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Wide wooden tiers, dark backing, side steel columns and the separate Crane B block establish the staircase end.",
+      "identity_notes": "No unambiguous staircase surface is resolved in Scene 2; do not infer its position through intervening structures."
+    },
+    {
+      "target_id": 26,
+      "inventory_name": "下层中庭的大型室内树",
+      "english_name": "Large indoor atrium tree",
+      "source_photos": [
+        12,
+        16
+      ],
+      "match_status": "mixed_identity",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 20,
+          "y": 1100,
+          "anchor_description": "Tree A crown at panorama seam",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 3240,
+          "y": 1120,
+          "anchor_description": "Tree A below Crane A",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [
+        {
+          "description": "Different tree below wood-clad room",
+          "source_photos": [
+            13
+          ],
+          "appearances": [
+            {
+              "scene": 1,
+              "x": 3940,
+              "y": 1295,
+              "anchor_description": "Partly visible nearer tree canopy",
+              "confidence": "medium",
+              "match_level": "exact_object"
+            },
+            {
+              "scene": 2,
+              "x": 2700,
+              "y": 1230,
+              "anchor_description": "Nearer tree canopy below wood-clad room",
+              "confidence": "high",
+              "match_level": "exact_object"
+            }
+          ],
+          "evidence": "Tree sits below the wood-room window, spatially separate from the tree under Crane A."
+        }
+      ],
+      "evidence": "Tree A has a round crown and pale trunk directly below Crane A beside the orange cabin; its base is visible in Scene 2.",
+      "identity_notes": "Photo 13 shows a different, nearer tree below the wood-clad room. The inventory same-tree hypothesis is not supported; both referents are documented without merging."
+    },
+    {
+      "target_id": 27,
+      "inventory_name": "二层长条花槽与垂挂植物",
+      "english_name": "Upper planted trough and trailing vegetation",
+      "source_photos": [
+        1
+      ],
+      "match_status": "mixed_identity",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 50,
+          "y": 1040,
+          "anchor_description": "End-gallery planted trough at seam",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 3160,
+          "y": 1020,
+          "anchor_description": "Planted trough below Crane A",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [
+        {
+          "description": "Side-gallery planted trough, distinct visible segment",
+          "source_photos": [
+            15
+          ],
+          "appearances": [
+            {
+              "scene": 1,
+              "x": 1450,
+              "y": 1130,
+              "anchor_description": "Side-gallery trough by black glazed tower",
+              "confidence": "high",
+              "match_level": "exact_architectural_region"
+            }
+          ],
+          "evidence": "This segment lies along the gallery beside the black glazed tower; physical continuity with the end trough is not established by the images."
+        }
+      ],
+      "evidence": "End-gallery trough under Crane A contains dense plants and trailing vines; end-wall doorway, crane and cabin give a specific location.",
+      "identity_notes": "Photo 15 independently confirms another side-gallery trough segment. It is not silently merged as the exact same source segment."
+    },
+    {
+      "target_id": 28,
+      "inventory_name": "木饰面悬挑房间体块",
+      "english_name": "Cantilevered wood-clad room volume",
+      "source_photos": [
+        6,
+        13,
+        19
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 3180,
+          "y": 920,
+          "anchor_description": "Wood-clad suspended room volume",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2390,
+          "y": 930,
+          "anchor_description": "Wood-clad room volume across atrium",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Large suspended wood-clad volume has matching panel seams, inset window, underside and nearby lit column/glass walkway.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 29,
+      "inventory_name": "木饰面体块上的横向玻璃窗",
+      "english_name": "Horizontal window in wood-clad volume",
+      "source_photos": [
+        13
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 3510,
+          "y": 990,
+          "anchor_description": "Inset window in wood-clad room",
+          "confidence": "high",
+          "match_level": "exact_object"
+        },
+        {
+          "scene": 2,
+          "x": 2455,
+          "y": 1000,
+          "anchor_description": "Same inset horizontal window",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Inset horizontal rectangular window, internal whiteboard and wood-cladding seams agree.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 30,
+      "inventory_name": "上层回廊地面",
+      "english_name": "Upper-gallery floor",
+      "source_photos": [
+        2,
+        12,
+        14,
+        17,
+        19
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2800,
+          "y": 1600,
+          "anchor_description": "Upper gallery floor foreground",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2100,
+          "y": 1600,
+          "anchor_description": "Upper gallery floor foreground",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Continuous purple-grey upper walkway with joins and circular service covers is directly visible around both cameras.",
+      "identity_notes": "Photo 17 supports the floor category/continuity but cannot uniquely identify its individual service cover; previous candidate (Scene 1, 2790,1380) remains uncertain, not a new target ID."
+    },
+    {
+      "target_id": 31,
+      "inventory_name": "下层中庭地面",
+      "english_name": "Lower atrium floor",
+      "source_photos": [
+        5,
+        13,
+        16
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2080,
+          "y": 1210,
+          "anchor_description": "Lower floor in front of staircase",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 1,
+          "x": 3940,
+          "y": 1160,
+          "anchor_description": "Lower floor near tree end",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2990,
+          "y": 1190,
+          "anchor_description": "Lower floor between tables and far tree",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Lower level is visible through the gallery glass around tree bases, tables, seating and staircase.",
+      "identity_notes": ""
+    },
+    {
+      "target_id": 32,
+      "inventory_name": "黄色圆柱形矮凳",
+      "english_name": "Yellow cylindrical low stool",
+      "source_photos": [
+        5
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 2,
+          "x": 1720,
+          "y": 1240,
+          "anchor_description": "Small yellow stool in partly occluded lower seating group",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Small yellow low stool with pale/scalloped top appears in the downstairs chair group; gallery planting partly occludes it.",
+      "identity_notes": "Scene 1 foreground rail hides the relevant lower part of the group; no exact yellow-stool appearance is claimed there."
+    },
+    {
+      "target_id": 33,
+      "inventory_name": "深蓝圆柱形矮凳",
+      "english_name": "Dark-blue cylindrical low stool",
+      "source_photos": [
+        5
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2040,
+          "y": 1295,
+          "anchor_description": "Dark-blue cylinder beside grey chair",
+          "confidence": "medium",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [
+        {
+          "scene": 2,
+          "x": 1710,
+          "y": 1225,
+          "anchor_description": "Partly occluded dark shape near yellow stool",
+          "confidence": "low",
+          "match_level": "uncertain"
+        }
+      ],
+      "conflicting_referents": [],
+      "evidence": "Small dark-blue cylinder stands immediately left of the grey chair in the downstairs seating group, as in the source.",
+      "identity_notes": "Scene 2 includes a dark shape near the yellow stool, but it is too small/occluded for an independent exact identification."
+    },
+    {
+      "target_id": 34,
+      "inventory_name": "下层地面橙色圆形图案组",
+      "english_name": "Orange circular floor-decoration group",
+      "source_photos": [
+        5
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 2,
+          "x": 1700,
+          "y": 1270,
+          "anchor_description": "Visible orange floor circles in lower seating group",
+          "confidence": "medium",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Small orange circular patches are visible on the lower floor beside the partly occluded yellow-stool/chair group.",
+      "identity_notes": "No matching circles are independently resolved in Scene 1; avoid assigning an anchor to a hidden floor patch."
+    },
+    {
+      "target_id": 35,
+      "inventory_name": "下层深色模块沙发组合",
+      "english_name": "Lower dark modular sofa group",
+      "source_photos": [
+        12,
+        16
+      ],
+      "match_status": "exact",
+      "appearances": [
+        {
+          "scene": 2,
+          "x": 3240,
+          "y": 1220,
+          "anchor_description": "Dark modular seating below Tree A",
+          "confidence": "high",
+          "match_level": "exact_object"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Dark square modular seating around the pale trunk of Tree A agrees with the source placement and angular base.",
+      "identity_notes": "Tree A crown is visible in Scene 1, but the foreground upper-level chair occludes the base; the sofa is not independently confirmed there."
+    },
+    {
+      "target_id": 36,
+      "inventory_name": "照片17中的浅色运动鞋",
+      "english_name": "Light-coloured athletic shoes in Photo 17",
+      "source_photos": [
+        17
+      ],
+      "match_status": "not_located",
+      "appearances": [],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "The source shows a pair of shoes. Neither panorama visibly contains the pair.",
+      "identity_notes": "A similar floor surface or circular outlet is not evidence that the shoes are present."
+    },
+    {
+      "target_id": 37,
+      "inventory_name": "中庭双坡屋顶整体",
+      "english_name": "Whole pitched atrium roof",
+      "source_photos": [
+        4,
+        16,
+        20
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2400,
+          "y": 400,
+          "anchor_description": "Whole roof-system overview",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2500,
+          "y": 420,
+          "anchor_description": "Roof-system overview behind foreground girder",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Two corrugated slopes, central ridge glazing and supporting steel structure form the same complete roof system.",
+      "identity_notes": "This whole-system identity does not replace the separate component results for IDs 16–18."
+    },
+    {
+      "target_id": 38,
+      "inventory_name": "多层工业中庭整体空间",
+      "english_name": "Whole multilevel industrial atrium",
+      "source_photos": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19,
+        20
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 2048,
+          "y": 1024,
+          "anchor_description": "Whole atrium overview",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 2600,
+          "y": 1080,
+          "anchor_description": "Whole atrium overview",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "Both panoramas share the multilevel hall, gallery rail, structural system, crane ends, planting and wood-clad room.",
+      "identity_notes": "This confirms the overall space, not every local object or its stable identity."
+    },
+    {
+      "target_id": 39,
+      "inventory_name": "上层回廊白色侧墙",
+      "english_name": "Upper-gallery white side wall",
+      "source_photos": [
+        2,
+        12
+      ],
+      "match_status": "exact_region",
+      "appearances": [
+        {
+          "scene": 1,
+          "x": 395,
+          "y": 1025,
+          "anchor_description": "Visible white side-wall segment behind planting",
+          "confidence": "medium",
+          "match_level": "exact_architectural_region"
+        },
+        {
+          "scene": 2,
+          "x": 3630,
+          "y": 950,
+          "anchor_description": "White corridor side wall with orange box",
+          "confidence": "high",
+          "match_level": "exact_architectural_region"
+        }
+      ],
+      "uncertain_candidates": [],
+      "conflicting_referents": [],
+      "evidence": "White wall beside the crane-side corridor has the orange wall box, notices and a separate white door; it is distinct from the B.1.61 door-side wall segment.",
+      "identity_notes": ""
+    }
+  ]
+}

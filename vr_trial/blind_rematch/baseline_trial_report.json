@@ -1,0 +1,805 @@
+{
+  "input_html_sha256": "f44455784d5f140c6c056474d422665f043bd05265955d6460f46d788bbc8d7e",
+  "output_html_sha256": "824fa2b6231ea68d9966d0e960eb35f31cd4fbada00fb1b86ad6433f91fec01c",
+  "scope": "all stable modern object IDs in the matching database; repeated viewpoints reuse the same ID",
+  "total_object_identities": 39,
+  "located_object_count": 34,
+  "unlocated_object_count": 4,
+  "excluded_not_in_vr_count": 1,
+  "hotspot_count": 42,
+  "located": [
+    {
+      "object_id": 1,
+      "modern_name": "笔记本电脑",
+      "historical_id": "H27",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3800,
+        1420
+      ],
+      "yaw": 153.984375,
+      "pitch": -34.8046875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Laptop on upholstered ottoman; visible keyboard, pink illumination and nearby mouse agree with target photos.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 2,
+      "modern_name": "无线鼠标",
+      "historical_id": "H28",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3752,
+        1348
+      ],
+      "yaw": 149.765625,
+      "pitch": -28.4765625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Small dark mouse next to laptop; visible in original panorama pixels, not inferred from its historical proxy.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 3,
+      "modern_name": "电脑下方的方形软凳",
+      "historical_id": "H22",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3500,
+        1470
+      ],
+      "yaw": 127.6171875,
+      "pitch": -39.19921875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Upholstered ottoman supporting the same laptop and mouse.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 4,
+      "modern_name": "深色单人扶手椅",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3100,
+        1370
+      ],
+      "yaw": 92.4609375,
+      "pitch": -30.41015625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Dark armchair adjacent to the laptop ottoman; no historical mapping retained.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 6,
+      "modern_name": "B.1.61旁白色实心门",
+      "historical_id": "H01",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        830,
+        1030
+      ],
+      "yaw": -107.05078125,
+      "pitch": -0.52734375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "White double leaf solid door identified by adjacent B.1.61 plaque, smoke panel and black-horn extinguisher.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 7,
+      "modern_name": "B.1.61房间标牌",
+      "historical_id": "H02",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1070,
+        974
+      ],
+      "yaw": -85.95703125,
+      "pitch": 4.39453125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "B.1.61 plaque on the solid white door; cropped panorama detail was inspected.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 8,
+      "modern_name": "黑框玻璃双扇门",
+      "historical_id": "H03",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        170,
+        1060
+      ],
+      "yaw": -165.05859375,
+      "pitch": -3.1640625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Black-framed glass doorway at the panorama seam; distinct from the white solid door.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 9,
+      "modern_name": "黑色喇叭喷口灭火器",
+      "historical_id": "H04",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        480,
+        1470
+      ],
+      "yaw": -137.8125,
+      "pitch": -39.19921875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Extinguisher with black horn beside smoke panel and B.1.61 door.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 10,
+      "modern_name": "黑色软管式灭火器",
+      "historical_id": "H20",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3712,
+        1130
+      ],
+      "yaw": 146.25,
+      "pitch": -9.31640625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Different hose extinguisher on opposite side beside another solid door; not merged with object09.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 11,
+      "modern_name": "橙色排烟控制面板",
+      "historical_id": "H24",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        540,
+        990
+      ],
+      "yaw": -132.5390625,
+      "pitch": 2.98828125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Orange smoke-control panel beside the white door; distinct from the extinguisher and key switch.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 12,
+      "modern_name": "排烟面板下方钥匙开关",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        540,
+        1060
+      ],
+      "yaw": -132.5390625,
+      "pitch": -3.1640625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Small key switch immediately below the smoke-control panel.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 13,
+      "modern_name": "白墙上的橙色控制盒",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3420,
+        1010
+      ],
+      "yaw": 120.5859375,
+      "pitch": 1.23046875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Orange control box on the far white wall; kept separate from the smoke panel at the other doorway.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 14,
+      "modern_name": "玻璃门上方绿色出口标志",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        185,
+        875
+      ],
+      "yaw": -163.740234375,
+      "pitch": 13.095703125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Green exit sign above the glass doorway near the panorama seam.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 15,
+      "modern_name": "上层回廊玻璃护栏",
+      "historical_id": "H19",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        680,
+        1110
+      ],
+      "yaw": -120.234375,
+      "pitch": -7.55859375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Upper-level glass guardrail bordering the atrium; the same continuous railing is visible in both panoramas.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 15,
+      "modern_name": "上层回廊玻璃护栏",
+      "historical_id": "H19",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2540,
+        1130
+      ],
+      "yaw": 43.2421875,
+      "pitch": -9.31640625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same upper-level glass guardrail, seen across the atrium from the second viewpoint.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 16,
+      "modern_name": "屋脊中央长条天窗",
+      "historical_id": "H05",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2050,
+        450
+      ],
+      "yaw": 0.17578125,
+      "pitch": 50.44921875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Long central roof skylight; located on the glazed roof, not on the opaque side panels.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 16,
+      "modern_name": "屋脊中央长条天窗",
+      "historical_id": "H05",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2030,
+        425
+      ],
+      "yaw": -1.58203125,
+      "pitch": 52.646484375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same central roof skylight, seen from the second viewpoint.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 17,
+      "modern_name": "两侧不透明波纹屋面",
+      "historical_id": "H17",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1050,
+        350
+      ],
+      "yaw": -87.71484375,
+      "pitch": 59.23828125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Opaque corrugated roof panels on the side slope; separate from the central skylight.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 18,
+      "modern_name": "屋顶钢桁架及支撑",
+      "historical_id": "H06",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1450,
+        590
+      ],
+      "yaw": -52.55859375,
+      "pitch": 38.14453125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Steel roof truss and supporting members, distinct from the roof covering.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 18,
+      "modern_name": "屋顶钢桁架及支撑",
+      "historical_id": "H06",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1420,
+        570
+      ],
+      "yaw": -55.1953125,
+      "pitch": 39.90234375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same roof truss system, seen from the second viewpoint.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 19,
+      "modern_name": "红色桥式吊车",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3370,
+        790
+      ],
+      "yaw": 116.19140625,
+      "pitch": 20.56640625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Red bridge crane running across the industrial atrium.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 20,
+      "modern_name": "黄色吊钩滑轮组",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3570,
+        865
+      ],
+      "yaw": 133.76953125,
+      "pitch": 13.974609375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Yellow hook and pulley assembly attached below the red bridge crane.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 21,
+      "modern_name": "门上方银色通风管道",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        520,
+        230
+      ],
+      "yaw": -134.296875,
+      "pitch": 69.78515625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Silver ventilation duct above the doorway, near the ceiling.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 22,
+      "modern_name": "门上方黄黑警示横梁",
+      "historical_id": "H07",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1750,
+        390
+      ],
+      "yaw": -26.19140625,
+      "pitch": 55.72265625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Yellow-and-black warning beam crossing the opening; separate from the red crane.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 23,
+      "modern_name": "铆接式组合钢柱",
+      "historical_id": "H08",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        900,
+        760
+      ],
+      "yaw": -100.8984375,
+      "pitch": 23.203125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Riveted structural column beside the doorway and atrium opening.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 24,
+      "modern_name": "带竖向灯带的圆柱",
+      "historical_id": "H09",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1900,
+        1010
+      ],
+      "yaw": -13.0078125,
+      "pitch": 1.23046875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Pillar with a distinct vertical light strip, visually consistent with photo 06; the nearby striped beam and atrium context support the identification.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 25,
+      "modern_name": "中庭尽端宽阶梯",
+      "historical_id": "H10",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2040,
+        1110
+      ],
+      "yaw": -0.703125,
+      "pitch": -7.55859375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Broad staircase at the far end of the atrium, visible in the first panorama.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 26,
+      "modern_name": "下层中庭的大型室内树",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2780,
+        1040
+      ],
+      "yaw": 64.3359375,
+      "pitch": -1.40625,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Large indoor tree on the lower atrium level.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 27,
+      "modern_name": "二层长条花槽与垂挂植物",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        720,
+        1010
+      ],
+      "yaw": -116.71875,
+      "pitch": 1.23046875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Long planter with hanging greenery along the upper-level atrium edge.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 28,
+      "modern_name": "木饰面悬挑房间体块",
+      "historical_id": "H18",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2820,
+        890
+      ],
+      "yaw": 67.8515625,
+      "pitch": 11.77734375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Large projecting wood-clad room volume; treated as one architectural mass.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 28,
+      "modern_name": "木饰面悬挑房间体块",
+      "historical_id": "H18",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2250,
+        865
+      ],
+      "yaw": 17.75390625,
+      "pitch": 13.974609375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same projecting wood-clad room volume, seen from the second viewpoint.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 29,
+      "modern_name": "木饰面体块上的横向玻璃窗",
+      "historical_id": "H11",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3420,
+        930
+      ],
+      "yaw": 120.5859375,
+      "pitch": 8.26171875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Horizontal window set into the wood-clad volume.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 29,
+      "modern_name": "木饰面体块上的横向玻璃窗",
+      "historical_id": "H11",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2470,
+        820
+      ],
+      "yaw": 37.08984375,
+      "pitch": 17.9296875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same horizontal window, viewed from across the atrium.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 30,
+      "modern_name": "上层回廊地面",
+      "historical_id": "H12",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1120,
+        1420
+      ],
+      "yaw": -81.5625,
+      "pitch": -34.8046875,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Upper-level corridor floor in the foreground; not the lower atrium floor.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 30,
+      "modern_name": "上层回廊地面",
+      "historical_id": "H12",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1250,
+        1340
+      ],
+      "yaw": -70.13671875,
+      "pitch": -27.7734375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same upper-level corridor floor from the second viewpoint.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 31,
+      "modern_name": "下层中庭地面",
+      "historical_id": "H13",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2670,
+        1280
+      ],
+      "yaw": 54.66796875,
+      "pitch": -22.5,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Visible section of the lower atrium floor, below the guardrail.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 35,
+      "modern_name": "下层深色模块沙发组合",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2960,
+        1135
+      ],
+      "yaw": 80.15625,
+      "pitch": -9.755859375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Dark modular sofa group on the lower atrium level.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 37,
+      "modern_name": "中庭双坡屋顶整体",
+      "historical_id": "H14",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2050,
+        270
+      ],
+      "yaw": 0.17578125,
+      "pitch": 66.26953125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Overall double-pitched atrium roof, shown as a whole rather than as an individual roof component.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 37,
+      "modern_name": "中庭双坡屋顶整体",
+      "historical_id": "H14",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2050,
+        270
+      ],
+      "yaw": 0.17578125,
+      "pitch": 66.26953125,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same overall roof, viewed from the second panorama.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 38,
+      "modern_name": "多层工业中庭整体空间",
+      "historical_id": "H15",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2050,
+        900
+      ],
+      "yaw": 0.17578125,
+      "pitch": 10.8984375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Overall multi-level industrial atrium, including both upper gallery and lower floor.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 38,
+      "modern_name": "多层工业中庭整体空间",
+      "historical_id": "H15",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2470,
+        900
+      ],
+      "yaw": 37.08984375,
+      "pitch": 10.8984375,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "Same overall multi-level atrium from the second viewpoint.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 39,
+      "modern_name": "上层回廊白色侧墙",
+      "historical_id": "H16",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1120,
+        1280
+      ],
+      "yaw": -81.5625,
+      "pitch": -22.5,
+      "method": "manual visual comparison, approximate point placement",
+      "basis": "White side wall by the doorway; kept at wall scale rather than mapped to the door.",
+      "state": "position_proposed_click_review_pending"
+    }
+  ],
+  "unlocated": [
+    {
+      "object_id": 5,
+      "name": "深色背包",
+      "reason": "Photo 19 shows a dark backpack resting on a sofa; the panoramas show seating but no separately identifiable backpack. Photo 09 contains only a partial dark object and is already marked identity_pending, so it cannot safely establish the same item."
+    },
+    {
+      "object_id": 32,
+      "name": "黄色圆柱形矮凳",
+      "reason": "The source photo shows a small yellow cylindrical stool with a pale top. The panoramas contain distant lower-level furniture, but no stool with those features can be individually identified."
+    },
+    {
+      "object_id": 33,
+      "name": "深蓝圆柱形矮凳",
+      "reason": "The source photo shows a small dark-blue cylindrical stool. The panoramas contain distant lower-level furniture, but no stool with those features can be individually identified."
+    },
+    {
+      "object_id": 34,
+      "name": "下层地面橙色圆形图案组",
+      "reason": "The source photo shows several bright orange circular floor decals. They are not visible on the floor areas captured in either panorama, so no location can be assigned in the current VR coverage."
+    }
+  ],
+  "excluded_not_in_vr": [
+    {
+      "object_id": 36,
+      "name": "照片17中的浅色运动鞋",
+      "reason": "User confirmed that the sneakers from the source photo are not present in this VR scene."
+    }
+  ],
+  "original_navigation_preserved": true,
+  "source_panorama_bytes_preserved": true,
+  "limitations": [
+    "Hotspots are manual approximate point locations; this is not an automatic recognition evaluation.",
+    "Objects not confidently visible remain without guessed hotspots.",
+    "Desktop click behavior and projected hotspot alignment need browser review.",
+    "Immersive headset/controller interaction not verified."
+  ]
+}

@@ -1,0 +1,1233 @@
+{
+  "input_html_sha256": "f44455784d5f140c6c056474d422665f043bd05265955d6460f46d788bbc8d7e",
+  "output_html_sha256": "1c75e35d4dc5e3659e98a447835202053d1b0e874b7678ec2c0d2fdacfb50eb6",
+  "scope": "independent Sol rematch proposal; one representative marker per object and scene; stable IDs reused across scenes",
+  "identity_review_ids": [
+    19,
+    20,
+    26,
+    27
+  ],
+  "medium_confidence_new_ids": [
+    32,
+    33,
+    34
+  ],
+  "total_object_identities": 39,
+  "located_object_count": 37,
+  "unlocated_object_count": 1,
+  "excluded_not_in_vr_count": 1,
+  "hotspot_count": 66,
+  "located": [
+    {
+      "object_id": 1,
+      "modern_name": "笔记本电脑",
+      "historical_id": "H27",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3790,
+        1425
+      ],
+      "yaw": 153.10546875,
+      "pitch": -35.244140625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Photo 09 matches the open laptop on the upholstered support beside the mouse and dark armchair. Scene 2 shows the same seating arrangement at a distance.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 1,
+      "modern_name": "笔记本电脑",
+      "historical_id": "H27",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2145,
+        1095
+      ],
+      "yaw": 8.525390625,
+      "pitch": -6.240234375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Photo 09 matches the open laptop on the upholstered support beside the mouse and dark armchair. Scene 2 shows the same seating arrangement at a distance. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 2,
+      "modern_name": "无线鼠标",
+      "historical_id": "H28",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3745,
+        1355
+      ],
+      "yaw": 149.150390625,
+      "pitch": -29.091796875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "A separate dark mouse is visible behind the laptop on the upholstered support in Scene 1.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 3,
+      "modern_name": "电脑下方的方形软凳",
+      "historical_id": "H22",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3570,
+        1415
+      ],
+      "yaw": 133.76953125,
+      "pitch": -34.365234375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "The laptop rests on the matching upholstered support with a front face and rounded corners. The same support is visible between the two dark chairs in Scene 2.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 3,
+      "modern_name": "电脑下方的方形软凳",
+      "historical_id": "H22",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2155,
+        1120
+      ],
+      "yaw": 9.404296875,
+      "pitch": -8.4375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "The laptop rests on the matching upholstered support with a front face and rounded corners. The same support is visible between the two dark chairs in Scene 2. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 4,
+      "modern_name": "深色单人扶手椅",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3140,
+        1390
+      ],
+      "yaw": 95.9765625,
+      "pitch": -32.16796875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Rounded dark armchair beside the wood-clad room; adjoining glass rail, nearby door and laptop support agree.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 4,
+      "modern_name": "深色单人扶手椅",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2200,
+        1140
+      ],
+      "yaw": 13.359375,
+      "pitch": -10.1953125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Rounded dark armchair beside the wood-clad room; adjoining glass rail, nearby door and laptop support agree. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 6,
+      "modern_name": "B.1.61旁白色实心门",
+      "historical_id": "H01",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        760,
+        1070
+      ],
+      "yaw": -113.203125,
+      "pitch": -4.04296875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Door closer, round knob, neighboring B.1.61 sign, pillar controls and adjacent black glass door agree.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 6,
+      "modern_name": "B.1.61旁白色实心门",
+      "historical_id": "H01",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        850,
+        1100
+      ],
+      "yaw": -105.29296875,
+      "pitch": -6.6796875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Door closer, round knob, neighboring B.1.61 sign, pillar controls and adjacent black glass door agree.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 7,
+      "modern_name": "B.1.61房间标牌",
+      "historical_id": "H02",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        800,
+        1007
+      ],
+      "yaw": -109.6875,
+      "pitch": 1.494140625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Small framed sign beside the white door matches the close-up layout and room identifier. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 7,
+      "modern_name": "B.1.61房间标牌",
+      "historical_id": "H02",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1065,
+        975
+      ],
+      "yaw": -86.396484375,
+      "pitch": 4.306640625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Small framed sign beside the white door matches the close-up layout and room identifier.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 8,
+      "modern_name": "黑框玻璃双扇门",
+      "historical_id": "H03",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        600,
+        1050
+      ],
+      "yaw": -127.265625,
+      "pitch": -2.28515625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Black frames, stair railing behind the glass, adjacent pillar controls and white door establish the door assembly.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 8,
+      "modern_name": "黑框玻璃双扇门",
+      "historical_id": "H03",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        200,
+        1100
+      ],
+      "yaw": -162.421875,
+      "pitch": -6.6796875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Black frames, stair railing behind the glass, adjacent pillar controls and white door establish the door assembly.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 9,
+      "modern_name": "黑色喇叭喷口灭火器",
+      "historical_id": "H04",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        661,
+        1095
+      ],
+      "yaw": -121.904296875,
+      "pitch": -6.240234375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Black rigid horn, red handle and bottle are mounted on the concrete pillar below the smoke control, beside the glass and white doors. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 9,
+      "modern_name": "黑色喇叭喷口灭火器",
+      "historical_id": "H04",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        475,
+        1490
+      ],
+      "yaw": -138.251953125,
+      "pitch": -40.95703125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Black rigid horn, red handle and bottle are mounted on the concrete pillar below the smoke control, beside the glass and white doors.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 10,
+      "modern_name": "黑色软管式灭火器",
+      "historical_id": "H20",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        489,
+        1045
+      ],
+      "yaw": -137.021484375,
+      "pitch": -1.845703125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Separate extinguisher beside the other white door; its flexible looped hose and wall position differ from ID 9. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 10,
+      "modern_name": "黑色软管式灭火器",
+      "historical_id": "H20",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3715,
+        1110
+      ],
+      "yaw": 146.513671875,
+      "pitch": -7.55859375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Separate extinguisher beside the other white door; its flexible looped hose and wall position differ from ID 9.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 11,
+      "modern_name": "橙色排烟控制面板",
+      "historical_id": "H24",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        665,
+        1018
+      ],
+      "yaw": -121.552734375,
+      "pitch": 0.52734375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Orange RAUCHABZUG housing, green indicator and conduit above; a separate white key switch sits below. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 11,
+      "modern_name": "橙色排烟控制面板",
+      "historical_id": "H24",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        545,
+        1055
+      ],
+      "yaw": -132.099609375,
+      "pitch": -2.724609375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Orange RAUCHABZUG housing, green indicator and conduit above; a separate white key switch sits below.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 12,
+      "modern_name": "排烟面板下方钥匙开关",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        665,
+        1033
+      ],
+      "yaw": -121.552734375,
+      "pitch": -0.791015625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "White square switch with circular key cylinder lies immediately below the orange control. It is anchored separately from the panel. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 12,
+      "modern_name": "排烟面板下方钥匙开关",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        537,
+        1155
+      ],
+      "yaw": -132.802734375,
+      "pitch": -11.513671875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "White square switch with circular key cylinder lies immediately below the orange control. It is anchored separately from the panel.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 13,
+      "modern_name": "白墙上的橙色控制盒",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        367,
+        1060
+      ],
+      "yaw": -147.744140625,
+      "pitch": -3.1640625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Orange box is mounted on a white wall below wall notices, along the narrow corridor by the crane column. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 13,
+      "modern_name": "白墙上的橙色控制盒",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3630,
+        975
+      ],
+      "yaw": 139.04296875,
+      "pitch": 4.306640625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Orange box is mounted on a white wall below wall notices, along the narrow corridor by the crane column.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 14,
+      "modern_name": "玻璃门上方绿色出口标志",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        4060,
+        610
+      ],
+      "yaw": 176.8359375,
+      "pitch": 36.38671875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Green running-person/arrow sign is directly visible above the black door in Scene 2 near the right panorama edge.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 15,
+      "modern_name": "上层回廊玻璃护栏",
+      "historical_id": "H19",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1500,
+        1280
+      ],
+      "yaw": -48.1640625,
+      "pitch": -22.5,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Transparent panels, metal top rail and repeated vertical dark safety marks run around the upper atrium gallery.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 15,
+      "modern_name": "上层回廊玻璃护栏",
+      "historical_id": "H19",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2860,
+        1200
+      ],
+      "yaw": 71.3671875,
+      "pitch": -15.46875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Transparent panels, metal top rail and repeated vertical dark safety marks run around the upper atrium gallery.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 16,
+      "modern_name": "屋脊中央长条天窗",
+      "historical_id": "H05",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2050,
+        450
+      ],
+      "yaw": 0.17578125,
+      "pitch": 50.44921875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Paired glazed strip follows the roof ridge, bounded by corrugated slopes and repeated steel cross members.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 16,
+      "modern_name": "屋脊中央长条天窗",
+      "historical_id": "H05",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2320,
+        340
+      ],
+      "yaw": 23.90625,
+      "pitch": 60.1171875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Paired glazed strip follows the roof ridge, bounded by corrugated slopes and repeated steel cross members.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 17,
+      "modern_name": "两侧不透明波纹屋面",
+      "historical_id": "H17",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        900,
+        350
+      ],
+      "yaw": -100.8984375,
+      "pitch": 59.23828125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Both opaque roof slopes show closely spaced parallel ribs and purple illumination; they are separate from the glazing.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 17,
+      "modern_name": "两侧不透明波纹屋面",
+      "historical_id": "H17",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1810,
+        470
+      ],
+      "yaw": -20.91796875,
+      "pitch": 48.69140625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Both opaque roof slopes show closely spaced parallel ribs and purple illumination; they are separate from the glazing.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 18,
+      "modern_name": "屋顶钢桁架及支撑",
+      "historical_id": "H06",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        900,
+        460
+      ],
+      "yaw": -100.8984375,
+      "pitch": 49.5703125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Grey rafters, diagonal braces and repeated cross members visibly support the roof slopes and ridge.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 18,
+      "modern_name": "屋顶钢桁架及支撑",
+      "historical_id": "H06",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2840,
+        700
+      ],
+      "yaw": 69.609375,
+      "pitch": 28.4765625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Grey rafters, diagonal braces and repeated cross members visibly support the roof slopes and ridge.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 19,
+      "modern_name": "红色桥式吊车",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        4090,
+        920
+      ],
+      "yaw": 179.47265625,
+      "pitch": 9.140625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Crane A has a red trolley and bridge above a triangular yellow block; orange cabin and tree-end gallery establish its location. Identity review required: The inventory hypothesis combining Photo 05 with Photos 01/12/16 is rejected as a same-object inference. Photo 05 shows Crane B. Both are real visible cranes; the stable ID is retained and referents remain separate.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 19,
+      "modern_name": "红色桥式吊车",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3160,
+        855
+      ],
+      "yaw": 97.734375,
+      "pitch": 14.853515625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Crane A has a red trolley and bridge above a triangular yellow block; orange cabin and tree-end gallery establish its location. Identity review required: The inventory hypothesis combining Photo 05 with Photos 01/12/16 is rejected as a same-object inference. Photo 05 shows Crane B. Both are real visible cranes; the stable ID is retained and referents remain separate.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 20,
+      "modern_name": "黄色吊钩滑轮组",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        35,
+        975
+      ],
+      "yaw": -176.923828125,
+      "pitch": 4.306640625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Crane A triangular yellow pulley casing and dark curved hook are visible below its bridge. Identity review required: Photo 05 depicts the other-end Crane B suspended block; do not merge it with this Crane A component.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 20,
+      "modern_name": "黄色吊钩滑轮组",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3190,
+        925
+      ],
+      "yaw": 100.37109375,
+      "pitch": 8.701171875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Crane A triangular yellow pulley casing and dark curved hook are visible below its bridge. Identity review required: Photo 05 depicts the other-end Crane B suspended block; do not merge it with this Crane A component.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 21,
+      "modern_name": "门上方银色通风管道",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        610,
+        625
+      ],
+      "yaw": -126.38671875,
+      "pitch": 35.068359375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "High silver cylindrical duct and its projecting round outlet match the distinct segment above the server/glass-door assembly.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 22,
+      "modern_name": "门上方黄黑警示横梁",
+      "historical_id": "H07",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        650,
+        950
+      ],
+      "yaw": -122.87109375,
+      "pitch": 6.50390625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Grey girder with diagonal warning strips lies in front of the identified door assembly; its close overhead underside is visible from Scene 2.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 22,
+      "modern_name": "门上方黄黑警示横梁",
+      "historical_id": "H07",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2500,
+        590
+      ],
+      "yaw": 39.7265625,
+      "pitch": 38.14453125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Grey girder with diagonal warning strips lies in front of the identified door assembly; its close overhead underside is visible from Scene 2. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 23,
+      "modern_name": "铆接式组合钢柱",
+      "historical_id": "H08",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        415,
+        1040
+      ],
+      "yaw": -143.525390625,
+      "pitch": -1.40625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Rectangular openings, bolted/riveted connection plates, crane-side orange cabin and narrow corridor identify this particular column. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 23,
+      "modern_name": "铆接式组合钢柱",
+      "historical_id": "H08",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3390,
+        1070
+      ],
+      "yaw": 117.94921875,
+      "pitch": -4.04296875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Rectangular openings, bolted/riveted connection plates, crane-side orange cabin and narrow corridor identify this particular column.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 24,
+      "modern_name": "带竖向灯带的圆柱",
+      "historical_id": "H09",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2600,
+        1040
+      ],
+      "yaw": 48.515625,
+      "pitch": -1.40625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Round column below the wood-room corner has a vertical illuminated strip and stands beside the matching glass doorway and warning beam.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 24,
+      "modern_name": "带竖向灯带的圆柱",
+      "historical_id": "H09",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2040,
+        1055
+      ],
+      "yaw": -0.703125,
+      "pitch": -2.724609375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Round column below the wood-room corner has a vertical illuminated strip and stands beside the matching glass doorway and warning beam. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 25,
+      "modern_name": "中庭尽端宽阶梯",
+      "historical_id": "H10",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2085,
+        1100
+      ],
+      "yaw": 3.251953125,
+      "pitch": -6.6796875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Wide wooden tiers, dark backing, side steel columns and the separate Crane B block establish the staircase end.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 26,
+      "modern_name": "下层中庭的大型室内树",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        20,
+        1100
+      ],
+      "yaw": -178.2421875,
+      "pitch": -6.6796875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Tree A has a round crown and pale trunk directly below Crane A beside the orange cabin; its base is visible in Scene 2. Identity review required: Photo 13 shows a different, nearer tree below the wood-clad room. The inventory same-tree hypothesis is not supported; both referents are documented without merging. Medium qualitative confidence; inspect in VR.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 26,
+      "modern_name": "下层中庭的大型室内树",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3240,
+        1120
+      ],
+      "yaw": 104.765625,
+      "pitch": -8.4375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Tree A has a round crown and pale trunk directly below Crane A beside the orange cabin; its base is visible in Scene 2. Identity review required: Photo 13 shows a different, nearer tree below the wood-clad room. The inventory same-tree hypothesis is not supported; both referents are documented without merging.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 27,
+      "modern_name": "二层长条花槽与垂挂植物",
+      "historical_id": null,
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        50,
+        1040
+      ],
+      "yaw": -175.60546875,
+      "pitch": -1.40625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "End-gallery trough under Crane A contains dense plants and trailing vines; end-wall doorway, crane and cabin give a specific location. Identity review required: Photo 15 independently confirms another side-gallery trough segment. It is not silently merged as the exact same source segment.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 27,
+      "modern_name": "二层长条花槽与垂挂植物",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3160,
+        1020
+      ],
+      "yaw": 97.734375,
+      "pitch": 0.3515625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "End-gallery trough under Crane A contains dense plants and trailing vines; end-wall doorway, crane and cabin give a specific location. Identity review required: Photo 15 independently confirms another side-gallery trough segment. It is not silently merged as the exact same source segment.",
+      "state": "identity_review_required"
+    },
+    {
+      "object_id": 28,
+      "modern_name": "木饰面悬挑房间体块",
+      "historical_id": "H18",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3180,
+        920
+      ],
+      "yaw": 99.4921875,
+      "pitch": 9.140625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Large suspended wood-clad volume has matching panel seams, inset window, underside and nearby lit column/glass walkway.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 28,
+      "modern_name": "木饰面悬挑房间体块",
+      "historical_id": "H18",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2390,
+        930
+      ],
+      "yaw": 30.05859375,
+      "pitch": 8.26171875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Large suspended wood-clad volume has matching panel seams, inset window, underside and nearby lit column/glass walkway.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 29,
+      "modern_name": "木饰面体块上的横向玻璃窗",
+      "historical_id": "H11",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3510,
+        990
+      ],
+      "yaw": 128.49609375,
+      "pitch": 2.98828125,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Inset horizontal rectangular window, internal whiteboard and wood-cladding seams agree.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 29,
+      "modern_name": "木饰面体块上的横向玻璃窗",
+      "historical_id": "H11",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2455,
+        1000
+      ],
+      "yaw": 35.771484375,
+      "pitch": 2.109375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Inset horizontal rectangular window, internal whiteboard and wood-cladding seams agree.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 30,
+      "modern_name": "上层回廊地面",
+      "historical_id": "H12",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2800,
+        1600
+      ],
+      "yaw": 66.09375,
+      "pitch": -50.625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Continuous purple-grey upper walkway with joins and circular service covers is directly visible around both cameras.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 30,
+      "modern_name": "上层回廊地面",
+      "historical_id": "H12",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2100,
+        1600
+      ],
+      "yaw": 4.5703125,
+      "pitch": -50.625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Continuous purple-grey upper walkway with joins and circular service covers is directly visible around both cameras.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 31,
+      "modern_name": "下层中庭地面",
+      "historical_id": "H13",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2080,
+        1210
+      ],
+      "yaw": 2.8125,
+      "pitch": -16.34765625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Lower level is visible through the gallery glass around tree bases, tables, seating and staircase.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 31,
+      "modern_name": "下层中庭地面",
+      "historical_id": "H13",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2990,
+        1190
+      ],
+      "yaw": 82.79296875,
+      "pitch": -14.58984375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Lower level is visible through the gallery glass around tree bases, tables, seating and staircase.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 32,
+      "modern_name": "黄色圆柱形矮凳",
+      "historical_id": "H25",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1720,
+        1240
+      ],
+      "yaw": -28.828125,
+      "pitch": -18.984375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Small yellow low stool with pale/scalloped top appears in the downstairs chair group; gallery planting partly occludes it. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 33,
+      "modern_name": "深蓝圆柱形矮凳",
+      "historical_id": "H26",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2040,
+        1295
+      ],
+      "yaw": -0.703125,
+      "pitch": -23.818359375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Small dark-blue cylinder stands immediately left of the grey chair in the downstairs seating group, as in the source. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 34,
+      "modern_name": "下层地面橙色圆形图案组",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        1700,
+        1270
+      ],
+      "yaw": -30.5859375,
+      "pitch": -21.62109375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Small orange circular patches are visible on the lower floor beside the partly occluded yellow-stool/chair group. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 35,
+      "modern_name": "下层深色模块沙发组合",
+      "historical_id": null,
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3240,
+        1220
+      ],
+      "yaw": 104.765625,
+      "pitch": -17.2265625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Dark square modular seating around the pale trunk of Tree A agrees with the source placement and angular base.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 37,
+      "modern_name": "中庭双坡屋顶整体",
+      "historical_id": "H14",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2400,
+        400
+      ],
+      "yaw": 30.9375,
+      "pitch": 54.84375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Two corrugated slopes, central ridge glazing and supporting steel structure form the same complete roof system.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 37,
+      "modern_name": "中庭双坡屋顶整体",
+      "historical_id": "H14",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2500,
+        420
+      ],
+      "yaw": 39.7265625,
+      "pitch": 53.0859375,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Two corrugated slopes, central ridge glazing and supporting steel structure form the same complete roof system.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 38,
+      "modern_name": "多层工业中庭整体空间",
+      "historical_id": "H15",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2048,
+        1024
+      ],
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Both panoramas share the multilevel hall, gallery rail, structural system, crane ends, planting and wood-clad room.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 38,
+      "modern_name": "多层工业中庭整体空间",
+      "historical_id": "H15",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        2600,
+        1080
+      ],
+      "yaw": 48.515625,
+      "pitch": -4.921875,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "Both panoramas share the multilevel hall, gallery rail, structural system, crane ends, planting and wood-clad room.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 39,
+      "modern_name": "上层回廊白色侧墙",
+      "historical_id": "H16",
+      "scene_id": "8d87e828-2caf-467f-addb-0644837e83e4",
+      "panorama_revision": 1,
+      "panorama_sha256": "09e5a5a0daad327400b8a24aace787f94033b528eb8ca7f00e7c34b254a25a85",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        395,
+        1025
+      ],
+      "yaw": -145.283203125,
+      "pitch": -0.087890625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "White wall beside the crane-side corridor has the orange wall box, notices and a separate white door; it is distinct from the B.1.61 door-side wall segment. Medium qualitative confidence; inspect in VR.",
+      "state": "position_proposed_click_review_pending"
+    },
+    {
+      "object_id": 39,
+      "modern_name": "上层回廊白色侧墙",
+      "historical_id": "H16",
+      "scene_id": "2a046066-88b1-413c-acb1-b41c145c54aa",
+      "panorama_revision": 1,
+      "panorama_sha256": "d872e1fb1104e3dc291249137f7e645b19fab648d8460e384980a2ebff0406f9",
+      "panorama_hash_basis": "data URI UTF-8, not decoded JPEG bytes",
+      "pixel_center": [
+        3630,
+        950
+      ],
+      "yaw": 139.04296875,
+      "pitch": 6.50390625,
+      "method": "independent Sol visual rematch; approximate location proposal",
+      "basis": "White wall beside the crane-side corridor has the orange wall box, notices and a separate white door; it is distinct from the B.1.61 door-side wall segment.",
+      "state": "position_proposed_click_review_pending"
+    }
+  ],
+  "unlocated": [
+    {
+      "object_id": 5,
+      "name": "深色背包",
+      "reason": "The independent full-resolution pass did not resolve the backpack; dark fabric remains an uncertain candidate."
+    }
+  ],
+  "excluded_not_in_vr": [
+    {
+      "object_id": 36,
+      "name": "照片17中的浅色运动鞋",
+      "reason": "User confirmed that the sneakers from the source photo are not present in this VR scene."
+    }
+  ],
+  "original_navigation_preserved": true,
+  "source_panorama_bytes_preserved": true,
+  "limitations": [
+    "Hotspots are manual approximate point locations; this is not an automatic recognition evaluation.",
+    "Objects not confidently visible remain without guessed hotspots.",
+    "Desktop click behavior and projected hotspot alignment need browser review.",
+    "Immersive headset/controller interaction not verified."
+  ]
+}
