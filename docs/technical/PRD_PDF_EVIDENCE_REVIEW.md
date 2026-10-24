@@ -1,7 +1,7 @@
 # Photo-to-PDF and IDML Preparation — Technical PRD
 
 Owner: wehan. Scope revision: 2026-10-24, confirmed in the product discussion.
-Branch: `codex/pdf-evidence-review-prd`. Implementation: `modules/pdf_evidence`.
+Branch: `codex/pdf-evidence-review-prd`. Implementation: repository-root `src/pastport_evidence`.
 This revision supersedes the earlier review-workbench and structured-handoff scope in this file.
 
 ## 1. Product outcome and boundary
@@ -76,17 +76,17 @@ Default semantic configuration is Sol 6.1 Medium through the running operator's 
 ChatGPT login. Keep the transport injectable and metered. No implicit provider/model fallback.
 No live subscription calls are authorized merely by installing or viewing this code.
 
-## 5. Architecture and existing-main boundary
+## 5. Independent architecture
 
 The independent module has typed immutable domain records, asset/PDF/semantic/identity ports,
 application preparation services, and I/O adapters. SDKs, PDF renderers and SQLite stay outside
 the domain. Reuse the existing isolated metered transport, exact-evidence logic and photo work;
 do not import the legacy demo database or silently seed fixtures as inferred results.
 
-Main application code, schemas and approval rules remain unchanged. This local document generator
-is not claimed to be integrated into main's model gateway, resource system or approval authority.
-It does not introduce a competing public museum schema. A future integration requires a separate
-accepted contract change; it is not part of this deliverable.
+This branch is a standalone tool and will not integrate into main. Main framework/game/VR code
+and unrelated documentation are not part of this source tree. There is no public museum schema
+or structured handoff. Downstream software treats the PDF as an ordinary source document.
+Changes on this branch do not change the main branch or the separate VR implementation.
 
 ## 6. Operational invariants
 
@@ -122,3 +122,17 @@ Report separately: static checks, offline document rendering/inspection, real-mo
 Adobe InDesign opening/editing, and human acceptance. XML/ZIP validation alone does not prove that
 InDesign opens the document or that its typography matches the PDF. A synthetic run does not prove
 real historical matching quality. Do not label implementation complete if those limits are hidden.
+
+## 8. Source ownership and purpose
+
+| Path | Responsibility |
+| --- | --- |
+| `src/pastport_evidence/domain/` | Immutable photo, identity, evidence and private layout records |
+| `src/pastport_evidence/ports/` | Asset, PDF, semantic and identity contracts |
+| `src/pastport_evidence/application/` | Fixed preparation, exact-source/scope checks and atomic export |
+| `src/pastport_evidence/adapters/` | Assets, PDF extraction, metered Codex, SQLite, layout and renderers |
+| `src/pastport_evidence/workflow/` | Fixed LangGraph order and durable stage receipts |
+| `src/pastport_evidence/prompts/` | Versioned identity, mapping and evidence rules |
+| `src/pastport_evidence/fonts/` | Licensed Chinese font and provenance |
+| `src/pastport_evidence/cli.py` | Input/grant handling and document-generation entrypoint |
+| `tools/check_repository.py` | Independent source syntax, boundary and documentation-link checks |

@@ -1,12 +1,19 @@
-# PastPort Change Log
+# Photo Document Tool — Changelog
 
-Owner: wehan. Start at the 2026-10-21 initial documentation baseline; earlier drafting and discussion history is not retained here. Requirements: [PRD](PastPort_PRD_EN.md). Current implementation work: [Active Plan](ACTIVE_PLAN.md).
+## 2026-10-24 — Document generation implementation
 
-## 2026-10-21 — Initial bilingual PRD
+Implemented the fixed photo inventory, historical PDF matching, exact/scope-aware evidence and
+paired PDF/IDML export on this branch. Prior delivery commit: `cb67cfc` (nested module layout).
+Offline acceptance used two synthetic photo views, real PDF extraction and Poppler rendering;
+one identity, five PDF pages and six resolving IDML image links were produced. Repeated runs
+added no fixture dispatch. Strict mypy and Ruff passed. No live inference was made in that delivery.
+Native Adobe InDesign and a full fresh real-material run remain pending.
 
-- Deliverables: PastPort_PRD_CN and PastPort_PRD_EN, matching product/technical/topic sections, shared reference attachments, short navigation, active tasks and accepted design rationale.
-- Scope: documentation and unchanged supporting contract examples. Production source, generated production contracts, workflow configuration and existing user changes are preserved.
-- Verification: CN/EN contain the same 94 section IDs and all shared literal identifiers; independent document/link and source-preservation checks completed. Existing documentation gates need ENG-DOC for file layout and explicit anchors; this delivery does not claim passing CI or new runtime capabilities.
-- Limits: generic host, new wire integration, real IDML/model results, browser/mobile and human-play acceptance remain in the plan. No paid call, commit/push or deployment is part of this delivery.
+## 2026-10-24 — Independent root layout
 
-Record future meaningful verified deliveries here with exact scope, revision/report when available, actual checks and limits. Do not copy transcripts, old test counts or per-change archives into the team reading path.
+Moved the document tool to the repository root. Removed inherited main framework, game/VR code,
+main schemas, references, unrelated tests/CI and framework-only documents. Replaced the main-only
+repository checker with standalone source/document checks; strict mypy and Ruff remain required.
+Root locked installation and command help passed, as did strict typing over 42 Python files,
+Ruff and the standalone checker. Runtime records and operator files were preserved and ignored.
+No live model call, main modification or new native-IDML acceptance is claimed.

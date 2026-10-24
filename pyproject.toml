@@ -1,46 +1,35 @@
 [build-system]
-requires = ["hatchling==1.27.0"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "pastport"
-version = "0.2.0"
-description = "Typed editorial workflow for evidence-grounded heritage games"
+name = "pastport-evidence"
+version = "0.1.0"
+description = "Photo and historical PDF to evidence-grounded comparison PDF and editable IDML"
 requires-python = ">=3.12,<3.13"
-dependencies = [
-    "fastapi==0.143.2",
-    "httpx==0.28.1",
-    "langgraph==1.2.15",
-    "langgraph-checkpoint-sqlite==3.1.2",
-    "pydantic==2.12.3",
-    "uvicorn==0.54.0",
-]
+dependencies = ["pydantic>=2.12,<3", "langgraph>=1.2,<2", "pdfplumber>=0.11,<1", "pypdf>=5,<7", "pillow>=10.4,<13", "reportlab>=4,<5"]
 
-[dependency-groups]
-dev = [
-    "pytest==8.4.2",
-    "mypy==1.18.2",
-    "ruff==0.14.1",
-    "jsonschema==4.25.1",
-    "types-jsonschema==4.25.1.20251009",
-]
+[project.optional-dependencies]
+codex = ["openai-codex==0.163.0"]
+dev = ["mypy>=1.18,<2", "ruff>=0.14,<1", "types-reportlab>=5.0.0.20261008"]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/pastport"]
+[project.scripts]
+pastport-evidence = "pastport_evidence.cli:main"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pastport_evidence = ["prompts/*.txt", "fonts/*.ttf", "fonts/*.txt"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
-plugins = ["pydantic.mypy"]
+mypy_path = "src"
+packages = ["pastport_evidence"]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-include = ["src/**/*.py", "tests/**/*.py", "tools/check_contracts.py", "tools/check_handoff.py"]
-
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

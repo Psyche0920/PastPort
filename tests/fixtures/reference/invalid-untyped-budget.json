@@ -1,9 +1,0 @@
-{
-  "max_model_requests": "2",
-  "max_input_tokens": 10000,
-  "max_output_tokens": 10000,
-  "max_search_requests": 0,
-  "max_fetch_requests": 0,
-  "max_active_seconds": 120,
-  "max_cost_microusd": 100000
-}
