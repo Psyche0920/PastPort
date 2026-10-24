@@ -10,6 +10,7 @@ Owner: wehan. Branch: `codex/pdf-to-vr-standalone`. Current user-approved delive
 | Durable editorial state | wehan | SQLite and exact project/media bindings | Human copy/position precedence, CAS, idempotency, edit audit, rerun protection | Implemented; isolated and API integration checks pass |
 | Tour/replay workflow | wehan | Existing HTML export, explicitly supplied report; optional legacy DB | Data-only import, three fixed LangGraph stages, receipts and immutable local snapshots | Runnable; actual two-view material imported as 37 objects / 66 anchors |
 | Automatic build entry | wehan | PDF, supported tour export, local Codex login, finite subscription grant | One command creates numbered VR and linked review without handwritten intermediate requests | Implemented; full fixed graph tested with semantic counterparts; native generated-PDF/Poppler path verified; whole real-material live run not performed |
+| Browser upload and generation | wehan | Existing automatic build, local SDK login/Poppler | PDF + HTML/folder/ZIP upload, bounded background job, stage progress, fixed project VR/review links, preserved edits | Implemented; offline API and browser checks completed; no fresh live-model inference in this delivery |
 | Linked VR/workbench | wehan | Tour and editorial state | Transparent numbered markers, click-to-read latest copy, workbench editing, drag-release autosave | Implemented; browser popup and drag-save checked; representative display checked |
 | Standalone subscription semantic adapter | wehan | Local ChatGPT login, official Codex SDK and explicit finite grant | Existing semantic ports, image inputs, strict payloads, usage receipts, no API fallback | Implemented; SDK login/model/image capability and synthetic live image call verified; not main gateway integration |
 | Second-site/main integration | wehan and affected main owners | Second materials, frozen shared schemas/checkers | Configuration-only reuse and compatible SDK export | Pending; replay does not prove these |
@@ -26,7 +27,7 @@ Owner: wehan. Branch: `codex/pdf-to-vr-standalone`. Current user-approved delive
 ## Remaining limits and next action
 
 1. The replay command remains explicit prior-result replay. The separate Codex SDK command now executes typed semantic requests, but the unified build command now composes whole-PDF/tour processing. Main metered gateway integration, OCR, arbitrary vendor import and complete live-material acceptance remain incomplete.
-2. HTML schema 3/4 import is supported; arbitrary vendor tours, ZIP execution and cloud hosting are not. Preview server is localhost-only and separate from the old 8793 demo.
+2. HTML schema 3/4 import and safe ZIP/folder packaging are supported; uploaded scripts, arbitrary vendor tours, IDML parsing, 3D processing and cloud hosting are not. Preview server is localhost-only and separate from the old 8793 demo.
 3. Local immutable snapshots are not main-compatible museum bundles. Freeze the counterpart and validate the adapter before integration.
 4. A second site's PDF/VR must be supplied and run before claiming cross-site reuse or accuracy.
 5. Git delivery is limited to source, tests, configuration examples and documentation on the standalone branch. No main code, original demo data, credentials or media is included; no deployment is claimed. Remote push status is reported separately after verification.
@@ -49,3 +50,12 @@ Visual inspection of the first panorama overlay places its three regions on the 
 The unified `build --pdf --tour --grant --workspace --run-id --serve` command composes ingest, overview/detail recognition with bounded missed-target review, page/object mapping, independently scoped evidence, copy composition, editable preview and immutable snapshot stages. The user no longer needs to author semantic request JSON. Mapping modes explicitly separate same-site identity from campus demonstration substitutes. Missing evidence and budget limits produce visible gaps.
 
 The complete graph test uses explicit PDF-reader and semantic fixtures. A separate verification exercised actual generated-PDF extraction and Poppler, data-only tour import, the complete graph, source crop/full-page media and review API with semantic fixtures. Both the same and new run ID retain human copy/position without duplicate inference. This does not establish correctness of an entire live model-backed build. Final delivery remains standalone, not integrated into main or cloud-deployed.
+
+
+## Browser generation delivery
+
+The user requested nontechnical upload/generate operation in the same workbench. The new `studio` entry starts an empty-project portal, accepts PDF plus supported 360 HTML/folder/ZIP, creates finite per-run subscription grants after explicit UI authorization, launches the existing fixed workflow in one owned subprocess, and reads persisted stage receipts for progress. Finished projects expose stable linked review and VR routes. Existing project rebuilds retain applicable human overrides. Restart/interruption never automatically redispatches uncertain calls.
+
+Source format inspection found PDF, IDML, INDD and Links JPG/JPEG in the official II. Murat Drive folder. Only PDF and supported 360 exports are enabled today. IDML/Links and 3D remain visibly reserved capabilities; INDD requires conversion. Main integration, IDML extraction, surface-anchor geometry and cloud authentication remain separate pending work.
+
+Acceptance evidence: isolated upload/job/API checks with fake semantic transport; browser file chooser, submit/progress/completion, generated numbered popup and evidence-editor navigation on a separate offline fixture server. Full real-material live inference was deliberately not rerun. Check counts and remote delivery are recorded after completion, without changing the original demo data.

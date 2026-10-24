@@ -16,6 +16,9 @@ from pastport_pdf_vr.domain.tour import ImportedTour
 def main() -> None:
     parser = argparse.ArgumentParser(prog="pastport-pdf-vr")
     subcommands = parser.add_subparsers(dest="command", required=True)
+    studio = subcommands.add_parser("studio", help="Open browser upload, generation and review")
+    studio.add_argument("--workspace", type=Path, default=Path(".runtime/studio"))
+    studio.add_argument("--port", type=int, default=8794)
     replay = subcommands.add_parser(
         "replay", help="Import an explicitly supplied demo report; no model inference"
     )
@@ -52,6 +55,15 @@ def main() -> None:
     build.add_argument("--serve", action="store_true", help="Start linked VR/review after building")
     build.add_argument("--port", type=int, default=8794)
     arguments = parser.parse_args()
+    if arguments.command == "studio":
+        import uvicorn
+
+        from pastport_pdf_vr.api.studio import StudioApplication
+
+        application = StudioApplication(arguments.workspace)
+        print(f"Studio: http://127.0.0.1:{arguments.port}/")
+        uvicorn.run(application.app, host="127.0.0.1", port=arguments.port, access_log=False)
+        return
     if arguments.command == "build":
         import shutil
 

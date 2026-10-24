@@ -427,3 +427,14 @@ The revised implementation priority is: fixed counterparts and typed state → p
 The user approved local Codex SDK execution using each operator's existing ChatGPT login. The standalone adapter implements the existing scene-inspection/evidence/draft ports with explicit model selection, bounded image attachments, strict structured output conversion, a persistent subscription call grant, authentic SDK token receipts, deadline/cancellation and no implicit API-key/provider fallback. It does not share credentials or alter the main gateway contract.
 
 Subscription token receipts do not report the exact remaining subscription allowance or billed USD. A recorded-token threshold stops subsequent dispatches and is not a hard per-call token ceiling. Unknown usage remains recovery-required across restarts. Main integration still requires its shared execution grant/usage bridge; this local adapter cannot be presented as evidence that the main gateway or dollar-budget acceptance already passes.
+
+
+## Browser upload and generation extension
+
+The standalone studio starts without an existing output. Its local root is the Chinese upload/generation portal; users choose/drop a PDF and supported 360 Studio HTML, folder or ZIP, authorize a bounded Codex run, see persisted stage progress and open the numbered VR or linked review backend. A saved project can be selected for regeneration without changing its URL or overwriting applicable human edits. Review/VR links and API/media calls are project-scoped. Existing direct-workspace serving remains available.
+
+The typed input contract contains `document_format` (`pdf`, reserved `idml_links`, conversion-only `indd`) and `scene_format` (`tour_360`, reserved `model_3d`). Capability status must be displayed accurately; reserved formats are rejected before inference. Official source inspection confirmed the PDF/IDML/INDD/Links arrangement. Future IDML extraction must align with main's Story/XML/range locators and original linked assets. A 3D adapter must introduce geometry/reference-view version bindings, inverse projection to surfaces and a suitable viewer/anchor schema; it cannot reinterpret spherical anchors as 3D coordinates.
+
+One build runs at a time. Upload bytes, archive members/expansion, paths and same-origin edit requests are bounded. Uploaded HTML is data, not executable application code. The generator owns its subprocess group, persists job status separately from evidence/editorial authority, and stops interrupted jobs for reconciliation. It does not reset or retry uncertain subscription usage. Draft availability still does not constitute publication approval.
+
+Verification uses an injected build-runner boundary and explicit offline semantic counterparts; upload-to-browser assembly is distinct from full live-model/source accuracy, cross-site reuse and main integration.

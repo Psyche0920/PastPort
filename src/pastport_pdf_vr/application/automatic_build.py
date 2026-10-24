@@ -47,6 +47,7 @@ from pastport_pdf_vr.domain.recognition import MatchingImage, PanoramaView, Reco
 from pastport_pdf_vr.domain.tour import ImportedTour
 from pastport_pdf_vr.ports.execution import SemanticTransport
 from pastport_pdf_vr.ports.pdf import PDFDocumentReader
+from pastport_pdf_vr.ports.scene import PanoramaSourceReader
 from pastport_pdf_vr.workflow.graph import (
     FixedStage,
     FixedWorkflow,
@@ -560,7 +561,8 @@ class AutomaticBuildWorkflow:
             file_hashes.append(file_digest.hexdigest())
             digest.update(file_digest.digest())
         asset_store = LocalAssetStore(workspace / "assets")
-        admitted_tour = TourImporter(asset_store).import_html(grant.project_id, tour_path, limits)
+        tour_reader: PanoramaSourceReader = TourImporter(asset_store)
+        admitted_tour = tour_reader.import_html(grant.project_id, tour_path, limits)
         digest.update(admitted_tour.model_dump_json().encode())
         digest.update((grant.model_dump_json() + mode + str(large_pdf) + "automatic-v1").encode())
         binding = "build:" + digest.hexdigest()

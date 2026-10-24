@@ -1,9 +1,11 @@
 'use strict';
+const projectBase = location.pathname.match(/^\/projects\/[a-f0-9]{32}/)?.[0] || '';
+for (const link of document.querySelectorAll('a[data-project-link]')) link.href = projectBase + link.getAttribute('href');
 let snapshot, selected;
 const el = id => document.getElementById(id);
 
 async function fetchJSON(url, options) {
-  const response = await fetch(url, options);
+  const response = await fetch(projectBase+url, options);
   const data = await response.json();
   if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : '数据校验失败');
   return data;
@@ -23,7 +25,7 @@ function select(id) {
   el('appearances').replaceChildren();
   for (const row of snapshot.anchors.filter(item => item.anchor.object_id === id)) {
     const link = document.createElement('a');
-    link.href = `/vr/?object=${encodeURIComponent(id)}&view=${encodeURIComponent(row.anchor.view_id)}`;
+    link.href = `${projectBase}/vr/?object=${encodeURIComponent(id)}&view=${encodeURIComponent(row.anchor.view_id)}`;
     link.textContent = `在 VR 中查看（${row.origin === 'human' ? '人工位置' : '模型位置'}）`;
     el('appearances').append(link, document.createElement('br'));
   }
@@ -38,10 +40,10 @@ function select(id) {
   const evidence = object.replay_evidence;
   const image = el('source-image');
   image.hidden = !evidence?.source_image;
-  if (!image.hidden) image.src = '/media/' + evidence.source_image.asset.sha256;
+  if (!image.hidden) image.src = projectBase + '/media/' + evidence.source_image.asset.sha256;
   const page = el('source-page');
   page.hidden = !evidence?.page_image;
-  if (!page.hidden) page.href = '/media/' + evidence.page_image.asset.sha256;
+  if (!page.hidden) page.href = projectBase + '/media/' + evidence.page_image.asset.sha256;
   el('status').textContent = selected.assignment_mismatch ? '历史绑定已改变，旧人工内容已保留但未套用。' : '';
 }
 
