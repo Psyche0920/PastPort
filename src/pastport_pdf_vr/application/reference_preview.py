@@ -84,7 +84,7 @@ class ReferencePreviewPool:
             self._processes.clear()
 
 
-def serve(root: Path) -> None:
+def serve(root: Path, port: int = 0) -> None:
     """Reuse trusted shipped services; never execute Python from a generated directory."""
     root = root.resolve()
     if not (root / "pastport_matching.sqlite3").is_file():
@@ -101,7 +101,11 @@ def serve(root: Path) -> None:
         modules[name] = module
     module = modules["review_server"]
     handler = cast(type[BaseHTTPRequestHandler], module.ReviewHandler)
-    with ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+    with ThreadingHTTPServer(("127.0.0.1", port), handler) as server:
+        if (root / "scene3d/attachment.json").is_file():
+            from pastport_pdf_vr.api.scene3d import install_routes
+
+            install_routes(handler, root, server.server_port)
         module.__dict__["PORT"] = server.server_port
         print(json.dumps({"port": server.server_port}), flush=True)
         server.serve_forever()

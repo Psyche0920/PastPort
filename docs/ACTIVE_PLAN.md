@@ -12,3 +12,16 @@ are not deleted. Jobs from removed workflows are hidden without rewriting their 
 Different inputs must be localized again; old coordinates are not business defaults.
 The user reports targeted manual findings for subsequent fixes. No other workflow,
 main integration, 360 video, arbitrary vendor adapter or cloud deployment is included.
+
+## Optional 3D stage
+
+Owner: wehan. Branch: `codex/pdf-to-3d-standalone`. Dependencies: an existing matched
+environment and either an existing Marble export or later explicit local-key/credit
+authorization. Deliverable: preserve matches, freeze data, generate/import a world,
+compute geometric candidates, manually calibrate and save into a 3D review result.
+
+Status: implementation integrated; one unrelated real Marble export attached with
+zero new inference. Added modules have local static checks. No paid generation,
+browser/device or same-scene museum acceptance claimed. User supplies the key for
+the final manual trial; current source images, VR behavior and saved databases are
+preserved. See SCENE3D.md for startup, coordinate assumptions and recovery.

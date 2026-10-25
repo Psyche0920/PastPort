@@ -113,3 +113,16 @@ The user will manually assess output quality and report targeted issues. This
 release verifies the automatic chain, not equivalence of all semantic judgments,
 new-site accuracy, main integration, 360-video support or cloud deployment. The
 main repository checker is absent from this standalone branch.
+
+## Optional Marble 3D stage
+
+Added a separate 3D handoff after panorama matching: consistent source backup,
+existing-export import, explicit one-generation API entry and saved-operation polling,
+real SPZ/GLB loading and free movement, camera alignment, ray-derived candidates,
+manual anchor confirmation and versioned saves. Existing panorama generation/viewing
+remains available. Source matches and human edits are copied, not rematched or reset.
+
+One unrelated real indoor-video export completed asset/database attachment with no
+new inference or credits. It is not same-scene alignment or museum business acceptance.
+New Python passes local strict typing; syntax/lint checks cover the changed code.
+No paid generation, automated test suite or browser/device acceptance was run.

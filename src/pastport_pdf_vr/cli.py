@@ -46,7 +46,46 @@ def main() -> None:
         "codex-status", help="Check local login/model without inference"
     )
     status.add_argument("--model", default="gpt-6.1-sol")
+    attach = subcommands.add_parser(
+        "scene3d-attach", help="Attach an existing Marble world to a matched environment"
+    )
+    for name in ("environment", "world", "workspace"):
+        attach.add_argument("--" + name, type=Path, required=True)
+    attach.add_argument("--source-scene", default="")
+    generate3d = subcommands.add_parser(
+        "scene3d-generate", help="Generate once from a matched panorama, then attach its records"
+    )
+    for name in ("environment", "workspace"):
+        generate3d.add_argument("--" + name, type=Path, required=True)
+    generate3d.add_argument("--source-scene", default="")
+    generate3d.add_argument(
+        "--model", choices=("marble-1.1", "marble-1.0-draft"), default="marble-1.1"
+    )
+    generate3d.add_argument("--credit-budget", type=int, required=True)
+    generate3d.add_argument("--authorize-marble", action="store_true")
     arguments = parser.parse_args()
+    if arguments.command == "scene3d-generate":
+        from pastport_pdf_vr.application.marble_generation import MarbleGeneration
+
+        print(
+            MarbleGeneration().run(
+                arguments.environment,
+                arguments.workspace,
+                arguments.source_scene,
+                arguments.model,
+                arguments.credit_budget,
+                arguments.authorize_marble,
+            )
+        )
+        return
+    if arguments.command == "scene3d-attach":
+        from pastport_pdf_vr.application.scene3d import Scene3DAttachment
+
+        delivery = Scene3DAttachment(
+            arguments.environment, arguments.world, arguments.workspace, arguments.source_scene
+        ).run()
+        print(delivery.model_dump_json())
+        return
     if arguments.command == "environment-build":
         import shutil
 
