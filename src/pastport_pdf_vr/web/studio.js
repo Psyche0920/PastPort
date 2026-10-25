@@ -77,7 +77,7 @@ async function refresh() {
     }
     if(['completed','completed_with_gaps'].includes(job.status)) {
       const nav=document.createElement('nav');
-      for(const [label,path] of [['打开 VR 展示','vr/'],['打开审核工作台','']]) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/runs/${job.job_id}/${path}`;link.textContent=label;nav.append(link);}card.append(nav);
+      for(const [label,path] of [['打开 VR 展示','vr/'],['打开审核工作台','']]) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/runs/${job.job_id}/${path}`;link.textContent=label;nav.append(link);}const create3d=document.createElement('a');create3d.href=`/scene3d?job_id=${job.job_id}`;create3d.textContent='生成 3D';nav.append(create3d);card.append(nav);
     }
     container.append(card);
   }

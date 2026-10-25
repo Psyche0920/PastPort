@@ -25,3 +25,14 @@ zero new inference. Added modules have local static checks. No paid generation,
 browser/device or same-scene museum acceptance claimed. User supplies the key for
 the final manual trial; current source images, VR behavior and saved databases are
 preserved. See SCENE3D.md for startup, coordinate assumptions and recovery.
+
+3D frontend follow-up: separate homepage VR/3D records, unify the duplicate 3D entry,
+expose persisted task state and output downloads, and add an in-memory API-key dialog.
+Owner: wehan; dependencies: existing portal/runtime. Acceptance: user can configure
+the key and obtain the 3D output from the frontend; real generation remains pending
+explicit user trial. No paid call or automated provider retry is part of this change.
+
+Frontend refinement: each completed VR record owns its “Generate 3D” entry, source
+IDs are automatic, main form is project/key/generate only, existing-export import
+is retained in a collapsed form, and 3D record cards show status and their output.
+No generation is triggered by refresh, key entry or record listing.

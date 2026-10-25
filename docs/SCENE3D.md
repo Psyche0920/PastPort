@@ -10,8 +10,9 @@ review database using SQLite backup, keeps the original panorama, identities,
 numbering, quotations, introductions, human edits and backend links, and then uses
 Marble for the scene asset. Matching is not repeated against a blurry generated 3D.
 
-Start the same Studio command from the README. A new link beside generation records
-opens the 3D stage. Choose the completed result and the corresponding source viewpoint.
+Start the same Studio command from the README. Each completed VR record has its own **生成 3D** action. It opens the 3D page
+already bound to that result and its initial panorama; users do not select internal
+IDs. Only project name, API Key and explicit generation are shown in the main form.
 For multiple panoramas, select one deliberately; there is no implicit camera-pose
 estimation or multi-world stitching.
 
@@ -128,3 +129,22 @@ API references: [generation patterns](https://docs.worldlabs.ai/api/world-genera
 [scale and axes](https://docs.worldlabs.ai/api/rendering-spz),
 [pricing](https://docs.worldlabs.ai/api/pricing),
 [Spark loading](https://sparkjs.dev/docs/splat-mesh/).
+
+## Separate generation records and key dialog
+
+The homepage has two distinct sections: VR matching records, and 3D generation
+records. Generation starts from the specific VR record, not a second global entry. 3D records
+show the source title, import/generation mode, running/pending/stopped state, an
+explicit query-original-task action when an operation exists, and a ready 3D
+output link. Review and native-asset links remain available through the output/API
+without cluttering the primary record card.
+Read-only refresh never submits or polls a provider task. No fake result is created
+when there is no 3D output. The generation page uses the same records component.
+
+The 3D page accepts the key in a password field and stores it only for the session.
+The primary flow requires no internal view IDs, model selector or export JSON. An
+optional collapsed **导入已有 3D** form retains existing-export import without a
+key or new generation. Both paths bind automatically to the selected VR result.
+The API returns only configured state, never the key. Local edit protections apply
+to setting and clearing. A key already passed to a running request is not revoked
+by clearing the session field. No real-key call was performed for this UI change.

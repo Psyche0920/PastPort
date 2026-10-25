@@ -126,3 +126,16 @@ One unrelated real indoor-video export completed asset/database attachment with 
 new inference or credits. It is not same-scene alignment or museum business acceptance.
 New Python passes local strict typing; syntax/lint checks cover the changed code.
 No paid generation, automated test suite or browser/device acceptance was run.
+
+## Simplified 3D frontend and separate records
+
+Each completed VR record now opens its own 3D generation page with the source bound
+automatically. The main form shows project, session-only API key and a single explicit
+generation action; existing Marble export import remains collapsed. Homepage VR and
+3D records are separate. 3D records read persistent local status, expose output and
+query-original-task actions, and never trigger provider work on refresh. Native output
+links remain available via the API. Key values are not returned, logged or saved.
+
+New API/domain types pass strict typing, lint and Python/JS syntax checks. The current
+workbench was reloaded without active tasks and retains the imported 14-object result.
+No real key, paid generation or automatic test suite was used for this UI delivery.

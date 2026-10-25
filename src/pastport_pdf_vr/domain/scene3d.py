@@ -52,3 +52,17 @@ class AlignmentEdit(DomainModel):
     roll_degrees: Annotated[float, Field(ge=-180, le=180, allow_inf_nan=False)]
     editor: Annotated[str, Field(min_length=1, max_length=100)]
     basis: Annotated[str, Field(min_length=1, max_length=1000)]
+
+
+class Scene3DRecord(DomainModel):
+    run_id: str
+    title: str
+    mode: str
+    status: str
+    message: str
+    url: str = ""
+    review_url: str = ""
+    splat_url: str = ""
+    collider_url: str = ""
+    manifest_url: str = ""
+    resume: str = ""
