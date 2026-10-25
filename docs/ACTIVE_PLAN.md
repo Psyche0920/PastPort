@@ -65,3 +65,5 @@ result: 14/14 proposals hit collider surfaces; confirmed spatial acceptance rema
 zero. Browser checks verified visible labels, object 35 popup and review identity.
 Two targeted regressions pass. User manual spatial/identity review remains required;
 this is a mounted candidate output, not a claim of verified precise 3D matching.
+
+Review editing follow-up: shared introduction editing and same-object 3D review links are implemented. Dragging a 3D marker saves its independent position; panorama coordinates remain unchanged. Applied to the existing derived result. User requested no further automated verification and will manually accept behavior. No generation or paid calls.

@@ -181,7 +181,11 @@ class Scene3DStore:
             alignment = json.loads(
                 db.execute("SELECT payload_json FROM scene3d_alignment WHERE id=1").fetchone()[0]
             )
-            if edit.point is not None and not alignment["confirmed"]:
+            if (
+                edit.point is not None
+                and not alignment["confirmed"]
+                and edit.placement_method != "surface_pick"
+            ):
                 raise ValueError("Confirm panorama camera alignment first")
             identity = db.execute(
                 """SELECT o.parent_id FROM modern_objects o JOIN pairings p ON p.modern_id=o.id
@@ -254,6 +258,14 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
 
     def get(request: BaseHTTPRequestHandler) -> None:
         route = urlsplit(request.path).path
+        if route == "/api/scene3d/content":
+            original_path = request.path
+            request.path = request.path.replace("/api/scene3d/content", "/api/vr-content", 1)
+            try:
+                original_get(request)
+            finally:
+                request.path = original_path
+            return
         if route == "/api/scene3d-export":
             from pastport_pdf_vr.application.scene3d_export import export_scene
 
@@ -284,6 +296,7 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
             allowed = {
                 "index.html",
                 "viewer.js",
+                "shared_content.js",
                 "scene.json",
                 "attachment.json",
                 "scene.spz",
@@ -319,6 +332,14 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
         original_get(request)
 
     def post(request: BaseHTTPRequestHandler) -> None:
+        if request.path == "/api/scene3d/content":
+            original_path = request.path
+            request.path = "/api/vr-content"
+            try:
+                original_post(request)
+            finally:
+                request.path = original_path
+            return
         if request.path not in (
             "/api/scene3d/anchor",
             "/api/scene3d/alignment",

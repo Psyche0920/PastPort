@@ -40,6 +40,7 @@ class AnchorEdit(DomainModel):
     editor: Annotated[str, Field(min_length=1, max_length=100)]
     identity_basis: Annotated[str, Field(min_length=1, max_length=1000)]
     relation_basis: Annotated[str, Field(max_length=1000)] = ""
+    placement_method: Literal["aligned_confirmation", "surface_pick"] = "aligned_confirmation"
 
 
 class AlignmentEdit(DomainModel):

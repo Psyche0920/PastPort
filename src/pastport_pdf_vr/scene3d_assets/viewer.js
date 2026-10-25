@@ -5,8 +5,9 @@ const $=id=>document.getElementById(id), note=text=>{$('notice').textContent=tex
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(devicePixelRatio||1);document.body.append(renderer.domElement);
 const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(65,1,.03,1000);camera.rotation.order='YXZ';
 scene.add(new SparkRenderer({renderer}));
-let data,collider,candidate=null,markers=[],busy=false;const ray=new THREE.Raycaster(),keys=new Set();
+let data,collider,candidate=null,markers=[],busy=false,pendingSave=null,markerDrag=null,popupId=null;const ray=new THREE.Raycaster(),keys=new Set();
 const group=new THREE.Group();scene.add(group);const radians=THREE.MathUtils.degToRad;
+const contentChannel=new BroadcastChannel('pastport-shared-content-v1');
 async function api(path,body){const r=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});if(!r.ok){let d;try{d=await r.json();}catch{}throw Error(d?.detail||(r.status===409?'版本冲突，请刷新；未保存。':'请求失败；未保存。'));}return r.json();}
 function alignmentQuaternion(){return new THREE.Quaternion().setFromEuler(new THREE.Euler(radians(data.alignment.pitch_degrees),radians(data.alignment.yaw_degrees),radians(data.alignment.roll_degrees),'YXZ'));}
 function origin(){const p=data.alignment.origin;camera.position.set(p.x,p.y,p.z);camera.quaternion.copy(alignmentQuaternion());}
@@ -24,11 +25,56 @@ $('origin').onclick=()=>origin();
 $('save-alignment').onclick=async()=>{try{await api('/api/scene3d/alignment',{...fromFields(),scene_binding:data.binding,expected_version:data.alignment.version,confirmed:$('aligned').checked,editor:$('editor').value.trim(),basis:$('alignment-basis').value.trim()});await reload();await migrateCandidates();point(null);origin();note('对齐已保存；候选点仍需逐项确认身份。');}catch(e){note(e.message);}};
 $('object').onchange=()=>{point(null);$('popup').style.display='none';};
 $('propose').onclick=()=>{try{if(!data.alignment.confirmed)throw Error('请先人工对齐并保存拍摄点。');const o=selected(),h=data.source_hotspots.find(h=>h.object_id===o.id);if(!h)throw Error('该视点没有此物件的原热点；请点选校准。');const yaw=radians(h.yaw),pitch=radians(h.pitch),direction=new THREE.Vector3(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch)).applyQuaternion(alignmentQuaternion());ray.set(new THREE.Vector3(data.alignment.origin.x,data.alignment.origin.y,data.alignment.origin.z),direction);const hits=ray.intersectObject(collider,true);if(!hits.length)throw Error('方向没有碰到几何表面，不能补造深度；请人工点选。');point(hits[0].point.clone());note('黄色候选方向命中表面，不代表已经认对物件；确认身份后保存。');}catch(e){note(e.message);}};
-async function save(remove=false){if(busy)return;busy=true;try{const o=selected();if(!o)throw Error('请选择物件');if(!remove&&!candidate)throw Error('先计算或点选候选位置');await api('/api/scene3d/anchor',{operation_id:crypto.randomUUID(),scene_binding:data.binding,object_id:o.id,historical_id:o.historical_id,expected_version:o.version,point:remove?null:{x:candidate.x,y:candidate.y,z:candidate.z},editor:$('editor').value.trim(),identity_basis:$('basis').value.trim(),relation_basis:$('relation').value.trim()});await reload();point(null);note(remove?'已撤下热点，历史记录保留。':'已保存人工确认热点。');}catch(e){note(e.message);}finally{busy=false;}}
+async function persistPosition(edit){
+ if(busy)return false;busy=true;pendingSave=edit;$('retry-position').hidden=true;
+ try{await api('/api/scene3d/anchor',edit);pendingSave=null;await reload();point(null);note(edit.point?'人工位置已保存。原全景位置保持不变，介绍仍共用。':'已撤下此3D编号，历史保留。');return true;}
+ catch(e){note('位置保存未确认：'+e.message);$('retry-position').hidden=!pendingSave;return false;}
+ finally{busy=false;}
+}
+async function save(remove=false,method='aligned_confirmation',object=null){
+ const o=object||selected();if(!o){note('请选择物件');return false;}if(!remove&&!candidate){note('请先拖动或点选位置');return false;}
+ if(!remove&&$('pick').checked)method='surface_pick';
+ const manual=method==='surface_pick';
+ const edit={operation_id:crypto.randomUUID(),scene_binding:data.binding,object_id:o.id,historical_id:o.historical_id,expected_version:o.version,
+ point:remove?null:{x:candidate.x,y:candidate.y,z:candidate.z},editor:$('editor').value.trim()||(manual?'local_editor':''),
+ identity_basis:$('basis').value.trim()||(manual?'User manually placed this numbered marker on a 3D collision surface.':''),
+ relation_basis:$('relation').value.trim(),placement_method:method};
+ return persistPosition(edit);
+}
 $('confirm').onclick=()=>save();$('remove').onclick=()=>save(true);
-let dragging=false,moved=0;renderer.domElement.onpointerdown=e=>{dragging=true;moved=0;renderer.domElement.setPointerCapture(e.pointerId);};renderer.domElement.onpointermove=e=>{if(!dragging)return;moved+=Math.abs(e.movementX)+Math.abs(e.movementY);camera.rotation.y-=e.movementX*.003;camera.rotation.x=THREE.MathUtils.clamp(camera.rotation.x-e.movementY*.003,-1.55,1.55);};renderer.domElement.onpointerup=async e=>{dragging=false;if(moved>6||!collider)return;ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2),camera);if($('pick').checked){const h=ray.intersectObject(collider,true)[0];if(h)point(h.point.clone());else note('没有命中表面。');return;}const h=ray.intersectObjects(markers)[0];if(h){try{const o=h.object.userData.object,c=await api(`/api/vr-content?object_id=${o.id}`);$('object').value=String(o.id);point(h.object.position.clone());$('popup').replaceChildren();const text=document.createElement('p');text.textContent=`${o.id} · ${o.name}${h.object.userData.pending?"（自动迁移候选，位置待核对）":""}\n\n${c.content}`;const a=document.createElement('a');a.href=`/?object_id=${o.id}`;a.textContent='打开审核后台';const close=document.createElement('button');close.textContent='关闭';close.onclick=()=>{$('popup').style.display='none';};$('popup').append(text,a,close);$('popup').style.display='block';}catch(e){note(e.message);}}};
+$('retry-position').onclick=()=>pendingSave&&persistPosition(pendingSave);
+function setScreenRay(event){ray.setFromCamera(new THREE.Vector2(event.clientX/innerWidth*2-1,1-event.clientY/innerHeight*2),camera);}
+async function showPopup(o,pending=false){
+ try{const content=await api(`/api/scene3d/content?object_id=${o.id}`);popupId=o.id;$('object').value=String(o.id);$('popup').replaceChildren();
+ const text=document.createElement('p');text.textContent=`${o.id} · ${o.name}${pending?'（自动迁移候选，位置待核对）':''}\n\n${content.content}`;
+ const link=document.createElement('a');link.href=`/?object_id=${o.id}`;link.textContent='在后台编辑共用介绍';
+ const move=document.createElement('button');move.textContent='拖拽调整此编号';move.onclick=()=>{$('drag-markers').checked=true;$('popup').style.display='none';note('拖动此编号到正确表面，松开自动保存；文字和原全景位置不受影响。');};
+ const close=document.createElement('button');close.textContent='关闭';close.onclick=()=>{$('popup').style.display='none';popupId=null;};
+ $('popup').append(text,link,move,close);$('popup').style.display='block';
+ }catch(e){note(e.message);await reload();}
+}
+contentChannel.onmessage=async event=>{if(event.data?.type==='content-saved'&&Number(event.data.object_id)===popupId&&$('popup').style.display!=='none'){const marker=markers.find(m=>m.userData.object.id===popupId);if(marker)await showPopup(marker.userData.object,marker.userData.pending);}};
+let dragging=false,moved=0;
+renderer.domElement.onpointerdown=event=>{
+ if(busy)return;dragging=true;moved=0;renderer.domElement.setPointerCapture(event.pointerId);
+ if($('drag-markers').checked){setScreenRay(event);const hit=ray.intersectObjects(markers)[0];if(hit){markerDrag={marker:hit.object,original:hit.object.position.clone(),point:null};$('object').value=String(hit.object.userData.object.id);$('popup').style.display='none';event.preventDefault();}}
+};
+renderer.domElement.onpointermove=event=>{
+ if(!dragging)return;moved+=Math.abs(event.movementX)+Math.abs(event.movementY);
+ if(markerDrag){setScreenRay(event);const hit=ray.intersectObject(collider,true)[0];markerDrag.point=hit?hit.point.clone():null;if(hit){markerDrag.marker.position.copy(hit.point);point(hit.point.clone());}return;}
+ camera.rotation.y-=event.movementX*.003;camera.rotation.x=THREE.MathUtils.clamp(camera.rotation.x-event.movementY*.003,-1.55,1.55);
+};
+renderer.domElement.onpointerup=async event=>{
+ dragging=false;
+ if(markerDrag){const drag=markerDrag;markerDrag=null;if(moved>3){if(!drag.point){drag.marker.position.copy(drag.original);point(null);note('未命中3D表面，位置未保存。');return;}point(drag.point);const saved=await save(false,'surface_pick',drag.marker.userData.object);if(!saved)drag.marker.position.copy(drag.original);return;}}
+ if(moved>6||!collider)return;setScreenRay(event);
+ if($('pick').checked){const hit=ray.intersectObject(collider,true)[0];if(hit)point(hit.point.clone());else note('没有命中表面。');return;}
+ const hit=ray.intersectObjects(markers)[0];if(hit){point(hit.object.position.clone());await showPopup(hit.object.userData.object,hit.object.userData.pending);}
+};
+renderer.domElement.onpointercancel=()=>{dragging=false;if(markerDrag)markerDrag.marker.position.copy(markerDrag.original);markerDrag=null;};
+addEventListener('beforeunload',event=>{if(busy||pendingSave||markerDrag){event.preventDefault();event.returnValue='';}});
 addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;keys.add(e.code);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>keys.clear());
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();
 let last=performance.now();renderer.setAnimationLoop(now=>{const dt=Math.min((now-last)/1000,.05);last=now;const speed=(keys.has('ShiftLeft')?3:1)*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion),right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);camera.position.addScaledVector(forward,(Number(keys.has('KeyW'))-Number(keys.has('KeyS')))*speed).addScaledVector(right,(Number(keys.has('KeyD'))-Number(keys.has('KeyA')))*speed);camera.position.y+=(Number(keys.has('KeyE'))-Number(keys.has('KeyQ')))*speed;for(const m of markers){const size=camera.position.distanceTo(m.position)*2*Math.tan(radians(camera.fov)/2)*36/innerHeight;m.scale.set(size,size,1);}renderer.render(scene,camera);});
-try{await reload();$('source').src=data.source_panorama;const s=data.scene;group.scale.setScalar(s.metric_scale_factor);group.quaternion.set(1,0,0,0);group.position.y=s.ground_plane_offset;const splat=new SplatMesh({url:data.render_variant?.splat||s.splat});group.add(splat);const gltf=await new GLTFLoader().loadAsync('collider.glb');collider=gltf.scene;collider.traverse(o=>{if(o.isMesh)o.material=new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide});});group.add(collider);group.updateMatrixWorld(true);await splat.initialized;await migrateCandidates();origin();for(const[id,v]of[['ox',data.alignment.origin.x],['oy',data.alignment.origin.y],['oz',data.alignment.origin.z],['yaw',data.alignment.yaw_degrees],['pitch',data.alignment.pitch_degrees],['roll',data.alignment.roll_degrees]])$(id).value=v;$('aligned').checked=data.alignment.confirmed;const suggested=markers.filter(m=>m.userData.pending).length;note(`已挂载 ${markers.length} 个可点击编号，其中 ${suggested} 个为自动迁移候选（橙色虚线，位置待核对）。原介绍与审核后台已联动。`);}catch(e){note('场景加载失败：'+e.message);}
-addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);renderer.dispose();for(const m of markers)releaseMarker(m);});
+try{await reload();$('source').src=data.source_panorama;const s=data.scene;group.scale.setScalar(s.metric_scale_factor);group.quaternion.set(1,0,0,0);group.position.y=s.ground_plane_offset;const splat=new SplatMesh({url:data.render_variant?.splat||s.splat});group.add(splat);const gltf=await new GLTFLoader().loadAsync('collider.glb');collider=gltf.scene;collider.traverse(o=>{if(o.isMesh)o.material=new THREE.MeshBasicMaterial({visible:false,side:THREE.DoubleSide});});group.add(collider);group.updateMatrixWorld(true);await splat.initialized;await migrateCandidates();origin();for(const[id,v]of[['ox',data.alignment.origin.x],['oy',data.alignment.origin.y],['oz',data.alignment.origin.z],['yaw',data.alignment.yaw_degrees],['pitch',data.alignment.pitch_degrees],['roll',data.alignment.roll_degrees]])$(id).value=v;$('aligned').checked=data.alignment.confirmed;const requested=Number(new URLSearchParams(location.search).get('object_id'));if(requested){const marker=markers.find(m=>m.userData.object.id===requested);if(marker){camera.lookAt(marker.position);point(marker.position.clone());await showPopup(marker.userData.object,marker.userData.pending);}}const suggested=markers.filter(m=>m.userData.pending).length;note(`已挂载 ${markers.length} 个可点击编号，其中 ${suggested} 个为自动迁移候选（橙色虚线，位置待核对）。原介绍与审核后台已联动。`);}catch(e){note('场景加载失败：'+e.message);}
+addEventListener('pagehide',event=>{if(event.persisted)return;contentChannel.close();renderer.setAnimationLoop(null);renderer.dispose();for(const m of markers)releaseMarker(m);});

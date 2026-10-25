@@ -220,12 +220,9 @@ class Scene3DAttachment:
             "intersections are unverified candidates.",
         }
         write_json(scene_folder / "attachment.json", payload)
-        review = self.output / "index.html"
-        review.write_text(
-            review.read_text().replace(
-                "<body>", '<body><p><a href="/scene3d/index.html">打开 3D 场景与热点校准</a></p>', 1
-            )
-        )
+        from pastport_pdf_vr.application.scene3d_review import connect_review
+
+        connect_review(self.output)
         atomic_write(
             self.output / "start_3d.py",
             "from pathlib import Path\nfrom "
