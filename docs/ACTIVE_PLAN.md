@@ -95,3 +95,17 @@ drag edits with binding/version/idempotency checks. VR edits do not overwrite th
 3D arrow after initialization, and 3D drags do not write VR. Temporary-data checks
 cover seed independence, restart persistence, operation replay and stale writes;
 strict typing and JS syntax pass. Browser dragging remains for user acceptance.
+
+Viewer delivery follow-up: found a new-HTML/old-preview mismatch: the active result
+returned 404 for the new arrow endpoint. Seeded each existing result from its saved
+VR navigation and recycled only the two owned result preview children; the user
+Studio and key session were retained. Both arrow endpoints now return 200. Chrome
+verified point 1 → point 2 and point 2 → point 1 through the visible navigation
+control, preserving the corresponding saved arrival angles. Proximity walking is
+not claimed as browser-verified by this check.
+
+User-requested UI cleanup: primary view now shows only scene/title/fullscreen and
+start-view/switch-view/edit actions; all technical calibration is under Advanced
+in the hidden edit drawer. Shared introductions and position saves are preserved.
+An offscreen direction hint explains where the navigation arrow is. No model or
+review content changes, and no generation.
