@@ -94,7 +94,7 @@ class MarbleGeneration:
             if read_json(path) != owner:
                 raise RuntimeError(
                     "This source panorama already owns a generation job; resume it, never resubmit"
-                )
+                ) from None
 
     def run(
         self,
