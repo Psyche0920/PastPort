@@ -102,6 +102,9 @@ def serve(root: Path, port: int = 0) -> None:
     module = modules["review_server"]
     handler = cast(type[BaseHTTPRequestHandler], module.ReviewHandler)
     with ThreadingHTTPServer(("127.0.0.1", port), handler) as server:
+        from pastport_pdf_vr.api.vr_navigation import install_navigation
+
+        install_navigation(handler, root, server.server_port)
         if (root / "scene3d/attachment.json").is_file():
             from pastport_pdf_vr.api.scene3d import install_routes
 

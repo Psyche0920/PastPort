@@ -231,3 +231,13 @@ consistency only, not individual geometry or identity correctness. No semantic o
 precise spatial acceptance is claimed. Two offline regressions cover candidate
 idempotency, human-position preservation, stale alignment and foreign-scene refusal.
 No new generation or model fee was incurred.
+
+## Panorama navigation editing
+
+In the Studio result preview, use **调整导航箭头**. Drag an arrow and release to save its source direction. Click an arrow in editing mode, choose **设置跳转后朝向**, rotate the target panorama and choose **保存当前朝向**. Each directed link is independent; adjust the reverse arrow separately. Saved edits retain source/target identity, source panorama binding, version checks and operation replay protection. Failed saves are reported and can be retried. This changes panorama navigation only; it does not stitch 3D geometry. Browser acceptance is left to the user.
+
+| Source | Purpose |
+| --- | --- |
+| `application/navigation.py` | Typed source-bound links and transactional navigation corrections |
+| `api/vr_navigation.py` | Local-origin, bounded review preview endpoints |
+| `reference_environment/vr_position_editor.js` | Number and navigation interaction controls |

@@ -42,6 +42,8 @@ window.PastPortPositionEditor = class PastPortPositionEditor {
         }
       }, {capture: true, passive: false});
     }
+    this.navigation = new window.PastPortNavigationEditor(host, this.root, this);
+    this.navigation.initialize();
     this.host.viewer.on('scenechange', () => this.applyScene());
     this.host.viewer.on('load', () => this.applyScene());
     window.addEventListener('beforeunload', e => {
@@ -197,4 +199,42 @@ window.PastPortPositionEditor = class PastPortPositionEditor {
       }
     }).finally(() => { this.pending -= 1; });
   }
+};
+
+/* Navigation edits preserve identity; positions and arrival directions save separately per arrow. */
+window.PastPortNavigationEditor = class PastPortNavigationEditor {
+  constructor(host, panel, positionEditor) {
+    this.host=host;this.panel=panel;this.positionEditor=positionEditor;this.links=[];
+    this.enabled=false;this.drag=null;this.selected=null;this.arrivalEdit=null;this.pending=null;this.saving=false;
+    this.controls=document.createElement('div');
+    this.controls.innerHTML='<button type="button" disabled aria-pressed="false">调整导航箭头</button><button type="button" hidden>设置跳转后朝向</button><button type="button" hidden>保存当前朝向</button><button type="button" hidden>取消朝向调整</button><button type="button" hidden>重试导航保存</button><span role="status" aria-live="polite"></span>';
+    panel.append(this.controls);
+    [this.toggle,this.preview,this.arrivalSave,this.cancelButton,this.retry]=this.controls.querySelectorAll('button');
+    this.status=this.controls.querySelector('[role="status"]');
+    this.toggle.onclick=()=>{if(this.saving||this.pending||this.arrivalEdit||this.drag)return;this.enabled=!this.enabled;if(this.enabled&&positionEditor.enabled)positionEditor.toggle.click();this.toggle.setAttribute('aria-pressed',String(this.enabled));this.toggle.textContent=this.enabled?'完成导航调整':'调整导航箭头';this.preview.hidden=!this.enabled||!this.selected;this.say(this.enabled?'拖动箭头；点选箭头可设置跳转后的朝向':'');};
+    positionEditor.toggle.addEventListener('click',()=>{if(positionEditor.enabled&&this.enabled)this.toggle.click();});
+    this.preview.onclick=()=>{if(!this.selected||this.pending||this.saving)return;this.arrivalEdit=this.selected;this.preview.hidden=true;this.arrivalSave.hidden=false;this.cancelButton.hidden=false;this.host.go(this.selected.target_id);this.say('转动画面到进入此点位时希望看到的方向，再保存');};
+    this.arrivalSave.onclick=()=>{if(!this.arrivalEdit||this.host.viewer.getScene()!==this.arrivalEdit.target_id){this.say('请留在目标点位再保存朝向');return;}const view=this.host.view();this.save({...this.arrivalEdit,arrival:{yaw:view.yaw,pitch:view.pitch}});};
+    this.cancelButton.onclick=()=>{if(this.saving||this.pending)return;const link=this.arrivalEdit;this.arrivalEdit=null;this.arrivalSave.hidden=true;this.cancelButton.hidden=true;if(link)this.host.go(link.scene_id);this.preview.hidden=!this.enabled;this.say('已取消朝向调整');};
+    this.retry.onclick=()=>{if(this.pending&&!this.saving)this.send();};
+    const c=host.container;
+    c.addEventListener('pointerdown',e=>this.start(e),true);
+    c.addEventListener('pointermove',e=>this.move(e),true);
+    c.addEventListener('pointerup',e=>this.finish(e),true);
+    c.addEventListener('pointercancel',e=>this.cancelDrag(e),true);
+    for(const type of ['mousedown','touchstart','click'])c.addEventListener(type,e=>{if(this.enabled&&this.arrow(e.target)){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
+    host.viewer.on('load',()=>this.apply());host.viewer.on('scenechange',()=>this.apply());
+    addEventListener('beforeunload',e=>{if(this.pending||this.drag?.moved){e.preventDefault();e.returnValue='';}});
+  }
+  say(text){this.status.textContent=text;}
+  arrow(target){const el=target.closest?.('.pnlm-hotspot-base');if(!el)return null;const scene=this.host.scenes.find(s=>s.id===this.host.viewer.getScene());const link=scene?.hotspots.find(h=>h.type==='scene'&&h.label===el.getAttribute('aria-label'));return link?{el,link}:null;}
+  async initialize(){try{const response=await fetch('/api/vr-navigation',{cache:'no-store'});if(!response.ok)throw Error('导航服务尚未载入，请重新打开此成品');this.links=await response.json();this.apply();this.toggle.disabled=false;}catch(e){this.say(e.message);}}
+  place(link){const scene=this.host.scenes.find(s=>s.id===link.scene_id),hot=scene?.hotspots.find(h=>h.id===link.hotspot_id);if(hot){hot.yaw=link.position.yaw;hot.pitch=link.position.pitch;if(link.arrival)hot.arrivalView=link.arrival;}if(this.host.viewer.getScene()===link.scene_id){const active=this.host.viewer.getConfig().hotSpots?.find(h=>h.id===link.hotspot_id);if(active){active.yaw=link.position.yaw;active.pitch=link.position.pitch;if(link.arrival){active.targetYaw=link.arrival.yaw;active.targetPitch=link.arrival.pitch;}}}this.positionEditor.paint();}
+  apply(){for(const link of this.links)this.place(link);}
+  start(e){const hit=this.arrow(e.target);if(!this.enabled||!hit||e.button!==0||this.arrivalEdit||this.pending||this.saving)return;e.preventDefault();e.stopImmediatePropagation();const link=this.links.find(l=>l.scene_id===this.host.viewer.getScene()&&l.hotspot_id===hit.link.id);if(!link)return;this.selected=link;this.preview.hidden=false;this.host.viewer.stopMovement();const b=hit.el.getBoundingClientRect();this.drag={el:hit.el,original:link,link, pointer:e.pointerId,x:e.clientX,y:e.clientY,dx:e.clientX-b.left-b.width/2,dy:e.clientY-b.top-b.height/2,moved:false};hit.el.setPointerCapture(e.pointerId);this.say('已选中导航箭头，可拖动或设置跳转后朝向');}
+  move(e){const d=this.drag;if(!d||d.pointer!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();if(!d.moved&&Math.hypot(e.clientX-d.x,e.clientY-d.y)<3)return;d.moved=true;const[pitch,yaw]=this.host.viewer.mouseEventToCoords(new MouseEvent('mousemove',{clientX:e.clientX-d.dx,clientY:e.clientY-d.dy}));d.link={...d.original,position:{yaw:Math.max(-180,Math.min(180,yaw)),pitch:Math.max(-85,Math.min(85,pitch))}};this.place(d.link);this.say('松开箭头自动保存位置');}
+  finish(e){const d=this.drag;if(!d||d.pointer!==e.pointerId)return;e.preventDefault();e.stopImmediatePropagation();this.drag=null;if(d.el.hasPointerCapture(e.pointerId))d.el.releasePointerCapture(e.pointerId);if(d.moved)this.save(d.link);}
+  cancelDrag(e){const d=this.drag;if(!d||d.pointer!==e.pointerId)return;this.drag=null;this.place(d.original);this.say('已取消箭头拖动');}
+  save(link){if(this.pending||this.saving)return;this.pending={...link,operation_id:crypto.randomUUID()};this.send();}
+  async send(){this.saving=true;this.retry.hidden=true;this.arrivalSave.disabled=true;this.say('正在保存导航…');try{const response=await fetch('/api/vr-navigation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.pending)});if(response.status===409){this.pending=null;throw Error('导航已在其他页面改变，请刷新后重新调整');}if(!response.ok)throw Error('后台未确认保存');const saved=await response.json();this.links=this.links.map(l=>l.scene_id===saved.scene_id&&l.hotspot_id===saved.hotspot_id?saved:l);this.selected=saved;this.place(saved);this.pending=null;const arrival=this.arrivalEdit;this.arrivalEdit=null;this.arrivalSave.hidden=true;this.cancelButton.hidden=true;this.preview.hidden=!this.enabled;if(arrival)this.host.go(saved.scene_id);this.say('导航已保存，刷新后保留；反向箭头可单独调整');}catch(e){this.retry.hidden=!this.pending;this.say('尚未保存：'+e.message);}finally{this.saving=false;this.arrivalSave.disabled=false;}}
 };
