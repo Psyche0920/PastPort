@@ -45,8 +45,14 @@ textured mesh and engine import acceptance are not claimed. No real key or credi
 
 The user has now submitted one real Marble trial from the frontend. Its frozen
 source and preservation-policy binding were confirmed. Only its existing saved
-operation has been queried; no second generation was dispatched. At the latest
-check it remains pending, with no settled cost or final output yet. The service
+operation has been queried; no second generation was dispatched. The trial has now completed and its assets/result were saved. The settled cost is
+1,500 credits (0 for panorama generation, 1,500 for world generation). The service
 was not restarted while this operation/key session is active. Source-level ownership
 protection is also enforced in the child workflow, so stale frontend code cannot
 bypass the one-source/one-generation guard. Three committed offline regressions pass.
+
+Viewer follow-up: fixed the missing pinned Three.js Pass dependency and its import-map
+and static-route registration. The existing generated result was repaired in place
+without touching scene bytes or review data. Browser rendering and camera movement
+were observed after restarting only the owned preview child; no new generation.
+Hotspot alignment, object fidelity and user/game acceptance remain pending.

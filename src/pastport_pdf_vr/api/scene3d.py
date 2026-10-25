@@ -208,6 +208,7 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
                 "three.module.js",
                 "three.core.js",
                 "GLTFLoader.js",
+                "Pass.js",
                 "BufferGeometryUtils.js",
             }
             if name not in allowed:

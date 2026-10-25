@@ -151,3 +151,12 @@ Unconfirmed anchors stay withheld; full textured visual mesh is not claimed.
 Ten isolated checks with network disabled and simulated provider responses passed,
 plus a real local-asset ZIP export check. No real key, provider call or paid export
 was used. Actual provider billing, generated fidelity and engine import remain unverified.
+
+## Existing 3D viewer load repair
+
+Added the missing Three.js 0.180.0 Pass module required by Spark, its import-map
+entry and the local static allowlist. Updated only viewer resources in the existing
+output. Browser inspection now shows the saved scene and camera movement. No model
+regeneration, asset changes, review DB reset or additional generation cost occurred.
+The user's original trial settled at 1,500 credits. Spatial calibration and semantic
+acceptance remain pending.
