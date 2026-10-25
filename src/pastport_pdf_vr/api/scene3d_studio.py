@@ -183,6 +183,7 @@ class Scene3DPortal:
                     Scene3DRecord(
                         run_id=root.name,
                         job_id=str(source_id),
+                        source_title=titles.get(str(source_id), "已有匹配场景"),
                         source_scene_id=scene_id,
                         viewpoint_number=number,
                         viewpoint_count=len(source_views),

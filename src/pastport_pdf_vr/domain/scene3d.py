@@ -69,6 +69,7 @@ class Scene3DRecord(DomainModel):
     package_url: str = ""
     resume: str = ""
     job_id: str = ""
+    source_title: str = ""
     source_scene_id: str = ""
     viewpoint_number: int = 0
     viewpoint_count: int = 0
