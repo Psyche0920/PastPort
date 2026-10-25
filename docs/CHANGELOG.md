@@ -207,3 +207,15 @@ isolated local acceptance preview is running. Ten affected Python files passed
 strict typing, Ruff and diff checks. No stylization runtime/browser test suite or
 formal visual acceptance was performed. Geometry correction and far-view structural
 repair remain unresolved; this is a candidate, not an accepted replacement.
+
+## Stylization upload and optional budgets
+
+Added an English native VR/3D ZIP upload entry, format preflight, whole-tour estimates,
+optional manual limits with disclosed finite suggestions, explicit consent and an
+owned metered worker. The original grant and ledger are retained for resume; no
+automatic extra image generation or budget increase. The isolated local entry
+started successfully. Five affected Python modules passed strict mypy and Ruff;
+JavaScript syntax and diff checks passed. No new inference or automated runtime/
+browser test was performed. Fresh full-generation acceptance belongs to the user.
+The workspace repository checker is absent from this standalone checkout and was
+not reported as passing. Structural repair remains open.

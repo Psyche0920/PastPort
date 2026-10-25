@@ -33,3 +33,14 @@ limitations and retain the current Muradiye demo as the minimum acceptance basel
 User manually accepts output; do not add model calls, repeated browser tests or
 service restarts without task authorization. Complete-tour extraction and packaging
 are not image generation. Keep source rights, evidence, identities and manual edits.
+
+## Current upload entry and budget behavior
+
+The local `/stylization` page accepts the supported complete native VR/3D ZIP
+contracts. Read `docs/STYLIZATION3D.md` before use. Uploading only prepares the input
+and estimate. Both budget fields are optional: blank uses the visibly disclosed
+finite suggestions, not unlimited execution. An explicit Generate action authorizes
+the run. Fresh maps use the existing metered animation workflow, followed by the 3D
+appearance stage where applicable. Resume retains the same grant and usage ledger.
+No new model run validated this entry; the user tests manually. Earlier notes saying
+no upload page exists describe the preceding revision.

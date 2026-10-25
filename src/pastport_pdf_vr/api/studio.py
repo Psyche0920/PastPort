@@ -60,7 +60,8 @@ class UploadBoundary:
             message = await receive()
             if message["type"] == "http.request":
                 total += len(message.get("body", b""))
-                if total > 720 * MIB:
+                limit = (2050 if scope.get("path") == "/api/stylization/uploads" else 720) * MIB
+                if total > limit:
                     raise UploadLimitExceeded
             return message
 
@@ -130,8 +131,10 @@ class StudioApplication:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 try:
                     self.jobs.recover_interrupted()
+                    self.stylization.recover()
                     yield
                 finally:
+                    await self.stylization.close()
                     await self.scene3d.close()
                     await self.previews.close()
                     await self.jobs.close()
@@ -261,6 +264,9 @@ class StudioApplication:
         from pastport_pdf_vr.api.scene3d_studio import Scene3DPortal
 
         self.scene3d = Scene3DPortal(app, self.jobs, self.previews)
+        from pastport_pdf_vr.api.stylization_studio import StylizationPortal
+
+        self.stylization = StylizationPortal(app, self.jobs.root, self.previews)
         app.mount("/projects", ProjectReviewRouter(self.jobs, self.previews))
 
     @staticmethod

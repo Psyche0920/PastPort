@@ -11,8 +11,8 @@ parent LangGraph; the existing `AnimationNode` API remains compatible.
 
 ## Appearance implementation and limits
 
-This version reuses source-bound, full-resolution painted panoramas produced by the
-existing animation path. The actual SPZ DC appearance coefficients are changed:
+This version uses source-bound, full-resolution painted panoramas. Callers can reuse
+existing artwork or authorize the existing bounded animation stage to paint new maps. The actual SPZ DC appearance coefficients are changed:
 this is a three-dimensional asset output, not a screenshot or a postprocessing
 filter. Original Gaussian centers, scales, orientations, opacities and point count
 are retained. The full-resolution registered variant is preferred.
@@ -59,8 +59,9 @@ snapshot, not a live link back to the author's source database.
 
 ## Run and handoff
 
-The typed `Style3DTourRun` takes `source_archive`, a fresh `workspace`, and an exact
-tuple of `ExistingPanorama` bindings. A calling graph can construct these from its
+The typed `Style3DTourRun` takes `source_archive`, a fresh `workspace`, and either an exact
+tuple of `ExistingPanorama` bindings or an explicit subscription grant plus the injected
+animation workflow. A calling graph can construct these from its
 existing panorama animation delivery; the user does not have to author IDs/JSON.
 This 3D baking stage has no SDK/API transport and cannot dispatch paid generation.
 New painted maps remain the responsibility of the existing bounded 2D animation
@@ -109,3 +110,45 @@ the minimum quality baseline until a better candidate is explicitly accepted.
 
 Format references: [SPZ source](https://github.com/nianticlabs/spz),
 [SPZ color packing](https://github.com/nianticlabs/spz/blob/main/src/cc/splat-utils.h).
+
+## Upload and automatic generation
+
+Run `uv run --locked pastport-stylize-studio --workspace .runtime/stylization-studio --port 8795`
+and open `http://127.0.0.1:8795/stylization`. The integrated Studio also exposes
+`/stylization`; an already running Studio must be restarted to load new code.
+The separate entry does not restart or replace the original workbench.
+
+Upload one complete native ZIP, at most 2 GiB. Supported formats are labelled
+schema-4 VR exports with their review database and native 3D tour archives retaining
+clean source panoramas and source-tour metadata. Inputs support 1–16 viewpoints,
+2:1 panoramas up to 4096x2048, and the SPZ v2/SH0 subset above. Standalone meshes,
+arbitrary vendor files and higher-resolution inputs require adapters; they are
+rejected before generation rather than silently downsampled. Uploaded code is not run.
+
+Every upload displays a whole-tour estimate before generation. Each viewpoint needs
+six image turns. Historical one-view usage was 336,406 recorded tokens; this is an
+estimate basis, not a guaranteed price or quota conversion. Displayed estimates use
+56,068–85,000 tokens per turn. Image-turn and recorded-token fields are optional;
+blank values use the visibly disclosed suggestions of six turns per viewpoint and
+100,000 recorded tokens per turn. Users can enter their own limits. Starting requires
+explicit consent. A budget too small for the full estimated tour does not start.
+The token threshold gates subsequent turns, so an in-flight turn can exceed it;
+the image-turn limit is bounded. No automatic budget increases or extra variants.
+
+`application/automatic_stylization.py` routes supported uploads through the existing
+metered subscription adapter, then assembles VR or bakes and packages 3D. Identical
+upload bytes reuse the saved job. Resume retains its original grant, usage ledger
+and completed artwork; uncertain calls are not automatically retried. Fresh input
+model generation through this entry has not been live-validated. User performs
+runtime and visual acceptance. This is not a claim of universal 3D conversion or
+structural repair.
+
+| Additional source | Purpose |
+|---|---|
+| `api/stylization_studio.py` | Local uploads, estimates, optional limits, explicit consent and owned jobs |
+| `application/automatic_stylization.py` | Native input preflight and metered VR/3D orchestration |
+| `web/stylization.html`, `web/stylization.js` | English upload and manual acceptance entry |
+
+The VR upload adapter requires a portable review snapshot. A package containing a
+live `shared-content.json` authority pointer is retained and rejected before any
+generation; it is not deleted or rebound by the upload adapter.

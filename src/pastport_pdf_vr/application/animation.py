@@ -432,6 +432,14 @@ class AnimationWorkflow:
             elif "front" in images:
                 references.append(images["front"])
             text = prompt.read_text().replace("{direction}", face)
+            text += (
+                f"\nAuthorized run budget: at most {executor.grant.max_calls} image turns; "
+                f"{executor.remaining_calls()} remaining before this turn. "
+                f"Recorded-token threshold {executor.grant.max_recorded_tokens}; "
+                f"remaining recorded-token admission {executor.remaining_recorded_tokens()}. "
+                "Produce exactly one image for this direction. Do not add variants, "
+                "follow-up image generations, provider changes or extra repair runs."
+            )
             minimum = math.ceil(width / (4 * 0.9))
             config = AnimationImageCommand(
                 output_directory=str(directory / f"generated-{face}"),

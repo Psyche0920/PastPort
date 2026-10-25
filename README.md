@@ -163,3 +163,11 @@ source-bound whole-tour 3D appearance path. See [STYLIZATION3D.md](docs/STYLIZAT
 for the typed graph/CLI entry, one-package input/output, isolated preview, shared
 review snapshot and unresolved geometry/quality limits. This is an appearance
 candidate, not completed structural reconstruction or accepted visual quality.
+
+## Environment stylization upload
+
+Run `uv run --locked pastport-stylize-studio --workspace .runtime/stylization-studio --port 8795`
+and open `http://127.0.0.1:8795/stylization`. Upload a complete supported native VR or
+3D tour ZIP; review the estimate, optionally enter budget limits, and authorize the
+run. Blank budgets use the displayed suggestions. No generation starts on upload.
+See [formats, limits and validation status](docs/STYLIZATION3D.md#upload-and-automatic-generation).

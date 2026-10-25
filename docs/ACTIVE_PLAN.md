@@ -190,6 +190,15 @@ user tests. No provider call, regenerated asset or service restart. Stylization
 can integrate this fixed contract after the repair commit; conflicts must not be
 resolved silently.
 
+Legacy two-view preview repair (2026-10-25): the original ports 50194 and 50215
+were still serving isolated copies. Both existing results are now bound to the
+same source content authority; linear human edits and audit history were merged
+with the existing conflict-checking service, and both previews were restarted
+on their original ports. Object 86 version 2 matches exactly through all four
+VR/3D content endpoints, including the user edit; the point-2 review page also
+shows that human version. Five shared-content unittest checks passed. No
+geometry, spatial state, generated assets or source evidence was changed.
+
 ### Whole-tour 3D appearance candidate delivery
 
 Shared content fix 0b52cd5 is integrated. The actual two-view Muradiye source tour
@@ -204,3 +213,16 @@ tour CLI route exist; no Studio stylization-upload page is claimed. Structural
 repair, far-view geometry correction and visual acceptance remain unfinished.
 Next: user manual feedback on this candidate, then targeted repairs; do not call
 the full user objective complete or replace the approved minimum baseline.
+
+### Automatic upload and optional budgets
+
+Owner: style-transfer chat. Dependency: current native VR/3D contracts, pinned style,
+local Codex subscription adapter and shared semantic authority. Deliverable: upload,
+format preflight, full-tour estimate, optional manual budgets, explicit run consent,
+metered artwork generation and isolated corresponding VR/3D ZIP. Implemented in the
+stylization portal and automatic orchestration. Blank budgets use displayed finite
+suggestions; resume retains the original grant/ledger. No new model call performed.
+Acceptance: user manually starts a supported package and reviews the output. Fresh
+upload-to-generation runtime, universal format adapters and structural repair remain
+unverified or unfinished; no claim of complete target acceptance. Existing two-view
+appearance candidate and source assets are retained.
