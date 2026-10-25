@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 pastport-pdf-vr = "pastport_pdf_vr.cli:main"
+pastport-animate = "pastport_pdf_vr.application.animation_cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -36,7 +37,7 @@ codex = ["openai-codex==0.163.0"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-pastport_pdf_vr = ["prompts/*.txt", "web/*", "reference_environment/*"]
+pastport_pdf_vr = ["prompts/*.txt", "web/*", "reference_environment/*", "animation_assets/*"]
 
 [tool.mypy]
 python_version = "3.12"

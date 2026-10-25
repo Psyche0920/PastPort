@@ -84,6 +84,8 @@ class CodexSDKTransport:
         )
 
     def execute(self, request: ExecutionInput, timeout_seconds: int) -> ExecutionOutput:
+        if request.kind != "environment_generation":
+            raise ExecutionDenied("Recognition transport cannot execute image-generation requests")
         return asyncio.run(self._execute(request, timeout_seconds))
 
     async def _execute(self, request: ExecutionInput, timeout_seconds: int) -> ExecutionOutput:

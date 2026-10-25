@@ -127,3 +127,18 @@ The current cleanup was not tested or model-run at the user's request. The user
 performs manual runtime and output acceptance. Earlier verification describes the
 pre-cleanup version only; see the changelog. Main integration and cloud deployment
 are outside this standalone delivery.
+
+## Animated museum node
+
+This branch adds labelled museum → animated VR automation with explicit existing-image
+reuse (zero new inference) or bounded Codex subscription generation. Input/output,
+LangGraph chaining and recovery are described in [VR_ANIMATION.md](docs/VR_ANIMATION.md).
+The matching Studio entrypoint above is unchanged; animation currently has a Python/CLI
+entrypoint, not a new Studio upload page. Visual and interaction acceptance is manual.
+
+| Source | Purpose |
+|---|---|
+| `domain/animation.py`, `application/animation.py` | Hash-bound images, isolated full-tour assembly and packaging |
+| `adapters/codex_image.py`, `animation_assets/` | Native subscription image events and pinned style/policy |
+| `application/animation_cli.py`, `workflow/animation.py` | CLI and typed LangGraph node |
+| `.agents/skills/pastport-style-transfer/` | Reusable execution skill and scope |

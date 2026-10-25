@@ -1,3 +1,18 @@
+# Animation workflow delivery — 2026-10-25
+
+Added native Codex subscription image output, explicit existing-image reuse, full-tour
+assembly/ZIP delivery, pinned animation reference/policy and a typed LangGraph node.
+The actual two-viewpoint labelled source ran through the graph with existing animation
+files and no SDK transport, producing a separate environment and archive with zero new
+model calls. A preceding bounded SDK probe generated six directional textures for one
+viewpoint (one initial turn plus five follow-ups); it did not regenerate viewpoint two.
+
+Original identity/evidence data and review history are retained; copied human content
+and coordinates supply the new viewer snapshot. New image hashes/revisions preserve
+separate pending position proposals. Execution is not visual, seam, device or player
+acceptance. The user requested manual acceptance; no automated test suite or browser
+acceptance was run. Studio still serves the upstream matched-PDF workflow.
+
 # Changelog
 
 ## Single-workflow cleanup — 2026-10-25

@@ -54,6 +54,14 @@ class SubscriptionExecutor:
             if db is not None:
                 db.close()
 
+    def reserved_calls(self) -> int:
+        with self._connection() as db:
+            row = db.execute(
+                "SELECT COUNT(*) FROM executions WHERE project=? AND grant_ref=?",
+                (self.grant.project_id, self.grant.grant_ref),
+            ).fetchone()
+            return int(row[0])
+
     def remaining_calls(self) -> int:
         with self._connection() as db:
             rows = db.execute(

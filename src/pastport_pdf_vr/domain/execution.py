@@ -21,7 +21,7 @@ class ExecutionInput(DomainModel):
     project_id: ProjectId
     grant_ref: ResourceId
     model_id: str
-    kind: Literal["environment_generation"]
+    kind: Literal["environment_generation", "animation_generation"]
     prompt_version: str
     policy_version: str
     instructions: Annotated[str, Field(min_length=1, max_length=40_000)]

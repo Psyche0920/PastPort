@@ -1,6 +1,6 @@
 # Matched PDF + new VR delivery
 
-Owner: wehan. Branch: `codex/pdf-to-vr-standalone`.
+Owner: wehan. Branch: `codex/vr-animation-workflow` (based on `codex/pdf-to-vr-standalone`).
 
 | Work | Dependencies | Deliverable / acceptance | Status |
 |---|---|---|---|
@@ -12,3 +12,17 @@ are not deleted. Jobs from removed workflows are hidden without rewriting their 
 Different inputs must be localized again; old coordinates are not business defaults.
 The user reports targeted manual findings for subsequent fixes. No other workflow,
 main integration, 360 video, arbitrary vendor adapter or cloud deployment is included.
+
+## Animation workflow
+
+Owner: wehan. Dependencies: labelled reference museum, existing generated panoramas
+or an explicitly authorized finite Codex subscription grant, pinned style reference.
+Deliverable: isolated animated museum/ZIP with retained evidence, edits, object and
+viewpoint bindings; callable LangGraph node and self-contained Skill.
+
+Status: implementation and real two-viewpoint existing-image graph execution complete;
+zero new inference in that graph run. A prior bounded one-viewpoint SDK image probe
+also completed. User performs all output acceptance manually. No new Studio animation
+upload page, Story Agent integration, public deployment or device acceptance claimed.
+Next: user manual feedback; later parent-graph wiring uses `AnimationNode` and
+`AnimationDelivery` without changing the museum identities or source evidence.
