@@ -127,3 +127,19 @@ Source-ordered delivery follow-up — owner: wehan; dependencies: completed sour
 
 Site grouping refinement: group the full-tour card and source-ordered viewpoint records under their corresponding VR result title and job identity; different sites/results never share a module. Existing per-view operations and package links remain available. No generation or service restart.
 Display refinement: hide legacy imported-match count suffixes in VR/3D headings and selectors without changing stored names or bindings. Ready 3D cards omit redundant success descriptions; error/recovery messages remain visible.
+
+## User-approved minimum acceptance baseline
+
+Decision: the current Muradiye two-view independent 3D demo is the minimum
+comparison baseline until the user explicitly adopts a more satisfactory demo.
+Reference: delivered code at 3416840 and existing result runs
+26e3d8a44e30430f87af2a3eb2a9652e / e696a8f8b790058b88198bf6ac7acd92.
+
+Acceptance priorities: correct object/evidence matching; generated 3D must remain
+faithful to the source 360 panoramas in object identity, layout and appearance.
+Future deliveries must meet or improve this baseline, not regress. Existing blur,
+invented details and known errors are defects to improve, not approved accuracy.
+No numerical accuracy rate or universal input success is established by this decision.
+A future user-approved demo may replace the baseline. Automatic generation/display
+does not constitute human acceptance. Use new material and targeted reported bugs
+for further validation rather than repeatedly rerunning this same sample.
