@@ -9,7 +9,6 @@ import hashlib
 import json
 import re
 import select
-import shutil
 import subprocess
 import sys
 import zipfile
@@ -49,7 +48,7 @@ class StyleJob(DomainModel):
     upload_sha256: str
     source: StyleInput
     status: Literal["prepared", "running", "completed", "recovery_required"] = "prepared"
-    message: str = "Ready; generation has not started."
+    message: str = "Fresh task ready. Starting creates new output; generation has not started."
     expected_tokens_low: int
     expected_tokens_high: int
     suggested_token_threshold: int
@@ -128,21 +127,6 @@ class StylizationPortal:
                     standard = approved_animation_style().standard
                     if standard is None:
                         raise HTTPException(503, "Approved style is unavailable")
-                    for path in self.root.glob("*/job.json"):
-                        old = StyleJob.model_validate_json(path.read_bytes())
-                        if (
-                            old.upload_sha256 == checksum.hexdigest()
-                            and old.execution == "agent"
-                            and old.style_profile == standard.profile_id
-                        ):
-                            name = (item.filename or old.title)[:100]
-                            names = tuple(dict.fromkeys((*old.upload_names, old.title, name)))[-10:]
-                            reused = old.model_copy(
-                                update={"title": name, "upload_names": names, "upload_reused": True}
-                            )
-                            self.save(reused)
-                            shutil.rmtree(folder)
-                            return reused
                     try:
                         source = await asyncio.to_thread(
                             inspect_input, folder / "upload.zip", folder

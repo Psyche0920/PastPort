@@ -298,3 +298,15 @@ retained aliases and an explicit reuse message. Three existing versions were
 identified as one environment and retained. No generation or semantic DB changes.
 Three affected Python modules passed strict typing; Ruff, JS syntax and diff checks
 passed. User checks the UI behavior manually; no automated runtime/model test.
+
+### Fresh generation for every upload
+
+User supersedes upload deduplication: each successful upload creates a new run,
+even if bytes, filename and approved style are identical. Environment grouping
+remains presentation-only. Old outputs are history, not new-task results. Only
+explicit resume of the same interrupted run retains its own progress, original
+grant and uncertainty state. New tasks still show an estimate and require the
+existing Start action; this code update does not authorize running a new job.
+The current agent-test task has no run request, output or generation ledger yet,
+so its first Start will create new artwork. The UI now labels earlier previews
+explicitly when the latest task has not generated output.

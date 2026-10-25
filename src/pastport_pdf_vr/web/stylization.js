@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 let selected = null;
 let uploading = false;
 let previewId = null;
+let previewIsEarlier = false;
 let refreshInProgress = false;
 const expandedEnvironments = new Set();
 const statusLabels = {
@@ -56,7 +57,8 @@ function openPreview(job, scroll = true) {
   $('preview-frame').hidden = false;
   $('preview-empty').hidden = true;
   $('preview-actions').hidden = false;
-  $('preview-title').textContent = `${job.title} · ${job.source.viewpoints} viewpoints`;
+  previewIsEarlier = Boolean(job.isEarlierVersion);
+  $('preview-title').textContent = `${previewIsEarlier ? 'Earlier version · ' : ''}${job.title} · ${job.source.viewpoints} viewpoints`;
   $('open-preview').href = source;
   $('preview-download').href = `/api/stylization/${job.run_id}/download`;
   history.replaceState(null, '', `#preview=${job.run_id}`);
@@ -67,7 +69,9 @@ function openPreview(job, scroll = true) {
 }
 
 $('preview-frame').addEventListener('load', () => {
-  if (previewId) $('preview-state').textContent = 'Preview window open · visual review pending';
+  if (previewId) $('preview-state').textContent = previewIsEarlier
+    ? 'Showing an earlier completed version. The latest task has no new result yet.'
+    : 'Preview window open · visual review pending';
 });
 $('fullscreen').onclick = async () => {
   try {
@@ -115,9 +119,7 @@ $('upload').onsubmit = async event => {
       method: 'POST', headers: {'X-PastPort-Edit': '1'}, body: new FormData(event.target),
     });
     estimate(job);
-    $('status').textContent = job.upload_reused
-      ? `Upload recognized: ${job.title}. This matches an existing task; its state and usage are retained. ${job.message}`
-      : job.message;
+    $('status').textContent = `New generation task created: ${job.title}. Previous outputs will not be reused. Review the estimate and start when ready.`;
     await refresh();
   } catch (error) {
     $('status').textContent = error.message;
@@ -184,11 +186,12 @@ async function refresh() {
       count.className = 'badge';
       count.textContent = `${versions[0].source.viewpoints} viewpoints · ${versions.length} versions`;
       heading.append(title, count);
+      for (const row of versions) row.isEarlierVersion = row.run_id !== versions[0].run_id;
       const playable = versions.find(row => row.status === 'completed');
       if (playable) {
         const preview = document.createElement('button');
         preview.type = 'button'; preview.className = 'secondary';
-        preview.textContent = 'Preview latest result';
+        preview.textContent = playable.isEarlierVersion ? 'Preview previous result' : 'Preview latest result';
         preview.onclick = () => openPreview(playable);
         heading.append(preview);
       }
@@ -227,7 +230,7 @@ async function refresh() {
       meta.textContent = `${row.execution === 'agent' ? 'Agent · approved animation style' : 'Earlier result'} · ${row.source.kind === 'scene3d' ? '3D environment' : 'VR panorama'} · ${row.source.viewpoints} viewpoints`;
       const status = document.createElement('p');
       status.textContent = row.message;
-      if (row.upload_reused) status.textContent += ' Latest upload matched this existing task.';
+
       if (row.upload_names?.length > 1) {
         meta.textContent += ` · Uploaded names: ${row.upload_names.join(' / ')}`;
       }

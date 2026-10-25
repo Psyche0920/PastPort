@@ -257,3 +257,11 @@ pending task. Identical renamed uploads update the visible name and explicitly
 report reuse; they do not create another charged generation or reset a grant.
 The existing three records were retained under one source environment. Scoped
 strict typing, Ruff, JS syntax and diff checks passed. No model was invoked.
+
+## Fresh uploads supersede deduplication
+
+Removed byte-identical upload reuse at the user's request. Every successful upload
+now receives a new task/workspace and does not use earlier output. Environment
+version grouping remains. Explicit same-run resume still preserves grants and
+unknown usage. Earlier previews are labelled as earlier results when a new task
+is pending. No generation was started by this change.

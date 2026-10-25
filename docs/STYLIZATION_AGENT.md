@@ -68,7 +68,9 @@ and cannot cap the in-flight turn's usage. No generation starts on upload.
 Resume retains the original grant, reference, policy and frozen stage requests.
 Completed SDK receipts are reused. Unknown usage remains recovery-required and
 is never cleared by changing workspaces or automatically retrying. Old jobs retain
-their original pipeline mode; new-profile cache identity is separate.
+their original pipeline mode. Each upload creates a fresh task and new generation
+workspace, even for identical files. Environment grouping is only for display;
+only explicit resume of the same run reuses its own completed receipts.
 
 ## API and LangGraph
 
