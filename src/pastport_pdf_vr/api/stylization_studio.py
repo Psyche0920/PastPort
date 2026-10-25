@@ -59,6 +59,8 @@ class StyleJob(DomainModel):
     normal_model_calls: int = 0
     maximum_model_calls: int = 0
     style_profile: str = "legacy"
+    upload_names: tuple[str, ...] = Field(default=(), max_length=10)
+    upload_reused: bool = False
 
 
 class StartStyle(DomainModel):
@@ -133,8 +135,14 @@ class StylizationPortal:
                             and old.execution == "agent"
                             and old.style_profile == standard.profile_id
                         ):
+                            name = (item.filename or old.title)[:100]
+                            names = tuple(dict.fromkeys((*old.upload_names, old.title, name)))[-10:]
+                            reused = old.model_copy(
+                                update={"title": name, "upload_names": names, "upload_reused": True}
+                            )
+                            self.save(reused)
                             shutil.rmtree(folder)
-                            return old
+                            return reused
                     try:
                         source = await asyncio.to_thread(
                             inspect_input, folder / "upload.zip", folder
@@ -153,6 +161,7 @@ class StylizationPortal:
                     job = StyleJob(
                         run_id=run_id,
                         title=(item.filename or "Tour")[:100],
+                        upload_names=((item.filename or "Tour")[:100],),
                         upload_sha256=checksum.hexdigest(),
                         source=source,
                         expected_tokens_low=source.required_calls * 2 * 56068

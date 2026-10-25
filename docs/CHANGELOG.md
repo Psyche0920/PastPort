@@ -249,3 +249,11 @@ Thirteen affected Python modules passed strict mypy and Ruff, both affected
 JavaScript files passed syntax checks and git diff checks passed. No new model
 call, live Agent trial or automated runtime/browser test was performed for this
 implementation. tools/check_repository.py is absent from this standalone checkout.
+
+## Environment record grouping and upload feedback
+
+Grouped versions by import/viewpoint identity while retaining every result and
+pending task. Identical renamed uploads update the visible name and explicitly
+report reuse; they do not create another charged generation or reset a grant.
+The existing three records were retained under one source environment. Scoped
+strict typing, Ruff, JS syntax and diff checks passed. No model was invoked.

@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
+import zipfile
 from pathlib import Path
 from typing import Literal
 
 from pastport_pdf_vr.adapters.codex_image import CodexImageTransport
 from pastport_pdf_vr.application.animation import SLOT, AnimationRun, AnimationWorkflow, digest
 from pastport_pdf_vr.application.animation_style import approved_animation_style
-from pastport_pdf_vr.application.reference_environment import record, sequence
+from pastport_pdf_vr.application.reference_environment import record, sequence, string
 from pastport_pdf_vr.application.stylization3d_tour import (
     Style3DTourRun,
     Style3DTourWorkflow,
@@ -28,6 +30,7 @@ class StyleInput(DomainModel):
     viewpoints: int
     required_calls: int
     source_sha256: str
+    environment_key: str | None = None
 
 
 class AutomaticStyleRun(DomainModel):
@@ -59,6 +62,7 @@ def inspect_input(archive: Path, workspace: Path) -> StyleInput:
             shutil.make_archive(str(normalized.with_suffix("")), "zip", valid_tours[0].parent)
             archive = normalized
         return StyleInput(
+            environment_key=environment_identity("scene3d", archive),
             kind="scene3d",
             source=str(archive),
             viewpoints=count,
@@ -106,11 +110,43 @@ def inspect_input(archive: Path, workspace: Path) -> StyleInput:
         raise ValueError("This one-grant workflow supports 1 to 16 viewpoints")
     return StyleInput(
         kind="panorama",
+        environment_key=environment_identity("panorama", source),
         source=str(source),
         viewpoints=count,
         required_calls=count * 6,
         source_sha256=digest(archive),
     )
+
+
+def environment_identity(kind: Literal["panorama", "scene3d"], source: Path) -> str:
+    """Group versions by immutable import identity and viewpoint IDs, never filenames."""
+    from pastport_pdf_vr.application.scene3d_tour import TourManifest
+
+    if kind == "scene3d":
+        with zipfile.ZipFile(source) as outer:
+            entry = outer.getinfo("tour.json")
+            if entry.file_size > 2 * 1024**2:
+                raise ValueError("Oversized tour identity")
+            tour = TourManifest.model_validate_json(outer.read(entry))
+            if not tour.views:
+                raise ValueError("Empty tour identity")
+            ids = sorted(v.source_scene_id for v in tour.views)
+            with outer.open(tour.views[0].package) as nested, zipfile.ZipFile(nested) as view:
+                original = view.getinfo("import-manifest.json")
+                if original.file_size > 2 * 1024**2:
+                    raise ValueError("Oversized import identity")
+                import_hash = hashlib.sha256(view.read(original)).hexdigest()
+    else:
+        html = source / "vr_trial/index.html"
+        if html.stat().st_size > 200 * 1024**2:
+            raise ValueError("Tour identity exceeds its bound")
+        match = re.search(SLOT, html.read_text(), re.S)
+        if match is None:
+            raise ValueError("Tour identity payload missing")
+        tour_data = record(json.loads(match[2]))
+        ids = sorted(string(record(scene)["id"]) for scene in sequence(tour_data["scenes"]))
+        import_hash = digest(source / "import-manifest.json")
+    return hashlib.sha256(json.dumps([kind, import_hash, ids]).encode()).hexdigest()
 
 
 def animation_workflow(

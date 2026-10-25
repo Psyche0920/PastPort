@@ -2,3 +2,5 @@
 #upload{border:0;border-radius:0;box-shadow:none;overflow:visible}
 
 .upload-submit{margin-top:16px}
+
+.environment-group{border-bottom:1px solid var(--pp-line)}.environment-group:last-child{border:0}.environment-heading{padding:18px 24px;background:#f2f5ee;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.environment-heading h3{font-size:14px;font-weight:600;margin:0;flex:1;overflow-wrap:anywhere}.version-history{margin:0;padding:0;border-top:1px solid #e8ece5}.version-history>summary{padding:16px 24px}.version-history .job{background:#fafbf8}.environment-group>.job{border-bottom:0}

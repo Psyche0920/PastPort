@@ -3,6 +3,7 @@ let selected = null;
 let uploading = false;
 let previewId = null;
 let refreshInProgress = false;
+const expandedEnvironments = new Set();
 const statusLabels = {
   prepared: 'Ready to start', running: 'Generating',
   completed: 'Ready to review', recovery_required: 'Needs attention',
@@ -114,7 +115,9 @@ $('upload').onsubmit = async event => {
       method: 'POST', headers: {'X-PastPort-Edit': '1'}, body: new FormData(event.target),
     });
     estimate(job);
-    $('status').textContent = job.message;
+    $('status').textContent = job.upload_reused
+      ? `Upload recognized: ${job.title}. This matches an existing task; its state and usage are retained. ${job.message}`
+      : job.message;
     await refresh();
   } catch (error) {
     $('status').textContent = error.message;
@@ -155,13 +158,57 @@ async function refresh() {
   refreshInProgress = true;
   try {
     const rows = await request('/api/stylization/jobs');
-    $('record-count').textContent = `${rows.length} ${rows.length === 1 ? 'record' : 'records'}`;
+    const environments = new Map();
+    for (const row of rows) {
+      const key = row.source.environment_key || row.upload_sha256;
+      if (!environments.has(key)) environments.set(key, []);
+      environments.get(key).push(row);
+    }
+    $('record-count').textContent = `${environments.size} ${environments.size === 1 ? 'environment' : 'environments'} · ${rows.length} versions`;
+    const versionTargets = new Map();
     $('jobs').replaceChildren();
     if (!rows.length) {
       const empty = document.createElement('p');
       empty.className = 'empty';
       empty.textContent = 'No saved environments yet. Upload a package to begin.';
       $('jobs').append(empty);
+    }
+    for (const [key, versions] of environments) {
+      const group = document.createElement('section');
+      group.className = 'environment-group';
+      const heading = document.createElement('div');
+      heading.className = 'environment-heading';
+      const title = document.createElement('h3');
+      title.textContent = versions[0].title.replace(/\.zip$/i, '');
+      const count = document.createElement('span');
+      count.className = 'badge';
+      count.textContent = `${versions[0].source.viewpoints} viewpoints · ${versions.length} versions`;
+      heading.append(title, count);
+      const playable = versions.find(row => row.status === 'completed');
+      if (playable) {
+        const preview = document.createElement('button');
+        preview.type = 'button'; preview.className = 'secondary';
+        preview.textContent = 'Preview latest result';
+        preview.onclick = () => openPreview(playable);
+        heading.append(preview);
+      }
+      group.append(heading);
+      versionTargets.set(versions[0].run_id, group);
+      if (versions.length > 1) {
+        const history = document.createElement('details');
+        history.className = 'version-history';
+        history.open = expandedEnvironments.has(key);
+        history.addEventListener('toggle', () => {
+          if (history.open) expandedEnvironments.add(key);
+          else expandedEnvironments.delete(key);
+        });
+        const summary = document.createElement('summary');
+        summary.textContent = `Earlier versions (${versions.length - 1})`;
+        history.append(summary);
+        group.append(history);
+        for (const row of versions.slice(1)) versionTargets.set(row.run_id, history);
+      }
+      $('jobs').append(group);
     }
     for (const row of rows) {
       const article = document.createElement('article');
@@ -180,6 +227,10 @@ async function refresh() {
       meta.textContent = `${row.execution === 'agent' ? 'Agent · approved animation style' : 'Earlier result'} · ${row.source.kind === 'scene3d' ? '3D environment' : 'VR panorama'} · ${row.source.viewpoints} viewpoints`;
       const status = document.createElement('p');
       status.textContent = row.message;
+      if (row.upload_reused) status.textContent += ' Latest upload matched this existing task.';
+      if (row.upload_names?.length > 1) {
+        meta.textContent += ` · Uploaded names: ${row.upload_names.join(' / ')}`;
+      }
       const nav = document.createElement('nav');
       if (row.status === 'completed') {
         const preview = document.createElement('button');
@@ -209,7 +260,10 @@ async function refresh() {
         nav.append(button);
       }
       article.append(heading, meta, status, nav);
-      $('jobs').append(article);
+      const target = versionTargets.get(row.run_id);
+      if (target?.classList.contains('environment-group')) {
+        target.insertBefore(article, target.querySelector('.version-history'));
+      } else { target?.append(article); }
     }
     if (!previewId) {
       const requested = new URLSearchParams(location.hash.slice(1)).get('preview');

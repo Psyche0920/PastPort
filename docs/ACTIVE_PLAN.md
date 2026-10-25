@@ -286,3 +286,15 @@ run or automated runtime/visual test has been performed. Human output acceptance
 remain unverified. Model review covers panorama imagery and adjacent view pairs.
 New Agent jobs support at most six viewpoints within the existing 100-call grant.
 Original incomplete quality-run usage remains retained and is not resumed/reset.
+
+### Environment-grouped records and renamed-upload feedback
+
+Owner: style-transfer chat. The user found three cards for one environment and
+could not find a renamed identical ZIP. Records now group by immutable import
+fingerprint and viewpoint identities, not ZIP name or archive bytes. Latest task
+and latest completed preview remain accessible; earlier versions are expandable.
+Identical uploads retain the same task/grant/usage but show the latest filename,
+retained aliases and an explicit reuse message. Three existing versions were
+identified as one environment and retained. No generation or semantic DB changes.
+Three affected Python modules passed strict typing; Ruff, JS syntax and diff checks
+passed. User checks the UI behavior manually; no automated runtime/model test.
