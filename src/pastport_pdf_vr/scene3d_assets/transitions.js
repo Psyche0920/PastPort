@@ -1,4 +1,4 @@
-import {NavigationBoundary} from '../navigation_boundary.js';
+import {NavigationBoundary} from '../navigation_boundary.js?v=plane-3';
 import * as THREE from 'three';
 
 export class SceneTransitions {

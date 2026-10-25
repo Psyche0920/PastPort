@@ -120,3 +120,5 @@ an introduced asset 404 by serving the pure boundary helper through the existing
 root JS route; both active preview URLs return 200 without restarting Studio.
 The browser page was reloaded to the new assets; real proximity walking remains
 user manual acceptance, not inferred from these checks.
+
+Browser walking follow-up: actual held-W movement crossed the saved point-2 arrow plane and opened point 1 with its saved entry angles. Low rendering frame rate exposed a 50 ms movement-delta cap, slowing travel substantially; raised the bounded delta to 250 ms and reset timing/keys on visibility changes. Full module import-chain cache versions are updated for existing result pages. After the timing/cache fix, actual held-key walking passed point 1 to point 2 and point 2 to point 1, preserving both saved arrival angles. Existing manual arrow coordinates and model files were not changed. User acceptance remains pending.
