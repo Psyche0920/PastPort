@@ -184,3 +184,10 @@ These checks used no real key and spent zero credits. They do not verify provide
 availability, actual final billing, visual fidelity or Unity/Blender import behavior.
 A source result now owns one generation job; changed parameters stop for review,
 not a second hidden charge.
+
+The paid boundary additionally has a source-panorama ownership ledger outside the
+source result directory. Even a different job directory or older frontend cannot
+submit the same panorama again; it must resume the owning job. Existing submitted
+jobs are registered without changing their request or resetting their usage. Three
+committed offline regression tests cover this guard, repeated frontend POST and
+source-backup parent creation.

@@ -42,3 +42,11 @@ creation on frontend reconnect. Ten network-disabled simulated-provider checks p
 portable ZIP assets/IDs/null anchors checked. Faithful source-only request policy is
 input-bound. Native SPZ, collision GLB and versioned JSON export is implemented; full
 textured mesh and engine import acceptance are not claimed. No real key or credits used.
+
+The user has now submitted one real Marble trial from the frontend. Its frozen
+source and preservation-policy binding were confirmed. Only its existing saved
+operation has been queried; no second generation was dispatched. At the latest
+check it remains pending, with no settled cost or final output yet. The service
+was not restarted while this operation/key session is active. Source-level ownership
+protection is also enforced in the child workflow, so stale frontend code cannot
+bypass the one-source/one-generation guard. Three committed offline regressions pass.

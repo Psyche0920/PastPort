@@ -78,6 +78,24 @@ class MarbleHTTP:
 class MarbleGeneration:
     """Single-view input, one dispatch, source-bound receipt and explicit finite authorization."""
 
+    @staticmethod
+    def claim_source(environment: Path, workspace: Path, panorama_hash: str) -> None:
+        """Guard the paid boundary even if an older frontend creates a second job directory."""
+        registry = environment.parent / ".marble-submissions"
+        registry.mkdir(exist_ok=True)
+        path = registry / (panorama_hash + ".json")
+        owner = {"workspace": str(workspace.resolve())}
+        try:
+            with path.open("x") as stream:
+                json.dump(owner, stream)
+                stream.flush()
+                os.fsync(stream.fileno())
+        except FileExistsError:
+            if read_json(path) != owner:
+                raise RuntimeError(
+                    "This source panorama already owns a generation job; resume it, never resubmit"
+                )
+
     def run(
         self,
         environment: Path,
@@ -169,6 +187,7 @@ class MarbleGeneration:
                 client = MarbleHTTP(os.environ.get("WORLDLABS_API_KEY", ""))
                 operation_path = workspace / "operation.json"
                 if operation_path.exists():
+                    self.claim_source(environment, workspace, hashlib.sha256(raw).hexdigest())
                     operation = record(read_json(operation_path))
                     operation = client.request(
                         "GET",
@@ -188,6 +207,7 @@ class MarbleGeneration:
                     if not isinstance(available, (int, float)) or available < expected:
                         raise ValueError("Insufficient known credits; generation was not submitted")
                     write_json(workspace / "credits-before.json", balance)
+                    self.claim_source(environment, workspace, hashlib.sha256(raw).hexdigest())
                     write_json(marker, binding)
                     operation = client.request(
                         "POST",

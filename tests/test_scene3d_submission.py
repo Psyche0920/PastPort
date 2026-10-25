@@ -18,6 +18,7 @@ from pydantic import SecretStr
 from starlette.types import Message
 
 from pastport_pdf_vr.api.scene3d_studio import Scene3DPortal
+from pastport_pdf_vr.application.marble_generation import MarbleGeneration
 from pastport_pdf_vr.application.reference_preview import ReferencePreviewPool
 from pastport_pdf_vr.application.scene3d import Scene3DAttachment
 from pastport_pdf_vr.application.studio import StudioJobs, SubprocessBuildRunner
@@ -100,6 +101,17 @@ class Scene3DSubmissionTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 len(list((jobs.root / "scene3d").glob("*/generation-options.json"))), 1
             )
+
+    def test_new_directory_cannot_repeat_a_paid_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "result"
+            source.mkdir()
+            first, second = root / "first", root / "second"
+            MarbleGeneration.claim_source(source, first, "0" * 64)
+            MarbleGeneration.claim_source(source, first, "0" * 64)
+            with self.assertRaises(RuntimeError):
+                MarbleGeneration.claim_source(source, second, "0" * 64)
 
     def test_frozen_backup_creates_parent_and_preserves_data(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
