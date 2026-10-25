@@ -103,3 +103,20 @@ new live model/Agent run or runtime/browser acceptance test was performed for th
 implementation. The user performs output acceptance; new paid generation was not
 triggered to validate code. The standalone checkout lacks `tools/check_repository.py`,
 so that repository gate is not reported as passing.
+
+## Live progress
+
+`application/stylization_progress.py` reads completed execution receipts and saved
+Agent phase files without modifying them. The staff page shows planning, initial
+generation, reference/pair reviews, optional single repair, final review and saving;
+per-view direction counts and review counts are actual saved work. Progress is not
+an acceptance score or an invented global percentage. Unavailable/stale data is
+reported rather than assumed successful. The current-task panel is above preview.
+
+`GET /api/stylization/progress` serves the typed snapshot after normal server startup.
+For an already running service, a temporary read-only bridge can publish sanitized
+snapshots beneath the ignored `web/.runtime` cache, served by the existing static
+route. It is bounded to at most one day and the owned parent process lifetime.
+This lets the page update without restarting an active model job. New server
+starts use the normal API. No prompts, source paths, secrets or provider payloads
+are exposed in the progress snapshot; it cannot dispatch, resume or change usage.

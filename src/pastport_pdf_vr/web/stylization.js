@@ -155,11 +155,97 @@ $('generate').onclick = async () => {
   }
 };
 
+const progressLabels = {
+  ready: 'Ready to start', preparing: 'Preparing source images', planning: 'Agent planning',
+  generating: 'Generating initial images', assembling: 'Assembling initial tour',
+  reviewing: 'Comparing with your approved reference', repairing: 'Repair round 1 of 1',
+  reassembling: 'Assembling repaired tour', final_review: 'Reviewing the repaired images',
+  packaging: 'Saving the final package', completed: 'Ready for your review',
+  attention: 'Stopped — saved progress needs attention', unavailable: 'Progress temporarily unavailable',
+};
+let progressApiUnavailable = false;
+async function readProgress() {
+  try {
+    if (!progressApiUnavailable) {
+      const response = await fetch('/api/stylization/progress', {cache: 'no-store'});
+      if (response.ok) return await response.json();
+      if (response.status === 404) progressApiUnavailable = true;
+    }
+    const bridge = await fetch('/static/.runtime/stylization-progress.json', {cache: 'no-store'});
+    return bridge.ok ? await bridge.json() : null;
+  } catch { return null; }
+}
+function progressPanel(job, snapshot) {
+  const progress = snapshot?.runs?.find(run => run.run_id === job.run_id);
+  const panel = document.createElement('div'); panel.className = 'run-progress';
+  const label = document.createElement('p'); label.className = 'progress-heading';
+  if (!progress || Date.now() / 1000 - snapshot.generated_at > 15) {
+    label.textContent = 'Progress update delayed. The saved task is not restarted.';
+    panel.append(label); return panel;
+  }
+  label.textContent = progressLabels[progress.phase] ?? 'Reading saved progress';
+  panel.append(label);
+  const indexes = {ready: -1, preparing: 0, planning: 0, generating: 1, assembling: 1,
+    reviewing: 2, repairing: 3, reassembling: 3, final_review: 4, packaging: 5, completed: 6};
+  const current = indexes[progress.phase] ?? -1;
+  const stages = document.createElement('ol'); stages.className = 'progress-stages';
+  for (const [index, text] of ['Plan', 'Generate', 'Review', 'Repair if needed', 'Final check', 'Save'].entries()) {
+    const step = document.createElement('li');
+    const skipped = progress.repair_skipped && (index === 3 || index === 4);
+    step.className = skipped ? 'skipped' : index < current ? 'done' : index === current ? 'active' : '';
+    step.textContent = skipped ? `${text} · skipped` : text;
+    if (index === current) step.setAttribute('aria-current', 'step');
+    stages.append(step);
+  }
+  panel.append(stages);
+  const review = progress.phase === 'reviewing' || progress.phase === 'final_review';
+  const count = review ? progress.reviews_done : progress.images_done;
+  const total = review ? progress.reviews_total : progress.images_total;
+  const detail = document.createElement('p'); detail.className = 'progress-detail';
+  detail.textContent = review
+    ? `${count} / ${total} reference and cross-view checks saved`
+    : `${progress.round_number ? 'Repair' : 'Initial'} images: ${count} / ${total} directions saved`;
+  if (['generating', 'repairing', 'reviewing', 'final_review', 'assembling', 'reassembling'].includes(progress.phase)) {
+    const bar = document.createElement('progress'); bar.max = Math.max(total, 1); bar.value = count;
+    bar.setAttribute('aria-label', detail.textContent); panel.append(bar);
+  }
+  panel.append(detail);
+  const faceNames = {front: 'Front', right: 'Right', back: 'Back', left: 'Left', up: 'Ceiling', down: 'Floor'};
+  if (progress.views.length && !['ready', 'preparing', 'planning'].includes(progress.phase)) {
+    const views = document.createElement('div'); views.className = 'progress-views';
+    for (const view of progress.views) {
+      const row = document.createElement('div'); row.className = 'progress-view';
+      const name = document.createElement('strong'); name.textContent = `Viewpoint ${view.number}`; row.append(name);
+      for (const [face, text] of Object.entries(faceNames)) {
+        const saved = view.completed_directions.includes(face);
+        const item = document.createElement('span'); item.className = `face-status${saved ? ' done' : ''}`;
+        item.textContent = `${saved ? '✓' : '○'} ${text}`; item.title = saved ? 'Saved with a completed receipt' : 'Not yet saved';
+        row.append(item);
+      }
+      views.append(row);
+    }
+    panel.append(views);
+  }
+  const foot = document.createElement('p'); foot.className = 'progress-foot';
+  const minutes = Math.floor(progress.elapsed_seconds / 60), seconds = progress.elapsed_seconds % 60;
+  foot.textContent = `${minutes}m ${seconds}s this attempt · ${progress.calls_done} model calls completed${progress.call_in_flight ? ' · one call in progress' : ''} · updates automatically`;
+  panel.append(foot); return panel;
+}
+
 async function refresh() {
   if (refreshInProgress) return;
   refreshInProgress = true;
   try {
     const rows = await request('/api/stylization/jobs');
+    const progress = await readProgress();
+    const active = rows.find(row => row.status === 'running');
+    $('live-run').hidden = !active;
+    $('live-run').replaceChildren();
+    if (active) {
+      const heading = document.createElement('div'); heading.className = 'panel-heading';
+      const title = document.createElement('h2'); title.textContent = `Current task · ${active.title}`;
+      heading.append(title); $('live-run').append(heading, progressPanel(active, progress));
+    }
     const environments = new Map();
     for (const row of rows) {
       const key = row.source.environment_key || row.upload_sha256;
@@ -262,7 +348,9 @@ async function refresh() {
         };
         nav.append(button);
       }
-      article.append(heading, meta, status, nav);
+      article.append(heading, meta, status);
+      if (row.execution === 'agent' && row.status !== 'prepared') article.append(progressPanel(row, progress));
+      article.append(nav);
       const target = versionTargets.get(row.run_id);
       if (target?.classList.contains('environment-group')) {
         target.insertBefore(article, target.querySelector('.version-history'));

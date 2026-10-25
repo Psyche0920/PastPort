@@ -38,6 +38,10 @@ from pastport_pdf_vr.application.automatic_stylization import (
 from pastport_pdf_vr.application.reference_preview import ReferencePreviewPool
 from pastport_pdf_vr.application.storage import atomic_write
 from pastport_pdf_vr.application.stylization_agent import agent_call_limits
+from pastport_pdf_vr.application.stylization_progress import (
+    ProgressSnapshot,
+    StylizationProgressReader,
+)
 from pastport_pdf_vr.domain.execution import SubscriptionGrant
 from pastport_pdf_vr.domain.models import DomainModel
 
@@ -98,6 +102,10 @@ class StylizationPortal:
                     self.root.glob("*/job.json"), key=lambda p: p.stat().st_mtime, reverse=True
                 )
             ]
+
+        @app.get("/api/stylization/progress")
+        def progress() -> ProgressSnapshot:
+            return StylizationProgressReader(workspace).snapshot()
 
         @app.post("/api/stylization/uploads")
         async def upload(request: Request) -> StyleJob:

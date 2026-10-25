@@ -310,3 +310,19 @@ existing Start action; this code update does not authorize running a new job.
 The current agent-test task has no run request, output or generation ledger yet,
 so its first Start will create new artwork. The UI now labels earlier previews
 explicitly when the latest task has not generated output.
+
+### Live progress without interrupting generation
+
+Owner: style-transfer chat. User requested visible current stages while the existing
+Agent job keeps running. Added a read-only receipt/checkpoint progress reader,
+phase stepper, per-view six-direction completion, review counts, one-repair state
+and elapsed attempt time. A current-task panel is shown above the preview. Future
+server starts use the same-origin progress API; the current in-flight service uses
+an ignored read-only cache bridge so no server/worker restart is required. The
+bridge is bounded and tied to the owned UI process; it cannot call a model, change
+usage or resume a job. Counts come from completed SDK receipts, not fake timing.
+
+Two changed Python modules passed strict typing/Ruff; JS syntax and diff checks
+passed. The actual workbench was opened and displayed 11/12 completed directions,
+viewpoint one complete and viewpoint two floor outstanding. This is progress UI
+verification, not output/visual acceptance. Existing generation remained running.

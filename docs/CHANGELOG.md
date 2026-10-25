@@ -265,3 +265,12 @@ now receives a new task/workspace and does not use earlier output. Environment
 version grouping remains. Explicit same-run resume still preserves grants and
 unknown usage. Earlier previews are labelled as earlier results when a new task
 is pending. No generation was started by this change.
+
+## Visible running-task progress
+
+Added actual receipt/checkpoint progress, per-view direction completion, review
+counts and the optional one-repair phase to the staff workspace. An in-flight
+read-only bridge enabled the existing task display without restarting its server
+or generation worker. The opened workbench displayed real 11/12 direction progress.
+Strict typing/Ruff on two Python modules, JS syntax and diff checks passed. No
+new model call or automated output-quality acceptance was performed.
