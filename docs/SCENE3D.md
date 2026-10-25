@@ -270,3 +270,17 @@ Dragging the arrow updates this boundary automatically. Closing **编辑** disab
 the spatial editing modes and returns to navigation. The boundary's orientation
 is perpendicular to the original camera-to-arrow horizontal direction; a source
 VR direction is used only for a degenerate same-position arrow.
+
+## Source-ordered tour delivery
+
+3D records show the original VR viewpoint number, not generation order. A compact
+full-tour card appears for multi-view sources; playback and package download become
+available after every source viewpoint has a saved 3D output. The package contains
+one portable development ZIP per viewpoint and tour.json with saved 3D arrows,
+arrival angles and source IDs. It preserves independent worlds, not fused geometry.
+It is a development asset package, not a standalone executable viewer; playback uses
+the existing Studio entry. No generation or paid calls occur on export.
+
+| Source | Purpose |
+|---|---|
+| `application/scene3d_tour.py` | Source-ordered portable multi-world package and snapshot navigation |

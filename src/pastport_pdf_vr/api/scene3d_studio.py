@@ -7,15 +7,19 @@ import hashlib
 import json
 import os
 import re
+import sqlite3
 import sys
+import zipfile
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Annotated, Literal
 from urllib.parse import urlencode
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import SecretStr
+from starlette.background import BackgroundTask
 from starlette.datastructures import UploadFile
 
 from pastport_pdf_vr.application.reference_environment import read_json, record, sequence, string
@@ -126,7 +130,15 @@ class Scene3DPortal:
                 )
                 options = record(read_json(metadata)) if metadata.is_file() else {}
                 source_id = options.get("job_id", "")
-                title = titles.get(str(source_id), "已有匹配场景") + " · 3D"
+                scene_id = str(options.get("scene_id", ""))
+                try:
+                    source_views = scenes(str(source_id))
+                except (HTTPException, OSError, ValueError):
+                    source_views = []
+                number = source_views.index(scene_id) + 1 if scene_id in source_views else 0
+                title = titles.get(str(source_id), "已有匹配场景") + (
+                    f" · 点位 {number} · 3D" if number else " · 未知点位 · 3D"
+                )
                 base = f"/scene3d-results/{root.name}/"
                 ready = (root / "job/delivery.json").is_file() or (
                     root / "job/attachment/delivery.json"
@@ -170,6 +182,10 @@ class Scene3DPortal:
                 records.append(
                     Scene3DRecord(
                         run_id=root.name,
+                        job_id=str(source_id),
+                        source_scene_id=scene_id,
+                        viewpoint_number=number,
+                        viewpoint_count=len(source_views),
                         title=title,
                         mode="generate" if generation else "import",
                         status=status,
@@ -405,6 +421,39 @@ class Scene3DPortal:
                     )
                 )
             return Scene3DNavigation(source_scene_id=scene_id, transitions=tuple(transitions))
+
+        @app.get("/api/scene3d-tour/{job_id}/package")
+        def tour_package(job_id: str) -> FileResponse:
+            from pastport_pdf_vr.application.scene3d_tour import TourSource, export_tour
+
+            source_ids = scenes(job_id)
+            ready: dict[str, Scene3DRecord] = {}
+            for item in deliveries():
+                if item.job_id == job_id and item.url:
+                    ready.setdefault(item.source_scene_id, item)
+            if not source_ids or any(scene not in ready for scene in source_ids):
+                raise HTTPException(
+                    409, "Generate every source viewpoint before downloading the tour"
+                )
+            views = tuple(
+                TourSource(index + 1, scene, result_root(ready[scene].run_id))
+                for index, scene in enumerate(source_ids)
+            )
+            temporary = TemporaryDirectory(prefix="pastport-tour-")
+            archive = Path(temporary.name) / "pastport-3d-tour.zip"
+            try:
+                export_tour(views, archive)
+            except (OSError, ValueError, sqlite3.Error, zipfile.BadZipFile) as error:
+                temporary.cleanup()
+                raise HTTPException(
+                    422, "Tour export failed; existing scenes are unchanged"
+                ) from error
+            return FileResponse(
+                archive,
+                media_type="application/zip",
+                filename="pastport-3d-tour.zip",
+                background=BackgroundTask(temporary.cleanup),
+            )
 
         @app.get("/api/scene3d-navigation/{run_id}")
         async def navigation(run_id: str, request: Request) -> JSONResponse:

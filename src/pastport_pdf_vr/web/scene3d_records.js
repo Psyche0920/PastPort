@@ -7,6 +7,23 @@
     try{
       const response=await fetch('/api/scene3d-deliveries');if(!response.ok)throw Error('无法读取 3D 记录，请确认工作台已重启到最新代码。');
       const rows=await response.json(),fragment=document.createDocumentFragment();
+      const groups=new Map();
+      for(const row of rows){if(!row.job_id)continue;if(!groups.has(row.job_id))groups.set(row.job_id,new Map());if(row.url&&!groups.get(row.job_id).has(row.source_scene_id))groups.get(row.job_id).set(row.source_scene_id,row);}
+      for(const [jobId,views] of groups){
+        const first=rows.find(row=>row.job_id===jobId),expected=first.viewpoint_count;
+        if(expected<2)continue;
+        const card=document.createElement('article');card.className='job';
+        const title=document.createElement('h3');title.textContent='完整 3D 导览';
+        const note=document.createElement('p');note.textContent=`已完成 ${views.size} / ${expected} 个点位 · 按原 VR 顺序对应`;
+        const nav=document.createElement('nav');
+        if(views.size===expected){
+          const entry=[...views.values()].sort((a,b)=>a.viewpoint_number-b.viewpoint_number)[0];
+          const view=document.createElement('a');view.href=entry.url;view.textContent='查看完整 3D 导览';
+          const download=document.createElement('a');download.href=`/api/scene3d-tour/${encodeURIComponent(jobId)}/package`;download.textContent='下载完整导览文件包';
+          nav.append(view,download);
+        }else note.textContent+=' · 全部生成后可统一查看和下载';
+        card.append(title,note,nav);fragment.append(card);
+      }
       for(const row of rows){
         const card=document.createElement('article');card.className='job';
         const title=document.createElement('h3');title.textContent=row.title||'3D 场景';
