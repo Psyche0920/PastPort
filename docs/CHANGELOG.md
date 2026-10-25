@@ -196,3 +196,14 @@ Current result has 14 source hotspots and 14 ray-hit proposals. Visible labels, 
 object-35 popup and its review deep link were checked in the browser. Two targeted
 offline tests pass for persistence/isolation. This does not prove precise placement,
 object fidelity or user acceptance. No new generation or fee occurred.
+
+## Whole-tour 3D appearance candidate
+
+Added source-bound SPZ v2/SH0 appearance baking and typed panorama/3D graph paths
+on `codex/environment-stylization`, incorporating the fixed shared-review contract.
+The real two-view Muradiye tour was exported, processed using both existing 4K
+painted panoramas and repackaged as one developer ZIP; zero new inference. An
+isolated local acceptance preview is running. Ten affected Python files passed
+strict typing, Ruff and diff checks. No stylization runtime/browser test suite or
+formal visual acceptance was performed. Geometry correction and far-view structural
+repair remain unresolved; this is a candidate, not an accepted replacement.

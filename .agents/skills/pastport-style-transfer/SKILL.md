@@ -16,3 +16,20 @@ description: 将已标注的 PastPort 博物馆环境自动装配为完整动画
 - 交付动画环境目录、ZIP、`animation-manifest.json` 及 Story Agent 交接说明；流程执行成功不等于画质、接缝、对象位置或设备验收。用户明确由其手工验收，本轮不启动额外模型、自动测试、浏览器审核或服务。
 
 既有 Studio 的匹配 PDF 上传入口保持原作用；新动画流程是可单独调用的 Python/LangGraph 节点，尚未新增 Studio 动画上传页面。不能把它描述成已经接入所有供应商网站或已经部署的公共网站。
+
+## Additional 3D path
+
+The existing animation branch is now `codex/environment-stylization`; the matching
+branch is `codex/matched-environment`. Read `docs/STYLIZATION3D.md` for the exact
+whole-tour package and typed graph contracts. Consume one complete tour archive;
+return one complete archive with independent worlds and their navigation. Reuse
+source-bound painted maps through the existing animation stage; apply them to
+real SPZ appearance, not only 2D screenshots. Preserve one tour-level review
+authority and per-view spatial state. Automatic camera estimates proceed without
+waiting for human intervention, but are never recorded as human-confirmed.
+Current baking supports SPZ v2/SH0 and preserves geometry. It cannot claim to fix
+wrong structures, missing geometry or all far-view inconsistencies. Mark those
+limitations and retain the current Muradiye demo as the minimum acceptance baseline.
+User manually accepts output; do not add model calls, repeated browser tests or
+service restarts without task authorization. Complete-tour extraction and packaging
+are not image generation. Keep source rights, evidence, identities and manual edits.

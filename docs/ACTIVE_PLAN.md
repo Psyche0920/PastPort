@@ -189,3 +189,18 @@ Final browser behavior, real legacy migration and human acceptance remain pendin
 user tests. No provider call, regenerated asset or service restart. Stylization
 can integrate this fixed contract after the repair commit; conflicts must not be
 resolved silently.
+
+### Whole-tour 3D appearance candidate delivery
+
+Shared content fix 0b52cd5 is integrated. The actual two-view Muradiye source tour
+was exported and processed as one archive with both existing 4096x2048 animation
+maps. Output: `.runtime/style3d-acceptance-01/candidate/styled-tour.zip`, plus
+`delivery.json`, one isolated shared review authority and two registered styled
+SPZ assets. Zero new model calls. Automatic camera estimates continue without
+human gates and retain their unconfirmed status. Original assets/data/workbench
+were not replaced or restarted. The owned loopback preview was started for user
+acceptance; no automated browser/runtime tests were run. Typed graph and complete
+tour CLI route exist; no Studio stylization-upload page is claimed. Structural
+repair, far-view geometry correction and visual acceptance remain unfinished.
+Next: user manual feedback on this candidate, then targeted repairs; do not call
+the full user objective complete or replace the approved minimum baseline.

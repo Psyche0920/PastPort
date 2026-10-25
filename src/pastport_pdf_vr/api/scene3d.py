@@ -320,6 +320,7 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
                 "scene.spz",
                 "scene-full.spz",
                 "scene-styled.spz",
+                "style-variant.json",
                 "style-panorama.png",
                 "collider.glb",
                 "panorama.jpg",

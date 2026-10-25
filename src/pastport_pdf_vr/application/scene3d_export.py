@@ -182,6 +182,21 @@ def export_scene(root: Path, archive: Path) -> None:
         if style is not None:
             manifest["appearance"] = json.loads(style.model_dump_json())
             paths.extend([root / "scene3d/style-variant.json", root / "scene3d" / style.panorama])
+        source_panorama = str(attachment["source_panorama"])
+        if source_panorama not in ("source-panorama.jpg", "source-panorama.png"):
+            raise ValueError("Unexpected source panorama path")
+        paths.extend(
+            [
+                root / "scene3d" / source_panorama,
+                root / "scene3d/attachment.json",
+                root / "scene3d/scene.json",
+                root / "import-manifest.json",
+            ]
+        )
+        for name in ("scene.spz", "scene-full.spz", "render-variant.json", "arrow-seed.json"):
+            path = root / "scene3d" / name
+            if path.is_file() and path not in paths:
+                paths.append(path)
         media = root / "media"
         paths.extend(path for path in media.rglob("*") if path.is_file())
         if (
@@ -192,6 +207,15 @@ def export_scene(root: Path, archive: Path) -> None:
         with zipfile.ZipFile(archive, "x", compression=zipfile.ZIP_STORED) as bundle:
             bundle.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
             bundle.writestr("game-data.json", json.dumps(data, ensure_ascii=False, indent=2))
+            import re
+
+            html = (root / "vr_trial/index.html").read_text()
+            match = re.search(
+                r'<script id="tour-data" type="application/json">(.*?)</script>', html, re.S
+            )
+            if match is None:
+                raise ValueError("Original tour payload is missing")
+            bundle.writestr("source-tour.json", json.dumps(json.loads(match[1])))
             bundle.write(snapshot, "review.sqlite3")
             for path in paths:
                 relative = path.relative_to(root)

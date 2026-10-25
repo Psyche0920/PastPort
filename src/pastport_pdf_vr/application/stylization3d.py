@@ -175,6 +175,9 @@ class Style3DWorkflow:
         for asset in assets.iterdir():
             if asset.is_file():
                 (folder / asset.name).write_bytes(asset.read_bytes())
+        (output / "navigation_boundary.js").write_bytes(
+            assets.joinpath("navigation_boundary.js").read_bytes()
+        )
         reference = files("pastport_pdf_vr").joinpath("animation_assets/approved-style.png")
         variant = Style3DVariant(
             scene_binding=string(attachment["binding"]),

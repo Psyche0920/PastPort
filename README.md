@@ -155,3 +155,11 @@ confirmed anchors. This is not collision-constrained walking.
 See [SCENE3D.md](docs/SCENE3D.md) for the key setup, CLI, saved-operation recovery,
 coordinate convention, manual calibration and actual execution limits. No new paid
 generation was performed for this delivery.
+
+## Environment stylization (panorama and 3D)
+
+The `codex/environment-stylization` branch retains panorama animation and adds a
+source-bound whole-tour 3D appearance path. See [STYLIZATION3D.md](docs/STYLIZATION3D.md)
+for the typed graph/CLI entry, one-package input/output, isolated preview, shared
+review snapshot and unresolved geometry/quality limits. This is an appearance
+candidate, not completed structural reconstruction or accepted visual quality.
