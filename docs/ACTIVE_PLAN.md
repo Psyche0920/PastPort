@@ -109,3 +109,14 @@ start-view/switch-view/edit actions; all technical calibration is under Advanced
 in the hidden edit drawer. Shared introductions and position saves are preserved.
 An offscreen direction hint explains where the navigation arrow is. No model or
 review content changes, and no generation.
+
+Plane-trigger correction: the user requires an unbounded vertical cross-section
+through the arrow, not point proximity. The trigger now uses signed X/Z plane
+crossing with hysteresis, no altitude/radius bounds, and resets automatically
+when the user drags the arrow. Closing the edit drawer disables position-edit
+checkboxes and restores navigation. Deterministic checks cover high/low paths,
+full width, slow crossings, editing suppression and a moved arrow. Found/fixed
+an introduced asset 404 by serving the pure boundary helper through the existing
+root JS route; both active preview URLs return 200 without restarting Studio.
+The browser page was reloaded to the new assets; real proximity walking remains
+user manual acceptance, not inferred from these checks.

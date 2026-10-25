@@ -245,11 +245,10 @@ In the Studio result preview, use **调整导航箭头**. Drag an arrow and rele
 ## Independent-world arrow transitions
 
 Composition is not active. Open either completed viewpoint from Studio after restart.
-The viewer projects the source VR navigation arrow onto its own collider. Approaching
-within 0.65 m horizontally (and 1.8 m vertically) opens the target's independent
+The viewer projects the source VR navigation arrow onto its own collider. Crossing the unbounded vertical plane through that arrow opens the target's independent
 3D result, at its source camera with the VR-saved entry yaw/pitch. Arrows can also
-be clicked. A two-second spawn grace period and leaving the trigger region before
-arming prevent immediate ping-pong. Unsaved position edits and marker editing block
+be clicked. Signed-side arming and a small hysteresis prevent an immediate repeated transition;
+height and lateral distance do not restrict the plane. Unsaved position edits and marker editing block
 transitions. There is no blending of the two generated worlds.
 
 VR navigation initializes the 3D result once; later focus reloads its independent
@@ -266,3 +265,8 @@ to save. Initial positions and entry yaw/pitch are seeded from VR; later VR edit
 do not replace this stored seed. Failed drags show a retry action using the same
 operation identity; conflicting edits require reload. Arrow edits are local to
 this 3D result, with source-bound versions and event history.
+
+Dragging the arrow updates this boundary automatically. Closing **编辑** disables
+the spatial editing modes and returns to navigation. The boundary's orientation
+is perpendicular to the original camera-to-arrow horizontal direction; a source
+VR direction is used only for a degenerate same-position arrow.

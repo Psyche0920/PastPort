@@ -42,7 +42,7 @@ async function save(remove=false,method='aligned_confirmation',object=null){
  relation_basis:$('relation').value.trim(),placement_method:method};
  return persistPosition(edit);
 }
-$('edit-panel').onclick=()=>{$('editor-panel').hidden=false;};$('close-editor').onclick=()=>{$('editor-panel').hidden=true;};$('home-view').onclick=origin;$('fullscreen').onclick=()=>{(document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()).catch(()=>note('当前设备无法全屏'));};$('next-viewpoint').onclick=()=>{const arrow=transitions?.markers[0];if(arrow)transitions.go(arrow);else note('点位导航尚未载入，请从工作台重新打开');};
+$('edit-panel').onclick=()=>{$('editor-panel').hidden=false;};$('close-editor').onclick=()=>{$('drag-arrows').checked=false;$('drag-markers').checked=false;$('pick').checked=false;$('editor-panel').hidden=true;};$('home-view').onclick=origin;$('fullscreen').onclick=()=>{(document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()).catch(()=>note('当前设备无法全屏'));};$('next-viewpoint').onclick=()=>{const arrow=transitions?.markers[0];if(arrow)transitions.go(arrow);else note('点位导航尚未载入，请从工作台重新打开');};
 $('confirm').onclick=()=>save();$('remove').onclick=()=>save(true);
 $('retry-position').onclick=()=>pendingSave&&persistPosition(pendingSave);
 function setScreenRay(event){ray.setFromCamera(new THREE.Vector2(event.clientX/innerWidth*2-1,1-event.clientY/innerHeight*2),camera);}

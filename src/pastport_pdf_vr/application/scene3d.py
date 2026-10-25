@@ -152,6 +152,7 @@ class Scene3DAttachment:
         assets = Path(str(files("pastport_pdf_vr").joinpath("scene3d_assets")))
         for path in assets.iterdir():
             shutil.copy2(path, scene_folder / path.name)
+        shutil.copy2(assets / "navigation_boundary.js", self.output / "navigation_boundary.js")
         # Space binding includes the exact new world, frozen source DB and source viewpoint.
         binding = hashlib.sha256(
             (scene.binding + digest(self.output / "pastport_matching.sqlite3") + selected).encode()
