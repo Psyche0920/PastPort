@@ -148,3 +148,39 @@ key or new generation. Both paths bind automatically to the selected VR result.
 The API returns only configured state, never the key. Local edit protections apply
 to setting and clearing. A key already passed to a running request is not revoked
 by clearing the session field. No real-key call was performed for this UI change.
+
+## Portable development package
+
+The 3D output includes **下载开发文件包**, also available from a ready record. It
+creates a ZIP from a consistent current SQLite snapshot. The package contains
+`manifest.json`, `game-data.json`, original SPZ, glTF 2.0 collision GLB, the source
+and matched PDFs, source media and an audit database. Object stable IDs, historical
+bindings, exact evidence, current human introduction and confirmed metric anchors
+remain separate from generated geometry. Withheld/unconfirmed anchors are null.
+
+The manifest states units, handedness and asset-to-world transform. Unity and Blender
+can consume the GLB, but the current GLB is collision-only; SPZ requires a compatible
+splat renderer or conversion. This is not a claim that a complete textured modelling
+asset is already present. No paid HQ mesh export is performed. Engine-specific import
+adapters and visual-mesh authoring remain downstream work. The package is a private
+local download, not an automatic public publication or main-framework acceptance.
+
+The Marble request now prioritizes faithful translation-only reconstruction: retain
+identity, appearance and layout; no repair/restyling or creative additions. Only tiny
+unavoidable geometric adjustments for translation are allowed. Restoration belongs
+to the later art stage. The exact prompt hash is bound to the generation job.
+
+## Pre-payment preflight
+
+A network-disabled isolated run with simulated provider responses checked ten
+behaviors: one submission then polling, completed resume without a new call, actual
+local asset attachment, empty unconfirmed anchors, alignment conflict, anchor
+idempotency/conflict, reload persistence, unknown-dispatch blocking, pre-dispatch
+budget rejection and repeated frontend POST reuse. The portable ZIP was also opened
+and its assets, identities and withheld anchors checked. Two defects were fixed:
+source backup parent creation and repeated requests creating separate paid jobs.
+
+These checks used no real key and spent zero credits. They do not verify provider
+availability, actual final billing, visual fidelity or Unity/Blender import behavior.
+A source result now owns one generation job; changed parameters stop for review,
+not a second hidden charge.

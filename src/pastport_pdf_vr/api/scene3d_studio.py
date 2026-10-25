@@ -169,6 +169,7 @@ class Scene3DPortal:
                         splat_url=base + "?target=spz" if ready else "",
                         collider_url=base + "?target=glb" if ready else "",
                         manifest_url=base + "?target=manifest" if ready else "",
+                        package_url=base + "?target=package" if ready else "",
                         resume=resume_url,
                     )
                 )
@@ -309,19 +310,31 @@ class Scene3DPortal:
                 ):
                     raise HTTPException(422, "Explicit single-job Marble authorization required")
                 source(job_id)
-                run_id = uuid4().hex
-                root = jobs.root / "scene3d" / run_id
-                root.mkdir(parents=True)
-                (root / "generation-options.json").write_text(
-                    json.dumps(
-                        {
-                            "job_id": job_id,
-                            "scene_id": scene_id,
-                            "model": model,
-                            "credit_budget": int(budget),
-                        }
-                    )
-                )
+                expected = {
+                    "job_id": job_id,
+                    "scene_id": scene_id,
+                    "model": model,
+                    "credit_budget": int(budget),
+                }
+                # A reconnect, refresh or repeated POST must never create a second paid world.
+                # One source result owns one generation; changed authorization needs review.
+                run_id = job_id
+                parent = jobs.root / "scene3d"
+                for previous in parent.glob("*/generation-options.json"):
+                    saved = record(read_json(previous))
+                    if saved.get("job_id") == job_id:
+                        run_id = previous.parent.name
+                        break
+                root = parent / run_id
+                root.mkdir(parents=True, exist_ok=True)
+                options_path = root / "generation-options.json"
+                if options_path.exists():
+                    if read_json(options_path) != expected:
+                        raise HTTPException(
+                            409, "此 VR 已有生成任务。请核对原任务，不可改参数重复扣费。"
+                        )
+                else:
+                    options_path.write_text(json.dumps(expected))
             return await generate_job(run_id)
 
         @app.post("/api/scene3d-resume/{run_id}")
@@ -330,7 +343,8 @@ class Scene3DPortal:
 
         @app.get("/scene3d-results/{run_id}/")
         async def result(
-            run_id: str, target: Literal["viewer", "review", "spz", "glb", "manifest"] = "viewer"
+            run_id: str,
+            target: Literal["viewer", "review", "spz", "glb", "manifest", "package"] = "viewer",
         ) -> RedirectResponse:
             if len(run_id) != 32 or any(c not in "0123456789abcdef" for c in run_id):
                 raise HTTPException(404)
@@ -346,6 +360,7 @@ class Scene3DPortal:
                 "spz": "scene3d/scene.spz",
                 "glb": "scene3d/collider.glb",
                 "manifest": "scene3d/attachment.json",
+                "package": "api/scene3d-export",
             }[target]
             return RedirectResponse(f"http://127.0.0.1:{port}/{suffix}")
 

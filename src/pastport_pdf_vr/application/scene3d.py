@@ -86,7 +86,7 @@ class Scene3DAttachment:
     def preserve(self) -> StageOutput:
         if self.output.exists():
             raise ValueError("Never rebuild an existing review database")
-        self.output.mkdir()
+        self.output.mkdir(parents=True)
         total = 0
         for source in self.source.rglob("*"):
             if source.is_symlink():

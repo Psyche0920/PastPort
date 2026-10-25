@@ -139,3 +139,15 @@ links remain available via the API. Key values are not returned, logged or saved
 New API/domain types pass strict typing, lint and Python/JS syntax checks. The current
 workbench was reloaded without active tasks and retains the imported 14-object result.
 No real key, paid generation or automatic test suite was used for this UI delivery.
+
+## Pre-payment safeguards and portable scene output
+
+Fixed generation backup parent creation and made repeated frontend requests reuse
+the source result's persistent generation job. Added a version-bound source-fidelity
+policy and portable ZIP export containing SPZ, collision GLB, metric transforms,
+stable object/evidence JSON, original media/PDFs and a consistent review snapshot.
+Unconfirmed anchors stay withheld; full textured visual mesh is not claimed.
+
+Ten isolated checks with network disabled and simulated provider responses passed,
+plus a real local-asset ZIP export check. No real key, provider call or paid export
+was used. Actual provider billing, generated fidelity and engine import remain unverified.

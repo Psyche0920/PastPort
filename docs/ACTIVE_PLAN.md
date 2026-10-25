@@ -36,3 +36,9 @@ Frontend refinement: each completed VR record owns its “Generate 3D” entry, 
 IDs are automatic, main form is project/key/generate only, existing-export import
 is retained in a collapsed form, and 3D record cards show status and their output.
 No generation is triggered by refresh, key entry or record listing.
+
+Pre-payment follow-up: fixed source-backup parent creation and duplicate paid-job
+creation on frontend reconnect. Ten network-disabled simulated-provider checks pass;
+portable ZIP assets/IDs/null anchors checked. Faithful source-only request policy is
+input-bound. Native SPZ, collision GLB and versioned JSON export is implemented; full
+textured mesh and engine import acceptance are not claimed. No real key or credits used.

@@ -65,4 +65,5 @@ class Scene3DRecord(DomainModel):
     splat_url: str = ""
     collider_url: str = ""
     manifest_url: str = ""
+    package_url: str = ""
     resume: str = ""

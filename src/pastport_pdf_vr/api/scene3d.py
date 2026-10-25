@@ -12,6 +12,7 @@ from contextlib import closing
 from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import cast
 from urllib.parse import urlsplit
 
@@ -166,6 +167,25 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
 
     def get(request: BaseHTTPRequestHandler) -> None:
         route = urlsplit(request.path).path
+        if route == "/api/scene3d-export":
+            from pastport_pdf_vr.application.scene3d_export import export_scene
+
+            try:
+                with TemporaryDirectory(prefix="pastport-export-") as temporary:
+                    archive = Path(temporary) / "pastport-scene3d.zip"
+                    export_scene(root, archive)
+                    with archive.open("rb") as stream:
+                        request.send_response(200)
+                        request.send_header("Content-Type", "application/zip")
+                        request.send_header(
+                            "Content-Disposition", 'attachment; filename="pastport-scene3d.zip"'
+                        )
+                        request.send_header("Content-Length", str(archive.stat().st_size))
+                        request.end_headers()
+                        shutil.copyfileobj(stream, request.wfile, 65536)
+            except (OSError, ValueError, sqlite3.Error):
+                request.close_connection = True
+            return
         if route == "/api/scene3d":
             try:
                 respond(request, 200, store.current())

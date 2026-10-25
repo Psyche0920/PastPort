@@ -29,6 +29,22 @@ from pastport_pdf_vr.application.reference_environment import (
 from pastport_pdf_vr.application.scene3d import Scene3DAttachment
 from pastport_pdf_vr.application.storage import atomic_write
 
+PRESERVATION_PROMPT = (
+    "Faithful 3D conversion of the supplied 360 panorama for camera translation "
+    "only, not creative scene redesign. Preserve every visible object's identity, "
+    "count, position, proportions, shape, colour, materials, markings, room layout "
+    "and architectural details. Keep the supplied appearance as closely as possible"
+    " when moving left/right, up/down and forward/back. Do not replace, add, "
+    "remove, reinterpret or relocate objects. Do not repair, repaint, beautify, "
+    "restyle, sharpen away or redesign visible details in this stage; any requested"
+    " image restoration belongs to a separate later stage. Allow only tiny "
+    "unavoidable geometric adjustments necessary to enable translation, while "
+    "keeping identity, appearance and layout accurate. Prefer retaining uncertain "
+    "details over inventing them. Infer only the minimum unseen geometry needed for"
+    " movement; never introduce new narrative or historical elements. Accuracy and "
+    "source fidelity take priority over polish."
+)
+
 
 class MarbleHTTP:
     """Fixed API origin, bounded responses, no credentials in files or diagnostics."""
@@ -110,6 +126,7 @@ class MarbleGeneration:
             "model": model,
             "credit_budget": credit_budget,
             "max_calls": 1,
+            "preservation_prompt_sha256": hashlib.sha256(PRESERVATION_PROMPT.encode()).hexdigest(),
             "estimated_credits": expected,
             "pricing_reference": "https://docs.worldlabs.ai/api/pricing",
         }
@@ -184,12 +201,7 @@ class MarbleGeneration:
                                 "type": "image",
                                 "is_pano": True,
                                 "disable_recaption": True,
-                                "text_prompt": "Preserve the provided scene, "
-                                "visible object identities, layout, "
-                                "materials and details. Do not "
-                                "replace, add or remove objects. "
-                                "This guidance is not a fidelity "
-                                "guarantee.",
+                                "text_prompt": PRESERVATION_PROMPT,
                                 "image_prompt": {
                                     "source": "data_base64",
                                     "extension": extension,
