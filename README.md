@@ -2,6 +2,45 @@
 
 Standalone implementation on `codex/pdf-to-vr-standalone`. The branch has independent history; it does not copy main's application. Main compatibility is a target contract, not a completed integration.
 
+## Environment-generation Agent Skill
+
+For the demonstrated review-backend and VR format, open this checkout in Codex and invoke
+`$pastport-environment-generation` with the matched PDF, new tour and output directory.
+The [repository skill](.agents/skills/pastport-environment-generation/SKILL.md) carries the
+inspection, source, whole/part relationship, fresh-localization and acceptance workflow.
+The Agent performs the visual/semantic work and creates its intermediate records; users do
+not author per-object JSON. The active Codex session supplies the model and tools. This is a
+reusable workflow, not a copy of model weights or a guarantee of identical new-image judgments.
+
+The skill's deterministic tools are:
+
+```sh
+uv run --locked pastport-pdf-vr environment-prepare --pdf INPUT.pdf --tour TOUR --workspace .runtime/new-input
+uv run --locked pastport-pdf-vr environment-render --pdf INPUT.pdf --tour TOUR --evidence .runtime/new-input/evidence --locations .runtime/new-input/locations.json --output .runtime/new-result --serve
+```
+
+Preparation only registers and renders new inputs; it is not completed recognition.
+Rendering consumes the Agent's checked handoff and emits the demonstrated `index.html`
+review backend plus `vr_trial/index.html`, sharing a new editable database. It ignores old
+object hotspots, binds measurements to input/panorama hashes, and rejects changed-input
+measurements. Page, photo and viewpoint counts and object numbers come from each input.
+Existing output directories are refused so human work cannot be reset. Sources and runtime
+data remain under ignored `.runtime/`. The current reference renderer admits schema 4 static
+panorama tours, including safe relative images; 360 video is not implemented.
+
+This entry preserves the existing upload portal, finite SDK grants, typed models, asset store
+and recovery code below. The older `build`/browser pipeline remains a separate workflow and
+does not automatically invoke the repository skill or establish the same visual/semantic
+acceptance. Use the new Skill entry for the user's demonstrated output contract.
+
+| Source | Purpose |
+|---|---|
+| `application/environment_agent.py` | Safe PDF/tour preparation with existing asset/PDF/projection adapters |
+| `application/reference_environment.py` | Strict, hash-bound assembly, structural exclusions, exact source checks and isolated output |
+| `reference_environment/` | Data-free demonstrated layouts and persistence runtime templates; notices retained |
+| `.agents/skills/pastport-environment-generation/` | Complete Agent workflow, operational handoff reference and local UI metadata |
+| `tests/test_environment_agent.py` | Input variation, stale coordinates, source fabrication, relationship and safe rendering checks |
+
 ## Browser workflow: upload, generate, review
 
 Start the local workbench after installation (`uv sync --locked --extra dev --extra codex`):

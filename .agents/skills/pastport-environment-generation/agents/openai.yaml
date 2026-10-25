@@ -1,0 +1,4 @@
+interface:
+  display_name: 匹配环境生成 Agent
+  short_description: 输入匹配PDF与新VR，按真实证据制作同款审核后台和VR
+  default_prompt: 使用 $pastport-environment-generation 处理我指定的匹配PDF和VR，完成真实识别、结构关系检查和重新定位，交付同款审核后台与VR候选。

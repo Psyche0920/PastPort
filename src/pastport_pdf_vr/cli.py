@@ -16,6 +16,19 @@ from pastport_pdf_vr.domain.tour import ImportedTour
 def main() -> None:
     parser = argparse.ArgumentParser(prog="pastport-pdf-vr")
     subcommands = parser.add_subparsers(dest="command", required=True)
+    prepare_environment = subcommands.add_parser(
+        "environment-prepare", help="Prepare fresh PDF/tour images for the environment Agent Skill"
+    )
+    for name in ("pdf", "tour", "workspace"):
+        prepare_environment.add_argument("--" + name, type=Path, required=True)
+    prepare_environment.add_argument("--large-pdf", action="store_true")
+    render_environment = subcommands.add_parser(
+        "environment-render", help="Assemble the Agent's evidence into the exact reference UI"
+    )
+    for name in ("evidence", "locations", "pdf", "tour", "output"):
+        render_environment.add_argument("--" + name, type=Path, required=True)
+    render_environment.add_argument("--serve", action="store_true")
+    render_environment.add_argument("--port", type=int, default=8795)
     studio = subcommands.add_parser("studio", help="Open browser upload, generation and review")
     studio.add_argument("--workspace", type=Path, default=Path(".runtime/studio"))
     studio.add_argument("--port", type=int, default=8794)
@@ -67,6 +80,49 @@ def main() -> None:
     photo_map.add_argument("--large-pdf", action="store_true")
     photo_map.add_argument("--pdftoppm", type=Path)
     arguments = parser.parse_args()
+    if arguments.command == "environment-prepare":
+        import shutil
+
+        from pastport_pdf_vr.application.environment_agent import EnvironmentAgentPreparation
+
+        binary = shutil.which("pdftoppm")
+        if binary is None:
+            parser.error("Poppler pdftoppm is required for visual PDF inspection")
+        prepared = EnvironmentAgentPreparation(Path(binary)).prepare(
+            arguments.pdf,
+            arguments.tour,
+            arguments.workspace,
+            large_pdf=arguments.large_pdf,
+        )
+        print(f"Prepared {prepared.page_count} pages and {prepared.viewpoint_count} viewpoints")
+        print(f"Continue with the repository environment-generation skill: {prepared.manifest}")
+        return
+    if arguments.command == "environment-render":
+        import subprocess
+        import sys
+
+        from pastport_pdf_vr.application.reference_environment import (
+            CandidateBuilder,
+            reference_assets,
+        )
+
+        source = arguments.tour / "index.html" if arguments.tour.is_dir() else arguments.tour
+        CandidateBuilder(
+            reference_assets(),
+            arguments.evidence,
+            arguments.pdf,
+            source,
+            arguments.locations,
+            arguments.output,
+        ).build()
+        print(f"Reference-format VR/review candidate: {arguments.output}")
+        if arguments.serve:
+            subprocess.run(
+                [sys.executable, "start_demo.py", "--port", str(arguments.port)],
+                cwd=arguments.output,
+                check=True,
+            )
+        return
     if arguments.command == "studio":
         import uvicorn
 

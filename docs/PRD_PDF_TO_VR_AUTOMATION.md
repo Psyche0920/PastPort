@@ -62,6 +62,15 @@ For real-site inputs, identify actual shared heritage subjects. Do not add autom
 
 ## 3. Architecture
 
+User-requested extension (2026-10-25): a repository-local environment-generation Agent Skill
+now orchestrates visual inspection and a hash-bound handoff into the demonstrated reference
+review/VR renderer. It is the entry for reproducing the user's accepted output format and
+whole/part corrections. The existing fixed SDK graph remains available as a controlled tool;
+its presence does not make it equivalent to the Skill's inspection or presentation contract.
+The Skill uses the active Codex Agent and preserves input isolation, source evidence and
+human overrides. It is not model-weight cloning. New-site semantic accuracy still requires
+real inspection and acceptance; known-handoff replay does not establish that accuracy.
+
 Use LangGraph as a fixed workflow. Nodes call deterministic application services or a configured model; there is initially no autonomous planning/tool-selection agent. Conditional routing and retry limits are defined in code. A future node may acquire a bounded agent internally without replacing the graph or persistence authority.
 
 ```mermaid

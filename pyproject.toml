@@ -37,7 +37,7 @@ codex = ["openai-codex==0.163.0"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-pastport_pdf_vr = ["prompts/*.txt", "web/*", "web/vendor/*", "fonts/*.ttf", "fonts/*.txt"]
+pastport_pdf_vr = ["prompts/*.txt", "web/*", "web/vendor/*", "fonts/*.ttf", "fonts/*.txt", "reference_environment/*"]
 
 [tool.mypy]
 python_version = "3.12"

@@ -4,6 +4,7 @@ Owner: wehan. Branch: `codex/pdf-to-vr-standalone`. Current user-approved delive
 
 | Work | Owner | Dependencies | Deliverable and acceptance | Status |
 |---|---|---|---|---|
+| Reference environment Agent Skill | wehan | Saved standalone baseline; demonstrated review/VR code; new matched PDF and schema 4 tour | Repository-local skill, safe preparation, checked Agent handoff and exact demonstrated output; changing PDF/tour/numbering must not reuse old answers | Implemented; 41 offline tests, strict typing across 71 files, Ruff and Skill validation pass. Different PDF/numbering and one/three-view fixtures assemble; changed-input positions, fabricated quotes and invalid structural assertions are rejected. Known corrected real-material handoff assembles 14 candidates/25 anchors. This is assembly parity, not fresh new-site inference acceptance |
 | Specification/boundaries | wehan | Main PRD and demo rules | Fixed workflow, typed boundaries and explicit compatibility gaps | Specified; main counterpart/checkers not frozen here |
 | Core/PDF/projection | wehan | Registered assets, Poppler for PDF | Bounded immutable inputs, positioned text, panorama transforms/seams | Implemented and isolated checks pass; full actual PDF exceeds input profile |
 | Recognition/evidence services | wehan | Injected semantic ports | Stable identities, all-view records, bounded missed-target recheck, exact evidence/scope | Implemented with offline counterparts; fresh inference not evaluated |

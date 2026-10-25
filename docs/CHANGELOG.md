@@ -37,3 +37,20 @@ execution receipts were reused unchanged; no additional model usage occurred. Lo
 VR/review and result APIs respond successfully. Validation: 33 tests, strict typing across 63
 source/test files, Ruff and whitespace checks. Main's repository checker is absent; no full
 semantic accuracy, second-site validation or release is claimed.
+
+
+## Reference environment Agent Skill — 2026-10-25
+
+Added a repository-local Skill and two deterministic preparation/assembly commands. The
+active Codex Agent inspects each new PDF/tour, records identity, evidence, structural relations
+and fresh locations, then produces the demonstrated linked review/VR format. No old database,
+private input, matching answer or hotspot dataset is packaged. Existing upload, SDK budget,
+photo-mapping and recovery functionality remains available as a separate workflow.
+
+Verification: 41 offline tests, strict typing across 71 files, Ruff, Skill validation and
+whitespace checks pass. New tests vary PDF, object numbering, viewpoint counts and relative
+image packaging; they reject stale measurements, fabricated source quotes, invalid structure
+and unsafe HTML in evidence descriptions. A known corrected real-material handoff reproduces
+14 candidates/25 anchors. This verifies assembly and format, not equal fresh visual judgment
+on an unseen project. Static schema 4 panoramas are supported; 360 video and hardware-specific
+acceptance remain unimplemented or unverified. The main repository checker is absent.
