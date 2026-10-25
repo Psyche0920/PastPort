@@ -89,6 +89,10 @@ def serve(root: Path, port: int = 0) -> None:
     root = root.resolve()
     if not (root / "pastport_matching.sqlite3").is_file():
         raise ValueError("Missing initialized reference database")
+    if (root / "scene3d/attachment.json").is_file() and not (
+        root / "shared-content.json"
+    ).is_file():
+        raise ValueError("Open this legacy 3D result from Studio to bind shared review content")
     modules: dict[str, types.ModuleType] = {}
     for name in ("vr_content", "vr_positions", "review_server"):
         module = types.ModuleType(name)
@@ -100,10 +104,19 @@ def serve(root: Path, port: int = 0) -> None:
         exec(compile(source.read_text(), str(source), "exec"), module.__dict__)
         modules[name] = module
     module = modules["review_server"]
+    from pastport_pdf_vr.application.shared_content import SharedContentAuthority
+
+    authority = SharedContentAuthority(root)
+    database = authority.database
+    # The trusted review service retains its local static files and spatial service.
+    module.__dict__["CONTENT_DATABASE"] = database
+    module.__dict__["VR_CONTENT"].database = database
     handler = cast(type[BaseHTTPRequestHandler], module.ReviewHandler)
     with ThreadingHTTPServer(("127.0.0.1", port), handler) as server:
+        from pastport_pdf_vr.api.shared_content import install_shared_content
         from pastport_pdf_vr.api.vr_navigation import install_navigation
 
+        install_shared_content(handler, root)
         install_navigation(handler, root, server.server_port)
         if (root / "scene3d/attachment.json").is_file():
             from pastport_pdf_vr.api.scene3d import install_routes

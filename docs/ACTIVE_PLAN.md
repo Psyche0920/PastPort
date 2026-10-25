@@ -175,3 +175,17 @@ authority across independent 3D viewpoints; per-view spatial edits remain indepe
 Current code is checkpointed so that owner can work in the shared original checkout.
 Next: consume the shared-content contract, finish whole-tour input/output, then
 produce one isolated complete candidate without replacing the approved baseline.
+## Shared content repair before stylization
+
+Owner: wehan. Branch: codex/matched-environment. Dependency: original source VR
+result is content authority; per-view spatial stores remain separate. Deliverable:
+shared review/evidence/introduction reads and versioned writes across VR and 3D;
+input/stable identity isolation, preservation of linear legacy edits and explicit
+blocking of divergent histories; current shared semantics in portable exports.
+Implemented with source bindings, authority-backed services, cross-port revision
+polling and current packaged viewer bridges for existing results. Ten targeted
+offline checks passed; eight changed Python/test files passed strict typing.
+Final browser behavior, real legacy migration and human acceptance remain pending
+user tests. No provider call, regenerated asset or service restart. Stylization
+can integrate this fixed contract after the repair commit; conflicts must not be
+resolved silently.

@@ -1,4 +1,4 @@
-import {SceneTransitions} from './transitions.js?v=plane-3';
+import {SceneTransitions} from './transitions.js?v=shared-1';
 import * as THREE from 'three';
 import {SparkRenderer,SplatMesh} from '@sparkjsdev/spark';
 import {GLTFLoader} from './GLTFLoader.js';
@@ -56,6 +56,13 @@ async function showPopup(o,pending=false){
  }catch(e){note(e.message);await reload();}
 }
 contentChannel.onmessage=async event=>{if(event.data?.type==='content-saved'&&Number(event.data.object_id)===popupId&&$('popup').style.display!=='none'){const marker=markers.find(m=>m.userData.object.id===popupId);if(marker)await showPopup(marker.userData.object,marker.userData.pending);}};
+let refreshingShared=false;
+addEventListener('pastport-shared-changed',async()=>{
+ if(!data||busy||pendingSave||markerDrag||refreshingShared)return;refreshingShared=true;
+ try{await reload();const marker=markers.find(m=>m.userData.object.id===popupId);if(popupId&&$('popup').style.display!=='none'){if(marker)await showPopup(marker.userData.object,marker.userData.pending);else{$('popup').style.display='none';popupId=null;note('此编号审核或历史绑定已变化，已停止展示。');}}}
+ catch(e){note('共享内容更新失败：'+e.message);}finally{refreshingShared=false;}
+});
+addEventListener('pastport-shared-unavailable',()=>note('共享内容暂不可用；未切换到旧副本。'));
 let dragging=false,moved=0;
 renderer.domElement.onpointerdown=event=>{
  if(busy)return;if(transitions?.startDrag(event))return;dragging=true;moved=0;renderer.domElement.setPointerCapture(event.pointerId);
