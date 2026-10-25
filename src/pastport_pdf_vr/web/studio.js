@@ -1,8 +1,8 @@
 'use strict';
 const byId = id => document.getElementById(id);
-let documentFile = null, tourFiles = [], sending = false;
+let documentFile = null, tourFiles = [], photoFiles = [], sending = false;
 const statusLabels = {running:'正在生成',completed:'生成完成',completed_with_gaps:'完成 · 有缺口',failed:'未完成',recovery_required:'需核对中断记录'};
-const stageLabels = {ingest:'读取资料',recognize:'识别与定位',map_pdf:'关联历史对象',evidence:'提取证据与介绍',publish:'写入审核资料',export_snapshot:'导出预览'};
+const stageLabels = {ingest_photos:'读取 PDF 与照片',recognize_photos:'照片对象识别与统一编号',export_mapping:'导出照片映射 PDF',ingest:'读取资料',recognize:'识别与定位',map_pdf:'关联历史对象',evidence:'提取证据与介绍',publish:'写入审核资料',export_snapshot:'导出预览'};
 async function api(url, options) {
   const response = await fetch(url, options);
   const data = await response.json();
@@ -11,6 +11,7 @@ async function api(url, options) {
 }
 function showSelections() {
   byId('document-selection').textContent = documentFile ? `${documentFile.name} · ${(documentFile.size/1048576).toFixed(1)} MiB` : '尚未选择 · 默认上限 64 MiB';
+  byId('photos-selection').textContent = photoFiles.length ? `${photoFiles.length} 张照片 · ${(photoFiles.reduce((sum,f)=>sum+f.file.size,0)/1048576).toFixed(1)} MiB` : '尚未选择 · JPEG / PNG / WebP';
   byId('tour-selection').textContent = tourFiles.length ? `${tourFiles.length} 个文件 · ${(tourFiles.reduce((sum,f)=>sum+f.file.size,0)/1048576).toFixed(1)} MiB` : '尚未选择 · HTML / 文件夹 / ZIP';
 }
 byId('document').onchange = event => {documentFile=event.target.files[0] || null; showSelections();};
@@ -25,7 +26,15 @@ async function readEntry(entry, prefix='') {
   const nested=await Promise.all(entries.map(child=>readEntry(child,prefix+entry.name+'/')));
   return nested.flat();
 }
-for (const kind of ['document','tour']) {
+for (const id of ['photos','photo-folder']) byId(id).onchange = event => {photoFiles = Array.from(event.target.files).map(file=>({file,path:file.webkitRelativePath || file.name})); showSelections();};
+function configureWorkflow() {
+ const photos=byId('workflow').value==='photo_mapping';
+ byId('photos-drop').hidden=!photos; byId('tour-drop').hidden=photos;
+ byId('mapping').disabled=photos; if(photos) byId('mapping').value='demo_substitution';
+ byId('generate').textContent=photos?'生成照片映射 PDF':'生成 VR 直接试验';
+}
+byId('workflow').onchange=()=>{configureWorkflow();refresh().catch(error=>byId('form-status').textContent=error.message);}; configureWorkflow();
+for (const kind of ['document','tour','photos']) {
   const drop=byId(kind+'-drop');
   drop.addEventListener('dragover',event=>{event.preventDefault();drop.classList.add('over');});
   drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
@@ -37,7 +46,8 @@ for (const kind of ['document','tour']) {
         documentFile=event.dataTransfer.files[0];
       } else {
         const entries=Array.from(event.dataTransfer.items).map(item=>item.webkitGetAsEntry?.()).filter(Boolean);
-        tourFiles=entries.length ? (await Promise.all(entries.map(entry=>readEntry(entry)))).flat() : Array.from(event.dataTransfer.files).map(file=>({file,path:file.name}));
+        const uploaded=entries.length ? (await Promise.all(entries.map(entry=>readEntry(entry)))).flat() : Array.from(event.dataTransfer.files).map(file=>({file,path:file.name}));
+        if(kind==='photos') photoFiles=uploaded; else tourFiles=uploaded;
       }
       showSelections();
     } catch(error) {byId('form-status').textContent=error.message;}
@@ -48,7 +58,7 @@ async function refresh() {
   const current=byId('project').value;
   const select=byId('project'); select.replaceChildren(new Option('新建项目',''));
   const projects=new Set();
-  for(const job of jobs) if(!projects.has(job.project_id)) {projects.add(job.project_id);if(['completed','completed_with_gaps'].includes(job.status)) select.add(new Option(job.title+' · 保留已有人工修改',job.project_id));}
+  for(const job of jobs) if(!projects.has(job.project_id)) {projects.add(job.project_id);if(['completed','completed_with_gaps'].includes(job.status) && (job.workflow||'vr_build')===byId('workflow').value) select.add(new Option(job.title+' · 保留已有人工修改',job.project_id));}
   select.value=current;
   const container=byId('jobs'); container.replaceChildren();
   for (const job of jobs) {
@@ -60,7 +70,7 @@ async function refresh() {
     for(const item of job.stages) {const [name,status]=item.split(':');const label=document.createElement('span');label.className='stage '+status;label.textContent=(stageLabels[name]||name)+(status==='completed'?' ✓':status==='running'?' …':' · 需核对');phases.append(label);}card.append(phases);
     if(['completed','completed_with_gaps'].includes(job.status)) {
       const nav=document.createElement('nav');
-      for(const [label,path] of [['打开 VR 展示','vr/'],['打开审核工作台','']]) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/${path}`;link.textContent=label;nav.append(link);}card.append(nav);
+      for(const [label,path] of (job.workflow==='photo_mapping' ? [['下载映射 PDF','mapping.pdf'],['下载映射数据','mapping.json'],['查看照片与来源','']] : [['打开 VR 展示','vr/'],['打开审核工作台','']])) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/${path}`;link.textContent=label;nav.append(link);}card.append(nav);
     }
     container.append(card);
   }
@@ -71,12 +81,14 @@ byId('build-form').onsubmit=async event=>{
   event.preventDefault(); if(sending) return;
   try {
     if(!documentFile || !documentFile.name.toLowerCase().endsWith('.pdf')) throw new Error('请选择 PDF。IDML / INDD 当前尚不能直接生成。');
-    if(!tourFiles.length) throw new Error('请选择完整的 360° 导览。');
+    const photoMode=byId('workflow').value==='photo_mapping';
+    if(photoMode && (!photoFiles.length || photoFiles.length>100 || photoFiles.some(item=>! /\.(jpe?g|png|webp)$/i.test(item.file.name) || item.file.size>30*1048576) || photoFiles.reduce((n,f)=>n+f.file.size,0)>200*1048576)) throw new Error('请选择 1–100 张 JPEG、PNG 或 WebP 照片；单张最多 30 MiB，合计最多 200 MiB。');
+    if(!photoMode && !tourFiles.length) throw new Error('请选择完整的 360° 导览。');
     if(documentFile.size>(byId('large-pdf').checked?512:64)*1048576) throw new Error('PDF 超过大小限制；大文件请启用“大 PDF”选项。');
     if(tourFiles.length>100||tourFiles.reduce((sum,f)=>sum+f.file.size,0)>200*1048576) throw new Error('导览超过上传数量或大小限制，请精简并打包为 ZIP。');
-    const options={title:byId('project-title').value.trim(),project_id:byId('project').value||null,mapping_mode:byId('mapping').value,large_pdf:byId('large-pdf').checked,max_calls:Number(byId('max-calls').value),max_recorded_tokens:Number(byId('max-tokens').value),authorize_model:byId('authorize').checked};
+    const options={workflow:byId('workflow').value,title:byId('project-title').value.trim(),project_id:byId('project').value||null,mapping_mode:byId('mapping').value,large_pdf:byId('large-pdf').checked,max_calls:Number(byId('max-calls').value),max_recorded_tokens:Number(byId('max-tokens').value),authorize_model:byId('authorize').checked};
     const form=new FormData();form.append('options',JSON.stringify(options));form.append('document',documentFile);
-    for(const item of tourFiles) form.append('tour',item.file,item.path);
+    for(const item of (photoMode ? photoFiles : tourFiles)) form.append(photoMode?'photos':'tour',item.file,item.path);
     sending=true;byId('generate').disabled=true;byId('form-status').textContent='正在上传文件，请勿关闭页面…';
     await api('/api/jobs',{method:'POST',headers:{'X-PastPort-Edit':'1'},body:form});
     byId('form-status').textContent='文件已接收。生成进度见下方，完成后可直接打开结果。';

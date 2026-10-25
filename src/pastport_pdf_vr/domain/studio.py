@@ -18,6 +18,14 @@ class InputCapability(DomainModel):
 
 INPUT_CAPABILITIES = (
     InputCapability(
+        key="site_photos",
+        label="现场多角度照片",
+        category="scene",
+        status="supported",
+        extensions=(".jpg", ".jpeg", ".png", ".webp"),
+        detail="第一阶段独立接收 1-100 张照片，统一物品身份并导出替代映射 PDF；不要求 VR。",
+    ),
+    InputCapability(
         key="pdf",
         label="PDF 文档",
         category="document",
@@ -61,6 +69,7 @@ INPUT_CAPABILITIES = (
 
 
 class StudioOptions(DomainModel):
+    workflow: Literal["vr_build", "photo_mapping"] = "vr_build"
     title: Annotated[str, Field(min_length=1, max_length=100)]
     project_id: Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")] | None = None
     document_format: Literal["pdf", "idml_links", "indd"] = "pdf"
@@ -76,6 +85,7 @@ class StudioJob(DomainModel):
     job_id: Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")]
     project_id: Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")]
     title: str
+    workflow: Literal["vr_build", "photo_mapping"] = "vr_build"
     status: Literal["running", "completed", "completed_with_gaps", "failed", "recovery_required"]
     message: str = ""
     stages: tuple[str, ...] = ()

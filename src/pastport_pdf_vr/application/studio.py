@@ -132,10 +132,10 @@ class SubprocessBuildRunner:
             sys.executable,
             "-m",
             "pastport_pdf_vr.cli",
-            "build",
+            "photo-map" if options.workflow == "photo_mapping" else "build",
             "--pdf",
             str(pdf),
-            "--tour",
+            "--photos" if options.workflow == "photo_mapping" else "--tour",
             str(tour),
             "--grant",
             str(grant),
@@ -143,9 +143,9 @@ class SubprocessBuildRunner:
             str(workspace),
             "--run-id",
             job_id,
-            "--mapping-mode",
-            options.mapping_mode,
         ]
+        if options.workflow == "vr_build":
+            arguments.extend(("--mapping-mode", options.mapping_mode))
         if options.large_pdf:
             arguments.append("--large-pdf")
         self._process = await asyncio.create_subprocess_exec(
@@ -233,6 +233,8 @@ class StudioJobs:
             raise InputValidationError("项目不存在。")
         if any(j.status == "recovery_required" for j in previous):
             raise InputValidationError("此项目有未核对的中断记录，不能重新提交模型任务。")
+        if previous and previous[0].workflow != options.workflow:
+            raise InputValidationError("请为照片映射阶段新建项目，不能覆盖不同阶段的数据。")
         job_id = upload.name
         workspace = self.root / "projects" / project
         if pdf.stat().st_size > (512 if options.large_pdf else 64) * MIB:
@@ -249,7 +251,13 @@ class StudioJobs:
         )
         grant_path = upload / "grant.json"
         atomic_write(grant_path, grant.model_dump_json())
-        job = StudioJob(job_id=job_id, project_id=project, title=options.title, status="running")
+        job = StudioJob(
+            job_id=job_id,
+            project_id=project,
+            title=options.title,
+            workflow=options.workflow,
+            status="running",
+        )
         self.save(job)
         self._task = asyncio.create_task(
             self._execute(job, options, pdf, tour, grant_path, workspace)
@@ -274,7 +282,11 @@ class StudioJobs:
                     job.model_copy(
                         update={
                             "status": summary.status,
-                            "message": "生成完成，可打开 VR 和审核工作台。",
+                            "message": (
+                                "照片映射完成，可下载映射 PDF 与数据。"
+                                if options.workflow == "photo_mapping"
+                                else "生成完成，可打开 VR 和审核工作台。"
+                            ),
                         }
                     )
                 )

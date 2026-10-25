@@ -81,6 +81,13 @@ class EvidenceProposal(EvidencePayload):
     receipt_ref: ResourceId
 
 
+class EvidenceAssessment(DomainModel):
+    """Accepted proposal and explicit rejected-item diagnostics; raw receipts stay immutable."""
+
+    proposal: EvidenceProposal
+    validation_gaps: tuple[str, ...] = ()
+
+
 class DisplaySentence(DomainModel):
     text: Text
     claim_ids: Annotated[tuple[ResourceId, ...], Field(min_length=1)]
@@ -117,6 +124,7 @@ class AssociatedEvidence(DomainModel):
     retrieval_rounds: Literal[1, 2]
     retrieval_gap: bool
     receipt_refs: tuple[ResourceId, ...]
+    validation_gaps: tuple[str, ...] = ()
 
 
 class DisplayCopy(DomainModel):

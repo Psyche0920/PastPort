@@ -18,11 +18,20 @@ class PDFMatchPage(DomainModel):
     passages: tuple[ExactPassage, ...]
 
 
+class ObjectReferenceSheet(DomainModel):
+    image: ProjectAssetRef
+    object_ids: tuple[ResourceId, ...]
+    display_numbers: tuple[int, ...]
+    columns: int
+    rows: int
+
+
 class PDFMatchRequest(DomainModel):
     mode: Literal["same_site", "demo_substitution"]
     objects: tuple[SceneEntity, ...]
     known_subjects: tuple[HistoricalSubject, ...]
     pages: tuple[PDFMatchPage, ...]
+    reference_sheets: Annotated[tuple[ObjectReferenceSheet, ...], Field(max_length=5)] = ()
     grant: SubscriptionGrant
     prompt_version: str = "v1"
     policy_version: str = "pdf-object-mapping-v1"

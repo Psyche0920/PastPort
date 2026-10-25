@@ -86,7 +86,11 @@ class ProjectReviewRouter:
             )
             return
         workspace = self.jobs.root / "projects" / project
-        tour = ImportedTour.model_validate_json((workspace / "tour.json").read_bytes())
+        tour = (
+            ImportedTour.model_validate_json((workspace / "tour.json").read_bytes())
+            if known[0].workflow == "vr_build"
+            else None
+        )
         summary = BuildSummary.model_validate_json((workspace / "build-summary.json").read_bytes())
         application = LocalReviewApplication(
             project,
@@ -94,6 +98,10 @@ class ProjectReviewRouter:
             SQLiteEditorialRepository(workspace / "editorial.sqlite3"),
             LocalAssetStore(workspace / "assets"),
             summary,
+            mapping_pdf=workspace / "mapping.pdf" if known[0].workflow == "photo_mapping" else None,
+            mapping_data=workspace / "mapping.json"
+            if known[0].workflow == "photo_mapping"
+            else None,
         )
         child = dict(scope)
         child["root_path"] = prefix + "/" + project
@@ -180,7 +188,7 @@ class StudioApplication:
                 upload.mkdir()
                 try:
                     async with request.form(
-                        max_files=101, max_fields=1, max_part_size=16 * 1024
+                        max_files=201, max_fields=1, max_part_size=16 * 1024
                     ) as form:
                         raw_options = form.get("options")
                         if not isinstance(raw_options, str):
@@ -192,9 +200,16 @@ class StudioApplication:
                             )
                         pdfs = form.getlist("document")
                         tours = form.getlist("tour")
-                        if len(pdfs) != 1 or not tours:
+                        photos = form.getlist("photos")
+                        if (
+                            len(pdfs) != 1
+                            or (options.workflow == "vr_build" and not tours)
+                            or (options.workflow == "photo_mapping" and not photos)
+                        ):
                             raise InputValidationError("请选择一份 PDF 和完整的 VR 导览。")
-                        if any(key not in ("document", "tour", "options") for key in form):
+                        if any(
+                            key not in ("document", "tour", "photos", "options") for key in form
+                        ):
                             raise InputValidationError("包含无法识别的上传字段。")
                         pdf_file = pdfs[0]
                         if (
@@ -206,6 +221,43 @@ class StudioApplication:
                         await self._save_upload(
                             pdf_file, pdf_path, (512 if options.large_pdf else 64) * MIB
                         )
+                        if options.workflow == "photo_mapping":
+                            if (
+                                tours
+                                or len(photos) > 100
+                                or options.mapping_mode != "demo_substitution"
+                            ):
+                                raise InputValidationError(
+                                    "照片映射只接受历史 PDF 与最多 100 张现场照片，"
+                                    "请选择替代物模式。"
+                                )
+                            photo_folder = upload / "photos"
+                            photo_folder.mkdir()
+                            photo_names: set[str] = set()
+                            total = 0
+                            for item in photos:
+                                if not isinstance(item, UploadFile):
+                                    raise InputValidationError("照片必须为文件。")
+                                relative = safe_relative_name(item.filename or "")
+                                canonical = relative.as_posix().casefold()
+                                if canonical in photo_names or relative.suffix.lower() not in (
+                                    ".jpg",
+                                    ".jpeg",
+                                    ".png",
+                                    ".webp",
+                                ):
+                                    raise InputValidationError(
+                                        "照片格式或文件名重复；支持 JPEG、PNG、WebP。"
+                                    )
+                                photo_names.add(canonical)
+                                target = photo_folder / relative
+                                target.parent.mkdir(parents=True, exist_ok=True)
+                                total += await self._save_upload(
+                                    item, target, min(30 * MIB, 200 * MIB - total)
+                                )
+                            return self.jobs.start(options, upload, pdf_path, photo_folder)
+                        if photos:
+                            raise InputValidationError("请先选择照片映射阶段，以接收现场照片。")
                         tour_folder = upload / "tour"
                         tour_folder.mkdir()
                         names: set[str] = set()

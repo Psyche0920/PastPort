@@ -51,9 +51,21 @@ def main() -> None:
         "--mapping-mode", choices=("same_site", "demo_substitution"), default="same_site"
     )
     build.add_argument("--large-pdf", action="store_true", help="Explicit 512 MiB PDF profile")
+    build.add_argument(
+        "--resume-evidence",
+        action="store_true",
+        help="Explicitly reconcile a known evidence validation failure using settled cached calls",
+    )
     build.add_argument("--pdftoppm", type=Path)
     build.add_argument("--serve", action="store_true", help="Start linked VR/review after building")
     build.add_argument("--port", type=int, default=8794)
+    photo_map = subcommands.add_parser(
+        "photo-map", help="Create a photo-first substitution mapping PDF"
+    )
+    for name in ("pdf", "photos", "workspace", "grant", "run-id"):
+        photo_map.add_argument("--" + name, type=str if name == "run-id" else Path, required=True)
+    photo_map.add_argument("--large-pdf", action="store_true")
+    photo_map.add_argument("--pdftoppm", type=Path)
     arguments = parser.parse_args()
     if arguments.command == "studio":
         import uvicorn
@@ -63,6 +75,28 @@ def main() -> None:
         application = StudioApplication(arguments.workspace)
         print(f"Studio: http://127.0.0.1:{arguments.port}/")
         uvicorn.run(application.app, host="127.0.0.1", port=arguments.port, access_log=False)
+        return
+    if arguments.command == "photo-map":
+        import shutil
+
+        from pastport_pdf_vr.adapters.codex_sdk import CodexSDKTransport
+        from pastport_pdf_vr.adapters.pdf import PopplerPDFReader
+        from pastport_pdf_vr.application.photo_mapping import PhotoMappingWorkflow
+        from pastport_pdf_vr.domain.execution import SubscriptionGrant
+
+        binary = str(arguments.pdftoppm) if arguments.pdftoppm else shutil.which("pdftoppm")
+        if binary is None:
+            parser.error("Poppler pdftoppm is required")
+        grant = SubscriptionGrant.model_validate_json(arguments.grant.read_bytes())
+        PhotoMappingWorkflow(PopplerPDFReader(Path(binary)), CodexSDKTransport(grant.effort)).run(
+            arguments.pdf,
+            arguments.photos,
+            arguments.workspace,
+            grant,
+            arguments.run_id,
+            arguments.large_pdf,
+        )
+        print("Photo mapping PDF and structured data are ready in", arguments.workspace)
         return
     if arguments.command == "build":
         import shutil
@@ -87,6 +121,7 @@ def main() -> None:
             arguments.run_id,
             arguments.mapping_mode,
             arguments.large_pdf,
+            arguments.resume_evidence,
         )
         gaps = sorted({gap for result in results for gap in result.gaps})
         print("Build completed" + (" with gaps" if gaps else ""))

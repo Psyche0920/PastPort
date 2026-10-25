@@ -56,12 +56,23 @@ class FixedStage:
     service: Stage
 
 
+@dataclass(frozen=True, slots=True)
+class StageRecovery:
+    stage: str
+    expected_error: str
+    reason: str
+
+
 class StageJournal:
     def __init__(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         self.path = path
         with self._connection() as db:
             db.executescript("""
+                CREATE TABLE IF NOT EXISTS pipeline_recoveries (
+                    project TEXT NOT NULL, run_id TEXT NOT NULL, stage TEXT NOT NULL,
+                    previous_status TEXT NOT NULL, error_type TEXT NOT NULL,
+                    reason TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
                 CREATE TABLE IF NOT EXISTS pipeline_runs (
                     project TEXT NOT NULL,run_id TEXT NOT NULL,binding TEXT NOT NULL,
                     graph_version TEXT NOT NULL,status TEXT NOT NULL,
@@ -101,6 +112,34 @@ class StageJournal:
                 ),
             )
 
+    def reconcile(self, state: GraphState, recovery: StageRecovery) -> None:
+        """Record operator-authorized reconciliation without deleting failure or usage history."""
+        key = (state["project_id"], state["run_id"], recovery.stage)
+        with self._connection() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute(
+                "SELECT status,error_type FROM pipeline_stages "
+                "WHERE project=? AND run_id=? AND stage=?",
+                key,
+            ).fetchone()
+            if row and row[0] == "completed":
+                return
+            if row != ("recovery_required", recovery.expected_error):
+                raise RecoveryRequired("Recovery requires the exact previously diagnosed failure")
+            db.execute(
+                "INSERT INTO pipeline_recoveries "
+                "(project,run_id,stage,previous_status,error_type,reason) VALUES (?,?,?,?,?,?)",
+                (*key, row[0], row[1], recovery.reason),
+            )
+            db.execute(
+                "UPDATE pipeline_stages SET status='reconciled' "
+                "WHERE project=? AND run_id=? AND stage=?",
+                key,
+            )
+            db.execute(
+                "UPDATE pipeline_runs SET status='running' WHERE project=? AND run_id=?", key[:2]
+            )
+
     def execute(self, stage: FixedStage, state: GraphState) -> StageOutput:
         key = (state["project_id"], state["run_id"], stage.name)
         with self._connection() as db:
@@ -113,10 +152,17 @@ class StageJournal:
             if row:
                 if row[0] == "completed":
                     return StageOutput.model_validate_json(row[1])
-                raise RecoveryRequired(
-                    f"Stage {stage.name} is {row[0]}; reconcile its effects before resuming"
+                if row[0] != "reconciled":
+                    raise RecoveryRequired(
+                        f"Stage {stage.name} is {row[0]}; reconcile its effects before resuming"
+                    )
+                db.execute(
+                    "UPDATE pipeline_stages SET status='running' WHERE project=? AND run_id=? "
+                    "AND stage=?",
+                    key,
                 )
-            db.execute("INSERT INTO pipeline_stages VALUES (?,?,?,'running',NULL,NULL)", key)
+            else:
+                db.execute("INSERT INTO pipeline_stages VALUES (?,?,?,'running',NULL,NULL)", key)
         try:
             output = stage.service.execute(
                 StageCommand(
@@ -176,7 +222,14 @@ class FixedWorkflow:
             raise ValueError("Fixed stage names must be nonempty and unique")
         self._journal, self._stages, self._version = journal, stages, version
 
-    def run(self, project_id: str, run_id: str, input_binding: str) -> tuple[StageOutput, ...]:
+    def run(
+        self,
+        project_id: str,
+        run_id: str,
+        input_binding: str,
+        *,
+        recovery: StageRecovery | None = None,
+    ) -> tuple[StageOutput, ...]:
         state: GraphState = {
             "project_id": project_id,
             "run_id": run_id,
@@ -192,6 +245,8 @@ class FixedWorkflow:
                 raise RunConflict("Another workflow owns this project") from error
             try:
                 self._journal.bind(state)
+                if recovery is not None:
+                    self._journal.reconcile(state, recovery)
                 graph = StateGraph(GraphState)
                 previous = START
                 for stage in self._stages:

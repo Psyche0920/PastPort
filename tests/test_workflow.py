@@ -1,3 +1,4 @@
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,7 @@ from pastport_pdf_vr.workflow.graph import (
     StageCommand,
     StageJournal,
     StageOutput,
+    StageRecovery,
 )
 
 
@@ -52,3 +54,45 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaises(RecoveryRequired):
                 workflow.run("project", "run:1", "input:1")
             self.assertEqual(stage.calls, 1)
+
+
+class EvidenceFailure(ValueError):
+    pass
+
+
+class RecoverableEvidenceStage(CounterStage):
+    def execute(self, command: StageCommand) -> StageOutput:
+        self.calls += 1
+        if self.fail:
+            raise EvidenceFailure("Known semantic rejection")
+        return StageOutput(references=("fixture:accepted",), gaps=("rejected_claim:parent",))
+
+
+class RecoveryTests(unittest.TestCase):
+    def test_recovery_is_explicit_bound_audited_and_skips_completed_stages(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "stages.sqlite3"
+            first, evidence = CounterStage(), RecoverableEvidenceStage(fail=True)
+            workflow = FixedWorkflow(
+                StageJournal(path),
+                (FixedStage("recognize", first), FixedStage("evidence", evidence)),
+                "v1",
+            )
+            with self.assertRaises(EvidenceFailure):
+                workflow.run("project", "run:1", "input:1")
+            wrong = StageRecovery("evidence", "TimeoutError", "operator review")
+            with self.assertRaises(RecoveryRequired):
+                workflow.run("project", "run:1", "input:1", recovery=wrong)
+            recovery = StageRecovery("evidence", "EvidenceFailure", "operator review")
+            with self.assertRaises(RunConflict):
+                workflow.run("project", "run:1", "changed", recovery=recovery)
+            evidence.fail = False
+            workflow.run("project", "run:1", "input:1", recovery=recovery)
+            self.assertEqual((first.calls, evidence.calls), (1, 2))
+            workflow.run("project", "run:1", "input:1", recovery=recovery)
+            self.assertEqual((first.calls, evidence.calls), (1, 2))
+            with sqlite3.connect(path) as connection:
+                audit = connection.execute(
+                    "SELECT previous_status,error_type,reason FROM pipeline_recoveries"
+                ).fetchall()
+            self.assertEqual(audit, [("recovery_required", "EvidenceFailure", "operator review")])

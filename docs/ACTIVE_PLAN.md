@@ -59,3 +59,24 @@ The user requested nontechnical upload/generate operation in the same workbench.
 Source format inspection found PDF, IDML, INDD and Links JPG/JPEG in the official II. Murat Drive folder. Only PDF and supported 360 exports are enabled today. IDML/Links and 3D remain visibly reserved capabilities; INDD requires conversion. Main integration, IDML extraction, surface-anchor geometry and cloud authentication remain separate pending work.
 
 Acceptance evidence: isolated upload/job/API checks with fake semantic transport; browser file chooser, submit/progress/completion, generated numbered popup and evidence-editor navigation on a separate offline fixture server. Full real-material live inference was deliberately not rerun. Check counts and remote delivery are recorded after completion, without changing the original demo data.
+
+## Scope rejection and authorized recovery — 2026-10-24
+
+Owner: wehan. Dependencies: immutable model receipts, source selectors and the original finite
+grant. Deliverable: isolate semantic claim/association rejections, preserve usable evidence, and
+resume the diagnosed evidence failure without repeating completed inference or resetting usage.
+Acceptance: missing-parent background remains excluded with a diagnostic; valid claims survive;
+explicit recovery is input-bound and audited; uncertain dispatch remains blocked.
+
+Implemented and verified locally. The actual Ulucamii run resumed its evidence stage, completed
+publish/export, and produced 14 scene objects / 21 anchors. Three unsupported parent-background
+claims for the minbar balustrade remain explicit gaps. All 23 original model receipt rows stayed
+byte-for-byte unchanged; no new model calls were issued (634,536 recorded tokens remain).
+This is a completed-with-gaps build, not confirmation that all source objects are mapped or that
+all semantic/position proposals are correct. Three historical assignments were selected; the
+other scene objects remain unbound. Parent discovery is not invented or silently repaired.
+
+Evidence: 33 behavioral tests, strict mypy over 63 source/test files, Ruff lint/format and whitespace
+checks pass. Existing local job, review, VR, summary and snapshot endpoints return successfully.
+The main repository checker is absent. Changes remain local until a separate commit/push;
+second-site accuracy and main integration remain pending.

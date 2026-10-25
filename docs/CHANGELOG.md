@@ -23,3 +23,17 @@ Status: implemented on the standalone branch; localhost-only, not main-integrate
 - Published explicit format capabilities: PDF and current 360 exports work; IDML/Links and 3D remain reserved adapters, and INDD requires conversion. Read-only official Drive inspection confirmed those document/media formats.
 
 Evidence: 31 behavioral tests pass; strict mypy across 63 source/test files, Ruff lint/format, JavaScript syntax and whitespace checks pass. Six new tests cover linked upload/build/rebuild with preserved human text, rejected formats/origins, archive safety, request byte limits, interruption and missing renderer. Browser verification on a separate offline fixture server exercised file choosers, submission/progress/completion, numbered popup and the linked source/editor. No real model calls were made for this UI delivery; no full live-material or second-site accuracy is claimed. Main's repository checker is absent from this independent branch, so its gates remain unverified.
+
+## Evidence rejection and recovery — 2026-10-24
+
+Implemented locally; not yet committed or pushed. Partial evidence assessment excludes invalid
+claims/associations with explicit diagnostics, while keeping source validation strict and raw
+model receipts immutable. Added explicit, input-bound evidence recovery with an append-only
+reconciliation audit; unknown dispatches and changed grants remain blocked.
+
+The authorized actual Ulucamii recovery completed with gaps: 14 objects, 21 anchors, three
+historical assignments, and three rejected minbar-balustrade background claims. All 23 previous
+execution receipts were reused unchanged; no additional model usage occurred. Local project
+VR/review and result APIs respond successfully. Validation: 33 tests, strict typing across 63
+source/test files, Ruff and whitespace checks. Main's repository checker is absent; no full
+semantic accuracy, second-site validation or release is claimed.

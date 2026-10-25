@@ -210,6 +210,22 @@ A live synthetic image capability check passed with Sol 6.1 using ChatGPT login.
 
 Pannellum 2.5.6 is vendored from the official npm package via jsDelivr (`pannellum@2.5.6/build/pannellum.js` and `.css`). Its MIT license is retained in `web/vendor/COPYING`. No third-party CDN is needed at runtime.
 
+## Evidence rejection and explicit recovery
+
+Automatic generation validates each semantic claim and image association independently. Invalid
+claims are excluded and recorded as `evidence_validation` gaps; accepted claims and source
+receipts remain available. A missing parent never licenses inventing a parent, changing a
+background claim to a direct fact, or attaching whole-building history to a component. Invalid
+source selectors, project/version bindings and uncertain model dispatches still stop execution.
+
+After diagnosing an `EvidenceValidationError` and authorizing recovery, repeat the original
+`build` arguments with `--resume-evidence`. Keep the exact PDF, tour, grant, workspace, run ID,
+mapping mode and large-PDF setting. Completed stages are skipped, settled requests reuse their
+original receipts, and remaining work stays within the original cumulative grant. Recovery is
+recorded in `pipeline_recoveries`; it neither clears failure history nor resets usage. The flag
+rejects unrelated failures, changed bindings and unresolved dispatches. It is an operator command,
+not an automatic retry or a browser recovery button.
+
 ## Checks and next integration
 
 ```sh

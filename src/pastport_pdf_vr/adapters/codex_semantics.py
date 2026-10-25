@@ -5,6 +5,7 @@ from typing import Literal, TypeVar
 
 from pastport_pdf_vr.adapters.execution import SubscriptionExecutor
 from pastport_pdf_vr.adapters.structured_output import StrictOutputSchema
+from pastport_pdf_vr.application.photos import PhotoRecognitionService
 from pastport_pdf_vr.application.prompting import load_semantic_prompt
 from pastport_pdf_vr.application.recognition import SceneRecognitionService
 from pastport_pdf_vr.domain.build import PDFMatchPayload, PDFMatchRequest
@@ -18,6 +19,11 @@ from pastport_pdf_vr.domain.evidence import (
 )
 from pastport_pdf_vr.domain.execution import ExecutionDenied, ExecutionInput
 from pastport_pdf_vr.domain.models import DomainModel, ProjectAssetRef
+from pastport_pdf_vr.domain.photos import (
+    PhotoInspection,
+    PhotoInspectionPayload,
+    PhotoInspectionRequest,
+)
 from pastport_pdf_vr.domain.recognition import (
     SceneInspection,
     SceneInspectionPayload,
@@ -47,7 +53,13 @@ class CodexSemanticGateway:
 
     def _execute(
         self,
-        kind: Literal["scene_inspection", "evidence_association", "popup_draft", "pdf_matching"],
+        kind: Literal[
+            "scene_inspection",
+            "evidence_association",
+            "popup_draft",
+            "pdf_matching",
+            "photo_inspection",
+        ],
         request: DomainModel,
         output: type[Payload],
         images: tuple[ProjectAssetRef, ...],
@@ -77,6 +89,21 @@ class CodexSemanticGateway:
             )
         )
         return output.model_validate_json(result.payload_json), result.receipt_ref
+
+    def inspect_photos(self, request: PhotoInspectionRequest) -> PhotoInspection:
+        payload, receipt = self._execute(
+            "photo_inspection",
+            request,
+            PhotoInspectionPayload,
+            tuple(p.image for p in request.photos) + tuple(r.image for r in request.references),
+            request.grant_ref,
+            request.model_id,
+            "v1",
+            "photo-identity-v1",
+        )
+        result = PhotoInspection(**payload.model_dump(), receipt_ref=receipt)
+        PhotoRecognitionService.validate(request, result)
+        return result
 
     def inspect(self, request: SceneInspectionRequest) -> SceneInspection:
         if request.project_id != self._executor.grant.project_id:
@@ -139,7 +166,8 @@ class CodexSemanticGateway:
             "pdf_matching",
             request,
             PDFMatchPayload,
-            tuple(page.image for page in request.pages),
+            tuple(page.image for page in request.pages)
+            + tuple(sheet.image for sheet in request.reference_sheets),
             request.grant.grant_ref,
             request.grant.model_id,
             request.prompt_version,
@@ -162,7 +190,16 @@ class CodexSemanticGateway:
             ):
                 raise ValueError("PDF crop exceeds rendered page dimensions")
             small = {"object", "component"}
-            if (match.target_scale in small) != (match.source_scale in small):
+            declared_proxy = (
+                request.mode == "demo_substitution"
+                and request.policy_version == "narrative-proxy-v1"
+                and match.relationship == "substitution"
+                and match.story_support == "documented_activity"
+                and bool(match.passage_ids)
+            )
+            if (match.target_scale in small) != (
+                match.source_scale in small
+            ) and not declared_proxy:
                 raise ValueError("PDF mapping crosses incompatible physical scales")
             if request.mode == "same_site" and match.relationship != "same_object":
                 raise ValueError("Same-site mode cannot silently substitute objects")

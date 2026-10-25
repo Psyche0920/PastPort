@@ -170,6 +170,25 @@ class EvidenceTests(unittest.TestCase):
         with self.assertRaises(EvidenceValidationError):
             self.index.validate_image(self.selection.image.model_copy(update={"region": bleed}))
 
+    def test_missing_parent_rejects_background_without_losing_valid_claims(self) -> None:
+        selection = self.selection.model_copy(
+            update={
+                "subject": self.selection.subject.model_copy(update={"parent_subject_id": None})
+            }
+        )
+        model = FixtureEvidenceModel()
+        service = EvidenceService(self.index, model)
+        with self.assertRaisesRegex(EvidenceValidationError, "explicitly registered parent"):
+            service.associate(selection)
+        assessed = service.retrieve_and_associate(selection, allow_partial=True)
+        self.assertEqual([c.claim_id for c in assessed.evidence.claims], ["direct"])
+        self.assertEqual(len(assessed.evidence.associations), 1)
+        self.assertEqual(len(assessed.validation_gaps), 1)
+        self.assertIn("rejected_claim:building", assessed.validation_gaps[0])
+        self.assertIsNone(assessed.selection.subject.parent_subject_id)
+        # Neither fabricate a parent nor promote a rejected background to a direct fact.
+        self.assertEqual(len(model.associate(selection).claims), 2)
+
     def test_latest_human_copy_wins_and_reassignment_never_reuses_old_copy(self) -> None:
         ai = DisplayCopy(subject_id="room", version=99, introduction="Newest AI")
         humans = (

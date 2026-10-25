@@ -12,12 +12,14 @@ from pastport_pdf_vr.domain.evidence import (
     DisplayCopy,
     DraftRequest,
     EffectiveCopy,
+    EvidenceAssessment,
     EvidenceClaim,
     EvidenceProposal,
     EvidenceScope,
     EvidenceSelection,
     ExactPassage,
     HistoricalSubject,
+    ImageAssociation,
     PopupProposal,
     SourceImageObservation,
 )
@@ -126,9 +128,12 @@ class EvidenceService:
     def __init__(self, corpus: CorpusIndex, model: EvidenceModel) -> None:
         self._corpus, self._model = corpus, model
 
-    def retrieve_and_associate(self, selection: EvidenceSelection) -> AssociatedEvidence:
+    def retrieve_and_associate(
+        self, selection: EvidenceSelection, *, allow_partial: bool = False
+    ) -> AssociatedEvidence:
         """Permit one corpus-only expansion when the first semantic response needs more context."""
-        first = self.associate(selection)
+        initial = self.assess(selection, strict=not allow_partial)
+        first = initial.proposal
         if not first.retrieval_queries:
             return AssociatedEvidence(
                 selection=selection,
@@ -136,6 +141,7 @@ class EvidenceService:
                 retrieval_rounds=1,
                 retrieval_gap=False,
                 receipt_refs=(first.receipt_ref,),
+                validation_gaps=initial.validation_gaps,
             )
         expanded_subject = selection.subject.model_copy(
             update={
@@ -159,60 +165,89 @@ class EvidenceService:
             combined.append(passage)
             characters += len(passage.quote)
         expanded = selection.model_copy(update={"passages": tuple(combined)})
-        second = self.associate(expanded)
+        final = self.assess(expanded, strict=not allow_partial)
+        second = final.proposal
         return AssociatedEvidence(
             selection=expanded,
             evidence=second,
             retrieval_rounds=2,
             retrieval_gap=bool(second.retrieval_queries),
             receipt_refs=(first.receipt_ref, second.receipt_ref),
+            validation_gaps=initial.validation_gaps + final.validation_gaps,
         )
 
     def associate(self, selection: EvidenceSelection) -> EvidenceProposal:
+        return self.assess(selection, strict=True).proposal
+
+    def assess(self, selection: EvidenceSelection, *, strict: bool = False) -> EvidenceAssessment:
+        """Reject unsupported semantic items independently without rewriting their meaning.
+
+        Invalid source bindings remain fatal. Missing parents never become inferred parents
+        or direct facts; a caller opting into partial output receives explicit gaps instead.
+        """
         self._validate_selection(selection)
         proposal = self._model.associate(selection)
         passage_ids = {passage.passage_id for passage in selection.passages}
-        if len(passage_ids) != len(selection.passages):
-            raise EvidenceValidationError("Selected passages contain duplicate identities")
-        claim_ids: set[str] = set()
+        claims: list[EvidenceClaim] = []
+        associations: list[ImageAssociation] = []
+        gaps: list[str] = []
+        counts: dict[str, int] = {}
         for claim in proposal.claims:
-            if claim.claim_id in claim_ids:
-                raise EvidenceValidationError("Model returned duplicate claim IDs")
-            claim_ids.add(claim.claim_id)
-            self._validate_claim(claim, selection, passage_ids)
-        for association in proposal.associations:
-            if selection.image is None or association.image_id != selection.image.image_id:
-                raise EvidenceValidationError(
-                    "Image association changed its image or subject binding"
-                )
-            allowed_subjects = {selection.subject.subject_id}
-            if association.scope is EvidenceScope.PARENT_BACKGROUND:
-                allowed_subjects = (
-                    {selection.subject.parent_subject_id}
-                    if selection.subject.parent_subject_id
-                    else set()
-                )
-            if association.subject_id not in allowed_subjects:
-                raise EvidenceValidationError(
-                    "Image subject does not agree with its declared scope"
-                )
-            if (
-                selection.image.depicted_subject_id is not None
-                and association.subject_id != selection.image.depicted_subject_id
-            ):
-                raise EvidenceValidationError(
-                    "Image depicts a different explicitly identified subject"
-                )
-            if (
-                selection.image.depiction == "page_context"
-                and association.scope is EvidenceScope.DIRECT
-            ):
-                raise EvidenceValidationError(
-                    "Whole-page context is not a confirmed object photograph"
-                )
-            if not set(association.passage_ids) <= passage_ids:
-                raise EvidenceValidationError("Image association cites an unprovided passage")
-        return proposal
+            counts[claim.claim_id] = counts.get(claim.claim_id, 0) + 1
+        for claim in proposal.claims:
+            try:
+                if counts[claim.claim_id] != 1:
+                    raise EvidenceValidationError("Model returned duplicate claim IDs")
+                self._validate_claim(claim, selection, passage_ids)
+            except EvidenceValidationError as error:
+                if strict:
+                    raise
+                gaps.append(f"rejected_claim:{claim.claim_id}:{error}")
+            else:
+                claims.append(claim)
+        for index, association in enumerate(proposal.associations):
+            try:
+                self._validate_association(association, selection, passage_ids)
+            except EvidenceValidationError as error:
+                if strict:
+                    raise
+                gaps.append(f"rejected_association:{index}:{error}")
+            else:
+                associations.append(association)
+        return EvidenceAssessment(
+            proposal=proposal.model_copy(
+                update={"claims": tuple(claims), "associations": tuple(associations)}
+            ),
+            validation_gaps=tuple(gaps),
+        )
+
+    @staticmethod
+    def _validate_association(
+        association: ImageAssociation, selection: EvidenceSelection, passage_ids: set[str]
+    ) -> None:
+        if selection.image is None or association.image_id != selection.image.image_id:
+            raise EvidenceValidationError("Image association changed its image or subject binding")
+        allowed_subjects = {selection.subject.subject_id}
+        if association.scope is EvidenceScope.PARENT_BACKGROUND:
+            allowed_subjects = (
+                {selection.subject.parent_subject_id}
+                if selection.subject.parent_subject_id
+                else set()
+            )
+        if association.subject_id not in allowed_subjects:
+            raise EvidenceValidationError("Image subject does not agree with its declared scope")
+        if (
+            selection.image.depicted_subject_id is not None
+            and association.subject_id != selection.image.depicted_subject_id
+        ):
+            raise EvidenceValidationError("Image depicts a different explicitly identified subject")
+        if (
+            selection.image.depiction == "page_context"
+            and association.scope is EvidenceScope.DIRECT
+        ):
+            raise EvidenceValidationError("Whole-page context is not a confirmed object photograph")
+        if not set(association.passage_ids) <= passage_ids:
+            raise EvidenceValidationError("Image association cites an unprovided passage")
 
     def draft(self, selection: EvidenceSelection, evidence: EvidenceProposal) -> PopupProposal:
         self._validate_selection(selection)
@@ -270,6 +305,13 @@ class EvidenceService:
             valid_subjects = {selection.subject.subject_id}
             if selection.subject.parent_subject_id:
                 valid_subjects.add(selection.subject.parent_subject_id)
+        if (
+            claim.scope is EvidenceScope.PARENT_BACKGROUND
+            and not selection.subject.parent_subject_id
+        ):
+            raise EvidenceValidationError(
+                "Parent background requires an explicitly registered parent"
+            )
         if claim.subject_id not in valid_subjects:
             raise EvidenceValidationError("Claim subject does not agree with its declared scope")
 

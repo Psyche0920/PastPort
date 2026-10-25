@@ -9,6 +9,7 @@ from pydantic import Field, model_validator
 from pastport_pdf_vr.domain.evidence import DisplayCopy, EvidenceClaim, ExactPassage
 from pastport_pdf_vr.domain.geometry import AnchorPosition
 from pastport_pdf_vr.domain.models import DomainModel, ProjectAssetRef, ProjectId, ResourceId
+from pastport_pdf_vr.domain.photos import PhotoObservation
 from pastport_pdf_vr.domain.recognition import SceneEntity
 
 
@@ -39,6 +40,7 @@ class PreviewObject(DomainModel):
     draft: DisplayCopy | None = None
     evidence_refs: tuple[ResourceId, ...] = ()
     replay_evidence: ReplayEvidence | None = None
+    photo_observations: tuple[PhotoObservation, ...] = ()
 
     @model_validator(mode="after")
     def validate_assignment(self) -> PreviewObject:

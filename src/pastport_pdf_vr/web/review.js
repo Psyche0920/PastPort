@@ -22,6 +22,22 @@ function select(id) {
   el('introduction').value = selected.introduction;
   el('background').value = selected.background;
   el('save').disabled = !object.historical_subject_id;
+  const gallery=el('photo-observations'); gallery.replaceChildren();
+  const photoMode=snapshot.input_binding.startsWith('photo-mapping:');
+  el('mapping-downloads').hidden=!photoMode;
+  for(const link of document.querySelectorAll('header a[data-project-link]')) link.hidden=photoMode;
+  if(object.photo_observations?.length) {
+    const heading=document.createElement('h3'); heading.textContent='你的照片：同一对象的全部视角'; gallery.append(heading);
+    const views=document.createElement('div'); views.className='photo-views';
+    for(const observation of object.photo_observations) {
+      const card=document.createElement('figure');
+      const image=document.createElement('img'); image.src=projectBase+'/media/'+observation.crop.asset.sha256; image.alt='现场照片中的对象选区';
+      const caption=document.createElement('figcaption'); caption.textContent=observation.photo.name+' · '+(observation.identity_state==='confirmed'?'已记录身份':'身份待确认');
+      const link=document.createElement('a'); link.href=projectBase+'/media/'+observation.photo.image.asset.sha256; link.target='_blank'; link.rel='noreferrer'; link.textContent='查看完整照片';
+      card.append(image,caption,link); views.append(card);
+    }
+    gallery.append(views);
+  }
   el('appearances').replaceChildren();
   for (const row of snapshot.anchors.filter(item => item.anchor.object_id === id)) {
     const link = document.createElement('a');

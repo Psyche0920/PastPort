@@ -17,20 +17,27 @@ dependencies = [
     "fastapi>=0.115,<1",
     "uvicorn>=0.30,<1",
     "python-multipart>=0.0.20,<1",
+    "reportlab>=4,<5",
 ]
 
 [project.scripts]
 pastport-pdf-vr = "pastport_pdf_vr.cli:main"
 
 [project.optional-dependencies]
-dev = ["mypy>=1.18,<2", "ruff>=0.14,<1", "httpx>=0.28,<1"]
+dev = [
+    "mypy>=1.18,<2",
+    "ruff>=0.14,<1",
+    "httpx>=0.28,<1",
+    "types-reportlab>=5.0.0.20261008",
+    "fonttools>=4.60,<5",
+]
 codex = ["openai-codex==0.163.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-pastport_pdf_vr = ["prompts/*.txt", "web/*", "web/vendor/*"]
+pastport_pdf_vr = ["prompts/*.txt", "web/*", "web/vendor/*", "fonts/*.ttf", "fonts/*.txt"]
 
 [tool.mypy]
 python_version = "3.12"

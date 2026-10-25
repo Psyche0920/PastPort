@@ -25,12 +25,15 @@ class LocalReviewApplication:
     def __init__(
         self,
         project_id: str,
-        tour: ImportedTour,
+        tour: ImportedTour | None,
         repository: SQLiteEditorialRepository,
         assets: AssetStore,
         build_summary: BuildSummary | None = None,
+        *,
+        mapping_pdf: Path | None = None,
+        mapping_data: Path | None = None,
     ) -> None:
-        if tour.source.project_id != project_id:
+        if tour is not None and tour.source.project_id != project_id:
             raise ValueError("Tour belongs to another project")
         self._project, self._tour, self._repository, self._assets = (
             project_id,
@@ -39,6 +42,7 @@ class LocalReviewApplication:
             assets,
         )
         self._summary = build_summary
+        self._mapping_pdf, self._mapping_data = mapping_pdf, mapping_data
         self.app = self._build()
 
     def _build(self) -> FastAPI:
@@ -88,6 +92,8 @@ class LocalReviewApplication:
 
         @app.get("/vr/")
         def vr() -> FileResponse:
+            if self._tour is None:
+                raise HTTPException(409, "此项目完成了照片映射，尚未挂载 VR。")
             return FileResponse(web / "vr.html")
 
         @app.get("/api/build-summary")
@@ -96,7 +102,29 @@ class LocalReviewApplication:
 
         @app.get("/api/tour")
         def tour() -> ImportedTour:
+            if self._tour is None:
+                raise HTTPException(409, "此阶段没有全景导览。")
             return self._tour
+
+        @app.get("/mapping.pdf")
+        def mapping_pdf() -> FileResponse:
+            if self._mapping_pdf is None or not self._mapping_pdf.is_file():
+                raise HTTPException(404, "此项目尚未导出照片映射 PDF。")
+            return FileResponse(
+                self._mapping_pdf,
+                media_type="application/pdf",
+                filename="PastPort_Photo_Mapping.pdf",
+            )
+
+        @app.get("/mapping.json")
+        def mapping_data() -> FileResponse:
+            if self._mapping_data is None or not self._mapping_data.is_file():
+                raise HTTPException(404, "此项目尚未导出照片映射数据。")
+            return FileResponse(
+                self._mapping_data,
+                media_type="application/json",
+                filename="PastPort_Photo_Mapping.json",
+            )
 
         @app.get("/api/snapshot")
         def snapshot() -> PreviewSnapshot:
@@ -112,8 +140,19 @@ class LocalReviewApplication:
 
         @app.get("/media/{sha256}")
         def media(sha256: str) -> FileResponse:
-            allowed = {view.panorama.asset.sha256: view.panorama for view in self._tour.views}
+            allowed = (
+                {view.panorama.asset.sha256: view.panorama for view in self._tour.views}
+                if self._tour is not None
+                else {}
+            )
             for row in self._repository.snapshot(self._project).objects:
+                for observation in row.object.photo_observations:
+                    for photo_reference in (
+                        observation.crop,
+                        observation.photo.image,
+                        observation.photo.original,
+                    ):
+                        allowed[photo_reference.asset.sha256] = photo_reference
                 evidence = row.object.replay_evidence
                 if evidence:
                     for reference in (evidence.source_image, evidence.page_image):

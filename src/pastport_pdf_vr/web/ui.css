@@ -3,3 +3,5 @@
 #source-image{max-width:100%;max-height:420px;object-fit:contain;border:1px solid #cbd7df}
 
 .marker{display:grid;place-items:center}
+
+.photo-views{display:flex;flex-wrap:wrap;gap:12px}.photo-views figure{margin:0;width:180px}.photo-views img{width:180px;height:150px;object-fit:contain}.photo-views figcaption{font-size:12px;margin:8px 0}[hidden]{display:none!important}
