@@ -67,3 +67,5 @@ Two targeted regressions pass. User manual spatial/identity review remains requi
 this is a mounted candidate output, not a claim of verified precise 3D matching.
 
 Review editing follow-up: shared introduction editing and same-object 3D review links are implemented. Dragging a 3D marker saves its independent position; panorama coordinates remain unchanged. Applied to the existing derived result. User requested no further automated verification and will manually accept behavior. No generation or paid calls.
+
+Second-view generation: source panorama verified at 4096 × 2048 (1,371,493 bytes). Added source-order viewpoint selection and per-view durable job ownership; existing per-image submission ledger remains unchanged. Second paid generation not dispatched. Running Studio needs restart to load the endpoint change; session key must be entered in the UI after restart. User manual validation pending.

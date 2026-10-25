@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import re
@@ -95,8 +96,15 @@ class Scene3DPortal:
 
         @app.get("/api/scene3d-sources/{job_id}")
         def scenes(job_id: str) -> list[str]:
-            report = record(read_json(source(job_id) / "vr_trial/trial_report.json"))
-            return sorted({string(record(row)["scene_id"]) for row in sequence(report["located"])})
+            environment = source(job_id)
+            html = (environment / "vr_trial/index.html").read_text()
+            match = re.search(
+                r'<script id="tour-data" type="application/json">(.*?)</script>', html, re.S
+            )
+            if match is None:
+                raise HTTPException(422, "Source panorama unavailable")
+            tour = record(json.loads(match.group(1)))
+            return [string(record(scene)["id"]) for scene in sequence(tour["scenes"])]
 
         @app.get("/api/scene3d-deliveries")
         def deliveries() -> list[Scene3DRecord]:
@@ -317,12 +325,12 @@ class Scene3DPortal:
                     "credit_budget": int(budget),
                 }
                 # A reconnect, refresh or repeated POST must never create a second paid world.
-                # One source result owns one generation; changed authorization needs review.
-                run_id = job_id
+                # Each source viewpoint owns one generation; changed authorization needs review.
+                run_id = hashlib.sha256(f"{job_id}:{scene_id}".encode()).hexdigest()[:32]
                 parent = jobs.root / "scene3d"
                 for previous in parent.glob("*/generation-options.json"):
                     saved = record(read_json(previous))
-                    if saved.get("job_id") == job_id:
+                    if saved.get("job_id") == job_id and saved.get("scene_id") == scene_id:
                         run_id = previous.parent.name
                         break
                 root = parent / run_id
