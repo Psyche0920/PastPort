@@ -88,3 +88,10 @@ read-only real-data route calls found one transition in each direction and prese
 both saved entry angles. Both original SPZ hashes still match generation manifests.
 No model calls, source review edits or service startup. Browser movement/trigger/
 placement acceptance is pending user manual testing after Studio restart.
+
+Arrow independence correction: VR is an initialization reference only. The 3D
+result persists its own navigation seed, projected position and subsequent manual
+drag edits with binding/version/idempotency checks. VR edits do not overwrite the
+3D arrow after initialization, and 3D drags do not write VR. Temporary-data checks
+cover seed independence, restart persistence, operation replay and stale writes;
+strict typing and JS syntax pass. Browser dragging remains for user acceptance.

@@ -252,10 +252,17 @@ be clicked. A two-second spawn grace period and leaving the trigger region befor
 arming prevent immediate ping-pong. Unsaved position edits and marker editing block
 transitions. There is no blending of the two generated worlds.
 
-The source result's current navigation is read on entry/focus; only completed results
+VR navigation initializes the 3D result once; later focus reloads its independent
+3D arrow records rather than overwriting them from VR. Only completed results
 from that same matched job are eligible. The Studio writes a loopback navigation
 bootstrap when opening a result. Direct old preview tabs should be reopened through
 Studio after restart. An offline result without this context remains a standalone
 scene. Generated geometry may disagree with source imagery: ray-derived arrow
 placement and walking behavior require manual acceptance. This is navigation, not
 a repair of generated structures.
+
+Use **调整3D导航箭头（独立保存）** to drag an arrow onto the collider and release
+to save. Initial positions and entry yaw/pitch are seeded from VR; later VR edits
+do not replace this stored seed. Failed drags show a retry action using the same
+operation identity; conflicting edits require reload. Arrow edits are local to
+this 3D result, with source-bound versions and event history.

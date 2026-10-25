@@ -102,3 +102,24 @@ class Scene3DTransition(DomainModel):
 class Scene3DNavigation(DomainModel):
     source_scene_id: str
     transitions: tuple[Scene3DTransition, ...]
+
+
+class Scene3DArrow(Scene3DTransition):
+    point: Point3D | None = None
+    version: int = 0
+    placement: Literal["vr_seed", "projected", "manual"] = "vr_seed"
+
+
+class Scene3DArrowSet(DomainModel):
+    scene_binding: str
+    source_scene_id: str
+    arrows: tuple[Scene3DArrow, ...]
+
+
+class Scene3DArrowEdit(DomainModel):
+    scene_binding: str
+    hotspot_id: str
+    expected_version: Annotated[int, Field(ge=0)]
+    operation_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9-]{16,80}$")]
+    point: Point3D
+    placement: Literal["projected", "manual"]

@@ -23,9 +23,11 @@ from pastport_pdf_vr.application.reference_environment import (
     sequence,
     string,
 )
+from pastport_pdf_vr.application.scene3d_arrows import Scene3DArrowStore
 from pastport_pdf_vr.domain.scene3d import (
     AlignmentEdit,
     AnchorEdit,
+    Scene3DArrowEdit,
     SceneCandidateBatch,
     SceneRenderVariant,
 )
@@ -244,6 +246,7 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
     """Wrap trusted handler methods only when a 3D attachment exists."""
     store = Scene3DStore(root)
     store.initialize_candidates()
+    arrows = Scene3DArrowStore(root)
     get_method, post_method = "do_GET", "do_POST"
     original_get = cast(Callable[[BaseHTTPRequestHandler], None], getattr(handler, get_method))
     original_post = cast(Callable[[BaseHTTPRequestHandler], None], getattr(handler, post_method))
@@ -258,6 +261,12 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
 
     def get(request: BaseHTTPRequestHandler) -> None:
         route = urlsplit(request.path).path
+        if route == "/api/scene3d/arrows":
+            try:
+                respond(request, 200, arrows.current().model_dump_json().encode())
+            except (ValueError, OSError, sqlite3.Error):
+                request.send_error(503, "3D arrow data unavailable")
+            return
         if route == "/api/scene3d/content":
             original_path = request.path
             request.path = request.path.replace("/api/scene3d/content", "/api/vr-content", 1)
@@ -343,6 +352,7 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
                 request.path = original_path
             return
         if request.path not in (
+            "/api/scene3d/arrows/position",
             "/api/scene3d/anchor",
             "/api/scene3d/alignment",
             "/api/scene3d/candidates",
@@ -361,6 +371,14 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
             if not 0 < length <= limit:
                 raise ValueError("Invalid payload size")
             raw = request.rfile.read(length)
+            if request.path == "/api/scene3d/arrows/position":
+                saved_arrow = arrows.save(Scene3DArrowEdit.model_validate_json(raw))
+                respond(
+                    request,
+                    200 if saved_arrow else 409,
+                    saved_arrow.model_dump_json().encode() if saved_arrow else b'{"saved":false}',
+                )
+                return
             if request.path.endswith("/candidates"):
                 saved = store.save_candidates(SceneCandidateBatch.model_validate_json(raw))
             elif request.path.endswith("/anchor"):

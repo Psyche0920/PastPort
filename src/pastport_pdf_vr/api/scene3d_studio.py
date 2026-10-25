@@ -360,11 +360,10 @@ class Scene3DPortal:
                     return candidate
             raise HTTPException(404, "3D result unavailable")
 
-        @app.get("/api/scene3d-navigation/{run_id}")
-        async def navigation(run_id: str, request: Request) -> JSONResponse:
+        def navigation_payload(run_id: str, base_url: str) -> Scene3DNavigation:
+            result_root(run_id)
             from pastport_pdf_vr.application.navigation import NavigationStore
 
-            root = result_root(run_id)
             parent = jobs.root / "scene3d" / run_id
             metadata = parent / "generation-options.json"
             if not metadata.is_file():
@@ -393,7 +392,7 @@ class Scene3DPortal:
                 query = {}
                 if link.arrival:
                     query = {"arrival_yaw": link.arrival.yaw, "arrival_pitch": link.arrival.pitch}
-                url = str(request.base_url) + "scene3d-results/" + targets[link.target_id] + "/"
+                url = base_url + "scene3d-results/" + targets[link.target_id] + "/"
                 if query:
                     url += "?" + urlencode(query)
                 transitions.append(
@@ -405,7 +404,12 @@ class Scene3DPortal:
                         target_url=url,
                     )
                 )
-            payload = Scene3DNavigation(source_scene_id=scene_id, transitions=tuple(transitions))
+            return Scene3DNavigation(source_scene_id=scene_id, transitions=tuple(transitions))
+
+        @app.get("/api/scene3d-navigation/{run_id}")
+        async def navigation(run_id: str, request: Request) -> JSONResponse:
+            root = result_root(run_id)
+            payload = navigation_payload(run_id, str(request.base_url))
             port = await previews.ensure(root)
             origin = request.headers.get("origin", "")
             allowed = {f"http://127.0.0.1:{port}", f"http://localhost:{port}"}
@@ -443,6 +447,10 @@ class Scene3DPortal:
                 raise HTTPException(404, "3D result unavailable")
             if request.url.hostname not in ("127.0.0.1", "localhost"):
                 raise HTTPException(403, "Loopback Studio required")
+            atomic_write(
+                root / "scene3d/arrow-seed.json",
+                navigation_payload(run_id, str(request.base_url)).model_dump_json(),
+            )
             atomic_write(
                 root / "scene3d/portal-navigation.json",
                 json.dumps(
