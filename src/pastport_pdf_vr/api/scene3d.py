@@ -8,9 +8,9 @@ import mimetypes
 import shutil
 import sqlite3
 from collections.abc import Callable
-from contextlib import closing
 from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler
+from importlib.resources import files
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import cast
@@ -24,6 +24,7 @@ from pastport_pdf_vr.application.reference_environment import (
     string,
 )
 from pastport_pdf_vr.application.scene3d_arrows import Scene3DArrowStore
+from pastport_pdf_vr.application.shared_content import SharedContentAuthority
 from pastport_pdf_vr.domain.scene3d import (
     AlignmentEdit,
     AnchorEdit,
@@ -39,9 +40,10 @@ class Scene3DStore:
         self.attachment = record(read_json(root / "scene3d/attachment.json"))
         self.binding = string(self.attachment["binding"])
         self.database = root / "pastport_matching.sqlite3"
+        self.authority = SharedContentAuthority(root)
 
     def initialize_candidates(self) -> None:
-        with closing(sqlite3.connect(self.database)) as db, db:
+        with self.authority.spatial_connection() as db, db:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS scene3d_candidate_batches(
                     binding TEXT NOT NULL,alignment_version INTEGER NOT NULL,
@@ -56,7 +58,7 @@ class Scene3DStore:
     def save_candidates(self, batch: SceneCandidateBatch) -> bool:
         if batch.scene_binding != self.binding:
             raise ValueError("Candidate scene binding changed")
-        with closing(sqlite3.connect(self.database)) as db, db:
+        with self.authority.spatial_connection() as db, db:
             db.execute("BEGIN IMMEDIATE")
             version, raw = db.execute(
                 "SELECT version,payload_json FROM scene3d_alignment WHERE id=1"
@@ -100,7 +102,7 @@ class Scene3DStore:
         return True
 
     def current(self) -> bytes:
-        with closing(sqlite3.connect(self.database)) as db:
+        with self.authority.spatial_connection() as db:
             db.row_factory = sqlite3.Row
             alignment = db.execute(
                 "SELECT version,payload_json FROM scene3d_alignment WHERE id=1"
@@ -140,7 +142,7 @@ class Scene3DStore:
     def save_alignment(self, edit: AlignmentEdit) -> bool:
         if edit.scene_binding != self.binding:
             raise ValueError("Scene binding changed")
-        with closing(sqlite3.connect(self.database)) as db, db:
+        with self.authority.spatial_connection() as db, db:
             db.execute("BEGIN IMMEDIATE")
             # Existing confirmed anchors cannot silently follow a changed alignment.
             if db.execute(
@@ -170,7 +172,7 @@ class Scene3DStore:
         if edit.scene_binding != self.binding:
             raise ValueError("Scene binding changed")
         request_hash = hashlib.sha256(edit.model_dump_json().encode()).hexdigest()
-        with closing(sqlite3.connect(self.database)) as db, db:
+        with self.authority.spatial_connection() as db, db:
             db.execute("BEGIN IMMEDIATE")
             previous = db.execute(
                 "SELECT request_sha256 FROM scene3d_events WHERE operation_id=?",
@@ -327,6 +329,9 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
                 request.send_error(404)
                 return
             path = root / "scene3d" / name
+            if name in {"index.html", "viewer.js", "transitions.js", "shared_content.js"}:
+                # Existing output folders must receive the current application bridge too.
+                path = Path(str(files("pastport_pdf_vr").joinpath("scene3d_assets", name)))
             try:
                 with path.open("rb") as stream:
                     request.send_response(200)

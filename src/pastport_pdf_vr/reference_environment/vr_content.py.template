@@ -70,7 +70,7 @@ class VRContentService:
         self.database=database
 
     def initialize(self) -> None:
-        with closing(sqlite3.connect(self.database)) as db, db:
+        with closing(sqlite3.connect(f"{self.database.resolve().as_uri()}?mode=rw", uri=True)) as db, db:
             db.execute('PRAGMA foreign_keys=ON')
             db.execute('CREATE TABLE IF NOT EXISTS vr_display_contents(object_id INTEGER PRIMARY KEY REFERENCES modern_objects(id),historical_id TEXT REFERENCES historical_objects(id),content TEXT NOT NULL CHECK(length(content) BETWEEN 1 AND 1500),version INTEGER NOT NULL,updated_at TEXT NOT NULL,editor TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS vr_content_events(id INTEGER PRIMARY KEY,object_id INTEGER NOT NULL REFERENCES vr_display_contents(object_id),old_content TEXT NOT NULL,new_content TEXT NOT NULL,previous_version INTEGER NOT NULL,editor TEXT NOT NULL,created_at TEXT NOT NULL)')
@@ -97,7 +97,7 @@ class VRContentService:
             db.commit()
 
     def read(self, object_id: int) -> Optional[VRContent]:
-        with closing(sqlite3.connect(self.database)) as db:
+        with closing(sqlite3.connect(f"{self.database.resolve().as_uri()}?mode=rw", uri=True)) as db:
             row=db.execute("SELECT v.object_id,v.historical_id,COALESCE(v.human_override,v.ai_draft),v.version,v.updated_at,v.editor,CASE WHEN v.human_override IS NULL THEN 'ai_draft' ELSE 'human_override' END FROM vr_display_contents v JOIN pairings p ON p.modern_id=v.object_id WHERE v.object_id=? AND v.historical_id IS p.historical_id AND p.image_review != 'unsuitable' AND p.text_review != 'unsuitable' AND p.proposal_state != \'invalid_structural_relation\'",(object_id,)).fetchone()
             return VRContent(*row) if row else None
 
@@ -123,7 +123,7 @@ class VRContentService:
             return True
 
     def save(self, edit: VRContentEdit) -> bool:
-        connection=sqlite3.connect(self.database,timeout=5)
+        connection=sqlite3.connect(f"{self.database.resolve().as_uri()}?mode=rw", uri=True,timeout=5)
         try:
             connection.execute('PRAGMA foreign_keys=ON')
             with connection:

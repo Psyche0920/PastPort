@@ -35,6 +35,9 @@ def export_scene(root: Path, archive: Path) -> None:
         ) as source:
             with closing(sqlite3.connect(snapshot)) as destination:
                 source.backup(destination)
+        from pastport_pdf_vr.application.shared_content import SharedContentAuthority
+
+        SharedContentAuthority(root).snapshot_content(snapshot)
         with closing(sqlite3.connect(snapshot)) as db:
             db.row_factory = sqlite3.Row
             objects = [

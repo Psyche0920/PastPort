@@ -224,6 +224,9 @@ class Scene3DAttachment:
         from pastport_pdf_vr.application.scene3d_review import connect_review
 
         connect_review(self.output)
+        from pastport_pdf_vr.application.shared_content import SharedContentAuthority
+
+        SharedContentAuthority(self.output).bind(self.source)
         atomic_write(
             self.output / "start_3d.py",
             "from pathlib import Path\nfrom "

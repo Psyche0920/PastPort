@@ -436,6 +436,15 @@ class Scene3DPortal:
                 raise HTTPException(
                     409, "Generate every source viewpoint before downloading the tour"
                 )
+            from pastport_pdf_vr.application.shared_content import SharedContentAuthority
+
+            try:
+                for scene in source_ids:
+                    SharedContentAuthority(result_root(ready[scene].run_id)).bind(source(job_id))
+            except (ValueError, OSError, sqlite3.Error) as error:
+                raise HTTPException(
+                    409, "Shared review binding needs attention: " + str(error)
+                ) from error
             views = tuple(
                 TourSource(index + 1, scene, result_root(ready[scene].run_id))
                 for index, scene in enumerate(source_ids)
@@ -507,6 +516,19 @@ class Scene3DPortal:
                     {"endpoint": str(request.base_url) + "api/scene3d-navigation/" + run_id}
                 ),
             )
+            from pastport_pdf_vr.application.shared_content import SharedContentAuthority
+
+            parent = jobs.root / "scene3d" / run_id
+            metadata = parent / "generation-options.json"
+            if not metadata.is_file():
+                metadata = parent / "import-options.json"
+            options = record(read_json(metadata))
+            try:
+                SharedContentAuthority(root).bind(source(string(options["job_id"])))
+            except (ValueError, OSError, sqlite3.Error) as error:
+                raise HTTPException(
+                    409, "Shared review binding needs attention: " + str(error)
+                ) from error
             port = await previews.ensure(root)
             suffix = {
                 "viewer": "scene3d/index.html",

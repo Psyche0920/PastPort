@@ -15,6 +15,7 @@ from vr_content import VRContentEdit, VRContentService
 from vr_positions import PositionEdit, VRPositionService
 
 ROOT = Path(__file__).resolve().parent
+CONTENT_DATABASE = ROOT / "pastport_matching.sqlite3"
 PORT = 8793
 VR_CONTENT = VRContentService(ROOT / "pastport_matching.sqlite3")
 VR_POSITIONS = VRPositionService(ROOT / 'pastport_matching.sqlite3', ROOT / 'vr_trial/trial_report.json')
@@ -46,7 +47,7 @@ class Review:
 class ReviewRepository:
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
-        connection = sqlite3.connect(ROOT / 'pastport_matching.sqlite3', timeout=5)
+        connection = sqlite3.connect(f"{CONTENT_DATABASE.resolve().as_uri()}?mode=rw", uri=True, timeout=5)
         connection.row_factory = sqlite3.Row
         connection.execute('PRAGMA foreign_keys=ON')
         try:

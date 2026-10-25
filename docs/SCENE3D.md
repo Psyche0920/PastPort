@@ -284,3 +284,36 @@ the existing Studio entry. No generation or paid calls occur on export.
 | Source | Purpose |
 |---|---|
 | `application/scene3d_tour.py` | Source-ordered portable multi-world package and snapshot navigation |
+
+## Shared content authority (current contract)
+
+Within one source VR result, the original review SQLite is the single authority for
+object stable identities, historical bindings, evidence, introduction versions and
+review decisions. Derived worlds register a source/import/identity-bound
+`shared-content.json`. Their databases retain independent XYZ anchors, alignment,
+3D arrows, VR positions and spatial operation histories. Semantic reads use the
+source authority; review/content writes retain existing version checks and events.
+No numeric object ID is used to join unrelated input projects.
+
+Existing records bind when opened from Studio (or downloaded as a full tour).
+A provable linear revision descendant can be promoted with its audit events; a
+divergent history or changed evidence fails with a visible conflict instead of
+latest-wins. Both frozen copies remain intact. Conflict resolution requires an
+explicit editorial decision; no automatic resolution UI is claimed.
+
+Review pages and source panoramas receive the common live bridge. Visible pages
+poll the shared revision every two seconds, so separate localhost ports do not
+depend on BroadcastChannel. Open popups/eligible markers refresh; an unsaved review
+form is retained with an explicit reload prompt. 3D application scripts are served
+from the current package for existing results too. Missing authority fails rather
+than reverting to frozen copy text. Portable exports overlay shared semantic tables
+only in a temporary SQLite snapshot; each world's spatial tables remain unchanged.
+
+Owner: wehan. Dependencies: fixed source VR database and current preview runtime.
+Affected source: `application/shared_content.py`, `api/shared_content.py`, existing
+attachment/preview/3D/export routes, trusted review templates and shared viewer JS.
+Ten targeted offline tests passed before the final existing-output bridge adjustment;
+strict typing and JS syntax passed. Browser cross-view editing/dirty-form behavior
+and legacy real-data migration are pending user manual acceptance. No formal data
+migration, paid calls, regeneration or running service changes in this repair.
+Restart the Studio and reopen records to activate the new runtime.

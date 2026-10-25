@@ -143,3 +143,18 @@ No numerical accuracy rate or universal input success is established by this dec
 A future user-approved demo may replace the baseline. Automatic generation/display
 does not constitute human acceptance. Use new material and targeted reported bugs
 for further validation rather than repeatedly rerunning this same sample.
+
+## Shared content repair before stylization
+
+Owner: wehan. Branch: codex/matched-environment. Dependency: original source VR
+result is content authority; per-view spatial stores remain separate. Deliverable:
+shared review/evidence/introduction reads and versioned writes across VR and 3D;
+input/stable identity isolation, preservation of linear legacy edits and explicit
+blocking of divergent histories; current shared semantics in portable exports.
+Implemented with source bindings, authority-backed services, cross-port revision
+polling and current packaged viewer bridges for existing results. Ten targeted
+offline checks passed; eight changed Python/test files passed strict typing.
+Final browser behavior, real legacy migration and human acceptance remain pending
+user tests. No provider call, regenerated asset or service restart. Stylization
+can integrate this fixed contract after the repair commit; conflicts must not be
+resolved silently.
