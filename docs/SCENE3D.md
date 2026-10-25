@@ -1,6 +1,6 @@
 # Matched environment → Marble 3D
 
-Owner: wehan. Branch: `codex/pdf-to-3d-standalone`, based on
+Owner: wehan. Branch: `codex/matched-environment`, based on
 `codex/pdf-to-vr-standalone`. The animation branch is unchanged.
 
 ## Flow and user entry

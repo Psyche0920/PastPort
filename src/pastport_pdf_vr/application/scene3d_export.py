@@ -26,6 +26,11 @@ def export_scene(root: Path, archive: Path) -> None:
         if variant.scene_binding != attachment["binding"] or variant.world_id != scene["scene_id"]:
             raise ValueError("Render variant belongs to a different scene")
         render_name, render_hash, tier = variant.splat, variant.splat_sha256, variant.tier
+    from pastport_pdf_vr.application.stylization3d import current_style
+
+    style = current_style(root)
+    if style is not None:
+        render_name, render_hash, tier = style.splat, style.splat_sha256, "painted_candidate"
     if digest(root / "scene3d" / render_name) != render_hash:
         raise ValueError("Render asset bytes changed")
     with TemporaryDirectory(prefix="pastport-3d-export-") as temporary:
@@ -171,6 +176,9 @@ def export_scene(root: Path, archive: Path) -> None:
             root / "source.pdf",
             root / "mapping-demo.pdf",
         ]
+        if style is not None:
+            manifest["appearance"] = json.loads(style.model_dump_json())
+            paths.extend([root / "scene3d/style-variant.json", root / "scene3d" / style.panorama])
         media = root / "media"
         paths.extend(path for path in media.rglob("*") if path.is_file())
         if (

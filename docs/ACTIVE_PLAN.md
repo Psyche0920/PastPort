@@ -1,6 +1,6 @@
 # Matched PDF + new VR delivery
 
-Owner: wehan. Branch: `codex/vr-animation-workflow` (based on `codex/pdf-to-vr-standalone`).
+Owner: wehan. Branch: `codex/environment-stylization` (based on `codex/pdf-to-vr-standalone`).
 
 | Work | Dependencies | Deliverable / acceptance | Status |
 |---|---|---|---|
@@ -28,7 +28,7 @@ Next: user manual feedback; later parent-graph wiring uses `AnimationNode` and
 `AnimationDelivery` without changing the museum identities or source evidence.
 ## Optional 3D stage
 
-Owner: wehan. Branch: `codex/pdf-to-3d-standalone`. Dependencies: an existing matched
+Owner: wehan. Branch: `codex/matched-environment`. Dependencies: an existing matched
 environment and either an existing Marble export or later explicit local-key/credit
 authorization. Deliverable: preserve matches, freeze data, generate/import a world,
 compute geometric candidates, manually calibrate and save into a 3D review result.
@@ -156,3 +156,22 @@ No numerical accuracy rate or universal input success is established by this dec
 A future user-approved demo may replace the baseline. Automatic generation/display
 does not constitute human acceptance. Use new material and targeted reported bugs
 for further validation rather than repeatedly rerunning this same sample.
+
+## VR and 3D environment stylization (in progress)
+
+Owner: style-transfer chat. Branch: `codex/environment-stylization`.
+The original panorama animation path is retained. Existing 3D viewer, anchors and
+independent viewpoint navigation are integrated from `codex/matched-environment`.
+Initial source-bound SPZ v2 appearance baking, immutable source snapshots, typed
+LangGraph/CLI entry and render/export hooks are implemented but not delivered.
+Automatic alignment proceeds without a human gate, explicitly marked as estimated.
+No geometry correction is claimed. Whole-tour package handling and the two-view
+candidate remain unfinished. Five new Python modules pass strict typing; earlier
+format errors were reformatted but the final integrated static checks are pending.
+No automated runtime tests, new inference, paid calls, service restart or final
+quality acceptance. User performs runtime/visual acceptance.
+Dependency first: matching-environment owner must restore one shared object/content
+authority across independent 3D viewpoints; per-view spatial edits remain independent.
+Current code is checkpointed so that owner can work in the shared original checkout.
+Next: consume the shared-content contract, finish whole-tour input/output, then
+produce one isolated complete candidate without replacing the approved baseline.

@@ -135,6 +135,11 @@ class Scene3DStore:
             if variant.scene_binding != self.binding or variant.world_id != world["scene_id"]:
                 raise ValueError("Render variant belongs to a different scene")
             payload["render_variant"] = json.loads(variant.model_dump_json())
+        from pastport_pdf_vr.application.stylization3d import current_style
+
+        style = current_style(self.root)
+        if style is not None:
+            payload["style_variant"] = json.loads(style.model_dump_json())
         return json.dumps(payload, ensure_ascii=False).encode()
 
     def save_alignment(self, edit: AlignmentEdit) -> bool:
@@ -312,6 +317,8 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
                 "attachment.json",
                 "scene.spz",
                 "scene-full.spz",
+                "scene-styled.spz",
+                "style-panorama.png",
                 "collider.glb",
                 "panorama.jpg",
                 "source-panorama.jpg",
