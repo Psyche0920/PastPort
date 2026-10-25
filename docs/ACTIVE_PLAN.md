@@ -71,3 +71,20 @@ Review editing follow-up: shared introduction editing and same-object 3D review 
 Second-view generation: source panorama verified at 4096 × 2048 (1,371,493 bytes). Added source-order viewpoint selection and per-view durable job ownership; existing per-image submission ledger remains unchanged. Second paid generation not dispatched. Running Studio needs restart to load the endpoint change; session key must be entered in the UI after restart. User manual validation pending.
 
 Navigation editor — owner: wehan; dependency: existing matched panorama links. Implemented arrow dragging with automatic position saves, target-view orientation preview/save, source/destination identity binding, SQLite version checks and idempotent retries. Deliverable: existing panorama editor. User manual acceptance pending; no paid calls or 3D stitching.
+
+## Separate 3D viewpoint navigation (current)
+
+Owner: wehan. User stopped composition and restored the pre-composition separate-view
+version; that experiment is retained in a recoverable Git stash, not active code.
+Deliverable: a player approaching a projected navigation arrow changes to the next
+independent 3D result, using saved VR entry yaw/pitch. No world blending or generation.
+
+Implemented: original source navigation lookup, completed same-project target lookup,
+loopback-owned preview CORS, typed bounded arrival parameters, transparent arrows,
+proximity/click transitions, spawn cooldown and exit-zone arming, editing guards.
+Source panorama position and saved introductions remain unchanged.
+Evidence: strict typing on three affected Python files, JS syntax and diff checks;
+read-only real-data route calls found one transition in each direction and preserved
+both saved entry angles. Both original SPZ hashes still match generation manifests.
+No model calls, source review edits or service startup. Browser movement/trigger/
+placement acceptance is pending user manual testing after Studio restart.

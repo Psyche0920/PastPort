@@ -241,3 +241,21 @@ In the Studio result preview, use **调整导航箭头**. Drag an arrow and rele
 | `application/navigation.py` | Typed source-bound links and transactional navigation corrections |
 | `api/vr_navigation.py` | Local-origin, bounded review preview endpoints |
 | `reference_environment/vr_position_editor.js` | Number and navigation interaction controls |
+
+## Independent-world arrow transitions
+
+Composition is not active. Open either completed viewpoint from Studio after restart.
+The viewer projects the source VR navigation arrow onto its own collider. Approaching
+within 0.65 m horizontally (and 1.8 m vertically) opens the target's independent
+3D result, at its source camera with the VR-saved entry yaw/pitch. Arrows can also
+be clicked. A two-second spawn grace period and leaving the trigger region before
+arming prevent immediate ping-pong. Unsaved position edits and marker editing block
+transitions. There is no blending of the two generated worlds.
+
+The source result's current navigation is read on entry/focus; only completed results
+from that same matched job are eligible. The Studio writes a loopback navigation
+bootstrap when opening a result. Direct old preview tabs should be reopened through
+Studio after restart. An offline result without this context remains a standalone
+scene. Generated geometry may disagree with source imagery: ray-derived arrow
+placement and walking behavior require manual acceptance. This is navigation, not
+a repair of generated structures.

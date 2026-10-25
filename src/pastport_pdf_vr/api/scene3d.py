@@ -296,7 +296,9 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
             allowed = {
                 "index.html",
                 "viewer.js",
+                "transitions.js",
                 "shared_content.js",
+                "portal-navigation.json",
                 "scene.json",
                 "attachment.json",
                 "scene.spz",

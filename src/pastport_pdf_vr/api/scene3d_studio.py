@@ -9,18 +9,20 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
+from urllib.parse import urlencode
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import SecretStr
 from starlette.datastructures import UploadFile
 
 from pastport_pdf_vr.application.reference_environment import read_json, record, sequence, string
 from pastport_pdf_vr.application.reference_preview import ReferencePreviewPool
+from pastport_pdf_vr.application.storage import atomic_write
 from pastport_pdf_vr.application.studio import StudioJobs
-from pastport_pdf_vr.domain.scene3d import Scene3DRecord
+from pastport_pdf_vr.domain.scene3d import Scene3DNavigation, Scene3DRecord, Scene3DTransition
 
 
 class Scene3DPortal:
@@ -349,9 +351,87 @@ class Scene3DPortal:
         async def resume(run_id: str) -> dict[str, str]:
             return await generate_job(run_id)
 
+        def result_root(run_id: str) -> Path:
+            if not re.fullmatch(r"[a-f0-9]{32}", run_id):
+                raise HTTPException(404)
+            for suffix in ("job/result", "job/attachment/result"):
+                candidate = jobs.root / "scene3d" / run_id / suffix
+                if (candidate / "scene3d/attachment.json").is_file():
+                    return candidate
+            raise HTTPException(404, "3D result unavailable")
+
+        @app.get("/api/scene3d-navigation/{run_id}")
+        async def navigation(run_id: str, request: Request) -> JSONResponse:
+            from pastport_pdf_vr.application.navigation import NavigationStore
+
+            root = result_root(run_id)
+            parent = jobs.root / "scene3d" / run_id
+            metadata = parent / "generation-options.json"
+            if not metadata.is_file():
+                metadata = parent / "import-options.json"
+            options = record(read_json(metadata))
+            job_id, scene_id = string(options["job_id"]), string(options["scene_id"])
+            links = NavigationStore(source(job_id)).current()
+            targets: dict[str, str] = {}
+            for path in (jobs.root / "scene3d").iterdir():
+                for filename in ("generation-options.json", "import-options.json"):
+                    descriptor = path / filename
+                    if not descriptor.is_file():
+                        continue
+                    other = record(read_json(descriptor))
+                    if other.get("job_id") != job_id:
+                        continue
+                    try:
+                        result_root(path.name)
+                    except HTTPException:
+                        continue
+                    targets[string(other["scene_id"])] = path.name
+            transitions = []
+            for link in links:
+                if link.scene_id != scene_id or link.target_id not in targets:
+                    continue
+                query = {}
+                if link.arrival:
+                    query = {"arrival_yaw": link.arrival.yaw, "arrival_pitch": link.arrival.pitch}
+                url = str(request.base_url) + "scene3d-results/" + targets[link.target_id] + "/"
+                if query:
+                    url += "?" + urlencode(query)
+                transitions.append(
+                    Scene3DTransition(
+                        hotspot_id=link.hotspot_id,
+                        target_scene_id=link.target_id,
+                        yaw=link.position.yaw,
+                        pitch=link.position.pitch,
+                        target_url=url,
+                    )
+                )
+            payload = Scene3DNavigation(source_scene_id=scene_id, transitions=tuple(transitions))
+            port = await previews.ensure(root)
+            origin = request.headers.get("origin", "")
+            allowed = {f"http://127.0.0.1:{port}", f"http://localhost:{port}"}
+            if origin and origin not in allowed:
+                raise HTTPException(403, "Owned result preview required")
+            return JSONResponse(
+                payload.model_dump(),
+                headers={
+                    "Access-Control-Allow-Origin": origin
+                    if origin
+                    else str(request.base_url).rstrip("/"),
+                    "Vary": "Origin",
+                    "Cache-Control": "no-store",
+                },
+            )
+
         @app.get("/scene3d-results/{run_id}/")
         async def result(
             run_id: str,
+            request: Request,
+            arrival_yaw: Annotated[
+                float | None, Query(ge=-180, le=180, allow_inf_nan=False)
+            ] = None,
+            arrival_pitch: Annotated[
+                float | None, Query(ge=-90, le=90, allow_inf_nan=False)
+            ] = None,
             target: Literal["viewer", "review", "spz", "glb", "manifest", "package"] = "viewer",
         ) -> RedirectResponse:
             if len(run_id) != 32 or any(c not in "0123456789abcdef" for c in run_id):
@@ -361,6 +441,14 @@ class Scene3DPortal:
                 root = jobs.root / "scene3d" / run_id / "job/attachment/result"
             if not (root / "scene3d/attachment.json").is_file():
                 raise HTTPException(404, "3D result unavailable")
+            if request.url.hostname not in ("127.0.0.1", "localhost"):
+                raise HTTPException(403, "Loopback Studio required")
+            atomic_write(
+                root / "scene3d/portal-navigation.json",
+                json.dumps(
+                    {"endpoint": str(request.base_url) + "api/scene3d-navigation/" + run_id}
+                ),
+            )
             port = await previews.ensure(root)
             suffix = {
                 "viewer": "scene3d/index.html",
@@ -370,6 +458,10 @@ class Scene3DPortal:
                 "manifest": "scene3d/attachment.json",
                 "package": "api/scene3d-export",
             }[target]
+            if target == "viewer" and arrival_yaw is not None and arrival_pitch is not None:
+                suffix += "?" + urlencode(
+                    {"arrival_yaw": arrival_yaw, "arrival_pitch": arrival_pitch}
+                )
             return RedirectResponse(f"http://127.0.0.1:{port}/{suffix}")
 
     async def close(self) -> None:

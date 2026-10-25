@@ -89,3 +89,16 @@ class SceneCandidateBatch(DomainModel):
     origin: Point3D
     alignment_kind: Literal["unconfirmed_asset_origin", "human_alignment"]
     positions: Annotated[tuple[SceneCandidate, ...], Field(max_length=200)]
+
+
+class Scene3DTransition(DomainModel):
+    hotspot_id: str
+    target_scene_id: str
+    yaw: float
+    pitch: float
+    target_url: str
+
+
+class Scene3DNavigation(DomainModel):
+    source_scene_id: str
+    transitions: tuple[Scene3DTransition, ...]
