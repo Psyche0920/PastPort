@@ -18,7 +18,7 @@ estimation or multi-world stitching.
 
 Two modes are available:
 
-- Import existing `world.json`: downloads the selected 500k (or full-resolution fallback)
+- Import existing `world.json`: downloads full-resolution SPZ when available (500k only when absent)
   SPZ, collider GLB and panorama from the Marble CDN. No new generation or model usage.
   The CLI also accepts contained local asset references in a world export folder.
 - Generate from the selected clean source panorama: requires local `WORLDLABS_API_KEY`,
@@ -191,3 +191,19 @@ submit the same panorama again; it must resume the owning job. Existing submitte
 jobs are registered without changing their request or resetting their usage. Three
 committed offline regression tests cover this guard, repeated frontend POST and
 source-backup parent creation.
+
+## Rendering quality
+
+Full-resolution SPZ is now preferred over the 500k simplification. The existing
+trial keeps its original 500k bytes and registers a hash-bound full-resolution
+render variant from the same world; anchors and review data are not rewritten.
+Native screen pixel ratio is used. For an unconfirmed untouched camera, the initial
+position starts at the converted generated-asset origin, not an assumed 1.6 m height.
+This is an initial viewing position, not verified source-camera alignment.
+
+The actual request used the unchanged 4096×2048 JPEG from source viewpoint 1,
+encoded as an image with `is_pano=true`; the saved byte hash matches. Only the
+initial viewpoint of the two-view panorama tour was submitted. Full-resolution
+rendering and its development-package asset were checked without regeneration.
+This does not repair inaccurate generated geometry or prove parity with a different
+Marble-platform run/input.

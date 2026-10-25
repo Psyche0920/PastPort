@@ -160,3 +160,12 @@ output. Browser inspection now shows the saved scene and camera movement. No mod
 regeneration, asset changes, review DB reset or additional generation cost occurred.
 The user's original trial settled at 1,500 credits. Spatial calibration and semantic
 acceptance remain pending.
+
+## Full-resolution scene display
+
+Corrected the lower-quality 500k-first import and 1.5 pixel-ratio cap. Existing
+output now uses a hash-bound full-resolution variant from the same generated world,
+retaining original assets and review data. Untouched camera defaults use the converted
+asset origin. Development export follows the selected render variant. Browser loading
+and full-resolution ZIP contents were checked; no model regeneration or extra fee.
+Generated geometry quality and comparison with another platform run remain user review.

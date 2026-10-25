@@ -17,7 +17,7 @@ from typing import cast
 from urllib.parse import urlsplit
 
 from pastport_pdf_vr.application.reference_environment import read_json, record, string
-from pastport_pdf_vr.domain.scene3d import AlignmentEdit, AnchorEdit
+from pastport_pdf_vr.domain.scene3d import AlignmentEdit, AnchorEdit, SceneRenderVariant
 
 
 class Scene3DStore:
@@ -47,6 +47,13 @@ class Scene3DStore:
             "alignment": {**json.loads(alignment[1]), "version": alignment[0]},
             "objects": objects,
         }
+        variant_path = self.root / "scene3d/render-variant.json"
+        if variant_path.is_file():
+            variant = SceneRenderVariant.model_validate_json(variant_path.read_bytes())
+            world = record(self.attachment["scene"])
+            if variant.scene_binding != self.binding or variant.world_id != world["scene_id"]:
+                raise ValueError("Render variant belongs to a different scene")
+            payload["render_variant"] = json.loads(variant.model_dump_json())
         return json.dumps(payload, ensure_ascii=False).encode()
 
     def save_alignment(self, edit: AlignmentEdit) -> bool:
@@ -200,6 +207,7 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
                 "scene.json",
                 "attachment.json",
                 "scene.spz",
+                "scene-full.spz",
                 "collider.glb",
                 "panorama.jpg",
                 "source-panorama.jpg",

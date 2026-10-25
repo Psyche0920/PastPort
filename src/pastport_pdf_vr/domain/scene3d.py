@@ -67,3 +67,11 @@ class Scene3DRecord(DomainModel):
     manifest_url: str = ""
     package_url: str = ""
     resume: str = ""
+
+
+class SceneRenderVariant(DomainModel):
+    scene_binding: str
+    world_id: str
+    splat: Literal["scene-full.spz"] = "scene-full.spz"
+    splat_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
+    tier: Literal["full_res"] = "full_res"

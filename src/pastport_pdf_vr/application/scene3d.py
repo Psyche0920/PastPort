@@ -177,7 +177,7 @@ class Scene3DAttachment:
                     json.dumps(
                         {
                             "confirmed": False,
-                            "origin": {"x": 0.0, "y": 1.6, "z": 0.0},
+                            "origin": {"x": 0.0, "y": scene.ground_plane_offset, "z": 0.0},
                             "yaw_degrees": 0.0,
                             "pitch_degrees": 0.0,
                             "roll_degrees": 0.0,

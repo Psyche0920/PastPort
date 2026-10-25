@@ -93,7 +93,7 @@ class MarbleImporter:
         splats = record(assets["splats"])
         urls = record(splats["spz_urls"])
         semantics = record(splats["semantics_metadata"])
-        selection = urls.get("500k") or urls.get("full_res")
+        selection = urls.get("full_res") or urls.get("500k")
         identity = string(world["world_id"])
         # Source URLs can expire: source bytes remain in the upload audit, not the public result.
         destination.mkdir(parents=True, exist_ok=False)

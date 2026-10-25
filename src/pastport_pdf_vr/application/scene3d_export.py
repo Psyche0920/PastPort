@@ -9,13 +9,25 @@ from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from pastport_pdf_vr.application.reference_environment import read_json, record
+from pastport_pdf_vr.application.reference_environment import digest, read_json, record
+from pastport_pdf_vr.domain.scene3d import SceneRenderVariant
 
 
 def export_scene(root: Path, archive: Path) -> None:
     """Export current edits without rebuilding or mutating their database."""
     attachment = record(read_json(root / "scene3d/attachment.json"))
     scene = record(attachment["scene"])
+    render_name = "scene.spz"
+    render_hash = scene["splat_sha256"]
+    tier = "registered"
+    variant_path = root / "scene3d/render-variant.json"
+    if variant_path.is_file():
+        variant = SceneRenderVariant.model_validate_json(variant_path.read_bytes())
+        if variant.scene_binding != attachment["binding"] or variant.world_id != scene["scene_id"]:
+            raise ValueError("Render variant belongs to a different scene")
+        render_name, render_hash, tier = variant.splat, variant.splat_sha256, variant.tier
+    if digest(root / "scene3d" / render_name) != render_hash:
+        raise ValueError("Render asset bytes changed")
     with TemporaryDirectory(prefix="pastport-3d-export-") as temporary:
         snapshot = Path(temporary) / "review.sqlite3"
         with closing(
@@ -100,9 +112,10 @@ def export_scene(root: Path, archive: Path) -> None:
             "units": "metres",
             "coordinate_frame": "right_handed_threejs_y_up",
             "render_asset": {
-                "path": "scene/scene.spz",
+                "path": "scene/" + render_name,
+                "quality_tier": tier,
                 "kind": "gaussian_splat_spz",
-                "sha256": scene["splat_sha256"],
+                "sha256": render_hash,
                 "requires_splat_renderer": True,
             },
             "collision_asset": {
@@ -122,7 +135,7 @@ def export_scene(root: Path, archive: Path) -> None:
             "note": "Generated appearance is not historical evidence. No paid HQ mesh export.",
         }
         paths = [
-            root / "scene3d/scene.spz",
+            root / "scene3d" / render_name,
             root / "scene3d/collider.glb",
             root / "scene3d/panorama.jpg",
             root / "source.pdf",
