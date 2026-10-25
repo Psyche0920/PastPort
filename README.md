@@ -142,3 +142,16 @@ entrypoint, not a new Studio upload page. Visual and interaction acceptance is m
 | `adapters/codex_image.py`, `animation_assets/` | Native subscription image events and pinned style/policy |
 | `application/animation_cli.py`, `workflow/animation.py` | CLI and typed LangGraph node |
 | `.agents/skills/pastport-style-transfer/` | Reusable execution skill and scope |
+## Optional 3D handoff
+
+This branch adds an optional 3D stage after existing panorama matching. The original
+PDF/panorama workflow and viewer remain available. Open **追加 Marble 3D** from the
+generation records, choose the completed result and its exact viewpoint, then either
+import an existing Marble `world.json` or explicitly authorize one panorama generation.
+The 3D page loads the actual SPZ and GLB, supports six-direction free movement,
+computes ray/surface candidates after camera alignment, and saves only manually
+confirmed anchors. This is not collision-constrained walking.
+
+See [SCENE3D.md](docs/SCENE3D.md) for the key setup, CLI, saved-operation recovery,
+coordinate convention, manual calibration and actual execution limits. No new paid
+generation was performed for this delivery.

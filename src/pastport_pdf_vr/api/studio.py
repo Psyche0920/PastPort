@@ -132,6 +132,7 @@ class StudioApplication:
                     self.jobs.recover_interrupted()
                     yield
                 finally:
+                    await self.scene3d.close()
                     await self.previews.close()
                     await self.jobs.close()
                     fcntl.flock(lock, fcntl.LOCK_UN)
@@ -257,6 +258,9 @@ class StudioApplication:
                 finally:
                     self.jobs.discard_upload(upload)
 
+        from pastport_pdf_vr.api.scene3d_studio import Scene3DPortal
+
+        self.scene3d = Scene3DPortal(app, self.jobs, self.previews)
         app.mount("/projects", ProjectReviewRouter(self.jobs, self.previews))
 
     @staticmethod

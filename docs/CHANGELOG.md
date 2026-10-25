@@ -128,3 +128,71 @@ The user will manually assess output quality and report targeted issues. This
 release verifies the automatic chain, not equivalence of all semantic judgments,
 new-site accuracy, main integration, 360-video support or cloud deployment. The
 main repository checker is absent from this standalone branch.
+
+## Optional Marble 3D stage
+
+Added a separate 3D handoff after panorama matching: consistent source backup,
+existing-export import, explicit one-generation API entry and saved-operation polling,
+real SPZ/GLB loading and free movement, camera alignment, ray-derived candidates,
+manual anchor confirmation and versioned saves. Existing panorama generation/viewing
+remains available. Source matches and human edits are copied, not rematched or reset.
+
+One unrelated real indoor-video export completed asset/database attachment with no
+new inference or credits. It is not same-scene alignment or museum business acceptance.
+New Python passes local strict typing; syntax/lint checks cover the changed code.
+No paid generation, automated test suite or browser/device acceptance was run.
+
+## Simplified 3D frontend and separate records
+
+Each completed VR record now opens its own 3D generation page with the source bound
+automatically. The main form shows project, session-only API key and a single explicit
+generation action; existing Marble export import remains collapsed. Homepage VR and
+3D records are separate. 3D records read persistent local status, expose output and
+query-original-task actions, and never trigger provider work on refresh. Native output
+links remain available via the API. Key values are not returned, logged or saved.
+
+New API/domain types pass strict typing, lint and Python/JS syntax checks. The current
+workbench was reloaded without active tasks and retains the imported 14-object result.
+No real key, paid generation or automatic test suite was used for this UI delivery.
+
+## Pre-payment safeguards and portable scene output
+
+Fixed generation backup parent creation and made repeated frontend requests reuse
+the source result's persistent generation job. Added a version-bound source-fidelity
+policy and portable ZIP export containing SPZ, collision GLB, metric transforms,
+stable object/evidence JSON, original media/PDFs and a consistent review snapshot.
+Unconfirmed anchors stay withheld; full textured visual mesh is not claimed.
+
+Ten isolated checks with network disabled and simulated provider responses passed,
+plus a real local-asset ZIP export check. No real key, provider call or paid export
+was used. Actual provider billing, generated fidelity and engine import remain unverified.
+
+## Existing 3D viewer load repair
+
+Added the missing Three.js 0.180.0 Pass module required by Spark, its import-map
+entry and the local static allowlist. Updated only viewer resources in the existing
+output. Browser inspection now shows the saved scene and camera movement. No model
+regeneration, asset changes, review DB reset or additional generation cost occurred.
+The user's original trial settled at 1,500 credits. Spatial calibration and semantic
+acceptance remain pending.
+
+## Full-resolution scene display
+
+Corrected the lower-quality 500k-first import and 1.5 pixel-ratio cap. Existing
+output now uses a hash-bound full-resolution variant from the same generated world,
+retaining original assets and review data. Untouched camera defaults use the converted
+asset origin. Development export follows the selected render variant. Browser loading
+and full-resolution ZIP contents were checked; no model regeneration or extra fee.
+Generated geometry quality and comparison with another platform run remain user review.
+
+## Restore mounted candidate behavior in 3D output
+
+Added automatic source-direction/collider projection and separate persisted proposal
+records. The 3D viewer now shows numbered candidates, reads the preserved introduction
+and opens the corresponding review object. Human coordinates remain authoritative;
+proposals are labelled unverified and exported separately from confirmed anchors.
+
+Current result has 14 source hotspots and 14 ray-hit proposals. Visible labels, an
+object-35 popup and its review deep link were checked in the browser. Two targeted
+offline tests pass for persistence/isolation. This does not prove precise placement,
+object fidelity or user acceptance. No new generation or fee occurred.

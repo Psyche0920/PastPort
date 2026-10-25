@@ -1,4 +1,5 @@
 'use strict';
+const displayTitle=value=>String(value||'').replace(/\s*·\s*已有匹配成品(?:[（(].*[）)])?\s*$/u,'');
 const byId = id => document.getElementById(id);
 let documentFile = null, tourFiles = [], sending = false;
 const statusLabels = {running:'正在生成',completed:'生成完成',completed_with_gaps:'完成 · 有缺口',failed:'未完成',recovery_required:'需核对中断记录'};
@@ -60,12 +61,12 @@ async function refresh() {
   const current=byId('project').value;
   const select=byId('project'); select.replaceChildren(new Option('新建项目',''));
   const projects=new Set();
-  for(const job of jobs) if(!projects.has(job.project_id)) {projects.add(job.project_id);if(['completed','completed_with_gaps'].includes(job.status)) select.add(new Option(job.title+' · 保留已有人工修改',job.project_id));}
+  for(const job of jobs) if(!projects.has(job.project_id)) {projects.add(job.project_id);if(['completed','completed_with_gaps'].includes(job.status)) select.add(new Option(displayTitle(job.title),job.project_id));}
   select.value=current;
   const container=byId('jobs'); container.replaceChildren();
   for (const job of jobs) {
     const card=document.createElement('article');card.className='job';
-    const title=document.createElement('h3');title.textContent=job.title;
+    const title=document.createElement('h3');title.textContent=displayTitle(job.title);
     const badge=document.createElement('span');badge.className='badge';badge.textContent=statusLabels[job.status];title.append(badge);card.append(title);
     const note=document.createElement('p');note.textContent=job.message || '已提交，正在读取资料。可以保持此页查看进度。';card.append(note);
     const phases=document.createElement('div');phases.className='stages';
@@ -77,7 +78,7 @@ async function refresh() {
     }
     if(['completed','completed_with_gaps'].includes(job.status)) {
       const nav=document.createElement('nav');
-      for(const [label,path] of [['打开 VR 展示','vr/'],['打开审核工作台','']]) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/runs/${job.job_id}/${path}`;link.textContent=label;nav.append(link);}card.append(nav);
+      for(const [label,path] of [['打开 VR 展示','vr/'],['打开审核工作台','']]) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/runs/${job.job_id}/${path}`;link.textContent=label;nav.append(link);}const create3d=document.createElement('a');create3d.href=`/scene3d?job_id=${job.job_id}`;create3d.textContent='生成 3D';nav.append(create3d);card.append(nav);
     }
     container.append(card);
   }
