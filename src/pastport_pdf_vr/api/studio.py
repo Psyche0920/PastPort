@@ -20,9 +20,6 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from pastport_pdf_vr.adapters.assets import LocalAssetStore
-from pastport_pdf_vr.adapters.editorial import SQLiteEditorialRepository
-from pastport_pdf_vr.api.server import LocalReviewApplication
 from pastport_pdf_vr.application.inputs import InputValidationError
 from pastport_pdf_vr.application.reference_preview import ReferencePreviewPool
 from pastport_pdf_vr.application.studio import (
@@ -33,7 +30,6 @@ from pastport_pdf_vr.application.studio import (
     prepare_tour,
     safe_relative_name,
 )
-from pastport_pdf_vr.domain.build import BuildSummary
 from pastport_pdf_vr.domain.environment import RunResultPointer
 from pastport_pdf_vr.domain.studio import (
     INPUT_CAPABILITIES,
@@ -41,7 +37,6 @@ from pastport_pdf_vr.domain.studio import (
     StudioJob,
     StudioOptions,
 )
-from pastport_pdf_vr.domain.tour import ImportedTour
 
 
 class UploadLimitExceeded(ValueError):
@@ -85,7 +80,7 @@ class ProjectReviewRouter:
         run_path = remainder.strip("/").split("/")
         if run_path[0] == "runs":
             run_id = run_path[1] if len(run_path) > 1 else ""
-            known = [j for j in known if j.job_id == run_id and j.workflow == "environment_build"]
+            known = [j for j in known if j.job_id == run_id]
             remainder = "/".join(run_path[2:])
         if not known or known[0].status not in ("completed", "completed_with_gaps"):
             await JSONResponse({"detail": "项目尚未完成，请返回生成工作台。"}, status_code=409)(
@@ -93,57 +88,33 @@ class ProjectReviewRouter:
             )
             return
         workspace = self.jobs.root / "projects" / project
-        if known[0].workflow == "environment_build":
-            if scope["method"] not in ("GET", "HEAD") or remainder.strip("/") not in (
-                "",
-                "vr",
-                "demo.html",
-            ):
-                await JSONResponse({"detail": "Unknown result route"}, status_code=404)(
-                    scope, receive, send
-                )
-                return
-            try:
-                pointer = RunResultPointer.model_validate_json(
-                    (workspace / "runs" / known[0].job_id / "result-pointer.json").read_bytes()
-                )
-                if pointer.project_id != project:
-                    raise ValueError("Result belongs to another project")
-                result = workspace / "runs" / pointer.result_run_id / "result"
-                port = await self.previews.ensure(result)
-            except (OSError, ValueError, RuntimeError, TimeoutError):
-                await JSONResponse(
-                    {"detail": "本地结果服务未能启动，已保存的数据未重建。"}, status_code=503
-                )(scope, receive, send)
-                return
-            suffix = "vr_trial/index.html" if remainder.strip("/") == "vr" else ""
-            await RedirectResponse(f"http://127.0.0.1:{port}/{suffix}", status_code=307)(
+        if scope["method"] not in ("GET", "HEAD") or remainder.strip("/") not in (
+            "",
+            "vr",
+            "demo.html",
+        ):
+            await JSONResponse({"detail": "Unknown result route"}, status_code=404)(
                 scope, receive, send
             )
             return
-        tour = (
-            ImportedTour.model_validate_json((workspace / "tour.json").read_bytes())
-            if known[0].workflow == "vr_build"
-            else None
+        try:
+            pointer = RunResultPointer.model_validate_json(
+                (workspace / "runs" / known[0].job_id / "result-pointer.json").read_bytes()
+            )
+            if pointer.project_id != project:
+                raise ValueError("Result belongs to another project")
+            result = workspace / "runs" / pointer.result_run_id / "result"
+            port = await self.previews.ensure(result)
+        except (OSError, ValueError, RuntimeError, TimeoutError):
+            await JSONResponse(
+                {"detail": "本地结果服务未能启动，已保存的数据未重建。"}, status_code=503
+            )(scope, receive, send)
+            return
+        suffix = "vr_trial/index.html" if remainder.strip("/") == "vr" else ""
+        await RedirectResponse(f"http://127.0.0.1:{port}/{suffix}", status_code=307)(
+            scope, receive, send
         )
-        summary = BuildSummary.model_validate_json((workspace / "build-summary.json").read_bytes())
-        application = LocalReviewApplication(
-            project,
-            tour,
-            SQLiteEditorialRepository(workspace / "editorial.sqlite3"),
-            LocalAssetStore(workspace / "assets"),
-            summary,
-            mapping_pdf=workspace / "mapping.pdf" if known[0].workflow == "photo_mapping" else None,
-            mapping_data=workspace / "mapping.json"
-            if known[0].workflow == "photo_mapping"
-            else None,
-        )
-        child = dict(scope)
-        child["root_path"] = prefix + "/" + project
-        # Preserve the full path: Starlette subtracts root_path during routing.
-        if not remainder and not path.endswith("/"):
-            child["path"] = path + "/"
-        await application.app(child, receive, send)
+        return
 
 
 class StudioApplication:
@@ -238,64 +209,20 @@ class StudioApplication:
                             )
                         pdfs = form.getlist("document")
                         tours = form.getlist("tour")
-                        photos = form.getlist("photos")
-                        if (
-                            len(pdfs) != 1
-                            or (options.workflow != "photo_mapping" and not tours)
-                            or (options.workflow == "photo_mapping" and not photos)
-                        ):
-                            raise InputValidationError("请选择一份 PDF 和完整的 VR 导览。")
-                        if any(
-                            key not in ("document", "tour", "photos", "options") for key in form
-                        ):
+                        if len(pdfs) != 1 or not tours:
+                            raise InputValidationError("请选择一份匹配 PDF 和完整的 VR 导览。")
+                        if any(key not in ("document", "tour", "options") for key in form):
                             raise InputValidationError("包含无法识别的上传字段。")
                         pdf_file = pdfs[0]
                         if (
                             not isinstance(pdf_file, UploadFile)
                             or Path(pdf_file.filename or "").suffix.lower() != ".pdf"
                         ):
-                            raise InputValidationError("当前只支持 PDF；IDML/INDD 尚不能直接生成。")
+                            raise InputValidationError("请选择匹配 PDF 文件。")
                         pdf_path = upload / "source.pdf"
                         await self._save_upload(
                             pdf_file, pdf_path, (512 if options.large_pdf else 64) * MIB
                         )
-                        if options.workflow == "photo_mapping":
-                            if (
-                                tours
-                                or len(photos) > 100
-                                or options.mapping_mode != "demo_substitution"
-                            ):
-                                raise InputValidationError(
-                                    "照片映射只接受历史 PDF 与最多 100 张现场照片，"
-                                    "请选择替代物模式。"
-                                )
-                            photo_folder = upload / "photos"
-                            photo_folder.mkdir()
-                            photo_names: set[str] = set()
-                            total = 0
-                            for item in photos:
-                                if not isinstance(item, UploadFile):
-                                    raise InputValidationError("照片必须为文件。")
-                                relative = safe_relative_name(item.filename or "")
-                                canonical = relative.as_posix().casefold()
-                                if canonical in photo_names or relative.suffix.lower() not in (
-                                    ".jpg",
-                                    ".jpeg",
-                                    ".png",
-                                    ".webp",
-                                ):
-                                    raise InputValidationError(
-                                        "照片格式或文件名重复；支持 JPEG、PNG、WebP。"
-                                    )
-                                photo_names.add(canonical)
-                                target = photo_folder / relative
-                                target.parent.mkdir(parents=True, exist_ok=True)
-                                total += await self._save_upload(
-                                    item, target, min(30 * MIB, 200 * MIB - total)
-                                )
-                            return self.jobs.start(options, upload, pdf_path, photo_folder)
-                        if photos:
-                            raise InputValidationError("请先选择照片映射阶段，以接收现场照片。")
                         tour_folder = upload / "tour"
                         tour_folder.mkdir()
                         names: set[str] = set()

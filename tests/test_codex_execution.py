@@ -5,10 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pastport_pdf_vr.adapters.codex_semantics import CodexSemanticGateway
 from pastport_pdf_vr.adapters.execution import SubscriptionExecutor
 from pastport_pdf_vr.adapters.structured_output import StrictOutputSchema
-from pastport_pdf_vr.domain.evidence import EvidenceSelection, HistoricalSubject, PopupPayload
+from pastport_pdf_vr.domain.environment import LocationBatch, MatchedBatch
 from pastport_pdf_vr.domain.execution import (
     ExecutionDenied,
     ExecutionInput,
@@ -18,8 +17,6 @@ from pastport_pdf_vr.domain.execution import (
     SDKReadiness,
     SubscriptionGrant,
 )
-from pastport_pdf_vr.domain.recognition import SceneInspectionPayload, SceneInspectionRequest
-from tests.support import view
 
 
 class ExplicitTransport:
@@ -59,7 +56,7 @@ class CodexExecutionTests(unittest.TestCase):
             project_id=grant.project_id,
             grant_ref=grant.grant_ref,
             model_id=grant.model_id,
-            kind="scene_inspection",
+            kind="environment_generation",
             prompt_version="v1",
             policy_version="v1",
             instructions="Fixture",
@@ -116,7 +113,7 @@ class CodexExecutionTests(unittest.TestCase):
             self.assertEqual(len(transport.calls), 1)
 
     def test_strict_schema_requires_defaulted_and_nested_fields(self) -> None:
-        for model in (SceneInspectionPayload, PopupPayload):
+        for model in (LocationBatch, MatchedBatch):
             schema = json.loads(StrictOutputSchema.convert(json.dumps(model.model_json_schema())))
             self.assertEqual(set(schema["required"]), set(schema["properties"]))
             self.assertFalse(schema["additionalProperties"])
@@ -128,54 +125,3 @@ class CodexExecutionTests(unittest.TestCase):
                         all("default" not in row for row in child["properties"].values())
                     )
 
-    def test_gateway_forwards_images_and_does_not_accept_foreign_project(self) -> None:
-        from pastport_pdf_vr.adapters.assets import LocalAssetStore
-        from pastport_pdf_vr.domain.recognition import MatchingImage
-
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            assets = LocalAssetStore(root / "assets")
-            registered = assets.register_bytes("test", b"explicit-image-fixture", "image/png", 1024)
-            panorama = view("view:1")
-            original = panorama.images[0]
-            matching = MatchingImage(
-                **{
-                    **original.model_dump(),
-                    "image": registered.reference,
-                }
-            )
-            grant = SubscriptionGrant(project_id="test", grant_ref="grant:1")
-            transport = ExplicitTransport()
-            gateway = CodexSemanticGateway(
-                SubscriptionExecutor(root / "ledger.sqlite3", grant, transport),
-                assets,
-            )
-            request = SceneInspectionRequest(
-                project_id="test",
-                view_id="view:1",
-                phase="initial",
-                images=(matching,),
-                catalog=(),
-                grant_ref=grant.grant_ref,
-                model_id=grant.model_id,
-                prompt_version="v1",
-                policy_version="v1",
-            )
-            result = gateway.inspect(request)
-            self.assertEqual(result.entities, ())
-            self.assertEqual(transport.calls[0].image_hashes, (registered.reference.asset.sha256,))
-            self.assertNotIn(
-                "receipt_ref", json.loads(transport.calls[0].output_schema_json)["properties"]
-            )
-            with self.assertRaises(ExecutionDenied):
-                gateway.inspect(request.model_copy(update={"project_id": "foreign"}))
-            selection = EvidenceSelection(
-                subject=HistoricalSubject(subject_id="door", label="Door"),
-                passages=(),
-                grant_ref="wrong:grant",
-                model_id=grant.model_id,
-                policy_version="v1",
-                prompt_version="v1",
-            )
-            with self.assertRaises(ExecutionDenied):
-                gateway.associate(selection)

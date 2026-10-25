@@ -1,14 +1,12 @@
-"""Browser upload and linked result contracts with explicit offline model counterparts."""
+"""Upload boundaries and interruption handling, without model execution."""
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import io
 import json
 import stat
 import tempfile
-import time
 import unittest
 import zipfile
 from pathlib import Path
@@ -18,54 +16,9 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from pastport_pdf_vr.api.studio import StudioApplication
-from pastport_pdf_vr.application.automatic_build import AutomaticBuildWorkflow
 from pastport_pdf_vr.application.inputs import InputValidationError
 from pastport_pdf_vr.application.studio import StudioJobs, prepare_tour, safe_relative_name
-from pastport_pdf_vr.domain.editorial import PreviewSnapshot
-from pastport_pdf_vr.domain.execution import ExecutionInput, ExecutionOutput, SubscriptionGrant
-from pastport_pdf_vr.domain.geometry import PixelPoint
-from pastport_pdf_vr.domain.recognition import (
-    PixelRegion,
-    SceneInspectionPayload,
-    SceneInspectionRequest,
-    SightingProposal,
-)
 from pastport_pdf_vr.domain.studio import StudioJob, StudioOptions
-from tests.test_automatic_build import FixtureBuildTransport, FixturePDFReader
-
-
-class CatalogFixtureTransport(FixtureBuildTransport):
-    def execute(self, request: ExecutionInput, timeout_seconds: int) -> ExecutionOutput:
-        if request.kind == "scene_inspection":
-            scene = SceneInspectionRequest.model_validate_json(request.payload_json)
-            if scene.catalog:
-                targets = scene.target_ids or tuple(entity.object_id for entity in scene.catalog)
-                payload = SceneInspectionPayload(
-                    sightings=tuple(
-                        SightingProposal(
-                            target_ref=target,
-                            image_id=scene.images[0].image_id,
-                            disposition="located",
-                            point=PixelPoint(x=1000.0, y=500.0),
-                            region=PixelRegion(
-                                top_left=PixelPoint(x=990.0, y=490.0),
-                                bottom_right=PixelPoint(x=1010.0, y=510.0),
-                            ),
-                            basis=("Explicit fixture catalog identity",),
-                        )
-                        for target in targets
-                    )
-                )
-                return ExecutionOutput(
-                    payload_json=payload.model_dump_json(),
-                    receipt_ref="fixture:transport",
-                    thread_ref="fixture:thread",
-                    turn_ref="fixture:turn",
-                    input_tokens=20,
-                    output_tokens=10,
-                    total_tokens=30,
-                )
-        return super().execute(request, timeout_seconds)
 
 
 class FixtureRunner:
@@ -83,18 +36,7 @@ class FixtureRunner:
         options: StudioOptions,
     ) -> int:
         self.calls += 1
-        workflow = AutomaticBuildWorkflow(FixturePDFReader(), CatalogFixtureTransport())
-        await asyncio.to_thread(
-            workflow.run,
-            pdf,
-            tour,
-            workspace,
-            SubscriptionGrant.model_validate_json(grant.read_bytes()),
-            job_id,
-            options.mapping_mode,
-            options.large_pdf,
-        )
-        return 0
+        return 1
 
     async def close(self) -> None:
         self.stopped = True
@@ -116,76 +58,7 @@ def fixture_tour() -> bytes:
     ).encode()
 
 
-def wait_job(client: TestClient) -> StudioJob:
-    for _ in range(150):
-        job = StudioJob.model_validate_json(json.dumps(client.get("/api/jobs").json()[0]))
-        if job.status != "running":
-            return job
-        time.sleep(0.02)
-    raise AssertionError("Fixture job did not complete")
-
-
 class StudioTests(unittest.TestCase):
-    def test_upload_generates_linked_review_and_preserves_human_text(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            runner = FixtureRunner()
-            application = StudioApplication(Path(directory), runner)
-            with TestClient(application.app) as client:
-                self.assertEqual(client.get("/").status_code, 200)
-                self.assertIn("拖入你的 PDF", client.get("/").text)
-                capabilities = client.get("/api/capabilities").json()
-                self.assertEqual(
-                    next(c["status"] for c in capabilities if c["key"] == "model_3d"), "planned"
-                )
-                project_id = ""
-                for iteration in range(2):
-                    options = {"title": "Fixture project", "authorize_model": True}
-                    if iteration:
-                        options["project_id"] = project_id
-                    response = client.post(
-                        "/api/jobs",
-                        headers={"X-PastPort-Edit": "1"},
-                        data={"options": json.dumps(options)},
-                        files=[
-                            ("document", ("source.pdf", b"%PDF-1.7 fixture")),
-                            ("tour", ("index.html", fixture_tour())),
-                        ],
-                    )
-                    self.assertEqual(response.status_code, 202, response.text)
-                    job = wait_job(client)
-                    self.assertIn(job.status, ("completed", "completed_with_gaps"))
-                    project_id = job.project_id
-                    prefix = "/projects/" + project_id
-                    self.assertEqual(client.get(prefix + "/").status_code, 200)
-                    self.assertEqual(client.get(prefix + "/vr/").status_code, 200)
-                    snapshot = PreviewSnapshot.model_validate_json(
-                        client.get(prefix + "/api/snapshot").text
-                    )
-                    self.assertEqual(len(snapshot.objects), 1)
-                    pano = client.get(prefix + "/api/tour").json()["views"][0]["panorama"]["asset"][
-                        "sha256"
-                    ]
-                    self.assertEqual(client.get(prefix + "/media/" + pano).status_code, 200)
-                    row = snapshot.objects[0]
-                    if not iteration:
-                        result = client.post(
-                            prefix + "/api/text",
-                            headers={"X-PastPort-Edit": "1"},
-                            json={
-                                "operation_id": "studio-human",
-                                "object_id": row.object.entity.object_id,
-                                "expected_version": row.version,
-                                "historical_subject_id": row.object.historical_subject_id,
-                                "introduction": "Human wording",
-                                "background": "Human context",
-                            },
-                        )
-                        self.assertEqual(result.status_code, 200, result.text)
-                    else:
-                        self.assertEqual(row.introduction, "Human wording")
-                self.assertEqual(runner.calls, 2)
-            self.assertTrue(runner.stopped)
-
     def test_rejects_cross_origin_unapproved_and_unsupported_uploads(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             runner = FixtureRunner()

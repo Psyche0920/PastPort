@@ -1,5 +1,21 @@
 # Changelog
 
+## Single-workflow cleanup — 2026-10-25
+
+- Removed photo-to-PDF, raw-history matching and replay UI/CLI entries, exclusive
+  services, old review frontend, prompts, fonts and their exclusive tests/resources.
+- Kept matched PDF + fresh VR generation, its reference backend/viewer, bounded SDK
+  execution, source provenance, uploads, persistence, process cleanup and recovery.
+- Extracted shared atomic storage from removed replay composition. Legacy job files
+  remain on disk and are hidden from this single-workflow portal. Existing inputs,
+  databases, human edits and the saved user stash are untouched.
+- Updated current documentation and dependency packaging to this scope.
+
+No tests, model calls or service launches were performed for this cleanup, as
+explicitly requested by the user. Manual runtime/output acceptance is pending with
+the user. Earlier entries below describe historical versions, including removed
+features; their check results are not verification of the cleaned revision.
+
 ## 0.1.0 — standalone implementation
 
 Status: implemented on the standalone development branch; not merged into main or deployed.

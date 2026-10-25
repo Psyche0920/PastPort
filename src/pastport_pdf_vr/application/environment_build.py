@@ -21,7 +21,7 @@ from pastport_pdf_vr.adapters.execution import SubscriptionExecutor
 from pastport_pdf_vr.adapters.matched_pdf import MatchedPDFIndexReader
 from pastport_pdf_vr.adapters.structured_output import StrictOutputSchema
 from pastport_pdf_vr.adapters.tour import TourImporter
-from pastport_pdf_vr.application.bootstrap import atomic_write
+from pastport_pdf_vr.application.storage import atomic_write
 from pastport_pdf_vr.application.environment_agent import (
     EnvironmentAgentPreparation,
     offline_input_limits,
