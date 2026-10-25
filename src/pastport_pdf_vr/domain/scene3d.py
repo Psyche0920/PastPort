@@ -75,3 +75,16 @@ class SceneRenderVariant(DomainModel):
     splat: Literal["scene-full.spz"] = "scene-full.spz"
     splat_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     tier: Literal["full_res"] = "full_res"
+
+
+class SceneCandidate(DomainModel):
+    object_id: Annotated[int, Field(ge=1)]
+    point: Point3D | None
+
+
+class SceneCandidateBatch(DomainModel):
+    scene_binding: str
+    alignment_version: Annotated[int, Field(ge=0)]
+    origin: Point3D
+    alignment_kind: Literal["unconfirmed_asset_origin", "human_alignment"]
+    positions: Annotated[tuple[SceneCandidate, ...], Field(max_length=200)]

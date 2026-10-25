@@ -56,3 +56,12 @@ and static-route registration. The existing generated result was repaired in pla
 without touching scene bytes or review data. Browser rendering and camera movement
 were observed after restarting only the owned preview child; no new generation.
 Hotspot alignment, object fidelity and user/game acceptance remain pending.
+
+Matched-output correction: the earlier result had 14 source hotspots but zero 3D
+anchors and therefore did not fulfill the requested mounted-output behavior. The
+viewer now automatically computes/persists ray-derived candidates, displays numbers,
+reads original effective content and deep-links to the same review object. Current
+result: 14/14 proposals hit collider surfaces; confirmed spatial acceptance remains
+zero. Browser checks verified visible labels, object 35 popup and review identity.
+Two targeted regressions pass. User manual spatial/identity review remains required;
+this is a mounted candidate output, not a claim of verified precise 3D matching.

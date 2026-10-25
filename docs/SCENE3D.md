@@ -93,7 +93,7 @@ A hit does not prove object identity or correct depth. Manual surface picking ca
 correct the candidate. The user confirms that the original object still exists,
 records an identity basis, and saves it before it becomes a visible 3D hotspot.
 Whole/part membership needs a confirmed whole and an explicit physical relation
-basis. Rejected historical bindings remain excluded. All new anchors start empty.
+basis. Rejected historical bindings remain excluded. Confirmed anchors start empty; automatic proposals are stored separately.
 
 Anchor edits bind to the source snapshot/world version, use compare-and-swap versions
 and idempotent operation IDs, and retain edit events. Changing input creates a separate
@@ -207,3 +207,27 @@ initial viewpoint of the two-view panorama tour was submitted. Full-resolution
 rendering and its development-package asset were checked without regeneration.
 This does not repair inaccurate generated geometry or prove parity with a different
 Marble-platform run/input.
+
+## Automatic matched-content mounting
+
+Opening the 3D result now projects the selected source panorama's current hotspot
+directions into the collider using the initial estimated asset-origin pose, or a
+subsequent human alignment. This is a deterministic geometric proposal, not fresh
+visual identification. Proposals persist separately from human anchors and retain
+the scene binding, alignment version, origin and missed-ray states. Rejected source
+bindings are excluded; existing human position edits are never overwritten.
+
+The viewer displays numbered orange dashed proposals immediately. Clicking a number
+reads the original effective introduction and links to that same review object.
+Confirmed human markers are green. Changing alignment regenerates proposals for the
+new alignment version. Development JSON includes `candidate_anchor` separately from
+the confirmed `anchor`; it does not promote proposals into verified positions.
+
+For the current real result, 14 source hotspots yielded 14 collider-hit proposals.
+Browser inspection confirmed visible numbers and object 35's original introduction
+and matching review deep link. Source/generated pano comparison had no detected
+cyclic shift at 512×256 and normalized correlation 0.9944; this supports orientation
+consistency only, not individual geometry or identity correctness. No semantic or
+precise spatial acceptance is claimed. Two offline regressions cover candidate
+idempotency, human-position preservation, stale alignment and foreign-scene refusal.
+No new generation or model fee was incurred.

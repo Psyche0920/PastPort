@@ -72,6 +72,27 @@ def export_scene(root: Path, archive: Path) -> None:
                 db.execute("SELECT payload_json FROM scene3d_alignment WHERE id=1").fetchone()[0]
             )
 
+            candidates = {}
+            candidate_method = None
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='scene3d_candidates'").fetchone():
+                alignment_version = db.execute(
+                    "SELECT version FROM scene3d_alignment WHERE id=1"
+                ).fetchone()[0]
+                candidates = {
+                    row[0]: json.loads(row[1]) if row[1] else None
+                    for row in db.execute(
+                        "SELECT object_id,point_json FROM scene3d_candidates "
+                        "WHERE binding=? AND alignment_version=?",
+                        (attachment["binding"], alignment_version),
+                    )
+                }
+                method = db.execute(
+                    "SELECT payload_json FROM scene3d_candidate_batches "
+                    "WHERE binding=? AND alignment_version=?",
+                    (attachment["binding"], alignment_version),
+                ).fetchone()
+                candidate_method = json.loads(method[0]) if method else None
+
         def eligible(row: dict[str, object]) -> bool:
             return bool(
                 row["historical_id"]
@@ -92,6 +113,14 @@ def export_scene(root: Path, archive: Path) -> None:
                     and bool(parent.get("point_json") or parent.get("anchor"))
                 )
             row["anchor"] = json.loads(point) if point and visible else None
+            row["candidate_anchor"] = (
+                candidates.get(row["id"])
+                if eligible(row)
+                and row["anchor_version"] == 0
+                and (parent is None or parent.get("anchor") or parent.get("point_json"))
+                else None
+            )
+            row["candidate_state"] = "ray_projection_unverified"
             row["anchor_state"] = "human_confirmed" if row["anchor"] else "withheld_or_unconfirmed"
         data = {
             "schema_version": "pastport.scene3d/1.0",
@@ -102,6 +131,7 @@ def export_scene(root: Path, archive: Path) -> None:
             "photos": photos,
             "observations": observations,
             "alignment": alignment,
+            "candidate_method": candidate_method,
             "source_viewpoint": attachment["source_scene_id"],
             "source_pdf": "source.pdf",
             "matched_pdf": "mapping-demo.pdf",

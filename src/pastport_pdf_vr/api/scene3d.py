@@ -16,8 +16,19 @@ from tempfile import TemporaryDirectory
 from typing import cast
 from urllib.parse import urlsplit
 
-from pastport_pdf_vr.application.reference_environment import read_json, record, string
-from pastport_pdf_vr.domain.scene3d import AlignmentEdit, AnchorEdit, SceneRenderVariant
+from pastport_pdf_vr.application.reference_environment import (
+    integer,
+    read_json,
+    record,
+    sequence,
+    string,
+)
+from pastport_pdf_vr.domain.scene3d import (
+    AlignmentEdit,
+    AnchorEdit,
+    SceneCandidateBatch,
+    SceneRenderVariant,
+)
 
 
 class Scene3DStore:
@@ -26,6 +37,65 @@ class Scene3DStore:
         self.attachment = record(read_json(root / "scene3d/attachment.json"))
         self.binding = string(self.attachment["binding"])
         self.database = root / "pastport_matching.sqlite3"
+
+    def initialize_candidates(self) -> None:
+        with closing(sqlite3.connect(self.database)) as db, db:
+            db.executescript("""
+                CREATE TABLE IF NOT EXISTS scene3d_candidate_batches(
+                    binding TEXT NOT NULL,alignment_version INTEGER NOT NULL,
+                    payload_json TEXT NOT NULL,created_at TEXT NOT NULL,
+                    PRIMARY KEY(binding,alignment_version));
+                CREATE TABLE IF NOT EXISTS scene3d_candidates(
+                    binding TEXT NOT NULL,alignment_version INTEGER NOT NULL,
+                    object_id INTEGER NOT NULL,point_json TEXT,
+                    PRIMARY KEY(binding,alignment_version,object_id));
+            """)
+
+    def save_candidates(self, batch: SceneCandidateBatch) -> bool:
+        if batch.scene_binding != self.binding:
+            raise ValueError("Candidate scene binding changed")
+        with closing(sqlite3.connect(self.database)) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            version, raw = db.execute(
+                "SELECT version,payload_json FROM scene3d_alignment WHERE id=1"
+            ).fetchone()
+            if version != batch.alignment_version:
+                return False
+            alignment = json.loads(raw)
+            if batch.alignment_kind == "human_alignment" and not alignment["confirmed"]:
+                raise ValueError("Alignment is not human-confirmed")
+            if batch.alignment_kind == "unconfirmed_asset_origin" and alignment["confirmed"]:
+                return False
+            allowed = {
+                row[0]
+                for row in db.execute(
+                    "SELECT modern_id FROM pairings WHERE historical_id IS NOT NULL "
+                    "AND image_review!='unsuitable' AND text_review!='unsuitable' "
+                    "AND proposal_state!='invalid_structural_relation'"
+                )
+            }
+            source = {
+                integer(record(row)["object_id"])
+                for row in sequence(self.attachment["source_hotspots"])
+            }
+            numbers = [point.object_id for point in batch.positions]
+            if len(numbers) != len(set(numbers)) or set(numbers) != allowed & source:
+                raise ValueError("Candidate coverage differs from current source bindings")
+            db.execute(
+                "INSERT OR IGNORE INTO scene3d_candidate_batches VALUES (?,?,?,?)",
+                (self.binding, version, batch.model_dump_json(), datetime.now(UTC).isoformat()),
+            )
+            for candidate in batch.positions:
+                db.execute(
+                    "INSERT OR IGNORE INTO scene3d_candidates VALUES (?,?,?,?)",
+                    (
+                        self.binding,
+                        version,
+                        candidate.object_id,
+                        candidate.point.model_dump_json() if candidate.point else None,
+                    ),
+                )
+        return True
 
     def current(self) -> bytes:
         with closing(sqlite3.connect(self.database)) as db:
@@ -42,10 +112,19 @@ class Scene3DStore:
                 JOIN scene3d_anchors a ON a.object_id=o.id
                 AND a.historical_id IS p.historical_id""")
             ]
+            candidates = [
+                dict(row)
+                for row in db.execute(
+                    "SELECT object_id,point_json FROM scene3d_candidates "
+                    "WHERE binding=? AND alignment_version=?",
+                    (self.binding, alignment[0]),
+                )
+            ]
         payload = {
             **self.attachment,
             "alignment": {**json.loads(alignment[1]), "version": alignment[0]},
             "objects": objects,
+            "candidates": candidates,
         }
         variant_path = self.root / "scene3d/render-variant.json"
         if variant_path.is_file():
@@ -160,6 +239,7 @@ class Scene3DStore:
 def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int) -> None:
     """Wrap trusted handler methods only when a 3D attachment exists."""
     store = Scene3DStore(root)
+    store.initialize_candidates()
     get_method, post_method = "do_GET", "do_POST"
     original_get = cast(Callable[[BaseHTTPRequestHandler], None], getattr(handler, get_method))
     original_post = cast(Callable[[BaseHTTPRequestHandler], None], getattr(handler, post_method))
@@ -239,7 +319,11 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
         original_get(request)
 
     def post(request: BaseHTTPRequestHandler) -> None:
-        if request.path not in ("/api/scene3d/anchor", "/api/scene3d/alignment"):
+        if request.path not in (
+            "/api/scene3d/anchor",
+            "/api/scene3d/alignment",
+            "/api/scene3d/candidates",
+        ):
             original_post(request)
             return
         if request.headers.get("Origin") not in (
@@ -250,14 +334,16 @@ def install_routes(handler: type[BaseHTTPRequestHandler], root: Path, port: int)
             return
         try:
             length = int(request.headers.get("Content-Length", "0"))
-            if not 0 < length <= 16000:
+            limit = 128000 if request.path.endswith("/candidates") else 16000
+            if not 0 < length <= limit:
                 raise ValueError("Invalid payload size")
             raw = request.rfile.read(length)
-            saved = (
-                store.save_anchor(AnchorEdit.model_validate_json(raw))
-                if request.path.endswith("/anchor")
-                else store.save_alignment(AlignmentEdit.model_validate_json(raw))
-            )
+            if request.path.endswith("/candidates"):
+                saved = store.save_candidates(SceneCandidateBatch.model_validate_json(raw))
+            elif request.path.endswith("/anchor"):
+                saved = store.save_anchor(AnchorEdit.model_validate_json(raw))
+            else:
+                saved = store.save_alignment(AlignmentEdit.model_validate_json(raw))
             respond(request, 200 if saved else 409, json.dumps({"saved": saved}).encode())
         except ValueError as error:
             respond(request, 422, json.dumps({"detail": str(error)}).encode())

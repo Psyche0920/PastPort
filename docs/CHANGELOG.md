@@ -169,3 +169,15 @@ retaining original assets and review data. Untouched camera defaults use the con
 asset origin. Development export follows the selected render variant. Browser loading
 and full-resolution ZIP contents were checked; no model regeneration or extra fee.
 Generated geometry quality and comparison with another platform run remain user review.
+
+## Restore mounted candidate behavior in 3D output
+
+Added automatic source-direction/collider projection and separate persisted proposal
+records. The 3D viewer now shows numbered candidates, reads the preserved introduction
+and opens the corresponding review object. Human coordinates remain authoritative;
+proposals are labelled unverified and exported separately from confirmed anchors.
+
+Current result has 14 source hotspots and 14 ray-hit proposals. Visible labels, an
+object-35 popup and its review deep link were checked in the browser. Two targeted
+offline tests pass for persistence/isolation. This does not prove precise placement,
+object fidelity or user acceptance. No new generation or fee occurred.
