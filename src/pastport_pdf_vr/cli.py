@@ -16,6 +16,23 @@ from pastport_pdf_vr.domain.tour import ImportedTour
 def main() -> None:
     parser = argparse.ArgumentParser(prog="pastport-pdf-vr")
     subcommands = parser.add_subparsers(dest="command", required=True)
+    environment_build = subcommands.add_parser(
+        "environment-build", help="Matched PDF and new VR to the demonstrated review and viewer"
+    )
+    for name in ("pdf", "tour", "grant", "workspace"):
+        environment_build.add_argument("--" + name, type=Path, required=True)
+    environment_build.add_argument("--run-id", required=True)
+    environment_build.add_argument("--title", default="PastPort · 匹配环境")
+    environment_build.add_argument("--large-pdf", action="store_true")
+    environment_build.add_argument(
+        "--resume-inspection",
+        action="store_true",
+        help="Reconcile a diagnosed inspection validation error using settled receipts",
+    )
+    environment_build.add_argument(
+        "--resume-validation-stage",
+        choices=("matched_pdf", "fresh_localization", "structural_review"),
+    )
     prepare_environment = subcommands.add_parser(
         "environment-prepare", help="Prepare fresh PDF/tour images for the environment Agent Skill"
     )
@@ -80,6 +97,30 @@ def main() -> None:
     photo_map.add_argument("--large-pdf", action="store_true")
     photo_map.add_argument("--pdftoppm", type=Path)
     arguments = parser.parse_args()
+    if arguments.command == "environment-build":
+        import shutil
+
+        from pastport_pdf_vr.adapters.codex_sdk import CodexSDKTransport
+        from pastport_pdf_vr.application.environment_build import EnvironmentBuildWorkflow
+        from pastport_pdf_vr.domain.execution import SubscriptionGrant
+
+        binary = shutil.which("pdftoppm")
+        if binary is None:
+            parser.error("Poppler pdftoppm is required")
+        grant = SubscriptionGrant.model_validate_json(arguments.grant.read_bytes())
+        summary = EnvironmentBuildWorkflow(Path(binary), CodexSDKTransport(grant.effort)).run(
+            arguments.pdf,
+            arguments.tour,
+            grant,
+            arguments.workspace,
+            arguments.run_id,
+            title=arguments.title,
+            large_pdf=arguments.large_pdf,
+            resume_inspection=arguments.resume_inspection,
+            recovery_stage=arguments.resume_validation_stage,
+        )
+        print(summary.model_dump_json())
+        return
     if arguments.command == "environment-prepare":
         import shutil
 

@@ -69,7 +69,7 @@ INPUT_CAPABILITIES = (
 
 
 class StudioOptions(DomainModel):
-    workflow: Literal["vr_build", "photo_mapping"] = "vr_build"
+    workflow: Literal["vr_build", "photo_mapping", "environment_build"] = "vr_build"
     title: Annotated[str, Field(min_length=1, max_length=100)]
     project_id: Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")] | None = None
     document_format: Literal["pdf", "idml_links", "indd"] = "pdf"
@@ -85,7 +85,8 @@ class StudioJob(DomainModel):
     job_id: Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")]
     project_id: Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")]
     title: str
-    workflow: Literal["vr_build", "photo_mapping"] = "vr_build"
+    workflow: Literal["vr_build", "photo_mapping", "environment_build"] = "vr_build"
     status: Literal["running", "completed", "completed_with_gaps", "failed", "recovery_required"]
     message: str = ""
     stages: tuple[str, ...] = ()
+    gaps: tuple[str, ...] = ()

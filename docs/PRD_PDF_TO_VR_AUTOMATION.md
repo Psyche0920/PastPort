@@ -62,14 +62,19 @@ For real-site inputs, identify actual shared heritage subjects. Do not add autom
 
 ## 3. Architecture
 
-User-requested extension (2026-10-25): a repository-local environment-generation Agent Skill
-now orchestrates visual inspection and a hash-bound handoff into the demonstrated reference
-review/VR renderer. It is the entry for reproducing the user's accepted output format and
-whole/part corrections. The existing fixed SDK graph remains available as a controlled tool;
-its presence does not make it equivalent to the Skill's inspection or presentation contract.
-The Skill uses the active Codex Agent and preserves input isolation, source evidence and
-human overrides. It is not model-weight cloning. New-site semantic accuracy still requires
-real inspection and acceptance; known-handoff replay does not establish that accuracy.
+User-requested extension (2026-10-25): the browser's default matched-PDF/new-VR stage
+now uses a fixed, metered Codex SDK workflow to inspect registered evidence, localize
+fresh objects, audit points and structural relations, and assemble the demonstrated
+reference review/VR runtime. The repository Skill remains an optional interactive
+entry and shares the business policy with SDK execution. An interactive Codex
+session is not required for browser generation. The existing raw-PDF matching and
+photo-to-PDF stages remain available separately.
+
+The user owns manual output-quality acceptance and will report specific problems.
+Delivery acceptance here is the automatic upload-to-editable-result chain, preserved
+provenance/versions and durable human edits. Candidate gaps remain visible; tests or
+model verdicts do not stand in for the user's quality decision or establish model
+weight cloning or cross-site accuracy.
 
 Use LangGraph as a fixed workflow. Nodes call deterministic application services or a configured model; there is initially no autonomous planning/tool-selection agent. Conditional routing and retry limits are defined in code. A future node may acquire a bounded agent internally without replacing the graph or persistence authority.
 

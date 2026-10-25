@@ -2,7 +2,7 @@
 const byId = id => document.getElementById(id);
 let documentFile = null, tourFiles = [], photoFiles = [], sending = false;
 const statusLabels = {running:'正在生成',completed:'生成完成',completed_with_gaps:'完成 · 有缺口',failed:'未完成',recovery_required:'需核对中断记录'};
-const stageLabels = {ingest_photos:'读取 PDF 与照片',recognize_photos:'照片对象识别与统一编号',export_mapping:'导出照片映射 PDF',ingest:'读取资料',recognize:'识别与定位',map_pdf:'关联历史对象',evidence:'提取证据与介绍',publish:'写入审核资料',export_snapshot:'导出预览'};
+const stageLabels = {reuse_reference:'输入未变，保留已有编辑',environment_prepare:'读取新 PDF 与 VR',matched_pdf:'读取匹配与来源',fresh_localization:'重新定位与覆盖图复核',structural_review:'整体与部件关系审核',reference_publish:'装配同款后台与 VR',ingest_photos:'读取 PDF 与照片',recognize_photos:'照片对象识别与统一编号',export_mapping:'导出照片映射 PDF',ingest:'读取资料',recognize:'识别与定位',map_pdf:'关联历史对象',evidence:'提取证据与介绍',publish:'写入审核资料',export_snapshot:'导出预览'};
 async function api(url, options) {
   const response = await fetch(url, options);
   const data = await response.json();
@@ -28,10 +28,10 @@ async function readEntry(entry, prefix='') {
 }
 for (const id of ['photos','photo-folder']) byId(id).onchange = event => {photoFiles = Array.from(event.target.files).map(file=>({file,path:file.webkitRelativePath || file.name})); showSelections();};
 function configureWorkflow() {
- const photos=byId('workflow').value==='photo_mapping';
+ const photos=byId('workflow').value==='photo_mapping', environment=byId('workflow').value==='environment_build';
  byId('photos-drop').hidden=!photos; byId('tour-drop').hidden=photos;
- byId('mapping').disabled=photos; if(photos) byId('mapping').value='demo_substitution';
- byId('generate').textContent=photos?'生成照片映射 PDF':'生成 VR 直接试验';
+ byId('mapping').disabled=photos||environment; if(photos||environment) byId('mapping').value='demo_substitution';
+ byId('generate').textContent=photos?'生成照片映射 PDF':environment?'生成 VR 与审核后台':'生成 VR 直接试验';
 }
 byId('workflow').onchange=()=>{configureWorkflow();refresh().catch(error=>byId('form-status').textContent=error.message);}; configureWorkflow();
 for (const kind of ['document','tour','photos']) {
@@ -53,6 +53,17 @@ for (const kind of ['document','tour','photos']) {
     } catch(error) {byId('form-status').textContent=error.message;}
   });
 }
+function gapLabel(value) {
+ const [kind,number]=value.split(':');
+ const labels={matched_entry_omitted:`PDF 条目 ${number} 未完整读取`,
+ pdf_inspection_budget_exhausted:'PDF 读取达到本次上限，后续条目尚未完成',
+ localization_budget_exhausted:'部分视点的定位达到本次上限，未补造热点',
+ location_audit_budget_exhausted:'部分点位未完成复核，未挂载',
+ unlocated:`物件 ${number}：某视点未确认可见点位，未挂载`,
+ structural_part_excluded:`物件 ${number}：整体与部件关系不成立或尚未确认，已排除热点`,
+ no_visible_anchor:`物件 ${number}：没有已核实的可见点位`};
+ return labels[kind]||value;
+}
 async function refresh() {
   const jobs=await api('/api/jobs');
   const current=byId('project').value;
@@ -68,9 +79,14 @@ async function refresh() {
     const note=document.createElement('p');note.textContent=job.message || '已提交，正在读取资料。可以保持此页查看进度。';card.append(note);
     const phases=document.createElement('div');phases.className='stages';
     for(const item of job.stages) {const [name,status]=item.split(':');const label=document.createElement('span');label.className='stage '+status;label.textContent=(stageLabels[name]||name)+(status==='completed'?' ✓':status==='running'?' …':' · 需核对');phases.append(label);}card.append(phases);
+    if(job.gaps?.length) {
+      const details=document.createElement('details'), summary=document.createElement('summary');
+      summary.textContent=`查看生成缺口（${job.gaps.length}）`;details.append(summary);
+      for(const gap of job.gaps) {const p=document.createElement('p');p.textContent=gapLabel(gap);details.append(p);}card.append(details);
+    }
     if(['completed','completed_with_gaps'].includes(job.status)) {
       const nav=document.createElement('nav');
-      for(const [label,path] of (job.workflow==='photo_mapping' ? [['下载映射 PDF','mapping.pdf'],['下载映射数据','mapping.json'],['查看照片与来源','']] : [['打开 VR 展示','vr/'],['打开审核工作台','']])) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/${path}`;link.textContent=label;nav.append(link);}card.append(nav);
+      for(const [label,path] of (job.workflow==='photo_mapping' ? [['下载映射 PDF','mapping.pdf'],['下载映射数据','mapping.json'],['查看照片与来源','']] : [['打开 VR 展示','vr/'],['打开审核工作台','']])) {const link=document.createElement('a');link.href=`/projects/${job.project_id}/${job.workflow==='environment_build'?`runs/${job.job_id}/`:''}${path}`;link.textContent=label;nav.append(link);}card.append(nav);
     }
     container.append(card);
   }

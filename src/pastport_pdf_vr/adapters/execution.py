@@ -67,6 +67,17 @@ class SubscriptionExecutor:
             return 0
         return max(0, self.grant.max_calls - len(rows))
 
+    def remaining_recorded_tokens(self) -> int:
+        with self._connection() as db:
+            rows = db.execute(
+                "SELECT state,result FROM executions WHERE project=? AND grant_ref=?",
+                (self.grant.project_id, self.grant.grant_ref),
+            ).fetchall()
+        if any(row[0] != "completed" for row in rows):
+            raise ExecutionRecoveryRequired("Unknown prior usage blocks further dispatch")
+        used = sum(ExecutionOutput.model_validate_json(row[1]).total_tokens for row in rows)
+        return max(0, self.grant.max_recorded_tokens - used)
+
     def execute(self, request: ExecutionInput) -> ExecutionOutput:
         grant = self.grant
         if (request.project_id, request.grant_ref, request.model_id) != (

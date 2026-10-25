@@ -399,7 +399,7 @@ class CandidateBuilder:
         }
         write_json(self.output / "vr_trial/trial_report.json", report)
         self.render_viewer(tour, entities, located)
-        self.database(entities, import_id)
+        self.database(entities, import_id, frozenset(rejected))
         with closing(sqlite3.connect(self.output / "pastport_matching.sqlite3")) as db, db:
             for relation in relations:
                 if relation.verdict != "verified":
@@ -460,7 +460,12 @@ class CandidateBuilder:
             },
         )
 
-    def database(self, entities: tuple[Entity, ...], import_id: str) -> None:
+    def database(
+        self,
+        entities: tuple[Entity, ...],
+        import_id: str,
+        excluded: frozenset[int] = frozenset(),
+    ) -> None:
         quotes = {
             integer(record(q)["number"]): record(q)
             for q in sequence(read_json(self.upstream / "quote-regions.json"))
@@ -719,7 +724,9 @@ class CandidateBuilder:
                     o.name,
                     o.historical_id,
                     o.historical_name,
-                    "candidate_unreviewed",
+                    "invalid_structural_relation"
+                    if o.number in excluded
+                    else "candidate_unreviewed",
                 )
                 for o in entities
             )
@@ -799,10 +806,23 @@ class CandidateBuilder:
     def render_review(self, count: int, hotspots: int) -> None:
         text = (self.reference / "review.html").read_text()
         upstream = record(read_json(self.upstream / "objects.json"))
-        labels = {
-            string(record(o)["history_id"]): f"H{i}"
-            for i, o in enumerate(sequence(upstream["objects"]), 1)
-        }
+        title = escape(string(upstream.get("title", "PastPort")))
+        text = text.replace("<h2>PastPort · 图文配对复核</h2>", f"<h2>{title} · 图文配对复核</h2>")
+        inputs = record(read_json(self.upstream / "inputs.json"))
+        if any(
+            record(photo).get("source_kind") == "matched_pdf_page_render_not_original_photo"
+            for photo in sequence(inputs["photos"])
+        ):
+            text = text.replace("你的照片：同一对象的全部视角", "输入PDF中同一对象的全部照片选区")
+            text = text.replace("照片 ${String(v.photo_id)", "PDF页 ${String(v.photo_id)")
+            text = text.replace("查看完整照片", "查看完整PDF页视图")
+        labels: dict[str, str] = {}
+        for i, value in enumerate(sequence(upstream["objects"]), 1):
+            obj = record(value)
+            label = obj.get("history_key", f"H{i}")
+            labels[string(obj["history_id"])] = (
+                string(label) if isinstance(label, str) and 0 < len(label) <= 80 else f"H{i}"
+            )
         payload = json.dumps(labels, ensure_ascii=False).replace("</", "<\\/")
         text = text.replace(
             "<script>",
@@ -818,7 +838,7 @@ class CandidateBuilder:
         )
         text = text.replace(
             "esc(o.proposal_state)",
-            "esc(o.proposal_state==='candidate_unreviewed'?'候选·待审核':o.proposal_state==='invalid_structural_relation'?'结构关系不成立·不计数':o.proposal_state)",
+            "esc(o.proposal_state==='candidate_unreviewed'?'候选·待审核':o.proposal_state==='invalid_structural_relation'?'关系未确认或不成立·不计数':o.proposal_state)",
         )
         text = text.replace("' · '+esc(s.id)", "' · '+esc(sourceLabels[s.id]||s.id)")
         text = text.replace("<p>${esc(s.title_en)}</p>", "<p>${esc(s.parent_ref)}</p>")
@@ -851,7 +871,7 @@ class CandidateBuilder:
             "当前独立重匹配提案：37个对象、66处热点；编号点击显示文字，人工拖拽后自动保存。05号背包及36号运动鞋未放置；身份疑点以VR页面说明为准。",
             f"本轮{count}个PDF候选物件、{hotspots}处重新定位热点。未在某视点确认的物件不补造热点；编号点击显示文字，人工拖拽后自动保存。候选尚未独立验收。",
         )
-        text = text.replace("下载当前39项映射表", "下载本轮映射状态表")
+        text = text.replace("下载当前39项映射表", "下载生成时映射状态快照")
         text = re.sub(
             r"已撤下扶手椅→学生房.*?不能视为已拍到的实物。",
             f"原PDF记录保留；本轮{count}项候选可继续核验，结构关系不成立的项保留证据但不计数、不挂载。源文不可通过弹窗编辑改写。",

@@ -22,6 +22,11 @@ class StrictOutputSchema:
         if not isinstance(value, dict):
             return value
         output = {key: cls._visit(item) for key, item in value.items() if key != "default"}
+        prefix = output.pop("prefixItems", None)
+        if isinstance(prefix, list):
+            if not prefix or any(item != prefix[0] for item in prefix):
+                raise ValueError("Structured output requires homogeneous tuple items")
+            output["items"] = prefix[0]
         properties = output.get("properties")
         if isinstance(properties, dict):
             output["required"] = list(properties)

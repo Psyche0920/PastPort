@@ -13,7 +13,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 from starlette.datastructures import UploadFile
@@ -24,6 +24,7 @@ from pastport_pdf_vr.adapters.assets import LocalAssetStore
 from pastport_pdf_vr.adapters.editorial import SQLiteEditorialRepository
 from pastport_pdf_vr.api.server import LocalReviewApplication
 from pastport_pdf_vr.application.inputs import InputValidationError
+from pastport_pdf_vr.application.reference_preview import ReferencePreviewPool
 from pastport_pdf_vr.application.studio import (
     MIB,
     BuildRunner,
@@ -33,6 +34,7 @@ from pastport_pdf_vr.application.studio import (
     safe_relative_name,
 )
 from pastport_pdf_vr.domain.build import BuildSummary
+from pastport_pdf_vr.domain.environment import RunResultPointer
 from pastport_pdf_vr.domain.studio import (
     INPUT_CAPABILITIES,
     InputCapability,
@@ -71,8 +73,8 @@ class UploadBoundary:
 
 
 class ProjectReviewRouter:
-    def __init__(self, jobs: StudioJobs) -> None:
-        self.jobs = jobs
+    def __init__(self, jobs: StudioJobs, previews: ReferencePreviewPool) -> None:
+        self.jobs, self.previews = jobs, previews
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         path = str(scope["path"])
@@ -80,12 +82,45 @@ class ProjectReviewRouter:
         relative = path[len(prefix) :] if path.startswith(prefix) else path
         project, _, remainder = relative.lstrip("/").partition("/")
         known = [j for j in self.jobs.list() if j.project_id == project]
+        run_path = remainder.strip("/").split("/")
+        if run_path[0] == "runs":
+            run_id = run_path[1] if len(run_path) > 1 else ""
+            known = [j for j in known if j.job_id == run_id and j.workflow == "environment_build"]
+            remainder = "/".join(run_path[2:])
         if not known or known[0].status not in ("completed", "completed_with_gaps"):
             await JSONResponse({"detail": "项目尚未完成，请返回生成工作台。"}, status_code=409)(
                 scope, receive, send
             )
             return
         workspace = self.jobs.root / "projects" / project
+        if known[0].workflow == "environment_build":
+            if scope["method"] not in ("GET", "HEAD") or remainder.strip("/") not in (
+                "",
+                "vr",
+                "demo.html",
+            ):
+                await JSONResponse({"detail": "Unknown result route"}, status_code=404)(
+                    scope, receive, send
+                )
+                return
+            try:
+                pointer = RunResultPointer.model_validate_json(
+                    (workspace / "runs" / known[0].job_id / "result-pointer.json").read_bytes()
+                )
+                if pointer.project_id != project:
+                    raise ValueError("Result belongs to another project")
+                result = workspace / "runs" / pointer.result_run_id / "result"
+                port = await self.previews.ensure(result)
+            except (OSError, ValueError, RuntimeError, TimeoutError):
+                await JSONResponse(
+                    {"detail": "本地结果服务未能启动，已保存的数据未重建。"}, status_code=503
+                )(scope, receive, send)
+                return
+            suffix = "vr_trial/index.html" if remainder.strip("/") == "vr" else ""
+            await RedirectResponse(f"http://127.0.0.1:{port}/{suffix}", status_code=307)(
+                scope, receive, send
+            )
+            return
         tour = (
             ImportedTour.model_validate_json((workspace / "tour.json").read_bytes())
             if known[0].workflow == "vr_build"
@@ -114,6 +149,7 @@ class ProjectReviewRouter:
 class StudioApplication:
     def __init__(self, root: Path, runner: BuildRunner | None = None) -> None:
         self.jobs = StudioJobs(root, runner or SubprocessBuildRunner())
+        self.previews = ReferencePreviewPool()
         web = Path(str(files("pastport_pdf_vr").joinpath("web")))
 
         @asynccontextmanager
@@ -125,6 +161,7 @@ class StudioApplication:
                     self.jobs.recover_interrupted()
                     yield
                 finally:
+                    await self.previews.close()
                     await self.jobs.close()
                     fcntl.flock(lock, fcntl.LOCK_UN)
 
@@ -174,7 +211,8 @@ class StudioApplication:
         @app.get("/api/jobs")
         def jobs() -> tuple[StudioJob, ...]:
             return tuple(
-                j.model_copy(update={"stages": self.jobs.stages(j)}) for j in self.jobs.list()
+                j.model_copy(update={"stages": self.jobs.stages(j), "gaps": self.jobs.gaps(j)})
+                for j in self.jobs.list()
             )
 
         @app.post("/api/jobs", status_code=202)
@@ -203,7 +241,7 @@ class StudioApplication:
                         photos = form.getlist("photos")
                         if (
                             len(pdfs) != 1
-                            or (options.workflow == "vr_build" and not tours)
+                            or (options.workflow != "photo_mapping" and not tours)
                             or (options.workflow == "photo_mapping" and not photos)
                         ):
                             raise InputValidationError("请选择一份 PDF 和完整的 VR 导览。")
@@ -292,7 +330,7 @@ class StudioApplication:
                 finally:
                     self.jobs.discard_upload(upload)
 
-        app.mount("/projects", ProjectReviewRouter(self.jobs))
+        app.mount("/projects", ProjectReviewRouter(self.jobs, self.previews))
 
     @staticmethod
     async def _save_upload(source: UploadFile, path: Path, maximum: int) -> int:

@@ -18,6 +18,7 @@ from uuid import uuid4
 from pastport_pdf_vr.application.bootstrap import atomic_write
 from pastport_pdf_vr.application.inputs import InputValidationError
 from pastport_pdf_vr.domain.build import BuildSummary
+from pastport_pdf_vr.domain.environment import RunResultPointer, ValidationStage
 from pastport_pdf_vr.domain.execution import SubscriptionGrant
 from pastport_pdf_vr.domain.studio import StudioJob, StudioOptions
 
@@ -116,8 +117,12 @@ class BuildRunner(Protocol):
 class SubprocessBuildRunner:
     """One owned process group, interrupted on shutdown without automatic redispatch."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, resume_inspection: bool = False, recovery_stage: ValidationStage | None = None
+    ) -> None:
         self._process: asyncio.subprocess.Process | None = None
+        self._resume_inspection = resume_inspection
+        self._recovery_stage = recovery_stage
 
     async def run(
         self,
@@ -132,7 +137,11 @@ class SubprocessBuildRunner:
             sys.executable,
             "-m",
             "pastport_pdf_vr.cli",
-            "photo-map" if options.workflow == "photo_mapping" else "build",
+            {
+                "photo_mapping": "photo-map",
+                "vr_build": "build",
+                "environment_build": "environment-build",
+            }[options.workflow],
             "--pdf",
             str(pdf),
             "--photos" if options.workflow == "photo_mapping" else "--tour",
@@ -146,6 +155,12 @@ class SubprocessBuildRunner:
         ]
         if options.workflow == "vr_build":
             arguments.extend(("--mapping-mode", options.mapping_mode))
+        if options.workflow == "environment_build":
+            arguments.extend(("--title", options.title))
+            if self._recovery_stage:
+                arguments.extend(("--resume-validation-stage", self._recovery_stage))
+            elif self._resume_inspection:
+                arguments.append("--resume-inspection")
         if options.large_pdf:
             arguments.append("--large-pdf")
         self._process = await asyncio.create_subprocess_exec(
@@ -249,6 +264,7 @@ class StudioJobs:
             max_recorded_tokens=options.max_recorded_tokens,
             timeout_seconds=180,
         )
+        atomic_write(upload / "options.json", options.model_dump_json())
         grant_path = upload / "grant.json"
         atomic_write(grant_path, grant.model_dump_json())
         job = StudioJob(
@@ -275,7 +291,11 @@ class StudioJobs:
     ) -> None:
         try:
             code = await self.runner.run(pdf, tour, grant, workspace, job.job_id, options)
-            summary_path = workspace / "build-summary.json"
+            summary_path = (
+                workspace / "runs" / job.job_id / "build-summary.json"
+                if options.workflow == "environment_build"
+                else workspace / "build-summary.json"
+            )
             if code == 0 and summary_path.exists():
                 summary = BuildSummary.model_validate_json(summary_path.read_bytes())
                 self.save(
@@ -283,7 +303,13 @@ class StudioJobs:
                         update={
                             "status": summary.status,
                             "message": (
-                                "照片映射完成，可下载映射 PDF 与数据。"
+                                (
+                                    f"已生成候选：{summary.object_count}项可定位对象，"
+                                    f"{summary.anchor_count}处热点；记录{len(summary.gaps)}条生成缺口。"
+                                    "可打开后台复核。"
+                                )
+                                if options.workflow == "environment_build"
+                                else "照片映射完成，可下载映射 PDF 与数据。"
                                 if options.workflow == "photo_mapping"
                                 else "生成完成，可打开 VR 和审核工作台。"
                             ),
@@ -296,7 +322,7 @@ class StudioJobs:
                     job.model_copy(
                         update={
                             "status": "recovery_required",
-                            "message": "生成未完成。请检查登录、Poppler 和执行记录；不会自动重试。",
+                            "message": self.failure_message(job, workspace),
                         }
                     )
                 )
@@ -321,8 +347,52 @@ class StudioJobs:
                 )
             )
 
+    @staticmethod
+    def failure_message(job: StudioJob, workspace: Path) -> str:
+        generic = "生成未完成。任务已停止，已完成调用与用量记录保留；不会自动重试。"
+        if job.workflow != "environment_build" or not (workspace / "stages.sqlite3").exists():
+            return generic
+        try:
+            with sqlite3.connect(
+                f"{(workspace / 'stages.sqlite3').as_uri()}?mode=ro", uri=True
+            ) as db:
+                row = db.execute(
+                    "SELECT stage FROM pipeline_stages WHERE project=? AND run_id=? "
+                    "AND status='recovery_required' ORDER BY rowid DESC LIMIT 1",
+                    (job.project_id, job.job_id),
+                ).fetchone()
+        except sqlite3.Error:
+            return generic
+        labels = {
+            "environment_prepare": "输入PDF/VR展开",
+            "matched_pdf": "匹配PDF来源与身份校验",
+            "fresh_localization": "新VR定位与点位复核",
+            "structural_review": "整体与部件关系核对",
+            "reference_publish": "同款后台与VR装配",
+        }
+        return f"{labels.get(row[0], '生成')}未完成。{generic}" if row else generic
+
+    def gaps(self, job: StudioJob) -> tuple[str, ...]:
+        if job.status not in ("completed", "completed_with_gaps"):
+            return ()
+        workspace = self.root / "projects" / job.project_id
+        path = (
+            workspace / "runs" / job.job_id / "build-summary.json"
+            if job.workflow == "environment_build"
+            else workspace / "build-summary.json"
+        )
+        if not path.exists():
+            return ()
+        return BuildSummary.model_validate_json(path.read_bytes()).gaps
+
     def stages(self, job: StudioJob) -> tuple[str, ...]:
-        path = self.root / "projects" / job.project_id / "stages.sqlite3"
+        workspace = self.root / "projects" / job.project_id
+        pointer_path = workspace / "runs" / job.job_id / "result-pointer.json"
+        if job.workflow == "environment_build" and pointer_path.exists():
+            pointer = RunResultPointer.model_validate_json(pointer_path.read_bytes())
+            if pointer.result_run_id != job.job_id:
+                return ("reuse_reference:completed",)
+        path = workspace / "stages.sqlite3"
         if not path.exists():
             return ()
         try:

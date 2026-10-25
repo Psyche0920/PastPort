@@ -27,6 +27,7 @@ class ExecutionInput(DomainModel):
         "popup_draft",
         "pdf_matching",
         "photo_inspection",
+        "environment_generation",
     ]
     prompt_version: str
     policy_version: str

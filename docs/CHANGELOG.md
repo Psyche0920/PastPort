@@ -54,3 +54,46 @@ and unsafe HTML in evidence descriptions. A known corrected real-material handof
 14 candidates/25 anchors. This verifies assembly and format, not equal fresh visual judgment
 on an unseen project. Static schema 4 panoramas are supported; 360 video and hardware-specific
 acceptance remain unimplemented or unverified. The main repository checker is absent.
+
+
+## Browser matched-PDF environment automation — 2026-10-25
+
+Integrated the default matched-PDF/new-VR upload stage with metered Codex SDK
+execution and the demonstrated reference renderer. No interactive Codex session or
+user-authored handoff JSON is needed. The optional repository Skill and SDK use a
+shared business policy. Existing raw-PDF matching and photo-to-PDF remain selectable.
+
+The input PDF's internal links can index complete numbered evidence entries and
+photographic selections, with full-scan fallback for other layouts. Printed source
+IDs and exact native quotations are preserved; a misnumbered quotation is only
+reanchored when its exact text has a unique registered page, with an audit record.
+A historical part may have an unrepresented parent without inventing a catalog ID.
+Every new VR uses fresh measurements; 4K panoramas retain original geometry while
+model previews obey their own size bounds. Overlay audits and whole/part review
+exclude unconfirmed positions and structural parts. CSV snapshots reflect exclusion
+states. Budget checks now reserve the observed cost of a proposal/audit pair where
+available, avoiding a clearly unaffordable unreviewed next proposal.
+
+Each run retains its own DB and result URL; identical inputs/model/policy in the
+same project reuse the existing DB and human edits without further inference.
+Owned local reference servers load only packaged code, survive ordinary data
+reloads without regeneration, and close with Studio. Jobs expose actual counts,
+gaps and failure stage. Explicit validation recovery retains settled receipts and
+usage; uncertain dispatches are not retried. Original local PDF-evidence edits
+remain in their earlier named Git stash.
+
+Evidence: 53 offline behavioral tests; strict mypy across 76 source/test files;
+Ruff lint/format, JavaScript syntax and whitespace checks. Browser navigation
+opened the real review database and two-view reference VR. The actual supplied
+40-page PDF and two 4096×2048 panoramas completed with 15 evidence records and nine
+audited hotspots, with explicit gaps. Nine settled SDK calls consumed 266,471
+recorded tokens, including two diagnostic requests before validation fixes; the
+threshold stops subsequent calls and is not a hard per-call token cap. The second
+view's final proposals were not audited after the threshold, and the part proxy
+remained excluded pending physical proof. The later pair-cost guard is covered by
+a deterministic budget test; no additional live inference was used to rerun it.
+
+The user will manually assess output quality and report targeted issues. This
+release verifies the automatic chain, not equivalence of all semantic judgments,
+new-site accuracy, main integration, 360-video support or cloud deployment. The
+main repository checker is absent from this standalone branch.

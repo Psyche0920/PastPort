@@ -2,39 +2,86 @@
 
 Standalone implementation on `codex/pdf-to-vr-standalone`. The branch has independent history; it does not copy main's application. Main compatibility is a target contract, not a completed integration.
 
-## Environment-generation Agent Skill
+## Matched PDF and new VR: browser generation
 
-For the demonstrated review-backend and VR format, open this checkout in Codex and invoke
-`$pastport-environment-generation` with the matched PDF, new tour and output directory.
-The [repository skill](.agents/skills/pastport-environment-generation/SKILL.md) carries the
-inspection, source, whole/part relationship, fresh-localization and acceptance workflow.
-The Agent performs the visual/semantic work and creates its intermediate records; users do
-not author per-object JSON. The active Codex session supplies the model and tools. This is a
-reusable workflow, not a copy of model weights or a guarantee of identical new-image judgments.
+Run in this checkout:
 
-The skill's deterministic tools are:
+```sh
+uv sync --locked --extra dev --extra codex
+uv run --locked pastport-pdf-vr studio --workspace .runtime/studio --port 8794
+```
+
+Open **http://127.0.0.1:8794/**. The default stage accepts an already matched PDF
+plus a fresh schema 4 static panorama HTML/folder/ZIP. Authorize the finite local
+Codex subscription grant and click **生成 VR 与审核后台**. No interactive Codex
+session, hand-authored JSON or previously measured hotspots are needed. A local
+Codex login/runtime is still required by the existing SDK transport.
+
+The fixed workflow registers every matched-PDF page. When the PDF has internal
+links to numbered evidence entries, it derives their printed identities and all
+photographic selections from those links, inspects the complete evidence pages,
+and avoids repeated overview cards. Unrecognized layouts use bounded full-page
+inspection. It keeps the numbered identities
+and exact native quotations, crops registered photographic evidence, localizes
+those same modern objects in each new viewpoint, audits projected hotspot overlays,
+reviews the historical catalog before positioning, checks whole/part relations
+against observable modern attachment or
+containment, then assembles the demonstrated review backend and VR viewer. The
+model executes through the existing durable Codex SDK grant/usage ledger. It cannot
+run shell commands, edit project files or silently switch providers.
+
+Output quality is evaluated manually by the user, who reports targeted issues.
+Only audited visible positions are published. Unknown identities/positions remain
+gaps. Unverified or rejected structural parts retain their evidence but receive no
+hotspots. A mandatory catalog relationship review must finish before publication;
+otherwise the job stops. Observed proposal/audit pair costs are reserved when available to avoid starting
+a pair that clearly cannot fit. Finite budgets can produce gaps or stop a run and do not
+promise completion for arbitrarily large documents. Recognition remains a model
+judgment; offline tests are not new-site accuracy evidence or human acceptance.
+
+Different-input generation runs have separate databases and permanent result links.
+An identical input/model/policy in the same project reuses its existing database and
+human edits without additional inference. Reloading
+or restarting serves that database without regenerating it. New inputs never reuse
+old object coordinates, and previous run databases/human edits remain available
+through their original job links. The portal starts local result servers only when
+a result is opened and stops its owned servers on normal shutdown. Keep Studio
+running while editing; generated `start_demo.py` also serves a saved result independently.
+
+The original raw-heritage-PDF automatic matching and photo-to-PDF stages remain
+separate selectable workflows. The default matched-PDF workflow does not rerun or
+modify the upstream PDF generator. Static schema 4 panoramas are supported here;
+360 video, OCR and arbitrary vendor exports are not implemented.
+
+For command-line automation with an explicit finite grant:
+
+```sh
+uv run --locked --extra codex pastport-pdf-vr environment-build --pdf INPUT.pdf --tour TOUR.html --grant my-grant.json --workspace .runtime/site --run-id first-run
+```
+
+The [repository Skill](.agents/skills/pastport-environment-generation/SKILL.md)
+remains an optional interactive authoring/review entry with the same identity,
+source and spatial rules. Its low-level preparation/assembly tools remain available:
 
 ```sh
 uv run --locked pastport-pdf-vr environment-prepare --pdf INPUT.pdf --tour TOUR --workspace .runtime/new-input
 uv run --locked pastport-pdf-vr environment-render --pdf INPUT.pdf --tour TOUR --evidence .runtime/new-input/evidence --locations .runtime/new-input/locations.json --output .runtime/new-result --serve
 ```
 
-Preparation only registers and renders new inputs; it is not completed recognition.
-Rendering consumes the Agent's checked handoff and emits the demonstrated `index.html`
-review backend plus `vr_trial/index.html`, sharing a new editable database. It ignores old
-object hotspots, binds measurements to input/panorama hashes, and rejects changed-input
-measurements. Page, photo and viewpoint counts and object numbers come from each input.
-Existing output directories are refused so human work cannot be reset. Sources and runtime
-data remain under ignored `.runtime/`. The current reference renderer admits schema 4 static
-panorama tours, including safe relative images; 360 video is not implemented.
+Preparation alone is not recognition. Assembly alone consumes checked evidence.
+A diagnosed, settled semantic validation failure can be explicitly reconciled with
+`environment-build --resume-validation-stage matched_pdf` (or `fresh_localization` /
+`structural_review`) using the original inputs, grant, workspace and run ID. This
+retains the stage-recovery audit and existing usage and does not retry unknown dispatches.
 
-This entry preserves the existing upload portal, finite SDK grants, typed models, asset store
-and recovery code below. The older `build`/browser pipeline remains a separate workflow and
-does not automatically invoke the repository skill or establish the same visual/semantic
-acceptance. Use the new Skill entry for the user's demonstrated output contract.
+Runtime material stays under ignored `.runtime/`; no input-specific mapping or
+hotspot coordinates are shipped as business rules.
 
 | Source | Purpose |
 |---|---|
+| `adapters/matched_pdf.py` | Optional input-owned evidence-page and photographic-selection index; full-scan fallback |
+| `application/environment_build.py`, `domain/environment.py` | Metered matched-PDF inspection, fresh localization, overlay audits and structural review |
+| `application/reference_preview.py` | Owned isolated local servers using only packaged runtime code |
 | `application/environment_agent.py` | Safe PDF/tour preparation with existing asset/PDF/projection adapters |
 | `application/reference_environment.py` | Strict, hash-bound assembly, structural exclusions, exact source checks and isolated output |
 | `reference_environment/` | Data-free demonstrated layouts and persistence runtime templates; notices retained |
@@ -52,9 +99,9 @@ uv run pastport-pdf-vr studio --workspace .runtime/studio --port 8794
 Open **http://127.0.0.1:8794/**. This server can start with no existing project. In the Chinese interface:
 
 1. Choose or drop one **PDF**. Enable the large-PDF option for files above 64 MiB (maximum 512 MiB).
-2. Choose/drop a supported **360 Studio HTML**, a complete tour folder, or one **ZIP**. Preserve relative image paths. The supported data-only export is schema 3/4, as used by the existing demo; arbitrary vendor HTML, raw panoramas without navigation, and uploaded scripts are not executed or silently converted.
+2. In the default matched-PDF stage choose/drop a schema 4 **360 Studio HTML**, a complete tour folder, or one **ZIP**. Preserve relative image paths. The supported data-only export is schema 3/4, as used by the existing demo; arbitrary vendor HTML, raw panoramas without navigation, and uploaded scripts are not executed or silently converted.
 3. Enter a project title and choose real-site matching or explicitly declared demonstration substitution. New browser runs default to **20 model calls / 250,000 recorded tokens** for conservative trials. Larger documents may finish with budget gaps; expand generation settings to raise the limits deliberately. These are stopping thresholds, not a promised subscription percentage or a hard per-call token ceiling.
-4. Authorize this run to use the machine operator's Codex login, then click **生成 VR 与审核工作台**. No handwritten grant/request JSON or build command is needed. Poppler and the optional Codex SDK must already be installed; operator login must be available.
+4. Authorize this run to use the machine operator's Codex login, then click **生成 VR 与审核后台**. No handwritten grant/request JSON or build command is needed. Poppler and the optional Codex SDK must already be installed; operator login must be available.
 5. Read actual pipeline-stage progress in **生成记录**. Completed jobs provide **打开 VR 展示** and **打开审核工作台**. The existing popup editor and drag-release position autosave remain linked to the same project database.
 6. To rebuild, select the existing project under **保存到** and upload its inputs again. The project URL remains stable; applicable human text and positions remain authoritative. Model calls may occur again under the explicitly authorized new run's limits. Changed historical assignments/media can invalidate applicability, retaining previous edits without blindly applying them.
 
