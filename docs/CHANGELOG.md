@@ -230,3 +230,22 @@ passed strict typing and Ruff; JavaScript syntax and diff checks passed. The dir
 preview of the user's completed upload was opened in the browser. Runtime/visual
 acceptance remains with the user. No model generation was added by this UI change.
 The UI service was restarted only after its saved jobs showed no running generation.
+
+## Approved style v2 and independent stylization Agent
+
+Integrated the user-approved viewpoint-two sample as the versioned default visual
+reference, preserving old assets and frozen legacy-run styles. New staff jobs use
+an independent typed Agent: model planning, actual reference/source/output image
+review, direct pass for acceptable results and at most one complete repair round
+for critical defects. Planning, generation and review share the original metered
+subscription grant; the upfront estimate includes the complete one-repair reserve.
+
+Added CLI/LangGraph entry, frozen stage requests, packaged reports/reference/policy,
+and per-profile job-cache identity. Old jobs retain their original pipeline/grants.
+The opt-in 3D surface projection candidate remains experimental and does not
+reconstruct geometry. Image review is not 3D walking or human acceptance.
+
+Thirteen affected Python modules passed strict mypy and Ruff, both affected
+JavaScript files passed syntax checks and git diff checks passed. No new model
+call, live Agent trial or automated runtime/browser test was performed for this
+implementation. tools/check_repository.py is absent from this standalone checkout.

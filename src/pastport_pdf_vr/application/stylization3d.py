@@ -179,6 +179,10 @@ class Style3DWorkflow:
             assets.joinpath("navigation_boundary.js").read_bytes()
         )
         reference = files("pastport_pdf_vr").joinpath("animation_assets/approved-style.png")
+        style_hash = hashlib.sha256(reference.read_bytes()).hexdigest()
+        provenance = Path(image.provenance_ref)
+        if provenance.is_file():
+            style_hash = string(record(read_json(provenance)).get("style_sha256", style_hash))
         variant = Style3DVariant(
             scene_binding=string(attachment["binding"]),
             world_id=scene.scene_id,
@@ -188,7 +192,8 @@ class Style3DWorkflow:
             splat_sha256=digest(folder / "scene-styled.spz"),
             panorama_sha256=digest(folder / "style-panorama.png"),
             source_panorama_sha256=image.source_panorama_sha256,
-            style_reference_sha256=hashlib.sha256(reference.read_bytes()).hexdigest(),
+            style_reference_sha256=style_hash,
+            render_mode=request.render_mode,
             provenance_ref=image.provenance_ref,
             camera=camera,
             alignment_kind="human_alignment" if camera.confirmed else "automatic_estimate",

@@ -20,6 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
+pastport-stylization-agent = "pastport_pdf_vr.application.stylization_agent_cli:main"
 pastport-pdf-vr = "pastport_pdf_vr.cli:main"
 pastport-style3d = "pastport_pdf_vr.application.stylization3d_cli:main"
 pastport-stylize-studio = "pastport_pdf_vr.api.stylization_studio:main"

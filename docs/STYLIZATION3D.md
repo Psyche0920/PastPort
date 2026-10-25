@@ -167,3 +167,20 @@ for local development. Preview quality and interaction acceptance are manual.
 | `web/studio.css` | Shared workspace appearance and navigation |
 | `web/stylization.css` | Stylization layout and embedded preview controls |
 | `web/styled-tour-preview.html` | Trusted first-view 3D preview and viewpoint toolbar |
+
+## Opt-in high-detail surface candidate
+
+`render_mode="projective_surface"` is available on single-view and complete-tour
+requests. It projects the bound full panorama onto the existing collider mesh,
+using the same source camera and coordinate convention as appearance baking.
+Texture detail is preserved independently of Gaussian point sizes. The original
+comparison remains available. This option does not reconstruct geometry, correctly
+recover hidden surfaces, or guarantee multi-view consistency; moving away from
+the source camera can expose stretched projections or source mesh defects.
+It remains opt-in pending human acceptance, not the default rendering claim.
+
+For authorized fresh maps, the complete-tour CLI accepts `--style-reference` and
+`--style-policy` in addition to a request with an explicit grant. It injects the
+existing metered animation transport; no alternate provider or allowance bypass.
+Frozen reference/policy hashes and native per-face sizes remain in the animation
+manifest. The 3D appearance record now inherits its actual animation style hash.

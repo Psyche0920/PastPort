@@ -2,8 +2,8 @@
 
 This branch adds an executable animation workflow to the existing PastPort repository.
 It leaves matched-PDF generation available as an upstream producer. The animation
-node is callable from Python/LangGraph or the CLI; Studio does not yet have an
-animation-upload page. No new repository, server deployment or provider is required.
+node is callable from Python/LangGraph or the CLI. The `/stylization` staff page
+now uses the independent reference-guided Agent for new jobs; legacy jobs keep their mode. No new repository, server deployment or provider is required.
 
 ## Input and output
 
@@ -50,24 +50,29 @@ face size is `ceil(panorama_width / 3.2)`; required generated size is
 `ceil(panorama_width / (4 * 0.9))`. Independent painting can still produce seams;
 these parameters are a reproducible method, not proof of seamlessness.
 
-The fixed generated style reference has SHA-256
-`bddb6ddc8903b3ce4fdd57d94f1803a001c93f8c68140f965e40f51e31e4198a`.
-It was the local perspective the user selected after asking for more animation.
-It is a style reference, not a complete panorama or a documentary reconstruction.
-The original social screenshots and source PDFs are not copied into Git history.
+The current default style is the user-approved viewpoint-two sample in
+`animation_assets/approved-style-v2.png`, bound by `approved-style-v2.json` and
+`policy-v2.txt`. Both generation and the independent Agent reviewer receive the
+actual image. `approved_animation_style()` validates the image/policy hashes.
+The old reference/policy remain available for historical runs. Resume uses each
+run's frozen reference/policy and its original grant; approval of v2 does not
+silently change an older run or reset unknown usage. The selected sample is a
+style standard, not evidence of complete panorama or 3D acceptance.
 
 ## Python and LangGraph
 
 ```python
 from pathlib import Path
 from pastport_pdf_vr.application.animation import AnimationRun, AnimationWorkflow
+from pastport_pdf_vr.application.animation_style import approved_animation_style
 from pastport_pdf_vr.domain.animation import ExistingPanorama
 from pastport_pdf_vr.workflow.animation import AnimationNode
 
+style = approved_animation_style()
 workflow = AnimationWorkflow(
     ffmpeg=None,                         # not needed in reuse mode
-    style=Path("src/pastport_pdf_vr/animation_assets/approved-style.png"),
-    prompt=Path("src/pastport_pdf_vr/animation_assets/policy-v1.txt"),
+    style=style.reference,
+    prompt=style.policy,
     transport=None,                      # guarantees no SDK calls in reuse mode
 )
 request = AnimationRun(
@@ -138,3 +143,5 @@ This demonstrates process execution on real material, not a new two-viewpoint mo
 run, Story Agent integration, visual acceptance, a public deployment or device QA.
 The user performs quality, seam, object/hotspot and interaction acceptance manually.
 No automated test suite or browser/device acceptance was run for this delivery.
+
+See [the independent Agent contract and one-repair limit](STYLIZATION_AGENT.md).

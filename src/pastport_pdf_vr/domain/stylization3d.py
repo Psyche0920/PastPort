@@ -26,6 +26,7 @@ class Style3DRun(DomainModel):
     panorama: ExistingPanorama
     strength: Annotated[float, Field(gt=0, le=1, allow_inf_nan=False)] = 1
     resume: bool = False
+    render_mode: Literal["gaussian", "projective_surface"] = "gaussian"
 
 
 class SplatBakeStats(DomainModel):
@@ -49,6 +50,7 @@ class Style3DVariant(DomainModel):
     source_panorama_sha256: Sha256
     style_reference_sha256: Sha256
     provenance_ref: str
+    render_mode: Literal["gaussian", "projective_surface"] = "gaussian"
     camera: StyleCamera
     alignment_kind: Literal["human_alignment", "automatic_estimate"]
     stats: SplatBakeStats

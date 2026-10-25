@@ -25,8 +25,9 @@ function estimate(job) {
   $('summary').replaceChildren();
   for (const text of [
     `${job.title} · ${source.viewpoints} viewpoints · ${source.kind === 'scene3d' ? '3D' : 'VR panorama'}`,
-    `Estimated use: ${source.required_calls} image generations and ${formatNumber(job.expected_tokens_low)}–${formatNumber(job.expected_tokens_high)} recorded tokens.`,
-    `Suggestions when blank: ${source.required_calls} generations / ${formatNumber(job.suggested_token_threshold)} tokens.`,
+    `Initial images: ${source.required_calls}. ${job.execution === 'agent' ? `Agent calls: normally ${job.normal_model_calls}, at most ${job.maximum_model_calls} including one optional repair and reviews.` : 'Fixed generation workflow.'}`,
+    `Estimated recorded tokens: ${formatNumber(job.expected_tokens_low)}–${formatNumber(job.expected_tokens_high)} (repair reserve included).`,
+    `Suggestions when blank: ${job.maximum_model_calls || source.required_calls} model calls / ${formatNumber(job.suggested_token_threshold)} tokens.`,
   ]) {
     const paragraph = document.createElement('p');
     paragraph.textContent = text;
@@ -36,7 +37,7 @@ function estimate(job) {
   $('tokens').value = job.authorized_tokens ?? '';
   $('calls').readOnly = job.authorized_calls != null;
   $('tokens').readOnly = job.authorized_tokens != null;
-  $('calls').placeholder = `Suggested: ${source.required_calls}`;
+  $('calls').placeholder = `Suggested: ${job.maximum_model_calls || source.required_calls}`;
   $('tokens').placeholder = `Suggested: ${formatNumber(job.suggested_token_threshold)}`;
   $('authorize').checked = false;
   $('generate').textContent = job.status === 'recovery_required' ? 'Resume saved task' : 'Create animated environment';
@@ -176,7 +177,7 @@ async function refresh() {
       heading.append(title, badge);
       const meta = document.createElement('p');
       meta.className = 'job-meta';
-      meta.textContent = `${row.source.kind === 'scene3d' ? '3D environment' : 'VR panorama'} · ${row.source.viewpoints} viewpoints`;
+      meta.textContent = `${row.execution === 'agent' ? 'Agent · approved animation style' : 'Earlier result'} · ${row.source.kind === 'scene3d' ? '3D environment' : 'VR panorama'} · ${row.source.viewpoints} viewpoints`;
       const status = document.createElement('p');
       status.textContent = row.message;
       const nav = document.createElement('nav');
@@ -189,6 +190,13 @@ async function refresh() {
         download.textContent = 'Download complete ZIP';
         download.href = `/api/stylization/${row.run_id}/download`;
         nav.append(preview, download);
+        if (row.execution === 'agent') {
+          const review = document.createElement('a');
+          review.textContent = 'Agent review';
+          review.href = `/api/stylization/${row.run_id}/review`;
+          review.target = '_blank'; review.rel = 'noopener';
+          nav.append(review);
+        }
       } else if (row.status !== 'running') {
         const button = document.createElement('button');
         button.type = 'button';

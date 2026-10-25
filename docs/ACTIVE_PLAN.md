@@ -237,3 +237,52 @@ standalone loopback launch is a development entry, not a separate product site.
 Uses the shared Studio stylesheet and retains generation authorization and optional
 budget behavior. Only UI/preview changes; no new model calls or asset generation.
 Acceptance: user checks the staff workflow, preview controls and visual consistency.
+
+### High-detail candidate after user rejection
+
+Owner: style-transfer chat. The user rejected current sharpness and set
+`demo-muradiye-ui-trial` (6e65a44) as the minimum visual-detail/style reference.
+The user then approved a newly rendered front view and authorized quality-first
+complete generation without another budget discussion. One built-in reference
+render is saved at `.runtime/style3d-hd-01/approved-front.png`; reference-only work
+does not prove a complete panorama or 3D result. A separate two-view candidate is
+running through the existing metered SDK route, maximum 12 directional calls,
+no automatic retry/variants, original inputs preserved.
+
+Added an opt-in projective-surface appearance mode to retain panorama texture detail
+on the existing collider geometry instead of only changing Gaussian DC colors.
+This does not reconstruct geometry or unseen surfaces. Shared style references and
+physical invariants constrain cross-view distant scenery; consistency, projection
+alignment and walking artifacts still require user review. Four affected Python
+modules pass strict typing and Ruff; viewer syntax passes. Acceptance: one complete
+interactive two-view package with retained content/navigation, detail at least the
+named reference, and no conflicting shared distant structures. Not yet accepted.
+
+User scope correction: stop full-tour expansion and establish a single style sample.
+The whole-tour worker was interrupted; its ledger retains four completed calls and
+one recovery-required call. No reset or retry is authorized. A single built-in image
+edit now preserves the accepted sharpness while moving to the user's uploaded
+animation-background reference. Saved sample/provenance/prompt:
+`material-workspace/work/style-transfer/hd-style-sample-02/`.
+Native output is 1254x1254, not an inferred 2K/4K claim. Style feedback is pending;
+complete panorama/3D sharpness and cross-view consistency remain unaccepted.
+
+### Independent reference-guided stylization Agent
+
+Owner: style-transfer chat. User approved viewpoint-two style sample for code
+integration, then requested an independent Agent: plan and generate once, compare
+against the actual reference, pass if satisfactory, repair only severe supported
+problems, and permit at most one repair round. No new generation is authorized by
+this implementation task. Deliverable: frozen v2 style/policy, typed Agent and
+LangGraph node, shared metered execution, saved planning/review reports, bounded
+one-repair branch, existing staff entry and upfront worst-case estimates. Legacy
+jobs/grants/style snapshots remain unchanged; cache identity includes the new
+profile so old-style results cannot impersonate the approved style.
+
+Implemented; 13 affected Python files pass strict mypy and Ruff; viewer and staff
+JavaScript syntax plus diff checks pass. No live Agent
+run or automated runtime/visual test has been performed. Human output acceptance,
+3D walking/geometry, projection quality and all non-adjacent view comparisons
+remain unverified. Model review covers panorama imagery and adjacent view pairs.
+New Agent jobs support at most six viewpoints within the existing 100-call grant.
+Original incomplete quality-run usage remains retained and is not resumed/reset.

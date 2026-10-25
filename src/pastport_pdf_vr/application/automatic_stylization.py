@@ -6,12 +6,12 @@ import argparse
 import json
 import re
 import shutil
-from importlib.resources import files
 from pathlib import Path
 from typing import Literal
 
 from pastport_pdf_vr.adapters.codex_image import CodexImageTransport
 from pastport_pdf_vr.application.animation import SLOT, AnimationRun, AnimationWorkflow, digest
+from pastport_pdf_vr.application.animation_style import approved_animation_style
 from pastport_pdf_vr.application.reference_environment import record, sequence
 from pastport_pdf_vr.application.stylization3d_tour import (
     Style3DTourRun,
@@ -43,6 +43,8 @@ class AutomaticStyleDelivery(DomainModel):
     environment: str | None = None
     tour_delivery: str | None = None
     acceptance: str = "pending_user_acceptance"
+    agent_report: str | None = None
+    model_review: Literal["model_review_pass", "needs_human_review"] | None = None
 
 
 def inspect_input(archive: Path, workspace: Path) -> StyleInput:
@@ -111,28 +113,31 @@ def inspect_input(archive: Path, workspace: Path) -> StyleInput:
     )
 
 
-def animation_workflow(grant: SubscriptionGrant) -> AnimationWorkflow:
+def animation_workflow(
+    grant: SubscriptionGrant, workspace: Path | None = None
+) -> AnimationWorkflow:
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None:
         raise ValueError("FFmpeg with v360 support is required before starting")
-    assets = Path(str(files("pastport_pdf_vr").joinpath("animation_assets")))
-    if (
-        digest(assets / "approved-style.png")
-        != "bddb6ddc8903b3ce4fdd57d94f1803a001c93f8c68140f965e40f51e31e4198a"
-    ):
-        raise ValueError("Pinned style reference changed")
+    style = approved_animation_style(workspace)
     return AnimationWorkflow(
-        Path(ffmpeg),
-        assets / "approved-style.png",
-        assets / "policy-v1.txt",
-        CodexImageTransport(grant.effort),
+        Path(ffmpeg), style.reference, style.policy, CodexImageTransport(grant.effort)
     )
 
 
-def run(request: AutomaticStyleRun) -> AutomaticStyleDelivery:
+def run(
+    request: AutomaticStyleRun, *, workflow: AnimationWorkflow | None = None
+) -> AutomaticStyleDelivery:
     if request.source.required_calls > request.grant.max_calls:
         raise ValueError("Grant cannot cover six image turns for every viewpoint; not started")
-    workflow = animation_workflow(request.grant)
+    image_workspace = (
+        Path(request.workspace) / "animation"
+        if request.source.kind == "scene3d"
+        else Path(request.workspace)
+    )
+    workflow = workflow or animation_workflow(
+        request.grant, image_workspace if request.resume else None
+    )
     if request.source.kind == "scene3d":
         source = Path(request.source.source)
         if digest(source) != request.source.source_sha256:

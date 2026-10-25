@@ -171,3 +171,11 @@ and open `http://127.0.0.1:8795/stylization`. Upload a complete supported native
 3D tour ZIP; review the estimate, optionally enter budget limits, and authorize the
 run. Blank budgets use the displayed suggestions. No generation starts on upload.
 See [formats, limits and validation status](docs/STYLIZATION3D.md#upload-and-automatic-generation).
+
+## Independent environment stylization Agent
+
+New staff uploads use the approved viewpoint-two animation reference and a bounded
+Agent: model planning, initial generation, image-based review, and zero or one
+complete repair round for severe defects. The original deterministic generation
+workflow remains available. Read [Agent contracts and limits](docs/STYLIZATION_AGENT.md).
+No live Agent validation or automatic geometry reconstruction is claimed.

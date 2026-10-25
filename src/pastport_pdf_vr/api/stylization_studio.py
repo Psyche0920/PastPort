@@ -29,6 +29,7 @@ from starlette.datastructures import UploadFile
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import Response
 
+from pastport_pdf_vr.application.animation_style import approved_animation_style
 from pastport_pdf_vr.application.automatic_stylization import (
     AutomaticStyleDelivery,
     AutomaticStyleRun,
@@ -37,6 +38,7 @@ from pastport_pdf_vr.application.automatic_stylization import (
 )
 from pastport_pdf_vr.application.reference_preview import ReferencePreviewPool
 from pastport_pdf_vr.application.storage import atomic_write
+from pastport_pdf_vr.application.stylization_agent import agent_call_limits
 from pastport_pdf_vr.domain.execution import SubscriptionGrant
 from pastport_pdf_vr.domain.models import DomainModel
 
@@ -53,6 +55,10 @@ class StyleJob(DomainModel):
     suggested_token_threshold: int
     authorized_calls: int | None = None
     authorized_tokens: int | None = None
+    execution: Literal["pipeline", "agent"] = "pipeline"
+    normal_model_calls: int = 0
+    maximum_model_calls: int = 0
+    style_profile: str = "legacy"
 
 
 class StartStyle(DomainModel):
@@ -117,9 +123,16 @@ class StylizationPortal:
                                 )
                             checksum.update(chunk)
                             stream.write(chunk)
+                    standard = approved_animation_style().standard
+                    if standard is None:
+                        raise HTTPException(503, "Approved style is unavailable")
                     for path in self.root.glob("*/job.json"):
                         old = StyleJob.model_validate_json(path.read_bytes())
-                        if old.upload_sha256 == checksum.hexdigest():
+                        if (
+                            old.upload_sha256 == checksum.hexdigest()
+                            and old.execution == "agent"
+                            and old.style_profile == standard.profile_id
+                        ):
                             shutil.rmtree(folder)
                             return old
                     try:
@@ -132,14 +145,26 @@ class StylizationPortal:
                             )
                     except (ValueError, OSError, KeyError, zipfile.BadZipFile) as error:
                         raise HTTPException(422, str(error)) from error
+                    try:
+                        normal_calls, maximum_calls = agent_call_limits(source.viewpoints)
+                    except ValueError as error:
+                        raise HTTPException(422, str(error)) from error
+                    review_calls = maximum_calls - source.required_calls * 2
                     job = StyleJob(
                         run_id=run_id,
                         title=(item.filename or "Tour")[:100],
                         upload_sha256=checksum.hexdigest(),
                         source=source,
-                        expected_tokens_low=source.required_calls * 56068,
-                        expected_tokens_high=source.required_calls * 85000,
-                        suggested_token_threshold=source.required_calls * 100000,
+                        expected_tokens_low=source.required_calls * 2 * 56068
+                        + review_calls * 25000,
+                        expected_tokens_high=source.required_calls * 2 * 85000
+                        + review_calls * 50000,
+                        suggested_token_threshold=source.required_calls * 2 * 100000
+                        + review_calls * 50000,
+                        execution="agent",
+                        style_profile=standard.profile_id,
+                        normal_model_calls=normal_calls,
+                        maximum_model_calls=maximum_calls,
                     )
                     self.save(job)
                     return job
@@ -177,10 +202,16 @@ class StylizationPortal:
                         )
                     command = original.model_copy(update={"resume": True})
                 else:
-                    calls = options.max_calls or job.source.required_calls
-                    if calls < job.source.required_calls:
+                    required = (
+                        job.maximum_model_calls
+                        if job.execution == "agent"
+                        else job.source.required_calls
+                    )
+                    calls = options.max_calls or required
+                    if calls < required:
                         raise HTTPException(
-                            422, "Image-turn limit cannot cover the complete tour; not started."
+                            422,
+                            "Call limit cannot cover the run and one-repair reserve; not started.",
                         )
                     tokens = options.max_recorded_tokens or job.suggested_token_threshold
                     if tokens < job.expected_tokens_low:
@@ -217,6 +248,16 @@ class StylizationPortal:
             return FileResponse(
                 delivery.archive, media_type="application/zip", filename="stylized-tour.zip"
             )
+
+        @app.get("/api/stylization/{run_id}/review")
+        def review(run_id: str) -> FileResponse:
+            delivery = self.delivery(run_id)
+            if delivery.agent_report is None:
+                raise HTTPException(404, "This legacy result has no agent review")
+            expected = self.folder(run_id) / "output/agent-report.json"
+            if Path(delivery.agent_report).resolve() != expected.resolve():
+                raise HTTPException(409, "Agent report binding differs")
+            return FileResponse(expected, media_type="application/json")
 
         @app.get("/stylization-results/{run_id}/")
         async def view(run_id: str) -> RedirectResponse:
@@ -288,7 +329,11 @@ class StylizationPortal:
                 self.process = await asyncio.create_subprocess_exec(
                     sys.executable,
                     "-m",
-                    "pastport_pdf_vr.application.automatic_stylization",
+                    (
+                        "pastport_pdf_vr.application.stylization_agent_cli"
+                        if job.execution == "agent"
+                        else "pastport_pdf_vr.application.automatic_stylization"
+                    ),
                     "--request",
                     str(request_path),
                     stdout=log,
@@ -296,11 +341,21 @@ class StylizationPortal:
                 )
                 code = await self.process.wait()
             if code == 0 and (folder / "automatic-delivery.json").is_file():
+                delivery = AutomaticStyleDelivery.model_validate_json(
+                    (folder / "automatic-delivery.json").read_bytes()
+                )
+                message = (
+                    "Agent finished; severe findings remain for your review."
+                    if delivery.model_review == "needs_human_review"
+                    else "Candidate saved; image review complete, final acceptance is yours."
+                    if delivery.model_review
+                    else "Candidate saved; visual and interaction review is yours."
+                )
                 self.save(
                     job.model_copy(
                         update={
                             "status": "completed",
-                            "message": "Candidate saved; visual and interaction review is yours.",
+                            "message": message,
                         }
                     )
                 )

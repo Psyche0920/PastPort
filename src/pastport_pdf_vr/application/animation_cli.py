@@ -7,8 +7,8 @@ from pathlib import Path
 from pydantic import TypeAdapter
 
 from pastport_pdf_vr.adapters.codex_image import CodexImageTransport
-from pastport_pdf_vr.application.animation import AnimationRun, AnimationWorkflow, digest
-from pastport_pdf_vr.application.reference_environment import reference_assets
+from pastport_pdf_vr.application.animation import AnimationRun, AnimationWorkflow
+from pastport_pdf_vr.application.animation_style import approved_animation_style
 from pastport_pdf_vr.domain.animation import ExistingPanorama
 from pastport_pdf_vr.domain.execution import SubscriptionGrant
 
@@ -29,10 +29,7 @@ def main() -> None:
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg is None and args.reuse_images is None:
         parser.error("FFmpeg with the v360 filter is required")
-    assets = reference_assets().parent / "animation_assets"
-    style = assets / "approved-style.png"
-    if digest(style) != "bddb6ddc8903b3ce4fdd57d94f1803a001c93f8c68140f965e40f51e31e4198a":
-        parser.error("Pinned approved animation style changed")
+    style = approved_animation_style(args.workspace if args.resume else None)
     grant = SubscriptionGrant.model_validate_json(args.grant.read_bytes()) if args.grant else None
     existing = (
         TypeAdapter(tuple[ExistingPanorama, ...]).validate_json(args.reuse_images.read_bytes())
@@ -41,8 +38,8 @@ def main() -> None:
     )
     workflow = AnimationWorkflow(
         Path(ffmpeg) if ffmpeg else None,
-        style,
-        assets / "policy-v1.txt",
+        style.reference,
+        style.policy,
         CodexImageTransport(grant.effort) if grant else None,
     )
     result = workflow.run(

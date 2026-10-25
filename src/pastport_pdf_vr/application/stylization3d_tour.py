@@ -12,6 +12,7 @@ import stat
 import zipfile
 from contextlib import closing
 from pathlib import Path, PurePosixPath
+from typing import Literal
 
 from pydantic import Field
 
@@ -32,6 +33,7 @@ class Style3DTourRun(DomainModel):
     workspace: str
     panoramas: tuple[ExistingPanorama, ...] = Field(default=(), max_length=50)
     grant: SubscriptionGrant | None = None
+    render_mode: Literal["gaussian", "projective_surface"] = "gaussian"
     resume: bool = False
 
 
@@ -231,6 +233,7 @@ class Style3DTourWorkflow:
                     workspace=str(target),
                     panorama=images[prepared_view.scene_id],
                     resume=target.exists(),
+                    render_mode=request.render_mode,
                 )
             )
             views.append(
@@ -344,8 +347,5 @@ class Style3DTourWorkflow:
                 image_sha256=binding["output_sha256"],
                 provenance_ref=maps.manifest,
             )
-        with closing(
-            sqlite3.connect(f"{(workspace / 'animation/usage.sqlite3').as_uri()}?mode=ro", uri=True)
-        ) as db:
-            calls = int(db.execute("SELECT COUNT(*) FROM executions").fetchone()[0])
+        calls = int(manifest["new_model_calls"])
         return images, calls

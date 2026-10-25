@@ -12,6 +12,7 @@ import re
 import shutil
 import sqlite3
 import subprocess
+from collections.abc import Mapping
 from contextlib import closing
 from pathlib import Path
 from typing import cast
@@ -75,8 +76,13 @@ class AnimationWorkflow:
         style: Path,
         prompt: Path,
         transport: ImageTransport | None,
+        *,
+        ledger_path: Path | None = None,
+        repair_references: Mapping[str, Path] | None = None,
     ) -> None:
         self._ffmpeg, self._style, self._prompt, self._transport = ffmpeg, style, prompt, transport
+        self._ledger_path = ledger_path
+        self._repair_references = dict(repair_references or {})
 
     def run(self, command: AnimationRun) -> AnimationDelivery:
         source = Path(command.source_directory).resolve(strict=True)
@@ -140,7 +146,7 @@ class AnimationWorkflow:
                     "Generation requires an explicit subscription grant/transport"
                 )
             executor = SubscriptionExecutor(
-                workspace / "usage.sqlite3", command.grant, self._transport
+                self._ledger_path or workspace / "usage.sqlite3", command.grant, self._transport
             )
             remaining = executor.remaining_calls()
             if not command.resume and remaining < len(scenes) * 6:
@@ -431,6 +437,9 @@ class AnimationWorkflow:
                 references.append(first_faces[face])
             elif "front" in images:
                 references.append(images["front"])
+            previous = self._repair_references.get(string(scene["id"]))
+            if previous is not None:
+                references.append(previous)
             text = prompt.read_text().replace("{direction}", face)
             text += (
                 f"\nAuthorized run budget: at most {executor.grant.max_calls} image turns; "
@@ -446,21 +455,32 @@ class AnimationWorkflow:
                 minimum_width=minimum,
                 minimum_height=minimum,
             )
-            response = executor.execute(
-                ExecutionInput(
-                    project_id=executor.grant.project_id,
-                    grant_ref=executor.grant.grant_ref,
-                    model_id=executor.grant.model_id,
-                    kind="animation_generation",
-                    prompt_version="animated-museum-v1",
-                    policy_version="identity-preserving-v1",
-                    instructions=text,
-                    payload_json=config.model_dump_json(),
-                    output_schema_json=json.dumps(AnimationImageResult.model_json_schema()),
-                    image_paths=tuple(str(p) for p in references),
-                    image_hashes=tuple(digest(p) for p in references),
-                )
+            pending_request = ExecutionInput(
+                project_id=executor.grant.project_id,
+                grant_ref=executor.grant.grant_ref,
+                model_id=executor.grant.model_id,
+                kind="animation_generation",
+                prompt_version="animated-museum-v1",
+                policy_version="identity-preserving-v1",
+                instructions=text,
+                payload_json=config.model_dump_json(),
+                output_schema_json=json.dumps(AnimationImageResult.model_json_schema()),
+                image_paths=tuple(str(p) for p in references),
+                image_hashes=tuple(digest(p) for p in references),
             )
+            frozen_request = directory / f"{face}-execution.json"
+            if frozen_request.is_file():
+                cached_request = ExecutionInput.model_validate_json(frozen_request.read_bytes())
+                if (
+                    cached_request.image_paths != pending_request.image_paths
+                    or cached_request.image_hashes != pending_request.image_hashes
+                    or cached_request.payload_json != pending_request.payload_json
+                ):
+                    raise ExecutionDenied("Frozen directional request binding changed")
+                pending_request = cached_request
+            else:
+                frozen_request.write_text(pending_request.model_dump_json())
+            response = executor.execute(pending_request)
             result = AnimationImageResult.model_validate_json(response.payload_json)
             if result.status != "generated" or result.image_path is None:
                 raise ExecutionDenied(result.reason or "Native image generation was rejected")
