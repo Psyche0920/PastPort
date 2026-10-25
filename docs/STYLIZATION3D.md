@@ -152,3 +152,18 @@ structural repair.
 The VR upload adapter requires a portable review snapshot. A package containing a
 live `shared-content.json` authority pointer is retained and rejected before any
 generation; it is not deleted or rebound by the upload adapter.
+
+## Staff preview interface
+
+The stylization module uses the shared Studio stylesheet and workspace navigation.
+Completed records open in an embedded preview, with a separate-window option,
+fullscreen and ZIP download. A complete 3D tour opens its first viewpoint directly
+and offers viewpoint buttons inside the preview. This is a module of the planned
+single staff website, not a separate product. The standalone loopback entry remains
+for local development. Preview quality and interaction acceptance are manual.
+
+| Preview source | Purpose |
+|---|---|
+| `web/studio.css` | Shared workspace appearance and navigation |
+| `web/stylization.css` | Stylization layout and embedded preview controls |
+| `web/styled-tour-preview.html` | Trusted first-view 3D preview and viewpoint toolbar |

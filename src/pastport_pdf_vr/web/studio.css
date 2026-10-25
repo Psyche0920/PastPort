@@ -3,3 +3,6 @@
 [hidden]{display:none!important}.workflow-choice{display:block;padding:18px 28px 0}
 
 .scene3d-site{margin:18px;border:1px solid #dce3d7;border-radius:12px;overflow:hidden}.scene3d-site-title{margin:0;padding:18px 24px;background:#f2f5ee;font-size:16px;border-bottom:1px solid #dce3d7}.scene3d-site .job h4{font-size:14px;margin:0 0 8px}.scene3d-site .job nav{flex-wrap:wrap}
+
+:root{--pp-green:#315b37;--pp-line:#dce3d7;--pp-muted:#68776c}
+.workspace-nav{display:flex;align-items:center;gap:22px}.workspace-nav a{font-size:13px;text-decoration:none;color:#68776c}.workspace-nav a[aria-current]{color:#315b37;font-weight:650}@media(max-width:700px){header{height:auto;min-height:78px;flex-wrap:wrap;gap:16px;padding:16px 18px}.workspace-nav{width:100%;order:3;gap:16px}}

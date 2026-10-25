@@ -226,3 +226,14 @@ Acceptance: user manually starts a supported package and reviews the output. Fre
 upload-to-generation runtime, universal format adapters and structural repair remain
 unverified or unfinished; no claim of complete target acceptance. Existing two-view
 appearance candidate and source assets are retained.
+
+### Staff workspace and embedded preview
+
+Owner: style-transfer chat. Dependency: existing saved stylization records and trusted
+preview services. Deliverable: project-consistent styling/navigation, a preview window
+inside the stylization page, viewpoint switching/fullscreen/download, and plain-language
+staff task states. The long-term product remains one website with module routes;
+standalone loopback launch is a development entry, not a separate product site.
+Uses the shared Studio stylesheet and retains generation authorization and optional
+budget behavior. Only UI/preview changes; no new model calls or asset generation.
+Acceptance: user checks the staff workflow, preview controls and visual consistency.

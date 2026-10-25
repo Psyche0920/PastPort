@@ -23,6 +23,7 @@ from uuid import uuid4
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import Field, ValidationError
 from starlette.datastructures import UploadFile
 from starlette.middleware.base import RequestResponseEndpoint
@@ -370,6 +371,7 @@ def create_app(workspace: Path) -> FastAPI:
         lifespan=lifespan,
     )
     app.add_middleware(UploadBoundary)
+    app.mount("/static", StaticFiles(directory=str(files("pastport_pdf_vr").joinpath("web"))))
     portal = StylizationPortal(app, workspace, previews)
 
     @app.middleware("http")

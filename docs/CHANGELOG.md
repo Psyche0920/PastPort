@@ -219,3 +219,14 @@ JavaScript syntax and diff checks passed. No new inference or automated runtime/
 browser test was performed. Fresh full-generation acceptance belongs to the user.
 The workspace repository checker is absent from this standalone checkout and was
 not reported as passing. Structural repair remains open.
+
+## Staff stylization workspace and direct preview
+
+Reused the project Studio stylesheet and navigation for the stylization page; added
+plain-language staff states, saved-record selection, embedded preview, fullscreen
+and download controls. The owned 3D tour preview opens its first viewpoint directly
+and keeps viewpoint switching inside the window. Three affected Python modules
+passed strict typing and Ruff; JavaScript syntax and diff checks passed. The direct
+preview of the user's completed upload was opened in the browser. Runtime/visual
+acceptance remains with the user. No model generation was added by this UI change.
+The UI service was restarted only after its saved jobs showed no running generation.

@@ -10,7 +10,9 @@ import sqlite3
 import subprocess
 import sys
 from contextlib import ExitStack, closing
+from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from importlib.resources import files
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -42,18 +44,28 @@ def serve(delivery_path: Path, port: int = 0) -> None:
             parsed = urlsplit(self.path)
             if parsed.path == "/":
                 links = "".join(
-                    f'<li><a href="/scene3d-results/{v.preview_id}/">Point {v.number}</a></li>'
+                    f'<a href="/scene3d-results/{escape(v.preview_id, quote=True)}/" '
+                    f'target="tour-viewport">Viewpoint {v.number}</a>'
                     for v in delivery.views
                 )
+                template = files("pastport_pdf_vr").joinpath("web/styled-tour-preview.html")
+                first_view = escape(delivery.views[0].preview_id, quote=True)
                 body = (
-                    '<!doctype html><meta charset="utf-8"><title>Styled tour candidate</title>'
-                    "<h1>Styled 3D tour candidate</h1><p>WASD: move; Q/E: down/up; drag: look.</p>"
-                    "<p>One shared review source; independent viewpoint positions.</p><ul>"
-                    + links
-                    + '</ul><a href="/download">Download complete tour package</a>'
-                ).encode()
+                    template.read_text()
+                    .replace("<!--VIEWPOINT_LINKS-->", links)
+                    .replace("<!--INITIAL_VIEW-->", f"/scene3d-results/{first_view}/")
+                    .encode()
+                )
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if parsed.path == "/studio.css":
+                body = files("pastport_pdf_vr").joinpath("web/studio.css").read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/css; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
