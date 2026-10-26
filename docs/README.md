@@ -6,6 +6,7 @@ Start with [PastPort_PRD_CN](PastPort_PRD_CN.md) or [PastPort_PRD_EN](PastPort_P
 |---|---|
 | Understand the product and team deliverables | PRD [part 1](PastPort_PRD_EN.md#part-product) |
 | Implement contracts, main integration and parallel work | PRD [part 2](PastPort_PRD_EN.md#part-technical), especially [2.9](PastPort_PRD_EN.md#s2-9) |
+| Implement the Story production coordinator and module handoffs | [Automation technical design](technical/STORY_AGENT_AUTOMATION.md) |
 | Build stories, select/develop plugins and deliver a game | PRD [part 3](PastPort_PRD_EN.md#part-topic) |
 | Run the existing code, inspect current APIs or recover a run | [Implementation Guide](IMPLEMENTATION_GUIDE.md) |
 | Choose the next task, dependencies and acceptance | [Active Plan](ACTIVE_PLAN.md) |
