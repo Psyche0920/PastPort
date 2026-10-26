@@ -15,3 +15,8 @@ Accepted, 2026-10-21. main owns common lifecycle, resources, authoritative saves
 Accepted, 2026-10-21. wcheung reuses IDML/Links, matches panorama objects and attaches traceable text. maslan generates then filters tasks against that same museum, prepares exact plugins/resources and invokes shared deterministic assembly for a complete game bundle. Reuse compatible plugins first; automatic development/repair is bounded and may fail explicitly. Rights, budgets and publication authority remain enforced. See [PRD 1.5–1.6](PastPort_PRD_EN.md#s1-5) and [part 3](PastPort_PRD_EN.md#part-topic).
 
 For future significant changes record date, accepted/proposed status, owner, decision, rationale, affected version/sections and replacement relationship. A log entry does not grant approval, paid execution or deployment rights.
+
+
+## D-008 — Explicit character-staging handoff
+
+Accepted on 2026-10-26: the Story Agent must state cast presence, entry/exit triggers and reasons, standing/facing, actions and dialogue/task timing. A future Frontend Presentation Agent maps those cues onto valid scene positions, routes and available animation assets. Missing cues return for revision. This is a target requirement, not implemented automation. The user subsequently removed the 2D standee from the current 3D demo; dialogue portraits remain. Natural multi-character arrival/departure is pending.

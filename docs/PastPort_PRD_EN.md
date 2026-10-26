@@ -905,6 +905,10 @@ This part expands maslan's automatic production work and gameplay boundaries. Pr
 4. **Filter/revise:** record each task in FilterReport. Remove/replace/request material for missing objects; use available original-image observation, revise or reject missing details. Do not invent objects in the scene. Recheck revised dependencies; excluded tasks stay out of final narrative.
 5. **Fix presentation bindings:** produce PresentationPackage linking tasks, objects/text, game scenes, viewpoints and navigation. Tasks may share source text but each needs checkable reasoning/actions.
 
+**Character staging handoff (target, not implemented):** the Story Agent authoring prompt must require, for every scene and dialogue beat, the cast already present, entry/exit triggers and reasons, standing positions, initial facing, actions, dialogue order and task/window timing. A Frontend Presentation Agent reads that script and the version-pinned scene/asset capabilities to produce executable staging within PresentationPackage. It preserves narrative meaning and character identity; missing cues, reachable positions or animation assets must be reported rather than guessed. Contract fields and versions must be agreed before formal integration. The shared player executes the resulting cues deterministically; generation does not imply an LLM call during every line of gameplay.
+
+For the current two-scene Demo, use fixed standing positions in the central walkable area, initially facing the player's arrival position; actors do not follow the camera afterward. Characters already present remain between lines, multiple speakers have separate positions, and scripted arrivals/departures need visible movement along valid routes. Do not spawn/despawn a character merely because the speaker changes. Validate cast continuity, missing/duplicate entrances/exits, paths, dialogue timing and overlay priority before delivery.
+
 Text-only checks need no images. wcheung does not deliver a duplicate hand-copied “maslan list”; read museum.entries and references directly.
 
 <a id="s3-1-2"></a>
