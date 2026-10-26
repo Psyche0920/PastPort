@@ -220,7 +220,7 @@ Contract checks cover exact hashes/revisions, wrong project, stale review, missi
 
 Keep validation layers separate: static/schema, deterministic rule tests, fixture orchestration, real materials, live provider, actual browser, target devices and human enjoyment. Store exact artifact versions and evidence for each. No passing fixture proves a real model or playable final bundle.
 
-Run affected checks and `tools/check_repository.py`. Known main documentation gate limitations (four-file layout and explicit anchors) remain tracked under ENG-DOC; report actual failures, never suppress checks to make this document pass. Documentation-only delivery does not need paid generation or a full gameplay rerun.
+Run affected checks and `tools/check_repository.py`. ENG-DOC tracks the separate four-file handoff-gate limitation; explicit-anchor resolution is fixed on this branch. Report actual failures and never suppress checks to make a document pass. Documentation-only delivery does not need paid generation or a full gameplay rerun.
 
 Git delivery uses an isolated authorized branch, selected files, no private PDF/media/large scene bundles, secrets, machine-specific paths or unrelated modifications. Preserve legal private assets in external registered storage. Re-fetch target refs before push, inspect the actual staged diff and verify the remote commit. No force push, automatic merge or deployment. Run publication authority binds exact candidate/target; a future run cannot inherit unlimited publication rights from this chat.
 
@@ -228,4 +228,4 @@ Git delivery uses an isolated authorized branch, selected files, no private PDF/
 
 This revision delivers architecture, responsibilities, proposed I/O, failure handling, implementation milestones and acceptance requirements only. The automation branch exists. No new production endpoints, schema implementation, generative Story Agent, plugin host or runnable automated bundle are claimed implemented by this document. The retained Demo is the regression counterpart; local material files moved during user-authorized cleanup must be deliberately re-registered from valid storage before another real-input run.
 
-Document verification: local target-file links, Markdown fence balance and `git diff --check` passed. The repository gate was executed and failed on explicit-anchor resolution, including the existing `part-topic` anchor used by this document. No gate suppression or runtime-validation claim was added.
+Document verification: local target-file links, Markdown fence balance and `git diff --check` passed. The previously failing explicit-anchor checker was repaired: four offline regression tests, strict typing and `tools/check_repository.py` passed on this branch. The separate four-document handoff gate remains pending. No runtime-validation or human-acceptance claim follows from these checks.

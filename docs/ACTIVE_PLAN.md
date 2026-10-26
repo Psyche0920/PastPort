@@ -21,7 +21,7 @@ Deliver the single-player cartoon-style 360° museum and complete game-making wo
 | T5 Plugins and game maker | maslan | Fixed API; T4 for integration | Existing-task adapter, distinct interaction, bounded plugin builder and complete game output | C07/C08/C11; default 3×3 non-rotating drag puzzle on actual host | todo |
 | T6 Complete automated assembly | wehan with wcheung/maslan | T2–T5 and real materials | Version-bound assembly, validation and recovery | C09/C12/C14; approval, budget, isolation and real playable slice | todo |
 | T7 Second project reuse | all three | T6 accepted | Another project using the same SDK/host | C13; no site-specific engine branches | todo |
-| ENG-DOC Documentation gate alignment | wehan | New documentation structure | Update legacy documentation gates and affected tests/CI discovery | Permit canonical bilingual PRD/reference material and explicit HTML anchors, reject obsolete duplicates; retain inventory/link checks | todo; code outside current documentation scope |
+| ENG-DOC Documentation gate alignment | wehan | New documentation structure | Update legacy documentation gates and affected tests/CI discovery | Permit canonical bilingual PRD/reference material and explicit HTML anchors, reject obsolete duplicates; retain inventory/link checks | in_progress: explicit HTML anchor resolution fixed on story-agent-automation; 4 regressions, strict typing and repository structure checks passed. Four-document handoff gate alignment remains pending. |
 
 ## Parallel work and handoff
 
@@ -31,4 +31,4 @@ Handoff records exact revision, contract/API versions, entry point, input hashes
 
 ## Open engineering issue
 
-`tools/check_handoff.py` currently rejects every extra file under docs/ and assumes the former four-document layout. `tools/check_repository.py` also recognizes heading-derived anchors only, so it falsely rejects valid explicit HTML anchor IDs used for bilingual section parity. Both limitations must be updated under ENG-DOC before the existing documentation gates can pass for this structure. Production/tooling code is intentionally outside the current documentation task. Do not suppress the gate or claim a passing CI result.
+`tools/check_handoff.py` still assumes the former four-document layout; its alignment remains pending under ENG-DOC. On story-agent-automation, `tools/check_repository.py` now recognizes explicit HTML id/named anchors outside fenced examples, inline code and HTML comments. Four regressions, strict typing and the repository structure gate passed. This does not imply the separate handoff gate, CI or product runtime passed.

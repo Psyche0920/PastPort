@@ -10,3 +10,11 @@ Owner: wehan. Start at the 2026-10-21 initial documentation baseline; earlier dr
 - Limits: generic host, new wire integration, real IDML/model results, browser/mobile and human-play acceptance remain in the plan. No paid call, commit/push or deployment is part of this delivery.
 
 Record future meaningful verified deliveries here with exact scope, revision/report when available, actual checks and limits. Do not copy transcripts, old test counts or per-change archives into the team reading path.
+
+## Explicit Markdown section targets
+
+On story-agent-automation, the repository checker now accepts rendered HTML IDs
+and legacy named anchors alongside heading slugs. Fenced/inline code and HTML
+comments cannot manufacture valid targets; missing files/sections still fail.
+Four offline regression tests, strict typing and the repository structure gate
+passed. The separate handoff gate and product runtime were not validated here.
