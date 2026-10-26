@@ -64,6 +64,16 @@ HTTP/workbench → application use cases → typed domain/ports
 | player | `runtime.mjs`, `rules.mjs`, action handlers, validation and Node wire entry | [player](../src/pastport/player/README.md) |
 | api | `app.py` composition/routes, authenticated private views, request logging, HTML/CSS/JS workbench | [api](../src/pastport/api/README.md) |
 | development | Module, fault, player, generated-contract and real-browser acceptance tools | [development](../src/pastport/development/README.md) |
+| Evidence SDK | Independent distribution for photo/PDF evidence mapping and comparison PDF/IDML output | [Evidence SDK](../packages/evidence-sdk/README.md) |
+| Matched Environment SDK | Independent distribution for matched PDF/tour environment building, 3D support and shared review | [Matched Environment SDK](../packages/matched-environment-sdk/README.md) |
+| Stylization SDK | Independent distribution for 360°/3D appearance post-processing and rendering | [Stylization SDK](../packages/stylization-sdk/README.md) |
+
+These three workspace packages can be built and installed independently. Main
+lists them as optional authoring dependencies; this does not yet compose them into
+the Main workflow or implement Story Agent/game-host generation. Stylization
+depends on Matched Environment's public scene/review/execution contracts; Matched Environment does not import
+Stylization. Each SDK retains its own explicit bounded grant and transport
+contracts; a unified Main budget adapter is not part of this packaging delivery.
 
 Domain/ports do not import FastAPI, SQLite or provider SDKs. Adapters implement boundaries; workflow schedules application use cases. JavaScript owns game semantics; Python delegates rather than implementing a second engine. No site-ID branches belong in the engine.
 
@@ -78,6 +88,27 @@ Neither module owner needs the other's finished module to develop or test. Ordin
 `tests/` contains behavioral, contract, failure and browser checks; `schemas/` contains generated wire schemas; `skills/` contains professional instructions/calibration; `tools/` contains checks; `references/` contains source materials. Reference materials and fixture provenance are useful inputs, not approved content or implementation instructions.
 
 ## 3. Install, accounts, startup and configuration
+
+### 3.0 Independent authoring SDK packages
+
+From the repository root, install each distribution. Stylization requires the
+Matched Environment SDK as its contract provider, so install Matched Environment before Stylization:
+
+```bash
+uv pip install './packages/evidence-sdk[codex]'
+uv pip install './packages/matched-environment-sdk[codex]'
+uv pip install './packages/stylization-sdk[codex]'
+uv pip install './packages/stylization-sdk[codex]'
+```
+
+Each package README documents its inputs, public Python boundary and CLI.
+Installation, import and `--help` do not execute a model or generate project data.
+
+For workspace development, `uv sync --locked --extra authoring` installs the three
+SDKs without the Codex provider. Select `--extra authoring-codex` explicitly when
+that provider is required. Neither extra mounts staff portals or supplies Main's
+shared budget adapter. Standalone SDK grants constrain their own execution
+ledger; they are not a project-wide Main spending authorization.
 
 ### 3.1 Dependencies and local test account
 

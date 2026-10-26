@@ -356,6 +356,13 @@ Keep evidence, narrative, deterministic assembly and player execution separate. 
 
 Retain Python 3.12, strict immutable Pydantic models, FastAPI, LangGraph, SQLite, HTTPX and shared JS game logic. Encapsulate browser panorama rendering, preferring Pannellum already used by VR Studio. Projection/image work uses bounded CPU workers. Image matching/stylization providers are outside shared wire contracts and pass through common gateways/cost controls.
 
+Evidence, Matched Environment and Stylization are independently distributable SDKs; Stylization
+depends on the pinned Matched Environment contracts without a reverse dependency. Main enables
+base authoring packages and provider adapters through separate explicit extras.
+Standalone SDK grants do not authorize Main-wide spending; automatic runtime
+composition requires the shared execution/budget adapter and fixed contract
+counterparts before dispatch. Packaging acceptance does not complete that adapter.
+
 Plugin logic is pure JS executable in the host's controlled environment and browser; DOM/Canvas views are separate. Locked compatible dependencies are allowed, but main need not install another complete game engine.
 
 <a id="s2-2"></a>

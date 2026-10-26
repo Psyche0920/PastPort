@@ -37,11 +37,17 @@ class RepositoryChecker:
         # Clear prior results so each run is independent.
         self.findings.clear()
         # Skip dependencies, version control, runtime data, and cache directories.
-        excluded = {'.git', '.venv', 'node_modules', '__pycache__', 'var', '.pytest_cache', '.mypy_cache', '.ruff_cache'}
+        excluded = {'.git', '.venv', 'node_modules', '__pycache__', 'var', '.runtime', 'acceptance-artifacts', 'browser-artifacts', '.pytest_cache', '.mypy_cache', '.ruff_cache'}
         # Walk the repository recursively.
         for folder, directories, names in os.walk(self.root):
             # Filter directories in place and sort them for stable output.
-            directories[:] = sorted(name for name in directories if name not in excluded)
+            relative = Path(folder).relative_to(self.root)
+            package_output = len(relative.parts) == 2 and relative.parts[0] == 'packages'
+            directories[:] = sorted(
+                name for name in directories
+                if name not in excluded and not name.endswith('.egg-info')
+                and not (package_output and name in {'build', 'dist'})
+            )
             # Sort filenames to keep output stable.
             for name in sorted(names):
                 # Build the file path from the current folder and filename.
@@ -113,6 +119,7 @@ class RepositoryChecker:
         result: set[str] = set()
         # Check each line for a Markdown heading.
         for line in lines:
+            result.update(re.findall(r'<(?:a|h[1-6])\b[^>]*\bid=["\']([^"\']+)["\']', line))
             # Support heading levels one through six.
             heading = re.match(r'^#{1,6}\s+(.+)', line)
             if heading:

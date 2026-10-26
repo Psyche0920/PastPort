@@ -356,6 +356,8 @@ flowchart LR
 
 沿用 Python 3.12、严格 Pydantic 不可变模型、FastAPI、LangGraph、SQLite、HTTPX 和共享 JS 运行逻辑。浏览器侧封装全景渲染器，优先复用 VR Studio 已使用的 Pannellum；投影与图像处理通过有界 CPU worker。具体图片模型、转绘供应商不是共享协议的一部分，均经统一网关和费用控制接入。
 
+Evidence、Matched Environment 和 Stylization 分为可独立分发的 SDK；Stylization 依赖固定版本的 Matched Environment 协议，不允许反向依赖。Main 通过分别明确选择的 extra 安装基础制作包或供应商适配器。独立 SDK 的授权额度不代表 Main 全局预算授权；自动运行接入前必须完成统一执行/预算适配，并固定双方协议。拆包验收不代表该适配已经实现。
+
 插件规则采用可在宿主受控 JS 执行环境与浏览器运行的纯逻辑模块；界面单独提供 DOM/Canvas 渲染。可携带经过锁定、符合目标构建要求的依赖，但不要求 main 安装另一个完整游戏引擎。
 
 <a id="s2-2"></a>

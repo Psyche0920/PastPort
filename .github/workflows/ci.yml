@@ -42,7 +42,7 @@ jobs:
         run: |
           uv run --no-sync ruff check .
           uv run --no-sync ruff format --check .
-          uv run --no-sync mypy --strict src/pastport tools/check_contracts.py tools/check_handoff.py tests
+          uv run --no-sync mypy --strict src/pastport tools/check_contracts.py tools/check_handoff.py tools/check_repository.py tests
           uv run --no-sync python tools/check_contracts.py
           uv run --no-sync python -m pastport.development.player_contracts --check
       - name: Failure propagation probe (manual opt-in)
@@ -85,6 +85,33 @@ jobs:
           uv run --no-sync python -m pastport.development.fault_acceptance
           --output acceptance-artifacts/faults.json
 
+  sdk-tests:
+    name: sdk-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version-file: '.python-version'
+      - name: Install locked SDK tooling and offline rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y poppler-utils
+          python -m pip install uv==0.12.8
+          uv sync --locked --all-packages --all-extras --group dev
+      - name: Check strict SDK types and build distributions
+        run: |
+          uv run --no-sync mypy --strict --follow-imports=silent packages/evidence-sdk/src/pastport_evidence packages/matched-environment-sdk/src/pastport_matched_environment packages/stylization-sdk/src/pastport_stylization packages/stylization-sdk/tests packages/matched-environment-sdk/tests/test_appearance.py
+          uv build --all-packages --out-dir acceptance-artifacts/wheels
+      - name: Run deterministic SDK regressions without model calls
+        run: |
+          (cd packages/evidence-sdk && uv run --no-sync python -m unittest discover -s tests -t . -v)
+          (cd packages/matched-environment-sdk && uv run --no-sync python -m unittest discover -s tests -t . -v)
+          (cd packages/stylization-sdk && uv run --no-sync python -m unittest discover -s tests -t . -v)
+
   browser-tests:
     name: browser-tests
     runs-on: ubuntu-24.04
@@ -115,7 +142,7 @@ jobs:
   ci:
     name: ci
     if: ${{ always() }}
-    needs: [quality, python-tests, browser-tests]
+    needs: [quality, python-tests, sdk-tests, browser-tests]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

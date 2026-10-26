@@ -12,6 +12,11 @@ Start with [PastPort_PRD_CN](PastPort_PRD_CN.md) or [PastPort_PRD_EN](PastPort_P
 | Understand significant accepted choices | [Decision Log](DECISION_LOG.md) |
 | See verified deliveries from this initial baseline | [Change Log](CHANGELOG.md) |
 | Use fixed target contracts and synthetic handoff examples | [SDK reference](technical/sdk-v1/README.md) |
+| Use the independent evidence-document workflow | [Evidence SDK](../packages/evidence-sdk/README.md) |
+| Build/review an already matched museum environment | [Matched Environment SDK](../packages/matched-environment-sdk/README.md) |
+| Post-process panorama/3D appearance independently | [Stylization SDK](../packages/stylization-sdk/README.md) |
+| Plan Story production, typed interfaces and acceptance | [Story workflow architecture](technical/STORY_WORKFLOW_ARCHITECTURE.md) |
+| Apply 360°/3D appearance post-processing | [Stylization SDK](../packages/stylization-sdk/README.md) |
 | Maintain CI and Agent tooling | [CI guide](ci-and-copilot.md), [Agent rules](../AGENTS.md) |
 
 The Chinese PRD defines the intended meaning if translation differs; correct both editions together. Actual code/generated schemas define existing executable behavior. Target SDK Schema 1.0.0, plugin API 1.0.0 and runtime wire 0.2.0 are not yet production capabilities. Current main remains wire 0.1.0 until implementation and acceptance.

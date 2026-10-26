@@ -58,12 +58,24 @@ Each module README lists the purpose of its direct source files. The PRD owns cr
 | player | Deterministic gameplay interpreter shared by browsers and Node | `runtime.mjs` atomic actions; `rules.mjs` conditions/effects; `runner.mjs` Python protocol entry | [player](src/pastport/player/README.md) |
 | api | Authenticated HTTP, private resources, and browser workbench | `app.py` composition/routes; `private_views.py` previews/source text; `workbench.mjs` workbench; `request_logging.py` request correlation | [api](src/pastport/api/README.md) |
 | development | Offline module, fault, browser acceptance, and contract-generation tools | `module_check.py` single module; `module_acceptance.py` four combinations; `fault_acceptance.py` faults; `browser_check.py` browser | [development](src/pastport/development/README.md) |
+| Evidence SDK | Independent photo + historical PDF evidence-document workflow | `packages/evidence-sdk/` | [package and API](packages/evidence-sdk/README.md) |
+| Matched Environment SDK | Independent matched-PDF + VR environment, 3D support and shared review | `packages/matched-environment-sdk/` | [package and API](packages/matched-environment-sdk/README.md) |
+| Stylization SDK | Independent 360°/3D appearance post-processing and rendering | `packages/stylization-sdk/` | [package and API](packages/stylization-sdk/README.md) |
+
+All three authoring SDKs are optional workspace distributions. Evidence handles
+photo/PDF evidence documents. The Matched Environment SDK contains the complete matched environment
+implementation, including its PDF-to-360° tour, 3D and shared-review capabilities. Stylization
+separately packages the appearance-processing workflows added by
+`environment-stylization`; it depends on Matched Environment's scene/review/execution contracts,
+while Matched Environment does not depend on Stylization. The standalone PDF-to-VR branch alone
+does not contain the 3D path. None of the SDKs contains the story Demo or claims
+automatic story generation or Main runtime composition.
 
 `tests/` contains behavior, contract, fault, and browser tests; `schemas/` contains generated contracts; `skills/` contains specialist methods; `tools/` contains repository checks; `references/` contains source references. Keep required provenance and runtime audit records. Use the short shared plan and logs; do not create per-change archives.
 
 ## Quick checks
 
-The legacy handoff gate currently rejects the expanded PRD/reference structure; see ENG-DOC in the plan. Its command remains below so the issue is visible, not silently bypassed.
+Repository checks validate explicit Markdown/HTML anchors and registered PRD/reference files; missing links, obsolete parallel documents and incomplete module inventories still fail.
 
 ```bash
 uv sync --locked --group dev

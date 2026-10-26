@@ -6,6 +6,64 @@ from pathlib import Path
 SOURCE_SUFFIXES = frozenset({".py", ".mjs", ".ts", ".mts", ".html", ".css"})
 DOCUMENT_NAMES = ("README.md", "ACTIVE_PLAN.md", "DECISION_LOG.md", "CHANGELOG.md")
 ROUTE_FILES = ("README.md", "AGENTS.md", ".github/copilot-instructions.md")
+SUPPORT_DOCUMENTS = frozenset(
+    {
+        "IMPLEMENTATION_GUIDE.md",
+        "PastPort_PRD_CN.md",
+        "PastPort_PRD_EN.md",
+        "ci-and-copilot.md",
+        "technical/STORY_WORKFLOW_ARCHITECTURE.md",
+        "showcase/hero.svg",
+        "showcase/workflow.svg",
+    }
+)
+REFERENCE_FILES = frozenset(
+    {
+        "README.md",
+        "check_contracts.py",
+        "check_plugin.mjs",
+        "plugin-api.d.ts",
+        "sdk-contracts.schema.json",
+        "test_reference_contracts.py",
+        "examples/host-lifecycle.json",
+        "examples/game/bundle.json",
+        *(
+            f"examples/game/data/{name}.json"
+            for name in (
+                "evidence",
+                "filter-report",
+                "museum",
+                "narrative-draft",
+                "plugin-receipt",
+                "presentation",
+                "resources",
+                "route",
+                "runtime",
+                "source-corpus",
+                "tour",
+            )
+        ),
+        *(
+            f"examples/game/media/{name}"
+            for name in (
+                "cartoon-one.png",
+                "pano-one.png",
+                "pano-two.png",
+                "source-image.png",
+                "synthetic-hatch.svg",
+                "synthetic-source.txt",
+            )
+        ),
+        *(
+            f"examples/game/plugins/pastport.match-pairs/1.0.0/{name}"
+            for name in (
+                "logic.mjs",
+                "manifest.json",
+                "view.mjs",
+            )
+        ),
+    }
+)
 
 
 def check(root: Path) -> tuple[str, ...]:
@@ -48,8 +106,18 @@ def check(root: Path) -> tuple[str, ...]:
             if relative not in text:
                 errors.append(f"{name}: missing collaboration route: {relative}")
     for path in sorted((root / "docs").rglob("*")):
+        if path.suffix == ".pyc" and "__pycache__" in path.parts:
+            continue
         if path.is_file() and path not in documents:
-            errors.append(f"{path.relative_to(root)}: use the four canonical documents")
+            relative = path.relative_to(root / "docs").as_posix()
+            reference = relative.removeprefix("technical/sdk-v1/")
+            if relative not in SUPPORT_DOCUMENTS and not (
+                relative.startswith("technical/sdk-v1/") and reference in REFERENCE_FILES
+            ):
+                errors.append(
+                    f"{path.relative_to(root)}: use the canonical documents "
+                    "or registered reference files"
+                )
     for name in ("CHANGELOG.md", "changelogs"):
         if (root / name).exists():
             errors.append(f"{name}: use the single docs/CHANGELOG.md")
@@ -65,7 +133,7 @@ def main() -> int:
     if errors:
         print("\n".join(errors))
         return 1
-    print("Handoff checks passed: module inventories and four shared document routes.")
+    print("Handoff checks passed: module inventories, shared routes and registered references.")
     return 0
 
 

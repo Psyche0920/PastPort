@@ -1,0 +1,176 @@
+"""Serve the local comparison dataset and record explicit review decisions."""
+from __future__ import annotations
+import json
+import mimetypes
+import sqlite3
+import shutil
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Iterator
+from urllib.parse import urlparse, parse_qs
+from vr_content import VRContentEdit, VRContentService
+from vr_positions import PositionEdit, VRPositionService
+
+ROOT = Path(__file__).resolve().parent
+CONTENT_DATABASE = ROOT / "pastport_matching.sqlite3"
+PORT = 8793
+VR_CONTENT = VRContentService(ROOT / "pastport_matching.sqlite3")
+VR_POSITIONS = VRPositionService(ROOT / 'pastport_matching.sqlite3', ROOT / 'vr_trial/trial_report.json')
+
+@dataclass(frozen=True)
+class Review:
+    object_id: int
+    version: int
+    image: str
+    text: str
+    note: str
+    reviewer: str
+
+    @classmethod
+    def parse(cls, value: object) -> Review:
+        if not isinstance(value, dict):
+            raise ValueError('Expected a JSON object')
+        image, text = value.get('image'), value.get('text')
+        if image not in ('unreviewed','suitable','unsuitable','uncertain') or text not in ('unreviewed','direct','context_only','unsuitable','uncertain'):
+            raise ValueError('Invalid verdict')
+        oid, version = value.get('object_id'), value.get('version')
+        note, reviewer = value.get('note'), value.get('reviewer')
+        if type(oid) is not int or type(version) is not int or not isinstance(note,str) or not isinstance(reviewer,str):
+            raise ValueError('Invalid review fields')
+        if not reviewer.strip() or len(note)>4000 or len(reviewer)>100:
+            raise ValueError('Reviewer required; note limited to 4000 characters')
+        return cls(oid,version,image,text,note,reviewer.strip())
+
+class ReviewRepository:
+    @contextmanager
+    def connection(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(f"{CONTENT_DATABASE.resolve().as_uri()}?mode=rw", uri=True, timeout=5)
+        connection.row_factory = sqlite3.Row
+        connection.execute('PRAGMA foreign_keys=ON')
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
+
+    def dataset(self) -> str:
+        with self.connection() as db:
+            objects = [dict(row) for row in db.execute('SELECT m.*,p.historical_id,p.proposal_state,p.rationale,p.image_review,p.text_review,p.version FROM modern_objects m JOIN pairings p ON m.id=p.modern_id ORDER BY m.id')]
+            sources = [dict(row) for row in db.execute('SELECT h.*,a.verdict AS audit_verdict,a.recommended_display_zh,a.limitation AS audit_limitation,t.translation_zh,p.exact_text,p.pdf_page AS text_page,NULLIF(s.printed_page,0) AS text_printed_page,p.start_offset,p.end_offset,s.normalized_text AS page_context FROM historical_objects h LEFT JOIN assistant_semantic_audit a ON a.historical_id=h.id LEFT JOIN text_associations t ON t.historical_id=h.id LEFT JOIN passages p ON p.id=t.passage_id LEFT JOIN source_pages s ON s.pdf_page=p.pdf_page')]
+            result = {'objects':objects,'sources':sources,'photos':[dict(r) for r in db.execute('SELECT * FROM photos')], 'observations':[dict(r) for r in db.execute('SELECT * FROM observations')], 'reviews':[dict(r) for r in db.execute('SELECT * FROM review_events ORDER BY id')], 'references':[dict(r) for r in db.execute('SELECT * FROM design_references')], 'vr_contents':[dict(r) for r in db.execute("SELECT v.*,CASE WHEN v.human_override IS NULL THEN 'ai_draft' ELSE 'human_override' END AS display_source,(p.historical_id IS v.historical_id AND p.proposal_state != 'invalid_structural_relation') AS mapping_current FROM vr_display_contents v JOIN pairings p ON p.modern_id=v.object_id")]}
+            return json.dumps(result,ensure_ascii=False)
+
+    def save(self, review: Review) -> bool:
+        with self.connection() as db:
+            changed = db.execute('UPDATE pairings SET image_review=?,text_review=?,version=version+1 WHERE modern_id=? AND version=?',(review.image,review.text,review.object_id,review.version)).rowcount
+            if not changed:
+                return False
+            db.execute('INSERT INTO review_events(modern_id,image_verdict,text_verdict,note,reviewer,created_at,previous_version) VALUES (?,?,?,?,?,?,?)',(review.object_id,review.image,review.text,review.note,review.reviewer,datetime.now(timezone.utc).isoformat(),review.version))
+            return True
+
+class ReviewHandler(BaseHTTPRequestHandler):
+    repository = ReviewRepository()
+
+    def send_bytes(self, status: int, payload: bytes, content_type: str) -> None:
+        self.send_response(status)
+        self.send_header('Content-Type',content_type)
+        self.send_header('Content-Length',str(len(payload)))
+        self.send_header('X-Content-Type-Options','nosniff')
+        self.send_header('Cache-Control','no-store')
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def send_file(self, path: Path) -> None:
+        try:
+            stream = path.open('rb')
+        except OSError:
+            self.send_error(503, 'File temporarily unavailable')
+            return
+        with stream:
+            self.send_response(200)
+            self.send_header('Content-Type', mimetypes.guess_type(str(path))[0] or 'application/octet-stream')
+            self.send_header('Content-Length', str(path.stat().st_size))
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            try:
+                shutil.copyfileobj(stream, self.wfile, length=65536)
+            except OSError as error:
+                self.close_connection = True
+                self.log_error('Static transfer interrupted (%s)', type(error).__name__)
+
+    def do_GET(self) -> None:
+        route = urlparse(self.path).path
+        if route == '/api/vr-positions':
+            try:
+                result = VRPositionService.encode(VR_POSITIONS.current())
+            except (OSError, ValueError, sqlite3.Error):
+                self.send_error(503, 'Position data unavailable')
+                return
+            self.send_bytes(200, result.encode(), 'application/json; charset=utf-8')
+            return
+        if route=='/api/vr-content':
+            try:
+                oid=int(parse_qs(urlparse(self.path).query).get('object_id',[''])[0])
+                content=VR_CONTENT.read(oid)
+            except (ValueError, IndexError):
+                self.send_error(400,'Invalid object ID')
+                return
+            except sqlite3.Error:
+                self.send_error(503,'VR content unavailable')
+                return
+            if content is None:
+                self.send_error(404,'No current VR content; object may be unlocated or remapped')
+                return
+            self.send_bytes(200,content.json().encode(),'application/json; charset=utf-8')
+            return
+        if route=='/api/data':
+            self.send_bytes(200,self.repository.dataset().encode(),'application/json; charset=utf-8')
+            return
+        relative = 'index.html' if route=='/' else route.lstrip('/')
+        path = (ROOT / relative).resolve()
+        if ROOT not in path.parents or not path.is_file() or path.suffix not in ('.html','.pdf','.jpg','.png','.sqlite3','.csv','.json','.md','.sql','.js'):
+            self.send_error(404)
+            return
+        self.send_file(path)
+
+    def do_POST(self) -> None:
+        origin = self.headers.get('Origin')
+        if self.path not in ('/api/review','/api/vr-content','/api/vr-positions') or origin not in (f'http://127.0.0.1:{PORT}',f'http://localhost:{PORT}'):
+            self.send_error(403)
+            return
+        try:
+            length = int(self.headers.get('Content-Length','0'))
+            if length<1 or length>16000:
+                raise ValueError('Invalid payload size')
+            payload=json.loads(self.rfile.read(length))
+            if self.path == '/api/vr-positions':
+                position = VR_POSITIONS.save(PositionEdit.parse(payload))
+                self.send_bytes(200 if position else 409,
+                    VRPositionService.encode((position,)).encode() if position else b'[]',
+                    'application/json; charset=utf-8')
+                return
+            if self.path=='/api/vr-content':
+                success=VR_CONTENT.save(VRContentEdit.parse(payload))
+            else:
+                review = Review.parse(payload)
+                success = self.repository.save(review)
+        except (ValueError, json.JSONDecodeError):
+            self.send_error(400,'Invalid review data')
+            return
+        except sqlite3.Error:
+            self.send_error(503,'Database write failed; review was not saved')
+            return
+        self.send_bytes(200 if success else 409,json.dumps({'saved':success}).encode(),'application/json')
+
+if __name__=='__main__':
+    # This is an initialized reference snapshot; do not regenerate baseline records.
+    with ThreadingHTTPServer(('127.0.0.1',PORT),ReviewHandler) as server:
+        print(f'Local review: http://127.0.0.1:{PORT}',flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass

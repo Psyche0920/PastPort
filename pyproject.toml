@@ -16,6 +16,18 @@ dependencies = [
     "uvicorn==0.54.0",
 ]
 
+[project.optional-dependencies]
+authoring = ["pastport-evidence==0.1.0", "pastport-matched-environment==0.1.0", "pastport-stylization==0.1.0"]
+authoring-codex = ["pastport-evidence[codex]==0.1.0", "pastport-matched-environment[codex]==0.1.0", "pastport-stylization[codex]==0.1.0"]
+
+[tool.uv.workspace]
+members = ["packages/evidence-sdk", "packages/matched-environment-sdk", "packages/stylization-sdk"]
+
+[tool.uv.sources]
+pastport-evidence = { workspace = true }
+pastport-matched-environment = { workspace = true }
+pastport-stylization = { workspace = true }
+
 [dependency-groups]
 dev = [
     "pytest==8.4.2",

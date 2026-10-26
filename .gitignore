@@ -13,3 +13,9 @@ var/
 node_modules/
 browser-artifacts/
 acceptance-artifacts/
+
+# SDK build outputs and private automation state.
+.runtime/
+*.egg-info/
+packages/*/build/
+packages/*/dist/

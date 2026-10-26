@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pastport-stylization"
+version = "0.1.0"
+readme = "README.md"
+description = "PastPort panorama and 3D appearance post-processing SDK"
+requires-python = ">=3.12,<3.13"
+dependencies = ["pastport-matched-environment==0.1.0"]
+
+[project.optional-dependencies]
+codex = ["pastport-matched-environment[codex]==0.1.0"]
+
+[project.scripts]
+pastport-stylization-agent = "pastport_stylization.application.stylization_agent_cli:main"
+pastport-style3d = "pastport_stylization.application.stylization3d_cli:main"
+pastport-stylize-studio = "pastport_stylization.api.stylization_studio:main"
+pastport-animate = "pastport_stylization.application.animation_cli:main"
+
+[tool.setuptools]
+license-files = ["LICENSE", "UPSTREAM.md"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pastport_stylization = ["py.typed", "web/*", "animation_assets/*"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src:../matched-environment-sdk/src"
+packages = ["pastport_stylization"]

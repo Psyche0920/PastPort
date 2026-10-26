@@ -1,0 +1,16 @@
+{
+  "profile_id": "approved-point2-animation-v2",
+  "reference": "approved-style-v2.png",
+  "reference_sha256": "f8200ae0140d52f35835bbf6e689ad7581c0965e7e6abd2fb525fa9cca71c3a8",
+  "policy": "policy-v2.txt",
+  "policy_sha256": "35f819d655779e706c44b8f9bf551be8947a1dc515733163e1a1822a06ce2db2",
+  "criteria": [
+    "Match the actual user-approved viewpoint-two image: clear, softly dimensional animated adventure/RPG background.",
+    "Preserve readable native detail in near and distant features; soft form must not become blurry focus.",
+    "Keep original architecture, object identity, quantity, placement, navigation and evidence association.",
+    "Keep shared distant structures and objects physically consistent across viewpoints, accounting for perspective and occlusion.",
+    "Use warm golden light, balanced shadows and limited existing magenta accents; no photorealistic PBR, flat poster shapes or imported reference props.",
+    "Only severe supported defects warrant one repair round; minor aesthetic differences do not."
+  ],
+  "approval": "User accepted the viewpoint-two sample and explicitly requested code integration; full panorama and 3D walking acceptance remain pending."
+}
