@@ -42,6 +42,12 @@ def main() -> None:
     studio = subcommands.add_parser("studio", help="Open browser upload, generation and review")
     studio.add_argument("--workspace", type=Path, default=Path(".runtime/studio"))
     studio.add_argument("--port", type=int, default=8794)
+    tour_preview = subcommands.add_parser(
+        "tour-preview", help="Run registered independent 3D views with shared navigation"
+    )
+    tour_preview.add_argument("--environment", type=Path, required=True)
+    tour_preview.add_argument("--view", type=Path, action="append", required=True)
+    tour_preview.add_argument("--port", type=int, default=8797)
     status = subcommands.add_parser(
         "codex-status", help="Check local login/model without inference"
     )
@@ -64,6 +70,23 @@ def main() -> None:
     generate3d.add_argument("--credit-budget", type=int, required=True)
     generate3d.add_argument("--authorize-marble", action="store_true")
     arguments = parser.parse_args()
+    if arguments.command == "tour-preview":
+        import uvicorn
+
+        from pastport_matched_environment.api.tour_preview import (
+            TourPreviewApplication,
+            TourPreviewView,
+        )
+
+        if not 1024 <= arguments.port <= 65535:
+            parser.error("Use a local port from 1024 to 65535")
+        tour_application = TourPreviewApplication(
+            arguments.environment,
+            tuple(TourPreviewView.from_result(path) for path in arguments.view),
+            f"http://127.0.0.1:{arguments.port}",
+        )
+        uvicorn.run(tour_application.app, host="127.0.0.1", port=arguments.port)
+        return
     if arguments.command == "scene3d-generate":
         from pastport_matched_environment.application.marble_generation import MarbleGeneration
 

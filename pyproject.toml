@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pastport"
-version = "0.2.0"
+version = "0.2.1rc4"
 description = "Typed editorial workflow for evidence-grounded heritage games"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -17,16 +17,23 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+codex = ["openai-codex==0.163.0"]
+game-making = ["pastport-story==0.1.0rc4", "pastport-gameplay==0.1.0rc2"]
 authoring = ["pastport-evidence==0.1.0", "pastport-matched-environment==0.1.0", "pastport-stylization==0.1.0"]
 authoring-codex = ["pastport-evidence[codex]==0.1.0", "pastport-matched-environment[codex]==0.1.0", "pastport-stylization[codex]==0.1.0"]
 
 [tool.uv.workspace]
-members = ["packages/evidence-sdk", "packages/matched-environment-sdk", "packages/stylization-sdk"]
+members = ["packages/evidence-sdk", "packages/matched-environment-sdk", "packages/stylization-sdk", "packages/story-sdk", "packages/gameplay-sdk"]
 
 [tool.uv.sources]
+pastport-story = { workspace = true }
+pastport-gameplay = { workspace = true }
 pastport-evidence = { workspace = true }
 pastport-matched-environment = { workspace = true }
 pastport-stylization = { workspace = true }
+
+[project.scripts]
+pastport-game-trial = "pastport.game_trial_cli:main"
 
 [dependency-groups]
 dev = [
@@ -56,3 +63,35 @@ include = ["src/**/*.py", "tests/**/*.py", "tools/check_contracts.py", "tools/ch
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/skills", "/pyproject.toml", "/uv.lock", "/README.md", "/LICENSE", "/prototype/story-agent-demo/app.mjs", "/prototype/story-agent-demo/app.css", "/prototype/story-agent-demo/index.html", "/prototype/story-agent-demo/dialogue.mjs", "/prototype/story-agent-demo/plugins.mjs", "/prototype/story-agent-demo/coverage.mjs", "/prototype/story-agent-demo/gameplay-catalog.mjs", "/prototype/story-agent-demo/session.mjs", "/prototype/story-agent-demo/gameplay.mjs", "/prototype/story-agent-demo/navigation.mjs", "/prototype/story-agent-demo/walkmesh.mjs", "/prototype/story-agent-demo/interaction.mjs", "/prototype/story-agent-demo/cinematic-view.mjs", "/prototype/story-agent-demo/scene3d-view.mjs", "/prototype/story-agent-demo/scene3d-runtime.js", "/prototype/story-agent-demo/scene3d-navigation.mjs", "/prototype/story-agent-demo/scene3d-bridge.mjs", "/prototype/story-agent-demo/serve3d.mjs", "/prototype/story-agent-demo/prepared-game.mjs", "/prototype/story-agent-demo/story-package.mjs", "/prototype/story-agent-demo/generated-story.mjs", "/prototype/story-agent-demo/build-story-package.mjs", "/prototype/story-agent-demo/engine", "/schemas/draft-result.schema.json", "/tools/gameplay_lifecycle.mjs", "/tools/prepare_presentation.mjs"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"skills" = "pastport/bundled_skills"
+"prototype/story-agent-demo/app.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/app.mjs"
+"prototype/story-agent-demo/app.css" = "pastport/runtime_assets/prototype/story-agent-demo/app.css"
+"prototype/story-agent-demo/index.html" = "pastport/runtime_assets/prototype/story-agent-demo/index.html"
+"prototype/story-agent-demo/dialogue.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/dialogue.mjs"
+"prototype/story-agent-demo/plugins.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/plugins.mjs"
+"prototype/story-agent-demo/coverage.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/coverage.mjs"
+"prototype/story-agent-demo/gameplay-catalog.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/gameplay-catalog.mjs"
+"prototype/story-agent-demo/session.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/session.mjs"
+"prototype/story-agent-demo/gameplay.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/gameplay.mjs"
+"prototype/story-agent-demo/navigation.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/navigation.mjs"
+"prototype/story-agent-demo/walkmesh.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/walkmesh.mjs"
+"prototype/story-agent-demo/interaction.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/interaction.mjs"
+"prototype/story-agent-demo/cinematic-view.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/cinematic-view.mjs"
+"prototype/story-agent-demo/scene3d-view.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/scene3d-view.mjs"
+"prototype/story-agent-demo/scene3d-runtime.js" = "pastport/runtime_assets/prototype/story-agent-demo/scene3d-runtime.js"
+"prototype/story-agent-demo/scene3d-navigation.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/scene3d-navigation.mjs"
+"prototype/story-agent-demo/scene3d-bridge.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/scene3d-bridge.mjs"
+"prototype/story-agent-demo/serve3d.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/serve3d.mjs"
+"prototype/story-agent-demo/prepared-game.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/prepared-game.mjs"
+"prototype/story-agent-demo/story-package.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/story-package.mjs"
+"prototype/story-agent-demo/generated-story.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/generated-story.mjs"
+"prototype/story-agent-demo/build-story-package.mjs" = "pastport/runtime_assets/prototype/story-agent-demo/build-story-package.mjs"
+"prototype/story-agent-demo/engine" = "pastport/runtime_assets/prototype/story-agent-demo/engine"
+"schemas/draft-result.schema.json" = "pastport/runtime_assets/schemas/draft-result.schema.json"
+"tools/gameplay_lifecycle.mjs" = "pastport/runtime_assets/tools/gameplay_lifecycle.mjs"
+"tools/prepare_presentation.mjs" = "pastport/runtime_assets/tools/prepare_presentation.mjs"

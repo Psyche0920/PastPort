@@ -1,6 +1,6 @@
 """Typed module messages for independent implementation against contract 0.1.0."""
 
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
@@ -30,6 +30,7 @@ from pastport.domain.evidence import (
     SourceManifestDraft,
 )
 from pastport.domain.game import NarrativePackage, RuntimeCapabilities
+from pastport.domain.mechanics import CoverageProblem, SourceChoiceRequirement
 from pastport.domain.packages import ReviewSnapshot, RuntimePackage, ValidationReport
 
 
@@ -137,10 +138,51 @@ class AuthoringTaskReport(Contract):
     counterexample: Text
 
 
+class TaskSpatialIntent(Contract):
+    """Story chooses registered identities; environment owns coordinates and physics."""
+
+    task_id: Identifier
+    object_number: int = Field(ge=1)
+    view_id: Identifier
+    station_id: Identifier
+    interaction: Literal["inspect_linked_source"]
+
+
+class TaskReadingIntent(Contract):
+    kind: Literal["source_reading"] = "source_reading"
+    task_id: Identifier
+    capability_id: Literal["source-reading:1"] = "source-reading:1"
+
+
+class TaskTilingIntent(Contract):
+    """Explicit reconstruction exercise, not evidence of an actual historic layout."""
+
+    kind: Literal["coverage"] = "coverage"
+    task_id: Identifier
+    capability_id: Identifier
+    rules: CoverageProblem
+    source_requirement: SourceChoiceRequirement
+    learning_goal: Text
+    fiction_notice: Text
+
+
+TaskGameplayIntent = Annotated[TaskReadingIntent | TaskTilingIntent, Field(discriminator="kind")]
+
+
 class NarrativeDraft(Contract):
     package: NarrativePackage
+    # Older drafts remain readable; new Story automation requires exact coverage.
+    spatial_intents: tuple[TaskSpatialIntent, ...] = ()
+    gameplay_intents: tuple[TaskGameplayIntent, ...] = ()
+    capability_catalog_sha256: Sha256 | None = None
     authoring_report: tuple[AuthoringTaskReport, ...] = Field(min_length=1)
     unresolved_items: tuple[Text, ...]
+
+    @property
+    def tiling_intents(self) -> tuple[TaskTilingIntent, ...]:
+        return tuple(
+            intent for intent in self.gameplay_intents if isinstance(intent, TaskTilingIntent)
+        )
 
 
 class NarrativeReview(Contract):
@@ -288,6 +330,8 @@ class DiscoverRequest(Contract):
 
 
 class DraftRequest(Contract):
+    authoring_mode: Literal["reviewed", "internal_preview"] = "reviewed"
+    host_constraints: tuple[Text, ...] = ()
     evidence: ApprovedEvidenceView
     selected_candidate: SelectedCandidate
     requirements: ProjectRequirements

@@ -32,8 +32,21 @@ class AppSettings:
     evidence_mode: ModuleMode | None = None
     narrative_mode: ModuleMode | None = None
     resources_mode: ModuleMode | None = None
+    story_3d_preparation_directory: Path | None = None
+    story_3d_museum_directory: Path | None = None
+    story_3d_output_directory: Path | None = None
+    story_host_constraints: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        story_paths = (
+            self.story_3d_preparation_directory,
+            self.story_3d_museum_directory,
+            self.story_3d_output_directory,
+        )
+        if any(path is not None for path in story_paths) and not all(
+            path is not None for path in story_paths
+        ):
+            raise ValueError("Configure preparation, museum and output directories together")
         if not self.accounts:
             raise ValueError("At least one authenticated account must be configured")
         if len({account.token_sha256 for account in self.accounts}) != len(self.accounts):

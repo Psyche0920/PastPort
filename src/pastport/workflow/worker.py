@@ -170,6 +170,9 @@ class EditorialWorker:
                 )
                 if not any(request.gate == gate for request in run.review_requests):
                     self.stages.gate(run_id, gate)
+                current = database.run(run_id)
+                if current.state.status == "running" and self.stages.gate(run_id, gate):
+                    return state
                 interrupt({"kind": gate, "run_id": run_id})
                 current = database.run(run_id)
                 if current.state.node != node or current.state.status != "running":

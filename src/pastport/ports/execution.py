@@ -12,6 +12,7 @@ from pastport.ports.modules import (
     SourceReader,
     ToolExecutor,
 )
+from pastport.ports.story_inputs import MatchedEnvironmentReader
 
 
 class ResearchExecutor(Protocol):
@@ -31,3 +32,4 @@ class ModuleServices:
     tools: ToolExecutor
     research: ResearchExecutor
     usage: UsageReader
+    environment: MatchedEnvironmentReader | None = None

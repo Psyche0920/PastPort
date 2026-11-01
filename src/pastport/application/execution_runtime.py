@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from pastport.adapters.skills import SkillLoader
+from pastport.application.environment_inputs import GuardedEnvironmentReader
 from pastport.application.execution_guard import ExecutionGuard
 from pastport.application.execution_models import (
     ExecutionBinding,
@@ -20,6 +21,8 @@ from pastport.domain.workflow import ExecutionMetadata, RemainingLimits
 from pastport.ports.editorial import EditorialRepository
 from pastport.ports.execution import ModuleServices
 from pastport.ports.resources import ResourceReader
+from pastport.ports.source_text import SourceTextExtractor
+from pastport.ports.story_inputs import MatchedEnvironmentReader
 
 
 class ExecutionRuntime:
@@ -32,6 +35,8 @@ class ExecutionRuntime:
         resources: ResourceReader | None,
         authority: ReviewAuthority,
         environment: str,
+        source_text_extractor: SourceTextExtractor | None = None,
+        environment_reader: MatchedEnvironmentReader | None = None,
     ) -> None:
         if environment != "test" and any(m.provider == "fake" for m in settings.models):
             raise ValueError("Fake model providers require an explicit test environment")
@@ -45,15 +50,24 @@ class ExecutionRuntime:
         self.settings = settings
         self.policy = LocalExecutionPolicy(
             environment="test" if environment == "test" else "production",
-            external_model_calls=any(m.provider == "openai" for m in settings.models),
+            external_model_calls=any(m.provider != "fake" for m in settings.models),
             external_tools=settings.allowed_tools,
             execution_config_hash=self.guard.binding_hash,
         )
         models = SharedModelGateway(self.guard, {p.name: p.provider for p in providers}, loader)
-        sources = SharedSourceReader(self.guard, resources)
+        sources = SharedSourceReader(self.guard, resources, source_text_extractor)
         tools = SharedToolExecutor(self.guard, sources)
         self.services = ModuleServices(
-            models, sources, tools, SharedResearchExecutor(self.guard, models, tools), self.guard
+            models,
+            sources,
+            tools,
+            SharedResearchExecutor(self.guard, models, tools),
+            self.guard,
+            environment=(
+                GuardedEnvironmentReader(self.guard, environment_reader)
+                if environment_reader is not None
+                else None
+            ),
         )
 
     def context(self, run: RunRecord, metadata: ExecutionMetadata) -> ExecutionMetadata:

@@ -34,6 +34,7 @@ class UsageReconciliation(Contract):
     command: ReconcileUsage
     original_entry: LedgerEntry
     original_receipt_hash: Sha256 | None
+    original_receipt: ExecutionReceipt | None = None
     recovered_receipt: ExecutionReceipt | None
 
 

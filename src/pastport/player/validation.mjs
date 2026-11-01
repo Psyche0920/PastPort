@@ -28,6 +28,9 @@ export class SchemaValidator {
   check(schema, value, depth, budget) {
     budget.visits += 1;
     requirePlayer(depth <= 160 && budget.visits <= 100000, "PLAYER_INPUT_TOO_COMPLEX", "Component input exceeds validation limits");
+    if (schema === true) return;
+    if (schema === false) mismatch();
+    requirePlayer(schema !== null && typeof schema === "object", "PLAYER_SCHEMA_UNSUPPORTED", "Schema node is unavailable");
     if (schema.$ref) {
       requirePlayer(schema.$ref.startsWith("#/$defs/"), "PLAYER_SCHEMA_UNSUPPORTED", "External schemas are not supported");
       return this.check(this.root.$defs[schema.$ref.slice(8)], value, depth + 1, budget);
@@ -63,7 +66,12 @@ export class SchemaValidator {
       if (!Array.isArray(value)) mismatch();
       if (schema.minItems !== undefined && value.length < schema.minItems) mismatch();
       if (schema.maxItems !== undefined && value.length > schema.maxItems) mismatch();
-      for (const item of value) this.check(schema.items, item, depth + 1, budget);
+      const prefix = schema.prefixItems ?? [];
+      requirePlayer(Array.isArray(prefix), "PLAYER_SCHEMA_UNSUPPORTED", "Tuple schema is unavailable");
+      for (let index = 0; index < value.length; index++) {
+        const itemSchema = index < prefix.length ? prefix[index] : schema.items ?? true;
+        this.check(itemSchema, value[index], depth + 1, budget);
+      }
     }
     if (schema.type === "object") {
       if (value === null || typeof value !== "object" || Array.isArray(value)) mismatch();

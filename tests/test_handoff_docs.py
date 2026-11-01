@@ -1,4 +1,4 @@
-"""Keep module inventories and canonical team-document routes consistent."""
+"""The user has one project entry, one technical PRD and five SDK guides."""
 
 import importlib.util
 from pathlib import Path
@@ -15,67 +15,67 @@ def checker() -> ModuleType:
 
 
 def documentation_fixture(root: Path) -> None:
-    package = root / "src/pastport"
-    package.mkdir(parents=True)
-    (package / "__init__.py").write_text("")
-    (package / "README.md").write_text("[Purpose](__init__.py)")
-    routes = "\n".join(
-        f"docs/{name}"
-        for name in ("README.md", "ACTIVE_PLAN.md", "DECISION_LOG.md", "CHANGELOG.md")
-    )
-    (root / "README.md").write_text("[package](src/pastport/README.md)\n" + routes)
-    (root / "AGENTS.md").write_text(routes)
-    (root / ".github").mkdir()
-    (root / ".github/copilot-instructions.md").write_text(routes)
-    (root / "docs").mkdir()
-    for name in ("README.md", "ACTIVE_PLAN.md", "DECISION_LOG.md", "CHANGELOG.md"):
-        (root / "docs" / name).write_text("Current authority")
+    module = checker()
+    for relative in module.ROUTE_FILES:
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(module.PRD)
+    prd = root / module.PRD
+    prd.parent.mkdir(parents=True, exist_ok=True)
+    prd.write_text("\n".join(f'<a id="{topic}"></a>' for topic in module.REQUIRED_TOPICS))
+    root_readme = root / "README.md"
+    for name in module.SDK_NAMES:
+        path = root / "packages" / name / "README.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("../../" + module.PRD + "\n" + "\n".join(
+            f"| {topic} | Description |"
+            for topic in ("Inputs", "Outputs", "Workflow", "Technology")
+        ))
+        with root_readme.open("a") as stream:
+            stream.write(f"\n[SDK](packages/{name}/README.md)")
 
 
-def test_missing_file_purpose_and_duplicate_documentation_are_reported(tmp_path: Path) -> None:
+def test_duplicate_guides_are_rejected(tmp_path: Path) -> None:
     documentation_fixture(tmp_path)
-    package = tmp_path / "src/pastport"
-    (package / "README.md").write_text("Namespace without a file inventory")
-    docs = tmp_path / "docs"
-    (docs / "obsolete-guide.md").write_text("Unnecessary parallel guide")
-    (tmp_path / "CHANGELOG.md").write_text("Obsolete change history")
+    (tmp_path / "docs/obsolete-guide.md").write_text("Old parallel guide")
+    (tmp_path / "docs/PastPort_PRD_EN.md").write_text("Duplicate PRD")
+    (tmp_path / "docs/showcase").mkdir()
+    (tmp_path / "docs/showcase/old.svg").write_text("<svg/>")
     errors = checker().check(tmp_path)
-    assert any("__init__.py" in error for error in errors)
-    assert any("use the canonical documents" in error for error in errors)
-    assert any("use the single docs/CHANGELOG.md" in error for error in errors)
+    assert any("showcase/old.svg: archive historical docs/resources" in e for e in errors)
+    assert any("obsolete-guide.md: duplicate guide" in error for error in errors)
+    assert any("PastPort_PRD_EN.md: duplicate guide" in error for error in errors)
 
 
-def test_canonical_documents_are_allowed_and_required(tmp_path: Path) -> None:
+def test_current_entries_and_sdk_contracts_are_required(tmp_path: Path) -> None:
     documentation_fixture(tmp_path)
     assert checker().check(tmp_path) == ()
-    (tmp_path / "docs/ACTIVE_PLAN.md").unlink()
-    assert checker().check(tmp_path) == ("docs/ACTIVE_PLAN.md: missing collaboration document",)
-
-
-def test_agents_and_copilot_must_route_to_shared_documents(tmp_path: Path) -> None:
-    documentation_fixture(tmp_path)
-    (tmp_path / "AGENTS.md").write_text("docs/README.md")
-    (tmp_path / ".github/copilot-instructions.md").unlink()
+    path = tmp_path / "packages/story-sdk/README.md"
+    path.write_text("Story text without an interface contract")
     errors = checker().check(tmp_path)
-    assert "AGENTS.md: missing collaboration route: docs/ACTIVE_PLAN.md" in errors
-    assert "AGENTS.md: missing collaboration route: docs/DECISION_LOG.md" in errors
-    assert "AGENTS.md: missing collaboration route: docs/CHANGELOG.md" in errors
-    assert ".github/copilot-instructions.md: missing collaboration entry point" in errors
+    assert any("story-sdk/README.md: missing SDK contract topic: Inputs" in e for e in errors)
+    (tmp_path / checker().PRD).unlink()
+    assert any("missing current documentation entry" in e for e in checker().check(tmp_path))
+
+
+def test_coding_agents_route_to_the_single_prd(tmp_path: Path) -> None:
+    documentation_fixture(tmp_path)
+    (tmp_path / "AGENTS.md").write_text("Follow old plans")
+    assert any("AGENTS.md: missing canonical route" in e for e in checker().check(tmp_path))
 
 
 def test_current_repo_handoff_checks_pass() -> None:
     assert checker().check(Path(__file__).resolve().parents[1]) == ()
 
 
-def test_registered_references_do_not_allow_unregistered_parallel_documents(tmp_path: Path) -> None:
+def test_machine_resources_and_provenance_are_not_parallel_guides(tmp_path: Path) -> None:
     documentation_fixture(tmp_path)
-    reference = tmp_path / "docs/technical/sdk-v1"
-    reference.mkdir(parents=True)
-    (reference / "README.md").write_text("Registered reference")
-    cache = reference / "__pycache__"
-    cache.mkdir()
-    (cache / "check_contracts.cpython-312.pyc").write_bytes(b"generated bytecode")
-    (tmp_path / "docs/PastPort_PRD_EN.md").write_text("Product specification")
+    for relative in ("skills/narrative/SKILL.md", "packages/evidence-sdk/UPSTREAM.md"):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("Required machine or provenance resource")
     assert checker().check(tmp_path) == ()
-    (reference / "obsolete-plan.md").write_text("Unregistered parallel plan")
-    assert any("obsolete-plan.md" in error for error in checker().check(tmp_path))
+    path = tmp_path / "src/pastport/README.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("Unwanted extra user entry")
+    assert any("src/pastport/README.md: duplicate guide" in e for e in checker().check(tmp_path))

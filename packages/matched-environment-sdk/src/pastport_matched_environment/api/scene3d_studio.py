@@ -34,7 +34,6 @@ from pastport_matched_environment.application.studio import StudioJobs
 from pastport_matched_environment.domain.scene3d import (
     Scene3DNavigation,
     Scene3DRecord,
-    Scene3DTransition,
 )
 
 
@@ -388,15 +387,12 @@ class Scene3DPortal:
 
         def navigation_payload(run_id: str, base_url: str) -> Scene3DNavigation:
             result_root(run_id)
-            from pastport_matched_environment.application.navigation import NavigationStore
-
             parent = jobs.root / "scene3d" / run_id
             metadata = parent / "generation-options.json"
             if not metadata.is_file():
                 metadata = parent / "import-options.json"
             options = record(read_json(metadata))
             job_id, scene_id = string(options["job_id"]), string(options["scene_id"])
-            links = NavigationStore(source(job_id)).current()
             targets: dict[str, str] = {}
             for path in (jobs.root / "scene3d").iterdir():
                 for filename in ("generation-options.json", "import-options.json"):
@@ -411,26 +407,19 @@ class Scene3DPortal:
                     except HTTPException:
                         continue
                     targets[string(other["scene_id"])] = path.name
-            transitions = []
-            for link in links:
-                if link.scene_id != scene_id or link.target_id not in targets:
-                    continue
-                query = {}
-                if link.arrival:
-                    query = {"arrival_yaw": link.arrival.yaw, "arrival_pitch": link.arrival.pitch}
-                url = base_url + "scene3d-results/" + targets[link.target_id] + "/"
-                if query:
-                    url += "?" + urlencode(query)
-                transitions.append(
-                    Scene3DTransition(
-                        hotspot_id=link.hotspot_id,
-                        target_scene_id=link.target_id,
-                        yaw=link.position.yaw,
-                        pitch=link.position.pitch,
-                        target_url=url,
-                    )
-                )
-            return Scene3DNavigation(source_scene_id=scene_id, transitions=tuple(transitions))
+            from pastport_matched_environment.application.tour_navigation import (
+                Scene3DTourNavigator,
+                TourDestination,
+            )
+
+            navigator = Scene3DTourNavigator(
+                source(job_id),
+                tuple(
+                    TourDestination(scene, base_url + "scene3d-results/" + target + "/")
+                    for scene, target in targets.items()
+                ),
+            )
+            return navigator.current(scene_id)
 
         @app.get("/api/scene3d-tour/{job_id}/package")
         def tour_package(job_id: str) -> FileResponse:

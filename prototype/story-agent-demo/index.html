@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Murat · 一捆柴</title><link rel="stylesheet" href="app.css?rev=ui3-navigation-dialogue"></head>
+<body>
+<header class="topbar"><a class="brand" href="./">P<span>●</span><small>PASTPORT</small></a><div class="identity"><h1>Murat · <span data-zh="一捆柴" data-en="One Bundle of Firewood">一捆柴</span></h1><p data-zh="1451 · Bursa · 一个普通人的一天" data-en="1451 · Bursa · An ordinary person’s day">1451 · Bursa · 一个普通人的一天</p></div><nav aria-label="Game controls"><button id="notebook" data-zh="史料册" data-en="Sources">史料册</button><button id="pause" data-zh="暂停" data-en="Pause">暂停</button><button id="export" data-zh="导出存档" data-en="Export save">导出存档</button><button id="restart" data-zh="重开" data-en="New game">重开</button><button id="language" aria-label="Change language">EN</button></nav></header>
+<section id="quest-hud"><small id="quest-stage"></small><button id="quest-title" aria-label="打开当前任务"></button><p id="quest-instruction"></p><button id="locate-target">⌖ 定位当前目标</button></section>
+<main>
+<section id="stage" aria-label="360 degree animated museum"><iframe id="museum" title="II. Murat animated 360 museum" src="museum/index.html?views=animated" allow="fullscreen; gyroscope; accelerometer" allowfullscreen></iframe>
+<div id="walk-layer" hidden tabindex="0" aria-label="固定分镜走动区域">
+<div id="shot-label"></div><button id="shot-object" class="target-object" aria-label="查看当前物件介绍"></button>
+<svg class="walk-ground" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon id="walk-ground-polygon" points="8,65 47,61 63,75 66,96 10,96"/></svg>
+<div id="destination" hidden aria-hidden="true"></div>
+<div id="player" class="figure" aria-label="Yusuf"><span class="shadow"></span><span class="sprite"></span><span class="actor-label">Yusuf</span></div><div id="cast"></div>
+<div class="dpad" aria-label="Movement controls"><button data-dir="up" aria-label="Move up">↑</button><button data-dir="left" aria-label="Move left">←</button><button data-dir="down" aria-label="Move down">↓</button><button data-dir="right" aria-label="Move right">→</button></div>
+<div class="walk-caption" data-zh="点击地面 / WASD走动 · Esc返回环视" data-en="Click ground / WASD to walk · Esc to look around">点击地面 / WASD走动 · Esc返回环视</div>
+</div>
+<div class="stage-footer"><span id="mode-status">拖动环视，点击编号看资料</span><span>II. Murat · 14 <span data-zh="个史料入口" data-en="source entries">个史料入口</span></span></div>
+</section>
+<dialog id="story-panel" aria-label="人物对话与任务"><button id="close-task" class="close" aria-label="关闭任务，继续走动">×</button><div class="chapter-bar"><span id="chapter-label"></span><span id="save-status" role="status"></span></div><div class="progress"><span id="progress-fill"></span></div><div id="story"></div><section id="task"></section><section id="decisions"></section><div id="next"></div><p class="fiction-note" data-zh="建筑资料有出处；人物经历、对白和游戏物料为原创。" data-en="Architecture is sourced; personal incidents, dialogue and game materials are fictional.">建筑资料有出处；人物经历、对白和游戏物料为原创。</p></dialog>
+</main>
+<section id="dialogue" hidden aria-label="人物逐句对话" aria-live="polite"></section>
+<div id="scene-curtain" aria-hidden="true"></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="source-dialog"><button class="close" data-close="source-dialog" aria-label="Close">×</button><span class="eyebrow" data-zh="来源资料" data-en="SOURCE MATERIAL">来源资料</span><div id="source-body"></div></dialog>
+<dialog id="notebook-dialog"><button class="close" data-close="notebook-dialog" aria-label="Close">×</button><span class="eyebrow">MURAT · SOURCEBOOK</span><h2 data-zh="十四处，留下了什么" data-en="What the fourteen entries tell us">十四处，留下了什么</h2><p data-zh="自由查看不等于完成任务。当前调查需要的资料，可在详情中加入本次观察。" data-en="Browsing does not complete a task. Required sources can be explicitly recorded in their detail view.">自由查看不等于完成任务。当前调查需要的资料，可在详情中加入本次观察。</p><div id="source-list"></div></dialog>
+<dialog id="welcome"><span class="eyebrow">PASTPORT · MURAT</span><h2 data-zh="一捆柴" data-en="One Bundle of Firewood">一捆柴</h2><p id="intro"></p><p class="muted" data-zh="单击物件看介绍，双击切分镜并走近。到达后自动打开任务，WASD可继续走动。阅读不倒计时。" data-en="Single-click an object to inspect; double-click to frame it and approach. Tasks open on arrival; WASD keeps you moving. Reading is not timed.">单击物件看介绍，双击切分镜并走近。到达后自动打开任务，WASD可继续走动。阅读不倒计时。</p><button id="start" class="primary" data-zh="开始这一天 →" data-en="Begin the day →">开始这一天 →</button></dialog>
+<script type="module" src="app.mjs?rev=ui3-navigation-dialogue"></script>
+</body></html>

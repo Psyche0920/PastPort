@@ -1078,6 +1078,28 @@ class EditorialDatabase:
                 )
             if command.action == "retry" and unit["attempts"] >= 2:
                 raise ServiceError("ATTEMPT_LIMIT", "Execution permits two total attempts")
+            if command.action == "retry":
+                stored = connection.execute(
+                    "SELECT payload_json FROM execution_receipts WHERE operation_id=?",
+                    (original.operation_id,),
+                ).fetchone()
+                if stored is not None:
+                    previous = ExecutionReceipt.model_validate_json(stored[0])
+                    if (
+                        previous.response is not None or previous.settlement is not None
+                        or reconciliation.original_receipt != previous
+                        or reconciliation.original_receipt_hash
+                        != CanonicalSerializer.digest(previous)
+                    ):
+                        raise ServiceError(
+                            "RETRY_UNSAFE", "Retry cannot replace a provider response"
+                        )
+                    # Archive the complete empty-response receipt in the immutable reconciliation
+                    # before permitting a fresh receipt for the authorized retry.
+                    connection.execute(
+                        "DELETE FROM execution_receipts WHERE operation_id=?",
+                        (original.operation_id,),
+                    )
             entry = updated(original, state="reserved")
             connection.execute(
                 "UPDATE usage_ledger SET state='reserved',payload_json=? WHERE reservation_id=?",

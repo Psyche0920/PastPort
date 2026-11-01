@@ -12,6 +12,7 @@ import sys
 import unicodedata
 # dataclass defines the result structure; Path handles filesystem paths.
 from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -21,6 +22,19 @@ from urllib.parse import unquote
 class Finding:
     path: Path
     message: str
+
+
+class ExplicitAnchorParser(HTMLParser):
+    """Collect rendered HTML targets without accepting tags inside HTML comments."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.anchors: set[str] = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        for name, value in attrs:
+            if value and (name == "id" or (tag == "a" and name == "name")):
+                self.anchors.add(value)
 
 
 # The repository checker uses one implementation for local and CI checks.
@@ -119,7 +133,6 @@ class RepositoryChecker:
         result: set[str] = set()
         # Check each line for a Markdown heading.
         for line in lines:
-            result.update(re.findall(r'<(?:a|h[1-6])\b[^>]*\bid=["\']([^"\']+)["\']', line))
             # Support heading levels one through six.
             heading = re.match(r'^#{1,6}\s+(.+)', line)
             if heading:
@@ -130,7 +143,12 @@ class RepositoryChecker:
                 # Leave the first anchor unchanged and suffix later duplicates in order.
                 result.add(slug if count == 0 else f'{slug}-{count}')
                 counts[slug] = count + 1
-        return result
+        parser = ExplicitAnchorParser()
+        # Inline code, like fenced examples, does not create rendered link targets.
+        prose = re.sub(r"(`+).*?\1", "", "\n".join(lines))
+        parser.feed(prose)
+        parser.close()
+        return result | parser.anchors
 
     # Check Markdown fences, local links, and Skill metadata.
     def _check_markdown(self, path: Path, text: str) -> None:

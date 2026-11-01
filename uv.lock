@@ -6,7 +6,9 @@ requires-python = "==3.12.*"
 members = [
     "pastport",
     "pastport-evidence",
+    "pastport-gameplay",
     "pastport-matched-environment",
+    "pastport-story",
     "pastport-stylization",
 ]
 
@@ -633,7 +635,7 @@ wheels = [
 
 [[package]]
 name = "pastport"
-version = "0.2.0"
+version = "0.2.1rc4"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
@@ -655,6 +657,13 @@ authoring-codex = [
     { name = "pastport-matched-environment", extra = ["codex"] },
     { name = "pastport-stylization", extra = ["codex"] },
 ]
+codex = [
+    { name = "openai-codex" },
+]
+game-making = [
+    { name = "pastport-gameplay" },
+    { name = "pastport-story" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -671,16 +680,19 @@ requires-dist = [
     { name = "httpx", specifier = "==0.28.1" },
     { name = "langgraph", specifier = "==1.2.15" },
     { name = "langgraph-checkpoint-sqlite", specifier = "==3.1.2" },
+    { name = "openai-codex", marker = "extra == 'codex'", specifier = "==0.163.0" },
     { name = "pastport-evidence", marker = "extra == 'authoring'", editable = "packages/evidence-sdk" },
     { name = "pastport-evidence", extras = ["codex"], marker = "extra == 'authoring-codex'", editable = "packages/evidence-sdk" },
+    { name = "pastport-gameplay", marker = "extra == 'game-making'", editable = "packages/gameplay-sdk" },
     { name = "pastport-matched-environment", marker = "extra == 'authoring'", editable = "packages/matched-environment-sdk" },
     { name = "pastport-matched-environment", extras = ["codex"], marker = "extra == 'authoring-codex'", editable = "packages/matched-environment-sdk" },
+    { name = "pastport-story", marker = "extra == 'game-making'", editable = "packages/story-sdk" },
     { name = "pastport-stylization", marker = "extra == 'authoring'", editable = "packages/stylization-sdk" },
     { name = "pastport-stylization", extras = ["codex"], marker = "extra == 'authoring-codex'", editable = "packages/stylization-sdk" },
     { name = "pydantic", specifier = "==2.12.3" },
     { name = "uvicorn", specifier = "==0.54.0" },
 ]
-provides-extras = ["authoring", "authoring-codex"]
+provides-extras = ["codex", "game-making", "authoring", "authoring-codex"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -730,6 +742,17 @@ requires-dist = [
 provides-extras = ["codex", "dev"]
 
 [[package]]
+name = "pastport-gameplay"
+version = "0.1.0rc2"
+source = { editable = "packages/gameplay-sdk" }
+dependencies = [
+    { name = "pastport" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pastport", editable = "." }]
+
+[[package]]
 name = "pastport-matched-environment"
 version = "0.1.0"
 source = { editable = "packages/matched-environment-sdk" }
@@ -776,6 +799,17 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.30,<1" },
 ]
 provides-extras = ["dev", "codex"]
+
+[[package]]
+name = "pastport-story"
+version = "0.1.0rc4"
+source = { editable = "packages/story-sdk" }
+dependencies = [
+    { name = "pastport", extra = ["codex"] },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pastport", extras = ["codex"], editable = "." }]
 
 [[package]]
 name = "pastport-stylization"

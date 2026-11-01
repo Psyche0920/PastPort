@@ -1,7 +1,7 @@
 """Pinned execution configuration and durable receipts, independent of provider SDKs."""
 
 from dataclasses import dataclass
-from typing import Annotated, Literal, Protocol, Self
+from typing import Annotated, Literal, Protocol, Self, runtime_checkable
 
 from pydantic import Field, model_validator
 
@@ -18,12 +18,14 @@ from pastport.domain.common import (
 )
 from pastport.domain.workflow import ExecutionMetadata, ToolKind
 
+STORY_CODEX_MODEL = "gpt-6.1-sol"
+
 BoundedText = Annotated[str, Field(max_length=1024 * 1024)]
 
 
 class ModelPolicy(Contract):
     role: Literal["research", "story"]
-    provider: Literal["fake", "openai"]
+    provider: Literal["fake", "openai", "codex"]
     model: Text
     price_version: Identifier
     input_microusd_per_million: NonNegative
@@ -31,6 +33,17 @@ class ModelPolicy(Contract):
     maximum_input_tokens: Positive = 32768
     maximum_output_tokens: Positive = 4096
     references: tuple[Text, ...] = ()
+
+    @model_validator(mode="after")
+    def codex_story_scope(self) -> Self:
+        if self.provider == "codex" and (
+            self.role != "story"
+            or self.model != STORY_CODEX_MODEL
+            or self.input_microusd_per_million != 0
+            or self.output_microusd_per_million != 0
+        ):
+            raise ValueError("Codex story generation permits only Sol 6.1 Medium")
+        return self
 
     def cost(self, input_tokens: int, output_tokens: int) -> int:
         return (
@@ -43,8 +56,8 @@ class ModelPolicy(Contract):
 class ExecutionSettings(Contract):
     models: tuple[ModelPolicy, ...] = ()
     allowed_tools: tuple[ToolKind, ...] = ()
-    timeout_seconds: Annotated[int, Field(ge=1, le=120)] = 120
-    maximum_source_bytes: Annotated[int, Field(ge=1, le=262144)] = 262144
+    timeout_seconds: Annotated[int, Field(ge=1, le=300)] = 120
+    maximum_source_bytes: Annotated[int, Field(ge=1, le=64 * 1024 * 1024)] = 262144
 
     @model_validator(mode="after")
     def unique_roles(self) -> Self:
@@ -109,9 +122,14 @@ class ModelProvider(Protocol):
     ) -> ProviderResponse: ...
 
 
+@runtime_checkable
+class RecordedModelProvider(Protocol):
+    def recorded_response(self, request_key: str) -> ProviderResponse | None: ...
+
+
 @dataclass(frozen=True, slots=True)
 class ProviderRegistration:
-    name: Literal["fake", "openai"]
+    name: Literal["fake", "openai", "codex"]
     provider: ModelProvider
 
 

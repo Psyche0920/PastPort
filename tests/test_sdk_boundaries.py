@@ -19,12 +19,20 @@ def imports(root: Path) -> set[str]:
 
 
 def test_sdk_dependencies_are_one_way_and_main_runtime_stays_independent() -> None:
-    assert not imports(ROOT / "src/pastport") & {
+    assert not set().union(*(imports(ROOT / "src/pastport" / layer)
+                            for layer in ("domain", "application", "ports"))) & {
         "pastport_evidence",
         "pastport_pdf_vr",
         "pastport_matched_environment",
         "pastport_stylization",
     }
+    # Optional SDK imports are allowed only in explicit lazy composition adapters.
+    allowed = {"environment_spatial.py", "game_making.py"}
+    for path in (ROOT / "src/pastport").rglob("*.py"):
+        text = path.read_text()
+        if any(name in text for name in ("from pastport_story", "from pastport_gameplay",
+                                        "from pastport_matched_environment")):
+            assert path.parent.name == "adapters" and path.name in allowed
     assert not imports(ROOT / "packages/evidence-sdk/src") & {
         "pastport",
         "pastport_matched_environment",

@@ -1,5 +1,16 @@
 # PastPort Matched Environment SDK
 
+## Current integration contract
+
+| Item | Current behavior |
+|---|---|
+| Inputs | Matched source materials, tour/3D resources, existing review and navigation state. |
+| Outputs | Shared museum content, object occurrences, 3D bindings/calibration, spatial/navigation records and preview. |
+| Workflow | Import → match/read shared content → bind scenes → analyze space → navigate/export. |
+| Technology | Python 3.12, typed APIs, browser viewer and bounded Node spatial processing. |
+
+Unified architecture and exact current verification scope: [Technical PRD](../../docs/TECHNICAL_PRD.md#sdk-modules). Main reuses the registered upstream outputs and saved Story in its current replay entry; this is not a new recognition/rendering/model run.
+
 Independent distribution: `pastport-matched-environment==0.1.0`; import namespace: `pastport_matched_environment`.
 Source revision and notices: [UPSTREAM](UPSTREAM.md), [license](LICENSE).
 
@@ -8,13 +19,6 @@ acceptance limits. Shared review and 3D remain in Matched Environment; appearanc
 owned by the separate `pastport-stylization` distribution, which depends on Matched Environment.
 Matched Environment does not depend on Stylization.
 No Story Demo, UI-trial game, live database or private scene is bundled.
-
-The upstream branch sequence matters: `pdf-to-vr-standalone` supplies the 360°
-PDF-to-tour workflow; `matched-environment` adds 3D scene support and shared
-review; the later `environment-stylization` line includes both and adds the
-appearance-processing workflows. This SDK packages the former museum/environment
-capabilities; appearance processing is in the separate Stylization SDK. The
-standalone branch by itself is not the 3D SDK source.
 
 ## Install independently
 
@@ -73,3 +77,196 @@ Its local staff app no longer implicitly mounts the separate style portal.
 The Matched Environment page no longer links to an unmounted style portal; launch the
 independent Stylization command explicitly. Main runtime adapters/authenticated API mounting are not supplied by
 installing either package.
+
+## Independent multi-view 3D tour
+
+Navigation, arrow dragging/persistence, arrival headings and preview process cleanup
+are owned by this SDK. Main supplies the source environment and registered result
+folders; it does not implement jumps, duplicate the viewer or require Studio job records.
+The existing Studio and this entry point share `Scene3DTourNavigator` and the same
+viewer, arrow store and transition boundaries. Evidence and Stylization are unchanged.
+
+```sh
+pastport-matched-environment tour-preview \
+  --environment /absolute/path/to/source-vr-environment \
+  --view /absolute/path/to/point-1-result \
+  --view /absolute/path/to/point-2-result \
+  --port 8797
+```
+
+Open `http://127.0.0.1:8797/`. Keep the terminal running; Ctrl+C closes owned previews.
+Each view must already share the source content authority and contain its matching
+`scene3d/attachment.json`. Source scene IDs are read from those attachments, not
+entered manually. Existing 3D arrow coordinates remain local to each result. New
+results seed arrows from the source VR; later VR edits do not overwrite dragged
+3D positions. The selected port must be free. This local portal is not a public
+server or an automatic generation command.
+
+Python callers can use `TourPreviewApplication(source, views, base_url).app` and
+`TourPreviewView.from_result(path)` from `pastport_matched_environment.sdk`.
+The host must bind the configured loopback origin and own the application's lifespan.
+
+| Source | Responsibility |
+|---|---|
+| `application/tour_navigation.py` | Resolve saved source navigation into registered viewer targets; shared with Studio |
+| `api/tour_preview.py` | Compose local scene previews, seed navigation and own their lifecycle without Studio records |
+
+
+### Offline spatial input analysis
+
+`application.spatial_analysis.OfflineSpatialAnalyzer.analyze` accepts a typed
+`domain.spatial_analysis.SpatialProbeRequest`, verified collider bytes and an execution
+cancellation/deadline callback. Node.js uses the bundled Three.js dependencies offline in
+a bounded subprocess; no model, network, asset generation or review mutation is involved.
+
+Every supplied object/arrow receives a spawn-to-target direct-route check and an anchor
+sight ray. All ordered routes between successfully reached approach positions and spawn
+are tested for continuous ground, step height and collision. This is a direct-path graph,
+not an exhaustive navigation mesh: a blocked direct path does not prove no detour exists.
+A clear anchor ray does not establish object identity, transparency or inscription detail.
+Legibility and touch remain unknown without task-specific evidence. Candidate locations
+and unconfirmed calibration stay unconfirmed even when geometry can be evaluated.
+
+| File | Responsibility |
+|---|---|
+| `domain/spatial_analysis.py` | Bounded request/result schema for geometry evidence |
+| `application/spatial_analysis.py` | Killable offline Node transport and identity checks |
+| `scene3d_assets/spatial_analysis.mjs` | World-space triangle index, direct routes and sight rays |
+
+Main injects its registered spatial reader once; each environment read automatically runs
+this pass for all supplied occurrences, with a separate hash covering coordinates,
+calibration, arrows, collider and algorithm. Process failures remain explicit unknowns.
+
+<!-- BEGIN FILE INVENTORY -->
+## 文件结构与用途
+
+每个文件的用途直接写在同一行。以下覆盖本范围内的 **111 个维护文件**；依赖环境、缓存、私有产物和历史备份不属于源码清单。
+
+```text
+matched-environment-sdk/
+├── src/
+│   └── pastport_matched_environment/
+│       ├── adapters/
+│       │   ├── __init__.py  # I/O adapters for registered assets and source formats.
+│       │   ├── assets.py  # Content-addressed local asset storage with atomic, size-bounded registration.
+│       │   ├── codex_sdk.py  # Official Codex SDK transport using the operator's existing ChatGPT login.
+│       │   ├── execution.py  # Durable grant reservations: uncertain dispatch consumes its slot until reconciled.
+│       │   ├── matched_pdf.py  # Read optional internal evidence links from a supplied matched PDF, never scripts.
+│       │   ├── pdf.py  # Native PDF text, positioned line and embedded image extraction plus Poppler rendering.
+│       │   ├── projection.py  # Render matching images using the same camera convention as coordinate inversion.
+│       │   ├── structured_output.py  # Translate Pydantic schemas to the provider's strict structured-output subset.
+│       │   └── tour.py  # Parse data-only tour exports; imported HTML is never served or executed.
+│       ├── api/
+│       │   ├── __init__.py  # Local review and VR transport.
+│       │   ├── scene3d.py  # Additive local 3D routes using the reference review database and version checks.
+│       │   ├── scene3d_studio.py  # Optional Marble attachment UI alongside the unchanged panorama generation flow.
+│       │   ├── shared_content.py  # Same-origin shared revision polling, independent of preview ports and broadcasts.
+│       │   ├── studio.py  # Browser generation portal sharing the existing per-project review application.
+│       │   ├── tour_preview.py  # Compose existing 3D viewers without requiring Studio job records.
+│       │   └── vr_navigation.py  # Local-only navigation editing routes layered over the trusted review handler.
+│       ├── application/
+│       │   ├── __init__.py  # Application-level input and configuration services.
+│       │   ├── appearance.py  # Read and verify a source-bound appearance manifest without executing stylization.
+│       │   ├── environment_agent.py  # Prepare registered visual inputs for the repository's environment-generation skill.
+│       │   ├── environment_build.py  # Metered matched-PDF inspection, fresh localization and reference-format delivery.
+│       │   ├── inputs.py  # Bounded source PDF validation before asset registration.
+│       │   ├── marble.py  # Admit existing Marble exports without generation, credentials or uploaded code.
+│       │   ├── marble_generation.py  # One explicitly authorized panorama generation; resume only polls its saved operation.
+│       │   ├── navigation.py  # Source-bound, versioned panorama navigation corrections.
+│       │   ├── pdf_ingestion.py  # Register a source PDF and persist page text and rendered-page references.
+│       │   ├── projection.py  # Invert stored image transforms before interpreting model pixels as VR angles.
+│       │   ├── reference_environment.py  # Assemble a new, isolated review candidate from a hash-bound visual handoff.
+│       │   ├── reference_preview.py  # Own isolated local reference servers, loading only packaged runtime code.
+│       │   ├── scene3d.py  # Attach an existing Marble world to a labelled environment without rematching.
+│       │   ├── scene3d_arrows.py  # Seed 3D navigation once from VR; all later spatial edits stay local to this result.
+│       │   ├── scene3d_export.py  # Portable scene assets and source-bound game data from one consistent review snapshot.
+│       │   ├── scene3d_review.py  # Adapt only a 3D result's review links; keep shared content and source evidence.
+│       │   ├── scene3d_tour.py  # Export separate source-ordered worlds and their saved navigation as one package.
+│       │   ├── shared_content.py  # One content authority per source environment; spatial state remains per result.
+│       │   ├── spatial_analysis.py  # Bounded offline geometry subprocess using the SDK's bundled Three.js loader.
+│       │   ├── storage.py  # Durable atomic metadata writes shared by generation and job storage.
+│       │   ├── studio.py  # Local generation jobs; subprocess ownership is separate from editorial state.
+│       │   └── tour_navigation.py  # Reuse source navigation across registered independent 3D deliveries.
+│       ├── domain/
+│       │   ├── __init__.py  # Framework-independent domain records.
+│       │   ├── animation.py  # Typed image-generation boundary; image edits do not change museum identities.
+│       │   ├── appearance.py  # Source-bound 3D appearance baking; geometry and matching stay independent.
+│       │   ├── build.py  # Persisted matched-environment generation summary.
+│       │   ├── environment.py  # Validated semantic proposals for matched-PDF environment generation.
+│       │   ├── execution.py  # Bounded standalone subscription execution; no fabricated dollar accounting.
+│       │   ├── geometry.py  # Coordinate contracts: image edges, top-left pixels, yaw-zero forward and pitch-up.
+│       │   ├── models.py  # Immutable domain records shared by input, workflow and export boundaries.
+│       │   ├── pdf.py  # Typed records produced while reading and rendering a registered PDF.
+│       │   ├── scene3d.py  # Versioned Marble input and metric-space manual anchor contracts.
+│       │   ├── spatial_analysis.py  # Source-bound advisory geometry evidence, independent of narrative permissions.
+│       │   ├── studio.py  # Typed browser submissions and explicit input-adapter capabilities.
+│       │   └── tour.py  # Imported tours preserve navigation and decoded panorama identity.
+│       ├── ports/
+│       │   ├── __init__.py  # Replaceable storage and document-processing boundaries.
+│       │   ├── assets.py  # Asset storage contract used by application services.
+│       │   ├── execution.py  # Transport boundary keeps the SDK outside domain/application services.
+│       │   └── pdf.py  # PDF processing contract independent of the chosen extraction/render libraries.
+│       ├── prompts/
+│       │   └── environment_policy_v1.txt  # 环境生成/准备阶段的模型策略与输出约束。
+│       ├── reference_environment/
+│       │   ├── PROVENANCE.md  # 参考资源的来源与归属记录。
+│       │   ├── landing.html  # 参考环境的导览入口页。
+│       │   ├── review.html  # 共享物件内容与匹配结果的审核页面。
+│       │   ├── review_server.py.template  # 生成环境审核 HTTP 服务的 Python 模板。
+│       │   ├── schema.sql  # 共享内容审核 SQLite 数据表定义。
+│       │   ├── start_demo.py.template  # 生成本地参考环境启动脚本的模板。
+│       │   ├── viewer.html  # 全景参考环境查看与热点交互页面。
+│       │   ├── vr_content.py.template  # 生成共享物件内容读取及审核持久化模块的模板。
+│       │   ├── vr_position_editor.js  # Scene-specific drag review. A released marker is persisted automatically.
+│       │   └── vr_positions.py.template  # 生成各视点热点与导航位置保存模块的模板。
+│       ├── scene3d_assets/
+│       │   ├── BufferGeometryUtils.js  # Three.js 几何体处理工具，供三维资源加载与处理使用。
+│       │   ├── GLTFLoader.js  # Three.js glTF 模型加载器，用于读取三维场景资源。
+│       │   ├── Pass.js  # Three.js 后处理渲染通道基础设施。
+│       │   ├── SPARK-LICENSE.txt  # Spark 渲染库许可证。
+│       │   ├── THREE-LICENSE.txt  # Three.js 库许可证。
+│       │   ├── index.html  # 独立 3D 场景查看器 HTML 入口。
+│       │   ├── navigation_boundary.js  # A one-way, unbounded vertical plane through an arrow; no altitude/radius test.
+│       │   ├── shared_content.js  # 在 3D 场景中读取共享物件内容，让多视点复用同一物件档案。
+│       │   ├── spark.module.js  # Spark Gaussian Splat 渲染库，显示点云式三维场景。
+│       │   ├── spatial_analysis.mjs  # Offline advisory geometry analysis; never changes player state or collision rules.
+│       │   ├── three.core.js  # @license Copyright 2010-2025 Three.js Authors SPDX-License-Identifier: MIT
+│       │   ├── three.module.js  # @license Copyright 2010-2025 Three.js Authors SPDX-License-Identifier: MIT
+│       │   ├── transitions.js  # 三维点位转场与进入朝向管理。
+│       │   └── viewer.js  # 三维查看器：加载场景、显示物件和处理空间交互。
+│       ├── web/
+│       │   ├── scene3d.html  # 工作台三维场景页面结构。
+│       │   ├── scene3d.js  # 工作台三维场景控制与环境接口调用。
+│       │   ├── scene3d_records.js  # 三维场景记录与视点相关数据的浏览器处理。
+│       │   ├── studio.css  # 环境搭建工作台样式。
+│       │   ├── studio.html  # 环境搭建工作台页面结构。
+│       │   └── studio.js  # 环境搭建工作台操作控制与后端交互。
+│       ├── workflow/
+│       │   ├── __init__.py  # Fixed and resumable execution graph.
+│       │   └── graph.py  # Fixed LangGraph stages backed by authoritative transactional stage receipts.
+│       ├── __init__.py  # Standalone PDF-to-VR workflow implementation.
+│       ├── __main__.py  # Run the standalone CLI using python -m pastport_matched_environment.
+│       ├── cli.py  # Matched PDF and fresh panorama generation entrypoints.
+│       ├── py.typed  # PEP 561 类型标记，让安装方的类型检查器识别本包类型。
+│       └── sdk.py  # Public Matched Environment SDK surface; appearance execution belongs to pastport_stylization.
+├── tests/
+│   ├── __init__.py  # Behavioral checks for standalone contracts and bounded services.
+│   ├── test_appearance.py  # 回归测试：Museum verifies appearance identity and bytes without a stylization dependency.
+│   ├── test_assets.py  # 回归测试，覆盖 AssetRegistrationTests。
+│   ├── test_codex_execution.py  # 回归测试：SDK port checks use an explicit transport double, not live subscription calls.
+│   ├── test_environment_agent.py  # 回归测试：Portable skill assembly checks use labeled inputs, not claims of new visual inference.
+│   ├── test_environment_build.py  # 回归测试：Behavioral SDK-pipeline and browser checks use explicit semantic counterparts.
+│   ├── test_projection.py  # 回归测试：Geometry checks use known rays and actual synthetic pixels, not model answers.
+│   ├── test_scene3d_candidates.py  # 回归测试：Automatic proposals must remain separate from authoritative human anchors.
+│   ├── test_scene3d_submission.py  # 回归测试：Financial regression checks: submission replay and source backup, without providers.
+│   ├── test_shared_content.py  # 回归测试：Shared identities/content must not collapse viewpoint state or divergent edits.
+│   ├── test_spatial_analysis.py  # 回归测试：Execute the packaged geometry analyzer against a deterministic floor and wall.
+│   ├── test_studio.py  # 回归测试：Upload boundaries and interruption handling, without model execution.
+│   ├── test_tour_preview.py  # 回归测试：Independent tours retain saved navigation and reject unregistered destinations.
+│   └── test_workflow.py  # 回归测试，覆盖 CounterStage, WorkflowTests, EvidenceFailure, RecoverableEvidenceStage, RecoveryTests。
+├── LICENSE  # 本模块的许可证；分发源码或安装包时保留。
+├── README.md  # 本模块的使用入口、输入输出及完整文件用途说明。
+├── UPSTREAM.md  # 上游来源、提取范围及归属说明；不是运行入口。
+└── pyproject.toml  # 本项目的包名、依赖、命令入口与构建配置。
+```
+<!-- END FILE INVENTORY -->

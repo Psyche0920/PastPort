@@ -111,6 +111,7 @@ class StageRunner:
         authority: ReviewAuthority,
         package_loader: RuntimePackageLoader,
         execution: "ExecutionRuntime | None" = None,
+        authoring_constraints: tuple[str, ...] = (),
     ) -> None:
         self.database = database
         self.releases = releases
@@ -124,6 +125,7 @@ class StageRunner:
         self.authority = authority
         self.package_loader = package_loader
         self.execution = execution
+        self.authoring_constraints = authoring_constraints
         self.activity = ActivityMeter(database)
         self.router = WorkflowRouter(database)
         self.branches = BranchRunner(self)

@@ -974,3 +974,47 @@ def test_skill_reference_hash_tracks_only_explicit_approved_files(tmp_path: Path
     with pytest.raises(ServiceError) as failure:
         loader.load(policy)
     assert failure.value.code == "SKILL_PATH_INVALID"
+
+
+@pytest.mark.parametrize("failure", ["deadline", "transport"])
+def test_known_response_recovered_after_timeout_is_settled_without_second_call(
+    tmp_path: Path,
+    failure: str,
+) -> None:
+    from pastport.application.models import ServiceError
+
+    tape = ProviderTape()
+
+    class RecoveredProvider:
+        response: ProviderResponse | None = None
+        key: str | None = None
+
+        async def respond(
+            self, request: ProviderRequest, timeout_seconds: float
+        ) -> ProviderResponse:
+            self.key = request.request_key
+            self.response = tape.respond(request)
+            if failure == "deadline":
+                raise TimeoutError()
+            raise ServiceError("OUTCOME_UNKNOWN", "Synthetic transport teardown timeout")
+
+        def recorded_response(self, request_key: str) -> ProviderResponse | None:
+            assert request_key == self.key
+            return self.response
+
+    config = replace(settings(tmp_path), execution=execution(), skill_directory=SKILLS)
+    with TestClient(
+        create_app(
+            config,
+            providers=(ProviderRegistration("fake", RecoveredProvider()),),
+            narrative_factory=GatewayNarrative,
+        )
+    ) as client:
+        run_id = start(client)
+        run = stopped(client, run_id, "needs_review")
+        assert any(a.reference.kind == "candidate_set" for a in run.artifacts)
+        budget = client.get("/api/v1/runs/" + run_id + "/budget", headers=headers()).json()
+        assert len(tape.calls) == 1
+        assert budget["used"]["model_requests"] == 1
+        assert budget["used"]["input_tokens"] == 100
+        assert not any(budget["held"].values())

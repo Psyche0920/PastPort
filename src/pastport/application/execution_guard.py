@@ -46,7 +46,7 @@ class ExecutionGuard:
         self.authority.actor(metadata.actor_id, metadata.project_id, "editor")
         policy = LocalExecutionPolicy(
             environment=run.environment,
-            external_model_calls=any(m.provider == "openai" for m in self.binding.settings.models),
+            external_model_calls=any(m.provider != "fake" for m in self.binding.settings.models),
             external_tools=self.binding.settings.allowed_tools,
             execution_config_hash=self.binding_hash,
         )

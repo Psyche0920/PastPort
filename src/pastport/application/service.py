@@ -191,7 +191,9 @@ class EditorialService:
             (item for item in candidates.candidates if item.candidate_id == request.candidate_id),
             None,
         )
-        if candidate is None or candidate.blocking_gaps:
+        if candidate is None or (
+            candidate.blocking_gaps and not run.control.internal_preview_continuation
+        ):
             raise ServiceError("CANDIDATE_INVALID", "Candidate is missing or has blocking gaps")
         requirements = self.database.project(run.state.project_id).requirements
         selection = SelectedCandidate(
@@ -232,6 +234,11 @@ class EditorialService:
         ):
             raise ServiceError("REVIEW_STALE", "This review is no longer pending")
         required_role = "publisher" if pending.gate == "publication" else pending.gate
+        if run.control.internal_preview_continuation and pending.gate == "publication":
+            raise ServiceError(
+                "PREVIEW_PUBLICATION_FORBIDDEN",
+                "Internal preview continuation cannot approve publication",
+            )
         self.authorize(actor, run.state.project_id, required_role)
         self.authority.actor(actor.actor_id, run.state.project_id, required_role)
         expected = {(item.target_id, item.version, item.sha256) for item in pending.targets}
@@ -424,7 +431,12 @@ class EditorialService:
         run = self.run(run_id, actor)
         self.authorize(actor, run.state.project_id, "editor")
         self.require_revision(run, request.expected_revision)
-        if run.state.status not in ("blocked", "failed"):
+        preview_gate_wakeup = (
+            run.control.internal_preview_continuation
+            and run.state.status == "running"
+            and run.state.node in ("evidence_review", "narrative_review")
+        )
+        if run.state.status not in ("blocked", "failed") and not preview_gate_wakeup:
             raise ServiceError(
                 "RESUME_NOT_ALLOWED",
                 "Resume cannot grant approval, reset budgets or undo rejection",
@@ -440,6 +452,38 @@ class EditorialService:
             ),
         )
         self.database.save(result, run.state.revision, "Run resumed", enqueue=True, receipt=receipt)
+        return result
+
+    def enable_internal_preview(
+        self, run_id: str, request: RunCommand, actor: Actor, receipt: RequestReceipt
+    ) -> RunRecord:
+        """Permit owner-authorized draft continuation without verifying unknown history."""
+        run = self.run(run_id, actor)
+        self.authorize(actor, run.state.project_id, "operator")
+        self.authority.actor(actor.actor_id, run.state.project_id, "operator")
+        self.require_revision(run, request.expected_revision)
+        project = self.database.project(run.state.project_id)
+        if (
+            project.requirements.distribution_scope != "internal_preview"
+            or run.current_release_id is not None
+            or run.state.status in ("running", "queued", "published", "cancelled")
+        ):
+            raise ServiceError(
+                "PREVIEW_CONTINUATION_NOT_ALLOWED",
+                "Preview continuation requires a stopped, unpublished internal-preview run",
+            )
+        result = updated(
+            run,
+            control=updated(run.control, internal_preview_continuation=True),
+            state=updated(run.state, revision=run.state.revision + 1),
+        )
+        self.database.save(
+            result,
+            run.state.revision,
+            "Internal preview continuation enabled; uncertainty retained; "
+            "no human approval or publication authority implied",
+            receipt=receipt,
+        )
         return result
 
     def set_locks(
@@ -465,7 +509,10 @@ class EditorialService:
 
     @staticmethod
     def _editable_story(run: RunRecord) -> "NarrativeDraft":
-        if run.state.node != "narrative_review" or run.state.status not in (
+        editable_node = run.state.node == "narrative_review" or (
+            run.control.internal_preview_continuation and run.state.node == "publish_review"
+        )
+        if not editable_node or run.state.status not in (
             "waiting_review",
             "needs_changes",
         ):
@@ -546,13 +593,19 @@ class EditorialService:
                 StoredArtifact(reference=reference, payload_json=package.model_dump_json()),
                 StoredArtifact(reference=draft_ref, payload_json=replacement.model_dump_json()),
             ),
-            review_requests=tuple(item for item in run.review_requests if item.gate != "narrative")
+            review_requests=tuple(
+                item
+                for item in run.review_requests
+                if item.gate not in ("narrative", "publication")
+            )
             + (review,),
             state=updated(
                 run.state,
                 revision=run.state.revision + 1,
+                node="narrative_review",
                 status="waiting_review",
                 narrative_ref=reference,
+                runtime_ref=None,
                 pending_review_id=review.request_id,
             ),
         )

@@ -1,6 +1,7 @@
 """Registered-source reading and deterministic local tools, bounded by frozen questions."""
 
 import asyncio
+import hashlib
 from typing import Literal
 
 from pastport.application.execution_guard import ExecutionGuard
@@ -14,15 +15,26 @@ from pastport.domain.resources import ResourceReference
 from pastport.domain.workflow import ToolRequest
 from pastport.ports.modules import ExecutionContext
 from pastport.ports.resources import ResourceReader
+from pastport.ports.source_text import SourceTextError, SourceTextExtractor
 
 
 class SharedSourceReader:
-    def __init__(self, guard: ExecutionGuard, resources: ResourceReader | None) -> None:
+    def __init__(
+        self,
+        guard: ExecutionGuard,
+        resources: ResourceReader | None,
+        source_text_extractor: SourceTextExtractor | None = None,
+    ) -> None:
         self.guard = guard
+        self.source_text_extractor = source_text_extractor
         self.resources = VerifiedResourceReader(resources) if resources is not None else None
 
     def operation(self, source_ref: ArtifactRef, context: ExecutionContext) -> tuple[str, str, str]:
         digest = CanonicalSerializer.digest(source_ref)
+        if self.source_text_extractor is not None:
+            digest = hashlib.sha256(
+                (digest + ":" + self.source_text_extractor.identity).encode("utf-8")
+            ).hexdigest()
         group = self.guard.group(context, "fetch")
         return group + digest[:32], digest, group
 
@@ -124,6 +136,26 @@ class SharedSourceReader:
                 except UnicodeError:
                     status = "failed"
             document = SourceDocument(source=source, fragments=fragments, status=status)
+            if resource.content.startswith(b"%PDF") and self.source_text_extractor is not None:
+                try:
+                    document = await self.source_text_extractor.extract(
+                        source,
+                        resource.content,
+                        timeout_seconds=self.guard.timeout(context),
+                        cancellation=context.cancellation,
+                    )
+                except SourceTextError as error:
+                    raise ServiceError(error.code, str(error)) from error
+                if document.source != source or any(
+                    (part.locator.source_id, part.locator.source_version, part.locator.file_sha256)
+                    != (source.source_id, source.version, source.file_sha256)
+                    for part in document.fragments
+                ):
+                    raise ServiceError(
+                        "SOURCE_IDENTITY_MISMATCH",
+                        "Extractor changed the registered source or locator",
+                    )
+            self.guard.validate(context)
             reference = ArtifactRef(
                 artifact_id=operation_id,
                 project_id=source_ref.project_id,

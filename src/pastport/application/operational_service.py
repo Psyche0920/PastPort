@@ -163,7 +163,10 @@ class OperationalService:
         original = self.database.execution_receipt(entry.operation_id)
         recovered: ExecutionReceipt | None = None
         if command.action == "retry":
-            if actual != Usage() or original is not None:
+            if actual != Usage() or (
+                original is not None
+                and (original.response is not None or original.settlement is not None)
+            ):
                 raise ServiceError(
                     "RETRY_UNSAFE", "Retry requires proof of non-execution and no saved response"
                 )
@@ -270,6 +273,7 @@ class OperationalService:
                 created_at=datetime.now(UTC),
                 command=command,
                 original_entry=entry,
+                original_receipt=original,
                 original_receipt_hash=CanonicalSerializer.digest(original)
                 if original is not None
                 else None,

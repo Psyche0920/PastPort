@@ -1352,8 +1352,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "authoring_mode": {
+      "default": "reviewed",
+      "enum": [
+        "reviewed",
+        "internal_preview"
+      ],
+      "title": "Authoring Mode",
+      "type": "string"
+    },
     "evidence": {
       "$ref": "#/$defs/ApprovedEvidenceView"
+    },
+    "host_constraints": {
+      "default": [],
+      "items": {
+        "maxLength": 10000,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "title": "Host Constraints",
+      "type": "array"
     },
     "locked_fields": {
       "items": {

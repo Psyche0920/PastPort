@@ -20,6 +20,7 @@ from pastport.adapters.player_process import NodePlayerProcess, PlayerComponentE
 from pastport.adapters.player_saves import SQLitePlayerSaves
 from pastport.adapters.previews import SQLitePreviews
 from pastport.adapters.resources import LocalResourceReader
+from pastport.adapters.story_3d import Story3DAssemblyAdapter
 from pastport.api.private_views import PrivateViewRoutes, static_router
 from pastport.api.request_logging import RequestLoggingMiddleware
 from pastport.api.settings import AppSettings
@@ -67,6 +68,8 @@ from pastport.domain.player_saves import (
 from pastport.ports.execution import ModuleServices
 from pastport.ports.modules import AssemblyPort, EvidencePort, NarrativePort, PackageValidatorPort
 from pastport.ports.resources import ResourceReader
+from pastport.ports.source_text import SourceTextExtractor
+from pastport.ports.story_inputs import MatchedEnvironmentReader
 from pastport.workflow.stages import StageRunner
 from pastport.workflow.worker import EditorialWorker
 
@@ -79,6 +82,8 @@ def create_app(
     assembly: AssemblyPort | None = None,
     validator: PackageValidatorPort | None = None,
     resources: ResourceReader | None = None,
+    source_text_extractor: SourceTextExtractor | None = None,
+    environment_reader: MatchedEnvironmentReader | None = None,
     providers: tuple[ProviderRegistration, ...] = (),
     player_process: PlayerRuntimeProcess | None = None,
     evidence_factory: Callable[[ModuleServices], EvidencePort] | None = None,
@@ -116,6 +121,8 @@ def create_app(
         resource_reader,
         authority,
         settings.environment,
+        source_text_extractor=source_text_extractor,
+        environment_reader=environment_reader,
     )
     service = EditorialService(
         database, settings.environment, authority, execution.policy, execution.guard.binding
@@ -141,19 +148,32 @@ def create_app(
         (lambda: LocalNarrativeAdapter(content)) if content is not None else None,
     )
     assembler = PackageAssembler(resource_reader) if resource_reader is not None else None
+    assembly_adapter = assembly if assembly is not None else assembler
+    if settings.story_3d_preparation_directory is not None:
+        if assembly_adapter is None:
+            raise ValueError("Story 3D delivery requires the shared assembly adapter")
+        assert settings.story_3d_museum_directory is not None
+        assert settings.story_3d_output_directory is not None
+        assembly_adapter = Story3DAssemblyAdapter(
+            assembly_adapter,
+            settings.story_3d_preparation_directory,
+            settings.story_3d_museum_directory,
+            settings.story_3d_output_directory,
+        )
     stages = StageRunner(
         database,
         directory / "releases",
         resource_reader,
         evidence_adapter,
         narrative_adapter,
-        assembly if assembly is not None else assembler,
+        assembly_adapter,
         validator if validator is not None else assembler,
         initial_capabilities(),
         settings.environment,
         authority,
         RuntimePackageLoader(initial_capabilities(), LocalPackageFileReader()),
         execution,
+        authoring_constraints=settings.story_host_constraints,
     )
     player_repository = SQLitePlayerSaves(directory / "player.sqlite3")
     operations = OperationalService(database, authority, stages.review_targets)
@@ -543,6 +563,17 @@ def create_app(
         entry = receipt(request, actor, payload, 202)
         return await asyncio.to_thread(
             mutate, entry, lambda: service.cancel(run_id, payload, actor, entry)
+        )
+
+    @app.post("/api/v1/runs/{run_id}/internal-preview-continuation")
+    async def internal_preview_continuation(run_id: str, request: Request) -> JSONResponse:
+        actor = authenticate(request)
+        record = service.run(run_id, actor)
+        service.authorize(actor, record.state.project_id, "operator")
+        payload = await read_body(request, RunCommand)
+        entry = receipt(request, actor, payload, 200)
+        return await asyncio.to_thread(
+            mutate, entry, lambda: service.enable_internal_preview(run_id, payload, actor, entry)
         )
 
     @app.post("/api/v1/runs/{run_id}/resume")

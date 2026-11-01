@@ -28,6 +28,7 @@ class RevisionRound(Contract):
 
 
 class WorkflowControl(Contract):
+    internal_preview_continuation: bool = False
     release_generation: int = Field(default=0, ge=0)
     retry_generation: int = Field(default=0, ge=0)
     action: Literal["draft", "revise", "review"] = "draft"

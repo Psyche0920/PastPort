@@ -583,6 +583,58 @@
       "title": "ChoiceEquals",
       "type": "object"
     },
+    "CoverageProblem": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "pieces": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maximum": 8,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "maximum": 8,
+                "minimum": 1,
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Pieces",
+          "type": "array"
+        },
+        "rotation_allowed": {
+          "default": true,
+          "title": "Rotation Allowed",
+          "type": "boolean"
+        },
+        "width": {
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "pieces"
+      ],
+      "title": "CoverageProblem",
+      "type": "object"
+    },
     "Decision": {
       "additionalProperties": false,
       "properties": {
@@ -1307,8 +1359,51 @@
           "title": "Authoring Report",
           "type": "array"
         },
+        "capability_catalog_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capability Catalog Sha256"
+        },
+        "gameplay_intents": {
+          "default": [],
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "coverage": "#/$defs/TaskTilingIntent",
+                "source_reading": "#/$defs/TaskReadingIntent"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/TaskReadingIntent"
+              },
+              {
+                "$ref": "#/$defs/TaskTilingIntent"
+              }
+            ]
+          },
+          "title": "Gameplay Intents",
+          "type": "array"
+        },
         "package": {
           "$ref": "#/$defs/NarrativePackage"
+        },
+        "spatial_intents": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TaskSpatialIntent"
+          },
+          "title": "Spatial Intents",
+          "type": "array"
         },
         "unresolved_items": {
           "items": {
@@ -1969,6 +2064,36 @@
       "title": "SetVariable",
       "type": "object"
     },
+    "SourceChoiceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "contrast_claim_ids": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Contrast Claim Ids",
+          "type": "array"
+        },
+        "target_claim_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Target Claim Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_claim_id",
+        "contrast_claim_ids"
+      ],
+      "title": "SourceChoiceRequirement",
+      "type": "object"
+    },
     "Spot": {
       "additionalProperties": false,
       "properties": {
@@ -2018,6 +2143,137 @@
         "claim_ids"
       ],
       "title": "Spot",
+      "type": "object"
+    },
+    "TaskReadingIntent": {
+      "additionalProperties": false,
+      "properties": {
+        "capability_id": {
+          "const": "source-reading:1",
+          "default": "source-reading:1",
+          "title": "Capability Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "source_reading",
+          "default": "source_reading",
+          "title": "Kind",
+          "type": "string"
+        },
+        "task_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id"
+      ],
+      "title": "TaskReadingIntent",
+      "type": "object"
+    },
+    "TaskSpatialIntent": {
+      "additionalProperties": false,
+      "description": "Story chooses registered identities; environment owns coordinates and physics.",
+      "properties": {
+        "interaction": {
+          "const": "inspect_linked_source",
+          "title": "Interaction",
+          "type": "string"
+        },
+        "object_number": {
+          "minimum": 1,
+          "title": "Object Number",
+          "type": "integer"
+        },
+        "station_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Station Id",
+          "type": "string"
+        },
+        "task_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "view_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "View Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "object_number",
+        "view_id",
+        "station_id",
+        "interaction"
+      ],
+      "title": "TaskSpatialIntent",
+      "type": "object"
+    },
+    "TaskTilingIntent": {
+      "additionalProperties": false,
+      "description": "Explicit reconstruction exercise, not evidence of an actual historic layout.",
+      "properties": {
+        "capability_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Capability Id",
+          "type": "string"
+        },
+        "fiction_notice": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Fiction Notice",
+          "type": "string"
+        },
+        "kind": {
+          "const": "coverage",
+          "default": "coverage",
+          "title": "Kind",
+          "type": "string"
+        },
+        "learning_goal": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Learning Goal",
+          "type": "string"
+        },
+        "rules": {
+          "$ref": "#/$defs/CoverageProblem"
+        },
+        "source_requirement": {
+          "$ref": "#/$defs/SourceChoiceRequirement"
+        },
+        "task_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "capability_id",
+        "rules",
+        "source_requirement",
+        "learning_goal",
+        "fiction_notice"
+      ],
+      "title": "TaskTilingIntent",
       "type": "object"
     },
     "Translation": {

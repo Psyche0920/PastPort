@@ -302,6 +302,10 @@ class BranchRunner:
             raise ServiceError("SELECTION_MISSING", "Direction missing")
         project = stages.database.project(run.state.project_id)
         request = DraftRequest(
+            authoring_mode="internal_preview"
+            if run.control.internal_preview_continuation
+            else "reviewed",
+            host_constraints=stages.authoring_constraints,
             evidence=stages.evidence_view(run),
             selected_candidate=run.selected_candidate,
             requirements=project.requirements,

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pastport-story"
+version = "0.1.0rc4"
+description = "Story-only SDK for registered PastPort evidence and matched environments"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.12,<3.13"
+dependencies = ["pastport[codex]==0.2.1rc4"]
+
+[project.scripts]
+pastport-story = "pastport_story.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pastport_story"]
+
+[tool.ruff]
+extend = "../../pyproject.toml"
+include = ["src/**/*.py"]
+
+[tool.uv.sources]
+pastport = { workspace = true }

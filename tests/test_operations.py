@@ -243,7 +243,11 @@ def test_confirmed_non_execution_allows_one_retry_with_the_same_saved_request(
         assert len(attempts) == 2 and attempts[0] == attempts[1]
         database = EditorialDatabase(tmp_path / "editorial.sqlite3")
         assert database.budget(run_id).used.model_requests == 1
-        assert database.interventions(run_id).reconciliations[0].command.action == "retry"
+        reconciliation = database.interventions(run_id).reconciliations[0]
+        assert reconciliation.command.action == "retry"
+        assert reconciliation.original_receipt is not None
+        assert reconciliation.original_receipt.response is None
+        assert reconciliation.original_receipt.error_code == "OUTCOME_UNKNOWN"
 
 
 def test_settlement_without_a_response_never_manufactures_completed_content(tmp_path: Path) -> None:
