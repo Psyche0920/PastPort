@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
-import {createGame,presentation as authored} from './content.mjs';
-import {stageTargets} from './shots.mjs';
-import {StoryPackageCompiler,museumSnapshotHash} from './story-package.mjs';
-import {GameSession} from './session.mjs';
+import {createGame,presentation as authored} from '../fixtures/game/content.mjs';
+import {stageTargets} from '../fixtures/game/shots.mjs';
+import {StoryPackageCompiler,museumSnapshotHash} from '../../tools/game-package/story-package.mjs';
+import {GameSession} from '../../frontend/game/session.mjs';
 
 /** Public synthetic geometry and media identities; no private museum assets. */
 async function fixture({rename=false}={}) {
@@ -73,7 +73,7 @@ test('generated scene/task identities play and restore without the Demo naming c
 test('accepts the shared NarrativeDraft contract without putting frontend fields into wire 0.1.0',async()=>{
   const {input,museum}=await fixture();
   const source=input.story.payload;
-  const referenceDraft=JSON.parse(await readFile(new URL('../../tests/fixtures/reference/draft-result.json',import.meta.url)));
+  const referenceDraft=JSON.parse(await readFile(new URL('../fixtures/reference/draft-result.json',import.meta.url)));
   const schema=JSON.parse(await readFile(new URL('../../schemas/draft-result.schema.json',import.meta.url)));
   const report=referenceDraft.payload.authoring_report[0];
   input.story={kind:'narrative-draft',package_id:'synthetic-import',payload:{package:{project_id:source.project_id,schema_version:source.schema_version,content_version:source.content_version,evidence_package_hash:source.evidence_package_hash,candidate_id:'synthetic-candidate',routes:[{artifact_id:'synthetic-route',project_id:source.project_id,kind:'route',schema_version:'0.1.0',content_version:'1',sha256:'c'.repeat(64)}],game:source.game,fiction_notice:'Synthetic test fiction, not historical evidence.'},authoring_report:[report],unresolved_items:[]}};

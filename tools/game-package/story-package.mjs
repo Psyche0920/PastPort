@@ -1,11 +1,10 @@
-import {PlayerContext} from './engine/context.mjs';
-import {SchemaValidator, contentHash, sameSet} from './engine/validation.mjs';
-import {prepareGameplayPlan} from './gameplay.mjs';
-import {validateNavigation} from './navigation.mjs';
+import {PlayerContext} from '../../src/pastport/player/context.mjs';
+import {SchemaValidator, contentHash, sameSet} from '../../src/pastport/player/validation.mjs';
+import {prepareGameplayPlan} from '../../gameplay/gameplay.mjs';
+import {validateNavigation} from '../../frontend/game/navigation.mjs';
 
-export class StoryPackageError extends Error {
-  constructor(code, message) { super(message); this.name='StoryPackageError'; this.code=code; }
-}
+import {StoryPackageError, museumSnapshot, museumSnapshotHash} from '../../gameplay/contracts.mjs';
+export {StoryPackageError, museumSnapshot, museumSnapshotHash};
 const requireValue=(condition,code,message)=>{if(!condition)throw new StoryPackageError(code,message);};
 const unique=values=>new Set(values).size===values.length;
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -13,15 +12,6 @@ const keys=(value,allowed,required=allowed)=>{
   requireValue(object(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>allowed.includes(key)), 'STORY_INPUT_INVALID', 'Unexpected or missing story package fields');
 };
 const displayText=value=>typeof value==='string'&&value.trim().length>0||object(value)&&['zh','en'].every(locale=>typeof value[locale]==='string'&&value[locale].trim().length>0);
-
-/** Pin reviewed museum data without importing the previous story or changing the review store. */
-export function museumSnapshot(presentation) {
-  const value=Object.fromEntries(['objects','tourId','shots','panoramaHashes','scenes','walkArea','sourceNotes','runtimeCapabilities'].map(key=>[key,presentation[key]]));
-  if(presentation.spatialContext)value.spatialContext=structuredClone(presentation.spatialContext);
-  return value;
-}
-
-export const museumSnapshotHash=async museum=>contentHash({snapshot:JSON.stringify(museumSnapshot(museum))});
 
 /** A local, versioned bridge; the shared wire package and rules remain unchanged. */
 export class StoryPackageCompiler {

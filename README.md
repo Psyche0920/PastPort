@@ -6,14 +6,14 @@
 
 ## 直接试玩
 
-[打开本轮 3D 试玩](http://127.0.0.1:18838/?scene=3d)。恢复到测试结局时，点“重新开始”。链接仅在本机服务运行时可用。
+[打开本轮 3D 试玩](http://127.0.0.1:18839/?scene=3d)。恢复到测试结局时，点“重新开始”。链接仅在本机服务运行时可用。
 
 当前工作区：`/Users/hanweijia/PastPort`。
 
 服务已运行时直接打开链接；服务关闭后，在该目录执行：
 
 ```sh
-PASTPORT_PORT=18838 node var/main-sdk-integration-20261101/run-02/game-3d/serve3d.mjs
+PASTPORT_PORT=18839 node var/runtime-layout-20261101/release-run/game-3d/serve3d.mjs
 ```
 
 保持终端打开；Ctrl+C 停止。**无需另外启动组包器服务，也不用把网址传给组包器。**
@@ -25,10 +25,10 @@ PASTPORT_PORT=18838 node var/main-sdk-integration-20261101/run-02/game-3d/serve3
 ```sh
 cd /Users/hanweijia/PastPort
 uv sync --extra authoring --extra game-making
-.venv/bin/pastport-game-trial --request var/main-sdk-integration-20261101/request-02.json
+.venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
 
-安装已完成时可跳过 `uv sync`。复跑命令自动完成：输入校验 → 保存故事复核 → 玩法准备 → 呈现绑定 → 组包 → 文件完整性检查。不新增模型调用。相同输入/实现可恢复已有阶段；改动后使用新输出目录，不能覆盖旧成果。
+安装已完成时可跳过 `uv sync`。上面的请求指向已验收的保存故事；输入和实现不变时复用已有阶段。复跑命令自动完成：输入校验 → 保存故事复核 → 玩法准备 → 呈现绑定 → 组包 → 文件完整性检查。不新增模型调用。相同输入/实现可恢复已有阶段；改动后使用新输出目录，不能覆盖旧成果。
 
 新故事生成是单独的 `pastport-story` 命令，使用模型额度，详见 Story SDK；本 README 的复跑命令不会启用它。其他机器需自行准备对应输入及请求 manifest。
 
@@ -58,6 +58,10 @@ main 用现有 LangGraph、SQLite 和 typed SDK 组织执行。Story 生成前�
 | Gameplay Preparation & Presentation | 0.1.0rc2 | [玩法参数、生命周期和呈现绑定](packages/gameplay-sdk/README.md) |
 | 共享运行时 | 0.2.1rc4 | main 与两个下游 SDK 共用，不复制引擎 |
 
+制作端的关系是：main 调用 Story SDK 产出剧情任务，再调用玩法准备与呈现 SDK 产出配置和绑定，最后由独立组包器封装。SDK 是调用入口，部分实现由共享的 `pastport` 核心包提供。
+
+玩家端只运行游戏包内的前端、玩法插件、JS 引擎及环境/故事数据；不运行 Python Story SDK 或玩法准备 SDK。玩法源码在 `gameplay/`，生成包目前携带完整的已登记玩法执行器，不做逐玩法代码裁剪。SDK 安装后读取随共享运行时携带的资源，不回本地源码仓库取文件。
+
 组包器是独立共享模块，尚未单独发行 SDK。当前支持已验证的双视点、资料阅读与来源判断后的矩形覆盖玩法，不代表任意小游戏都可直接接入。
 
 ## 目录与文件用途
@@ -78,20 +82,21 @@ flowchart TB
     Adapters --> Prep
     Shared --> Rules[skills + 玩法能力目录]
     Shared --> Model[受控模型调用]
-    Prep --> Host[prototype：插件、场景与界面宿主]
-    Adapters --> Pack[共享组包实现]
+    Prep --> Plugins[gameplay：玩法与插件]
+    Plugins --> Host[frontend/game：游戏前端]
+    Adapters --> Pack[tools/game-package：组包工具]
     Pack --> Host
     Host --> Player[共享 player 游戏状态与规则]
     App -.数据约束.-> Domain[domain / schemas]
 ```
 
-**目录是代码位置，SDK 是安装边界。** Story 和 Gameplay 的包提供调用入口，实现复用 `src/pastport/`；`prototype/story-agent-demo/` 仍承担当前宿主职责。它们不是三套独立游戏引擎。具体接口见技术 PRD，逐文件用途见下面清单。
+**目录是代码位置，SDK 是安装边界。** Story 和 Gameplay 的包提供调用入口，实现复用 `src/pastport/`；游戏前端在 `frontend/game/`，玩法代码在 `gameplay/`，组包工具在 `tools/game-package/`，引擎权威源码在 `src/pastport/player/`。组包时按显式资源清单生成运行副本，不维护第二份引擎源码。具体接口见技术 PRD，逐文件用途见下面清单。
 
 
 <!-- BEGIN FILE INVENTORY -->
 ## 文件结构与用途
 
-目录和文件名称均可点击；同一行说明该目录的职责或文件用途。SDK 内部文件在各 SDK README 展开，本页不重复。
+目录和文件名称均可点击；同一行说明用途。SDK内部文件见各自README；本树列出 321 个 main 与公共维护文件。
 
 <pre>
 PastPort/
@@ -101,52 +106,35 @@ PastPort/
 │   └── <a href=".github/copilot-instructions.md">copilot-instructions.md</a>  — Copilot 的仓库开发约束与规范入口。
 ├── <a href="docs/">docs/</a>  — 唯一技术 PRD：系统架构、接口和验收范围
 │   └── <a href="docs/TECHNICAL_PRD.md">TECHNICAL_PRD.md</a>  — 当前唯一技术 PRD：main/SDK 职责、架构、技术栈、输入输出及验收边界。
+├── <a href="frontend/">frontend/</a>  — 游戏前端源码；不承担故事生成或游戏组包
+│   └── <a href="frontend/game/">game/</a>  — 玩家页面：对话、任务操作、3D场景交互和会话
+│       ├── <a href="frontend/game/app.css">app.css</a>  — 试玩主界面的布局、对话、任务和玩法样式。
+│       ├── <a href="frontend/game/app.mjs">app.mjs</a>  — 试玩页面主控制器，连接对话、任务、插件、场景与操作。
+│       ├── <a href="frontend/game/cinematic-view.mjs">cinematic-view.mjs</a>  — 演出式视图控制：镜头、移动输入和物件交互。
+│       ├── <a href="frontend/game/dialogue.mjs">dialogue.mjs</a>  — Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue.
+│       ├── <a href="frontend/game/index.html">index.html</a>  — 试玩宿主页面的 HTML 入口。
+│       ├── <a href="frontend/game/interaction.mjs">interaction.mjs</a>  — 协调物件点击、查看与接近动作，避免交互手势冲突。
+│       ├── <a href="frontend/game/navigation.mjs">navigation.mjs</a>  — 检查导航连接、度量空间和行走约束是否合法。
+│       ├── <a href="frontend/game/scene3d-bridge.mjs">scene3d-bridge.mjs</a>  — Story-side interaction contract; the scene host alone owns navigation.
+│       ├── <a href="frontend/game/scene3d-navigation.mjs">scene3d-navigation.mjs</a>  — Preserve source navigation poses; screen bearings are camera-relative UI only.
+│       ├── <a href="frontend/game/scene3d-runtime.js">scene3d-runtime.js</a>  — 注入独立 3D 视图的运行桥接，传递导航和剧情交互，不修改上游场景文件。
+│       ├── <a href="frontend/game/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
+│       ├── <a href="frontend/game/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
+│       └── <a href="frontend/game/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+├── <a href="gameplay/">gameplay/</a>  — 玩法计划与呈现输入准备；复用插件和共享契约
+│   ├── <a href="gameplay/plugins/">plugins/</a>  — 本地小游戏执行器、拼板求解与生成的玩法能力目录
+│   │   ├── <a href="gameplay/plugins/coverage.mjs">coverage.mjs</a>  — 按实际拼板放置规则求解覆盖题，提前拒绝无解配置。
+│   │   ├── <a href="gameplay/plugins/gameplay-catalog.mjs">gameplay-catalog.mjs</a>  — 由共享能力 JSON 生成的浏览器能力目录，勿独立修改。
+│   │   └── <a href="gameplay/plugins/plugins.mjs">plugins.mjs</a>  — 本地 Activity 插件执行器，运行问答、归类、拼板等玩法并返回结果。
+│   ├── <a href="gameplay/contracts.mjs">contracts.mjs</a>  — 玩法准备与组包共用的博物馆快照身份和领域错误；不依赖前端或组包编译器。
+│   ├── <a href="gameplay/gameplay.mjs">gameplay.mjs</a>  — 将任务玩法声明转换为已登记插件的绑定计划并校验身份。
+│   └── <a href="gameplay/prepared-game.mjs">prepared-game.mjs</a>  — 读取玩法与呈现准备产物，检查故事、物件和能力目录身份后交给宿主。
 ├── <a href="packages/">packages/</a>  — 五个独立 SDK；点击各包查看源码及专属 README
 │   ├── <a href="packages/evidence-sdk/">evidence-sdk/</a>  — 证据 SDK：史料提取、照片观察、匹配与来源记录
 │   ├── <a href="packages/gameplay-sdk/">gameplay-sdk/</a>  — 玩法准备与呈现 SDK：编译玩法配置并绑定视点、导航和界面
 │   ├── <a href="packages/matched-environment-sdk/">matched-environment-sdk/</a>  — 环境 SDK：审核数据、VR/3D 挂载、导航与空间信息
 │   ├── <a href="packages/story-sdk/">story-sdk/</a>  — Story SDK：根据史料、环境与玩法能力生成剧情和任务
 │   └── <a href="packages/stylization-sdk/">stylization-sdk/</a>  — 转绘 SDK：保留环境结构，处理全景与三维外观
-├── <a href="prototype/">prototype/</a>  — 当前仍被构建流程引用的试玩宿主源码
-│   └── <a href="prototype/story-agent-demo/">story-agent-demo/</a>  — 游戏前端、插件、三维桥接和组包实现
-│       ├── <a href="prototype/story-agent-demo/engine/">engine/</a>  — 试玩宿主使用的共享 JavaScript 游戏规则与状态模块
-│       │   ├── <a href="prototype/story-agent-demo/engine/actions.mjs">actions.mjs</a>  — 处理玩家动作，检查前置条件并生成状态变化与回执。
-│       │   ├── <a href="prototype/story-agent-demo/engine/context.mjs">context.mjs</a>  — 建立游戏包对应的玩家上下文，校验身份、能力和规则。
-│       │   ├── <a href="prototype/story-agent-demo/engine/errors.mjs">errors.mjs</a>  — Safe operational errors never include source text, arbitrary keys or file paths.
-│       │   ├── <a href="prototype/story-agent-demo/engine/generated-schemas.mjs">generated-schemas.mjs</a>  — 由 Python 契约生成的玩家边界 Schema；应通过生成工具更新。
-│       │   ├── <a href="prototype/story-agent-demo/engine/rules.mjs">rules.mjs</a>  — 执行条件判断、规则匹配和效果计算。
-│       │   ├── <a href="prototype/story-agent-demo/engine/runtime.mjs">runtime.mjs</a>  — 共享游戏状态引擎，按动作推进状态并返回结果。
-│       │   └── <a href="prototype/story-agent-demo/engine/validation.mjs">validation.mjs</a>  — Schema 校验、规范化序列化、内容哈希和集合一致性工具。
-│       ├── <a href="prototype/story-agent-demo/app.css">app.css</a>  — 试玩主界面的布局、对话、任务和玩法样式。
-│       ├── <a href="prototype/story-agent-demo/app.mjs">app.mjs</a>  — 试玩页面主控制器，连接对话、任务、插件、场景与操作。
-│       ├── <a href="prototype/story-agent-demo/build-story-package.mjs">build-story-package.mjs</a>  — 独立游戏构建入口：读取故事及绑定计划，检查资源并组装可运行包。
-│       ├── <a href="prototype/story-agent-demo/cinematic-view.mjs">cinematic-view.mjs</a>  — 演出式视图控制：镜头、移动输入和物件交互。
-│       ├── <a href="prototype/story-agent-demo/content.mjs">content.mjs</a>  — Authored story and presentation data. All personal incidents are fictional.
-│       ├── <a href="prototype/story-agent-demo/coverage.mjs">coverage.mjs</a>  — 按实际拼板放置规则求解覆盖题，提前拒绝无解配置。
-│       ├── <a href="prototype/story-agent-demo/dialogue.mjs">dialogue.mjs</a>  — Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue.
-│       ├── <a href="prototype/story-agent-demo/gameplay-catalog.mjs">gameplay-catalog.mjs</a>  — 由共享能力 JSON 生成的浏览器能力目录，勿独立修改。
-│       ├── <a href="prototype/story-agent-demo/gameplay.mjs">gameplay.mjs</a>  — 将任务玩法声明转换为已登记插件的绑定计划并校验身份。
-│       ├── <a href="prototype/story-agent-demo/gameplay.test.mjs">gameplay.test.mjs</a>  — 玩法计划匹配与任务身份的自动回归测试。
-│       ├── <a href="prototype/story-agent-demo/generated-story.mjs">generated-story.mjs</a>  — 将生成的 Story 输入校验并转换成宿主可用的剧情与任务。
-│       ├── <a href="prototype/story-agent-demo/index.html">index.html</a>  — 试玩宿主页面的 HTML 入口。
-│       ├── <a href="prototype/story-agent-demo/interaction.mjs">interaction.mjs</a>  — 协调物件点击、查看与接近动作，避免交互手势冲突。
-│       ├── <a href="prototype/story-agent-demo/navigation.mjs">navigation.mjs</a>  — 检查导航连接、度量空间和行走约束是否合法。
-│       ├── <a href="prototype/story-agent-demo/plugins-contract.test.mjs">plugins-contract.test.mjs</a>  — 插件能力契约及配置的自动回归测试。
-│       ├── <a href="prototype/story-agent-demo/plugins.mjs">plugins.mjs</a>  — 本地 Activity 插件执行器，运行问答、归类、拼板等玩法并返回结果。
-│       ├── <a href="prototype/story-agent-demo/prepared-game.mjs">prepared-game.mjs</a>  — 读取玩法与呈现准备产物，检查故事、物件和能力目录身份后交给宿主。
-│       ├── <a href="prototype/story-agent-demo/prepared-game.test.mjs">prepared-game.test.mjs</a>  — 准备产物身份与宿主输入的自动回归测试。
-│       ├── <a href="prototype/story-agent-demo/scene3d-bridge.mjs">scene3d-bridge.mjs</a>  — Story-side interaction contract; the scene host alone owns navigation.
-│       ├── <a href="prototype/story-agent-demo/scene3d-bridge.test.mjs">scene3d-bridge.test.mjs</a>  — 3D 场景桥接与到达处理的自动回归测试。
-│       ├── <a href="prototype/story-agent-demo/scene3d-navigation.mjs">scene3d-navigation.mjs</a>  — Preserve source navigation poses; screen bearings are camera-relative UI only.
-│       ├── <a href="prototype/story-agent-demo/scene3d-runtime.js">scene3d-runtime.js</a>  — 注入独立 3D 视图的运行桥接，传递导航和剧情交互，不修改上游场景文件。
-│       ├── <a href="prototype/story-agent-demo/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
-│       ├── <a href="prototype/story-agent-demo/serve3d.mjs">serve3d.mjs</a>  — 本地 3D 试玩 HTTP 服务，提供生成包及隔离场景资源。
-│       ├── <a href="prototype/story-agent-demo/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
-│       ├── <a href="prototype/story-agent-demo/shots.mjs">shots.mjs</a>  — Per-object staging data; floor masks are game presentation, not surveyed geometry.
-│       ├── <a href="prototype/story-agent-demo/spatial-navigation.test.mjs">spatial-navigation.test.mjs</a>  — 空间导航与移动约束的自动回归测试。
-│       ├── <a href="prototype/story-agent-demo/story-package.mjs">story-package.mjs</a>  — 故事包编译器，校验博物馆快照与契约并生成宿主输入。
-│       ├── <a href="prototype/story-agent-demo/story-package.test.mjs">story-package.test.mjs</a>  — 故事包编译与资源绑定的自动回归测试。
-│       └── <a href="prototype/story-agent-demo/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
 ├── <a href="schemas/">schemas/</a>  — 由类型模型生成的 JSON Schema 边界契约
 │   ├── <a href="schemas/action-request.schema.json">action-request.schema.json</a>  — 自动生成的 ActionRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
 │   ├── <a href="schemas/action-result.schema.json">action-result.schema.json</a>  — 自动生成的 ActionResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
@@ -352,6 +340,9 @@ PastPort/
 │   ├── <a href="tests/browser/">browser/</a>  — 浏览器工作台交互测试
 │   │   └── <a href="tests/browser/workbench.test.mjs">workbench.test.mjs</a>  — 工作台浏览器交互的自动回归测试。
 │   ├── <a href="tests/fixtures/">fixtures/</a>  — 自动测试专用输入与预期数据
+│   │   ├── <a href="tests/fixtures/game/">game/</a>  — 旧故事与空间目标的测试样例；不参与正式游戏构建
+│   │   │   ├── <a href="tests/fixtures/game/content.mjs">content.mjs</a>  — Authored story and presentation data. All personal incidents are fictional.
+│   │   │   └── <a href="tests/fixtures/game/shots.mjs">shots.mjs</a>  — Per-object staging data; floor masks are game presentation, not surveyed geometry.
 │   │   └── <a href="tests/fixtures/reference/">reference/</a>  — Schema、工作流及玩家状态的合成参考样例
 │   │       ├── <a href="tests/fixtures/reference/action-request.json">action-request.json</a>  — 玩家动作请求的测试夹具；用于契约及行为验证，不是正式项目数据。
 │   │       ├── <a href="tests/fixtures/reference/assembly-request.json">assembly-request.json</a>  — 游戏装配请求的测试夹具；用于契约及行为验证，不是正式项目数据。
@@ -400,6 +391,14 @@ PastPort/
 │   │       ├── <a href="tests/fixtures/reference/vector-stale_revision.json">vector-stale_revision.json</a>  — 过期版本拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
 │   │       ├── <a href="tests/fixtures/reference/vector-success.json">vector-success.json</a>  — 成功动作状态变化的测试夹具；用于契约及行为验证，不是正式项目数据。
 │   │       └── <a href="tests/fixtures/reference/workflow-state.json">workflow-state.json</a>  — 工作流状态的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   ├── <a href="tests/game/">game/</a>  — 游戏前端、插件、导航和组包资源的自动回归测试
+│   │   ├── <a href="tests/game/gameplay.test.mjs">gameplay.test.mjs</a>  — 玩法计划匹配与任务身份的自动回归测试。
+│   │   ├── <a href="tests/game/plugins-contract.test.mjs">plugins-contract.test.mjs</a>  — 插件能力契约及配置的自动回归测试。
+│   │   ├── <a href="tests/game/prepared-game.test.mjs">prepared-game.test.mjs</a>  — 准备产物身份与宿主输入的自动回归测试。
+│   │   ├── <a href="tests/game/runtime-assets.test.mjs">runtime-assets.test.mjs</a>  — 验证组包使用权威引擎、导入不越界、场景注入上下文及拒绝覆盖已有文件。
+│   │   ├── <a href="tests/game/scene3d-bridge.test.mjs">scene3d-bridge.test.mjs</a>  — 3D 场景桥接与到达处理的自动回归测试。
+│   │   ├── <a href="tests/game/spatial-navigation.test.mjs">spatial-navigation.test.mjs</a>  — 空间导航与移动约束的自动回归测试。
+│   │   └── <a href="tests/game/story-package.test.mjs">story-package.test.mjs</a>  — 故事包编译与资源绑定的自动回归测试。
 │   ├── <a href="tests/api-client.test.mjs">api-client.test.mjs</a>  — 后台 API 客户端请求与错误的自动回归测试。
 │   ├── <a href="tests/player-components.test.mjs">player-components.test.mjs</a>  — 玩家组件准备与运行边界的自动回归测试。
 │   ├── <a href="tests/player-runtime.test.mjs">player-runtime.test.mjs</a>  — 共享玩家状态运行规则的自动回归测试。
@@ -439,6 +438,12 @@ PastPort/
 │   ├── <a href="tests/test_workflow_branches.py">test_workflow_branches.py</a>  — 回归测试：Real HTTP/SQLite/graph branch tests with fixed, explicitly synthetic counterpart modules.
 │   └── <a href="tests/test_workflow_control.py">test_workflow_control.py</a>  — 回归测试：Skill control translation preserves the frozen module vocabulary and human authority.
 ├── <a href="tools/">tools/</a>  — 契约、仓库、文档、玩法生命周期与呈现工具
+│   ├── <a href="tools/game-package/">game-package/</a>  — 独立组包工具：故事适配、资源发布、封装和试玩服务
+│   │   ├── <a href="tools/game-package/build-story-package.mjs">build-story-package.mjs</a>  — 独立游戏构建入口：读取故事及绑定计划，检查资源并组装可运行包。
+│   │   ├── <a href="tools/game-package/generated-story.mjs">generated-story.mjs</a>  — 将生成的 Story 输入校验并转换成宿主可用的剧情与任务。
+│   │   ├── <a href="tools/game-package/runtime-assets.mjs">runtime-assets.mjs</a>  — 显式游戏资源清单与发布器：从各模块收集源码，重定位浏览器导入并保持生成包布局。
+│   │   ├── <a href="tools/game-package/serve3d.mjs">serve3d.mjs</a>  — 本地 3D 试玩 HTTP 服务，提供生成包及隔离场景资源。
+│   │   └── <a href="tools/game-package/story-package.mjs">story-package.mjs</a>  — 故事包编译器，校验博物馆快照与契约并生成宿主输入。
 │   ├── <a href="tools/check_contracts.py">check_contracts.py</a>  — Export deterministic schemas or check committed schemas and complete wire samples.
 │   ├── <a href="tools/check_handoff.py">check_handoff.py</a>  — Check the deliberately small current documentation contract.
 │   ├── <a href="tools/check_javascript.mjs">check_javascript.mjs</a>  — Syntax and content-rendering guard for the native JS surfaces.
@@ -465,7 +470,7 @@ PastPort/
 | main Python 回归 | 523 项通过 |
 | 严格类型检查 | 127 文件通过 |
 | Schema/样例一致性 | 39 个契约通过 |
-| JS 绑定与玩法检查 | 26 项通过，1 项无关私有夹具跳过 |
+| JS 游戏与组包回归 | 35 项通过，1 项无关私有夹具跳过 |
 | 仓库外安装 | 六个发行文件共同安装、联跑及文件身份校验通过 |
 | 真实材料与试玩 | 62 页原件导出、两点位、三任务、三块板、两结局自动检查和浏览器通关 |
 
@@ -475,6 +480,6 @@ PastPort/
 
 唯一统一说明：[技术 PRD · 1.0 初稿](docs/TECHNICAL_PRD.md)。包含 workflow architecture、tech stack、各模块输入输出、权限预算、恢复、测试和下一阶段。
 
-本轮请求、验收记录、截图及 wheel 在 `var/main-sdk-integration-20261101/`，游戏包在其中的 `run-02/game-3d/`。这些是本地忽略产物，不是 GitHub 上已发布的文件。
+本次拆分后的请求、验收记录、截图及六个 wheel 在 `var/runtime-layout-20261101/`，当前游戏包为其中的 `release-run/game-3d/`。原先 `var/main-sdk-integration-20261101/run-01/` 和 `run-02/` 两份试玩保留。这些是本地产物，不随 GitHub 源码推送。
 
 项目许可证见 [LICENSE](LICENSE)。各 SDK 的来源与许可证通知随包保留；机器使用的 AGENTS/Skill 不是另一套用户操作指南。

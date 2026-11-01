@@ -58,16 +58,15 @@ class SDKGameMakingStages:
             ) from error
         digest = hashlib.sha256(json.dumps(versions, sort_keys=True).encode())
         root = runtime_root()
-        for relative in (
-            "tools/prepare_presentation.mjs",
-            "tools/gameplay_lifecycle.mjs",
-            "prototype/story-agent-demo/plugins.mjs",
-            "prototype/story-agent-demo/coverage.mjs",
-            "prototype/story-agent-demo/gameplay-catalog.mjs",
-            "prototype/story-agent-demo/prepared-game.mjs",
-            "prototype/story-agent-demo/build-story-package.mjs",
-        ):
-            digest.update(relative.encode() + b"\0" + (root / relative).read_bytes())
+        resources = [root / "tools/prepare_presentation.mjs", root / "tools/gameplay_lifecycle.mjs"]
+        for directory in ("frontend/game", "gameplay", "tools/game-package", "src/pastport/player"):
+            resources.extend(
+                path
+                for path in (root / directory).rglob("*")
+                if path.is_file() and path.suffix in {".mjs", ".js", ".html", ".css"}
+            )
+        for path in sorted(resources):
+            digest.update(str(path.relative_to(root)).encode() + b"\0" + path.read_bytes())
         for path in sorted(Path(__file__).resolve().parents[1].rglob("*.py")):
             digest.update(str(path.relative_to(Path(__file__).resolve().parents[1])).encode())
             digest.update(path.read_bytes())
@@ -189,7 +188,7 @@ class SDKGameMakingStages:
             result = subprocess.run(
                 [
                     node,
-                    str(runtime_root() / "prototype/story-agent-demo/build-story-package.mjs"),
+                    str(runtime_root() / "tools/game-package/build-story-package.mjs"),
                     "build",
                     "--input",
                     str(request.output_directory / "presentation/story-input.json"),

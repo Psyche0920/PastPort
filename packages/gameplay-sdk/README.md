@@ -41,6 +41,29 @@ museum and reading/coverage plugins, not arbitrary games or arbitrary scene coun
 | cli.py / __main__.py | Installed command and module entry points |
 | __init__.py / py.typed | Public typed exports |
 
+## Implementation and runtime ownership
+
+This SDK is the typed preparation/presentation entry, not the browser game engine.
+Its Python implementation is shared in [gameplay_preparation.py](../../src/pastport/application/gameplay_preparation.py).
+The verifier calls [gameplay/plugins](../../gameplay/plugins); presentation uses
+[prepared-game.mjs](../../gameplay/prepared-game.mjs) and the shared
+[contracts.mjs](../../gameplay/contracts.mjs). The player UI is in
+[frontend/game](../../frontend/game); the independent assembler is in
+[tools/game-package](../../tools/game-package).
+
+The `pastport` core wheel carries the required production resources. Installed SDKs
+use those bundled resources without requiring this checkout. The assembler includes
+frontend code, the registered activity executor, configuration and copies generated
+from the canonical [player engine](../../src/pastport/player) in the standalone game.
+The Python SDK itself is not shipped to the player's browser. Current bundling
+includes the whole registered executor, not a separate code slice per mechanic.
+
+The source-layout migration passed installed-wheel replay with real saved Story,
+plugin checks, browser source-failure retry, puzzle completion, viewpoint navigation
+and ending reload. This reuses saved generation; it is not fresh model generation.
+Local wheels and acceptance evidence are under `var/runtime-layout-20261101/` in the
+repository; they are not public registry releases.
+
 <!-- BEGIN FILE INVENTORY -->
 ## 文件结构与用途
 

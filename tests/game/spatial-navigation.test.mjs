@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateNavigation} from './navigation.mjs';
+import {validateNavigation} from '../../frontend/game/navigation.mjs';
 
 function fixture(){
  const node={key:'object:68',planning:{enabled_interactions:['inspect'],observation_positions:[{station:'spawn'}]}};
@@ -22,7 +22,7 @@ test('wrong task view, missing inspect binding, uncomputed ground and invalid ar
 });
 
 test('3D source inspection requires the task view and its registered interaction',async()=>{
- const {Scene3DView}=await import('./scene3d-view.mjs');
+ const {Scene3DView}=await import('../../frontend/game/scene3d-view.mjs');
  const presentation=fixture();
  const view=Object.create(Scene3DView.prototype);
  Object.assign(view,{world:2,arrivedSources:new Set(),readOnlySources:new Set(),session:{

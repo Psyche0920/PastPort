@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame,presentation} from './content.mjs';
-import {prepareGameplayPlan} from './gameplay.mjs';
+import {createGame,presentation} from '../fixtures/game/content.mjs';
+import {prepareGameplayPlan} from '../../gameplay/gameplay.mjs';
 
 function runtime() {
   return createGame('0'.repeat(64),'1'.repeat(64),[{number:68,media_sha256:'2'.repeat(64),media_path:'media/68.webp'}]);

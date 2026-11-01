@@ -1,5 +1,5 @@
-import {contentHash} from './engine/validation.mjs';
-import {StoryPackageError} from './story-package.mjs';
+import {contentHash} from '../../src/pastport/player/validation.mjs';
+import {StoryPackageError} from '../../gameplay/contracts.mjs';
 
 const requireValue=(value,code,message)=>{if(!value)throw new StoryPackageError(code,message);};
 

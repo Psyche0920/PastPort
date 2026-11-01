@@ -134,7 +134,13 @@ def test_generated_player_contracts_are_current() -> None:
 
 def test_javascript_components() -> None:
     result = subprocess.run(
-        ["node", "--test", "tests/player-components.test.mjs", "tests/player-runtime.test.mjs"],
+        [
+            "node",
+            "--test",
+            "tests/player-components.test.mjs",
+            "tests/player-runtime.test.mjs",
+            "tests/game/*.test.mjs",
+        ],
         capture_output=True,
         text=True,
         timeout=30,

@@ -3,14 +3,15 @@ import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {StoryPackageCompiler,museumSnapshotHash} from './story-package.mjs';
-import {openingLines} from './dialogue.mjs';
+import {openingLines} from '../../frontend/game/dialogue.mjs';
 import {generatedStoryInput} from './generated-story.mjs';
-import {preparedStoryInput} from './prepared-game.mjs';
+import {preparedStoryInput} from '../../gameplay/prepared-game.mjs';
+import {GameAssetPublisher} from './runtime-assets.mjs';
 
 const sourceRoot=path.dirname(fileURLToPath(import.meta.url));
 const json=value=>JSON.stringify(value,null,2)+'\n';
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-async function pluginHash(){const digest=createHash('sha256');for(const name of ['plugins.mjs','coverage.mjs','gameplay-catalog.mjs']){digest.update(name+'\0');digest.update(await readFile(path.join(sourceRoot,name)));digest.update('\0');}return digest.digest('hex');}
+async function pluginHash(){const digest=createHash('sha256');for(const name of ['plugins.mjs','coverage.mjs','gameplay-catalog.mjs']){digest.update(name+'\0');digest.update(await readFile(path.resolve(sourceRoot,'../../gameplay/plugins',name)));digest.update('\0');}return digest.digest('hex');}
 const requireValue=(value,message)=>{if(!value)throw new Error(message);};
 
 async function readJson(filename) {
@@ -88,8 +89,7 @@ async function build(inputFile,museumDirectory,output,preparationFile=null,envir
   await mkdir(path.dirname(output),{recursive:true});
   const staging=await mkdtemp(path.join(path.dirname(output),'.story-3d-build-'));
   try {
-    for(const file of ['index.html','app.mjs','app.css','dialogue.mjs','plugins.mjs','coverage.mjs','gameplay-catalog.mjs','session.mjs','gameplay.mjs','navigation.mjs','walkmesh.mjs','interaction.mjs','cinematic-view.mjs','scene3d-view.mjs','scene3d-runtime.js','scene3d-navigation.mjs','scene3d-bridge.mjs','serve3d.mjs'])await copyFile(path.join(sourceRoot,file),path.join(staging,file));
-    await copyTree(path.join(sourceRoot,'engine'),path.join(staging,'engine'));
+    await new GameAssetPublisher().publish(staging);
     await copyTree(path.join(museumDirectory,'assets'),path.join(staging,'assets'));
     for(const object of museum.objects) {
       const source=await childFile(museumDirectory,object.media_path),bytes=await readFile(source);

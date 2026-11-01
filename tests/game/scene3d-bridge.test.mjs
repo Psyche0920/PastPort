@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SceneStoryBridge} from './scene3d-bridge.mjs';
-import {sourceArrival,screenBearing} from './scene3d-navigation.mjs';
-import {Scene3DView} from './scene3d-view.mjs';
+import {SceneStoryBridge} from '../../frontend/game/scene3d-bridge.mjs';
+import {sourceArrival,screenBearing} from '../../frontend/game/scene3d-navigation.mjs';
+import {Scene3DView} from '../../frontend/game/scene3d-view.mjs';
 test('high and unreachable observations allow reading while reachable ground objects require arrival',()=>{
   const view=Object.create(Scene3DView.prototype);
   view.session={current:{id:'one'},presentation:{shots:[{number:2,available:true},{number:23,available:true},{number:40,available:false}],scenes:[{hotspots:[{number:2,pitch:53},{number:23,pitch:0},{number:40,pitch:0}]}]}};

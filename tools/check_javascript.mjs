@@ -16,6 +16,9 @@ let count = 0;
 for (const path of [
   ...(await files("src/pastport")),
   ...(await files("tests")),
+  ...(await files("frontend")),
+  ...(await files("gameplay")),
+  ...(await files("tools/game-package")),
 ]) {
   const result = spawnSync(process.execPath, ["--check", path], {
     encoding: "utf8",

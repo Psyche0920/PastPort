@@ -30,7 +30,7 @@ class _Result(BaseModel):
 class DemoGameplayVerifier:
     def __init__(self, root: Path) -> None:
         self.root = root.resolve()
-        self.plugin = self.root / "prototype/story-agent-demo/plugins.mjs"
+        self.plugin = self.root / "gameplay/plugins/plugins.mjs"
         self.runner = self.root / "tools/gameplay_lifecycle.mjs"
 
     def _plugin_hash(self) -> str:
@@ -47,7 +47,7 @@ class DemoGameplayVerifier:
             raise ServiceError("GAMEPLAY_PLUGIN_UNKNOWN", "No registered plugin for mechanic")
         return PluginIdentity(
             plugin_id=f"pastport.activity.{kind}",
-            entrypoint="prototype/story-agent-demo/plugins.mjs",
+            entrypoint="gameplay/plugins/plugins.mjs",
             code_sha256=self._plugin_hash(),
         )
 

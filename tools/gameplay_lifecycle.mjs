@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
-import {Activity} from '../prototype/story-agent-demo/plugins.mjs';
-import {gameplayCatalogSha256} from '../prototype/story-agent-demo/gameplay-catalog.mjs';
+import {Activity} from '../gameplay/plugins/plugins.mjs';
+import {gameplayCatalogSha256} from '../gameplay/plugins/gameplay-catalog.mjs';
 const config=JSON.parse(readFileSync(0,'utf8'));
 assert.ok(['dialogue','tiling'].includes(config.kind),'Unregistered verifier profile');
 const activity=new Activity(config),initial=activity.initialize();

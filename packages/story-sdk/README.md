@@ -31,6 +31,21 @@ this does not imply either package has been published to an external registry.
 Python 3.12 and a previously signed-in Codex CLI are required for real generation.
 Sol 6.1 Medium uses account quota; SDK installation and offline validation do not.
 
+## Implementation location
+
+The public SDK remains in this package. Story generation and validation are implemented
+in the shared runtime's [story_authoring.py](../../src/pastport/application/story_authoring.py),
+with model and workflow wiring in [model_narrative.py](../../src/pastport/adapters/model_narrative.py)
+and [story_workflow.py](../../src/pastport/adapters/story_workflow.py).
+Installing this SDK installs the matching `pastport` runtime; it does not fetch source
+files from a working checkout at execution time. Story outputs data for Gameplay;
+it does not package the frontend or execute minigames in the player's browser.
+
+The source-layout migration preserves these APIs. The paired installed SDKs passed
+saved-response revalidation, local preparation/presentation, assembly and browser
+acceptance without another model invocation. Current local candidate artifacts are
+under `var/runtime-layout-20261101/`; prior wheel archives are not rewritten.
+
 ## Install
 
 ```sh

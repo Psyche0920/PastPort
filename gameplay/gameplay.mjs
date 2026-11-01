@@ -1,5 +1,5 @@
-import {Activity} from './plugins.mjs';
-import {contentHash} from './engine/validation.mjs';
+import {Activity} from './plugins/plugins.mjs';
+import {contentHash} from '../src/pastport/player/validation.mjs';
 
 const definitions = new Map([
   ['question', {pluginId:'pastport.activity.question', version:'1.0.0'}],

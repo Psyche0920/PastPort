@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {Activity} from './plugins.mjs';
-import {gameplayCatalog} from './gameplay-catalog.mjs';
+import {Activity} from '../../gameplay/plugins/plugins.mjs';
+import {gameplayCatalog} from '../../gameplay/plugins/gameplay-catalog.mjs';
 
 const problem={kind:'tiling',width:4,height:4,pieces:[[1,4],[1,4],[1,4],[1,4]],rotation_allowed:true};
 const gate={target_claim_id:'cover',options:[{id:'pool',text:{zh:'庭院水池',en:'Courtyard pool'}},{id:'cover',text:{zh:'修缮顶盖',en:'Restoration cover'}}]};
@@ -43,13 +43,11 @@ test('legacy activity saves migrate on the next action without losing placements
 });
 
 test('shared schema validation accepts bounded dimension tuples and rejects wrong tuple values',async()=>{
-  const {SchemaValidator}=await import('./engine/validation.mjs');
+  const {SchemaValidator}=await import('../../src/pastport/player/validation.mjs');
   const validator=new SchemaValidator({});
   const schema={type:'array',minItems:2,maxItems:2,prefixItems:[{type:'integer',minimum:1,maximum:4},{type:'integer',minimum:1,maximum:4}],items:false};
   validator.assertSchema(schema,[1,4]);
   assert.throws(()=>validator.assertSchema(schema,[0,4]));
   assert.throws(()=>validator.assertSchema(schema,[1,4,2]));
   assert.throws(()=>validator.assertSchema(schema,['1',4]));
-  const source=await readFile(new URL('../../src/pastport/player/validation.mjs',import.meta.url),'utf8');
-  assert.equal(source,await readFile(new URL('./engine/validation.mjs',import.meta.url),'utf8'));
 });

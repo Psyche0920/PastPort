@@ -1,7 +1,7 @@
-import {contentHash} from './engine/validation.mjs';
-import {museumSnapshotHash,StoryPackageError} from './story-package.mjs';
-import {Activity} from './plugins.mjs';
-import {gameplayCatalog,gameplayCatalogSha256} from './gameplay-catalog.mjs';
+import {contentHash} from '../src/pastport/player/validation.mjs';
+import {museumSnapshotHash,StoryPackageError} from './contracts.mjs';
+import {Activity} from './plugins/plugins.mjs';
+import {gameplayCatalog,gameplayCatalogSha256} from './plugins/gameplay-catalog.mjs';
 
 const requireValue=(value,message)=>{if(!value)throw new StoryPackageError('PREPARED_GAME_INVALID',message);};
 const canonical=value=>Array.isArray(value)?'['+value.map(canonical).join(',')+']':value&&typeof value==='object'?'{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+canonical(value[key])).join(',')+'}':JSON.stringify(value);

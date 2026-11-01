@@ -47,7 +47,7 @@ class Story3DAssemblyAdapter:
         self.output_directory = output_directory.resolve()
         self.node_path = node_path
         self.timeout_seconds = timeout_seconds
-        self.builder = runtime_root() / "prototype/story-agent-demo/build-story-package.mjs"
+        self.builder = runtime_root() / "tools/game-package/build-story-package.mjs"
 
     def assemble(self, request: AssemblyRequest) -> AssemblyResult:
         result = self.assembler.assemble(request)

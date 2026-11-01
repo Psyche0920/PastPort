@@ -1,7 +1,7 @@
 import {DialoguePlayer,openingLines,spokenCopy} from './dialogue.mjs';
 import {validateNavigation} from './navigation.mjs';
 import {GameSession} from './session.mjs';
-import {Activity} from './plugins.mjs';
+import {Activity} from '../../gameplay/plugins/plugins.mjs';
 import {CinematicView} from './cinematic-view.mjs?rev=ui3-navigation-dialogue';
 import {Scene3DView} from './scene3d-view.mjs';
 const use3D=new URLSearchParams(location.search).get('scene')==='3d';

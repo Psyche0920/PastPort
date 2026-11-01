@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {contentHash} from './engine/validation.mjs';
-import {preparedStoryInput} from './prepared-game.mjs';
-import {gameplayCatalogSha256} from './gameplay-catalog.mjs';
+import {contentHash} from '../../src/pastport/player/validation.mjs';
+import {preparedStoryInput} from '../../gameplay/prepared-game.mjs';
+import {gameplayCatalogSha256} from '../../gameplay/plugins/gameplay-catalog.mjs';
 
 async function fixture(){
   const point={x:0,y:0.25,z:0};

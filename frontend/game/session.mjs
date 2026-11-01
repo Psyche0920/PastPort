@@ -1,9 +1,9 @@
-import {PlayerContext} from './engine/context.mjs';
-import {PlayerRuntime} from './engine/runtime.mjs';
-import {ConditionEvaluator} from './engine/rules.mjs';
-import {contentHash} from './engine/validation.mjs';
-import {Activity} from './plugins.mjs';
-import {prepareGameplayPlan} from './gameplay.mjs';
+import {PlayerContext} from '../../src/pastport/player/context.mjs';
+import {PlayerRuntime} from '../../src/pastport/player/runtime.mjs';
+import {ConditionEvaluator} from '../../src/pastport/player/rules.mjs';
+import {contentHash} from '../../src/pastport/player/validation.mjs';
+import {Activity} from '../../gameplay/plugins/plugins.mjs';
+import {prepareGameplayPlan} from '../../gameplay/gameplay.mjs';
 import {WalkMesh} from './walkmesh.mjs';
 export class SessionError extends Error {}
 const requireValue=(test,message)=>{if(!test)throw new SessionError(message);};
