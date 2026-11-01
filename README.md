@@ -4,7 +4,7 @@
 
 **当前：五个 SDK 已与本地 main 集成；真实材料的保存结果复跑、组包与 3D 通关已验证。命令行复跑不调用模型；Organizer分别提供缓存复用与明确授权后的新生成。源码通过 Git 管理；本地试玩产物不随源码发布。**
 
-[开发交接：伟胜 / Matt的修改范围、输入输出与任务](handoff.md)
+[开发交接：wcheung / maslan的修改范围、输入输出与任务](handoff.md)
 
 ## 启动与使用
 
@@ -562,7 +562,7 @@ PastPort/
 ├── <a href=".gitignore">.gitignore</a>  — 排除本地环境、私有输入、运行产物和缓存，防止误提交。
 ├── <a href=".python-version">.python-version</a>  — 指定项目使用的 Python 版本。
 ├── <a href="AGENTS.md">AGENTS.md</a>  — 开发代理的架构、实现、验证和文档维护约束。
-├── <a href="handoff.md">handoff.md</a>  — 伟胜与Matt的分工、修改位置、输入输出、接口兼容规则和下一步任务。
+├── <a href="handoff.md">handoff.md</a>  — wcheung与maslan的分工、修改位置、输入输出、接口兼容规则和下一步任务。
 ├── <a href="LICENSE">LICENSE</a>  — 本模块的许可证；分发源码或安装包时保留。
 ├── <a href="README.md">README.md</a>  — 项目安装、启动、复跑和逐文件导航的统一入口。
 ├── <a href="package-lock.json">package-lock.json</a>  — 锁定 Node 依赖树和完整性，支持可复现安装。
