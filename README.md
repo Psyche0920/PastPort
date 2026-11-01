@@ -91,365 +91,371 @@ flowchart TB
 <!-- BEGIN FILE INVENTORY -->
 ## 文件结构与用途
 
-每个文件的用途直接写在同一行。以下覆盖本范围内的 **325 个维护文件**；依赖环境、缓存、私有产物和历史备份不属于源码清单。
+目录和文件名称均可点击；同一行说明该目录的职责或文件用途。SDK 内部文件在各 SDK README 展开，本页不重复。
 
-```text
+<pre>
 PastPort/
-├── .github/
-│   ├── workflows/
-│   │   └── ci.yml  # GitHub Actions 持续集成：安装依赖并执行仓库检查与测试。
-│   └── copilot-instructions.md  # Copilot 的仓库开发约束与规范入口。
-├── docs/
-│   └── TECHNICAL_PRD.md  # 当前唯一技术 PRD：main/SDK 职责、架构、技术栈、输入输出及验收边界。
-├── prototype/
-│   └── story-agent-demo/
-│       ├── engine/
-│       │   ├── actions.mjs  # 处理玩家动作，检查前置条件并生成状态变化与回执。
-│       │   ├── context.mjs  # 建立游戏包对应的玩家上下文，校验身份、能力和规则。
-│       │   ├── errors.mjs  # Safe operational errors never include source text, arbitrary keys or file paths.
-│       │   ├── generated-schemas.mjs  # 由 Python 契约生成的玩家边界 Schema；应通过生成工具更新。
-│       │   ├── rules.mjs  # 执行条件判断、规则匹配和效果计算。
-│       │   ├── runtime.mjs  # 共享游戏状态引擎，按动作推进状态并返回结果。
-│       │   └── validation.mjs  # Schema 校验、规范化序列化、内容哈希和集合一致性工具。
-│       ├── app.css  # 试玩主界面的布局、对话、任务和玩法样式。
-│       ├── app.mjs  # 试玩页面主控制器，连接对话、任务、插件、场景与操作。
-│       ├── build-story-package.mjs  # 独立游戏构建入口：读取故事及绑定计划，检查资源并组装可运行包。
-│       ├── cinematic-view.mjs  # 演出式视图控制：镜头、移动输入和物件交互。
-│       ├── content.mjs  # Authored story and presentation data. All personal incidents are fictional.
-│       ├── coverage.mjs  # 按实际拼板放置规则求解覆盖题，提前拒绝无解配置。
-│       ├── dialogue.mjs  # Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue.
-│       ├── gameplay-catalog.mjs  # 由共享能力 JSON 生成的浏览器能力目录，勿独立修改。
-│       ├── gameplay.mjs  # 将任务玩法声明转换为已登记插件的绑定计划并校验身份。
-│       ├── gameplay.test.mjs  # 玩法计划匹配与任务身份的自动回归测试。
-│       ├── generated-story.mjs  # 将生成的 Story 输入校验并转换成宿主可用的剧情与任务。
-│       ├── index.html  # 试玩宿主页面的 HTML 入口。
-│       ├── interaction.mjs  # 协调物件点击、查看与接近动作，避免交互手势冲突。
-│       ├── navigation.mjs  # 检查导航连接、度量空间和行走约束是否合法。
-│       ├── plugins-contract.test.mjs  # 插件能力契约及配置的自动回归测试。
-│       ├── plugins.mjs  # 本地 Activity 插件执行器，运行问答、归类、拼板等玩法并返回结果。
-│       ├── prepared-game.mjs  # 读取玩法与呈现准备产物，检查故事、物件和能力目录身份后交给宿主。
-│       ├── prepared-game.test.mjs  # 准备产物身份与宿主输入的自动回归测试。
-│       ├── scene3d-bridge.mjs  # Story-side interaction contract; the scene host alone owns navigation.
-│       ├── scene3d-bridge.test.mjs  # 3D 场景桥接与到达处理的自动回归测试。
-│       ├── scene3d-navigation.mjs  # Preserve source navigation poses; screen bearings are camera-relative UI only.
-│       ├── scene3d-runtime.js  # 注入独立 3D 视图的运行桥接，传递导航和剧情交互，不修改上游场景文件。
-│       ├── scene3d-view.mjs  # 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
-│       ├── serve3d.mjs  # 本地 3D 试玩 HTTP 服务，提供生成包及隔离场景资源。
-│       ├── session.mjs  # 管理试玩会话、状态推进及存档恢复。
-│       ├── shots.mjs  # Per-object staging data; floor masks are game presentation, not surveyed geometry.
-│       ├── spatial-navigation.test.mjs  # 空间导航与移动约束的自动回归测试。
-│       ├── story-package.mjs  # 故事包编译器，校验博物馆快照与契约并生成宿主输入。
-│       ├── story-package.test.mjs  # 故事包编译与资源绑定的自动回归测试。
-│       └── walkmesh.mjs  # Screen-independent walkability, path finding and character locomotion.
-├── schemas/
-│   ├── action-request.schema.json  # 自动生成的 ActionRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── action-result.schema.json  # 自动生成的 ActionResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── action-vector.schema.json  # 自动生成的 ActionVector JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── artifact-ref.schema.json  # 自动生成的 ArtifactRef JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── assembly-request.schema.json  # 自动生成的 AssemblyRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── assembly-result.schema.json  # 自动生成的 AssemblyResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── budget-policy.schema.json  # 自动生成的 BudgetPolicy JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── bundle.schema.json  # 自动生成的 PackageBundle JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── discover-request.schema.json  # 自动生成的 DiscoverRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── discover-result.schema.json  # 自动生成的 ModuleResult[CandidateSetDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── draft-request.schema.json  # 自动生成的 DraftRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── draft-result.schema.json  # 自动生成的 ModuleResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── evidence-request.schema.json  # 自动生成的 EvidenceRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── evidence.schema.json  # 自动生成的 EvidencePackage JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── execution-metadata.schema.json  # 自动生成的 ExecutionMetadata JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── game.schema.json  # 自动生成的 GameContent JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── index-request.schema.json  # 自动生成的 IndexRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── index-result.schema.json  # 自动生成的 ModuleResult[SourceIndexDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── inventory-request.schema.json  # 自动生成的 InventoryRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── inventory-result.schema.json  # 自动生成的 ModuleResult[SourceManifestDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── narrative.schema.json  # 自动生成的 NarrativePackage JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── node-result.schema.json  # 自动生成的 NodeResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── player-state.schema.json  # 自动生成的 PlayerState JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── research-request.schema.json  # 自动生成的 ResearchRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── research-result.schema.json  # 自动生成的 ModuleResult[EvidenceFindings] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── review-decision.schema.json  # 自动生成的 ReviewDecision JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── review-request.schema.json  # 自动生成的 NarrativeReviewRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── review-result.schema.json  # 自动生成的 ModuleResult[NarrativeReview] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── revise-request.schema.json  # 自动生成的 ReviseRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── revise-result.schema.json  # 自动生成的 ModuleResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── route.schema.json  # 自动生成的 RouteRecord JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── runtime-capabilities.schema.json  # 自动生成的 RuntimeCapabilities JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── runtime.schema.json  # 自动生成的 RuntimePackage JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── skill-result.schema.json  # 自动生成的 SkillResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── source-locator.schema.json  # 自动生成的 SourceLocator JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── tool-request.schema.json  # 自动生成的 ToolRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── validation-report.schema.json  # 自动生成的 ValidationReport JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   ├── validation-request.schema.json  # 自动生成的 PackageValidationRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-│   └── workflow-state.schema.json  # 自动生成的 WorkflowState JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
-├── skills/
-│   ├── evidence-review/
-│   │   ├── references/
-│   │   │   └── review-examples.md  # 证据审查规则的示例与判定参考。
-│   │   └── SKILL.md  # main 证据审查/研究工作流规则：出处、核实状态和证据边界。
-│   ├── gameplay-preparation/
-│   │   └── SKILL.md  # 玩法准备工作规范：匹配、配置、验证、空间及呈现职责边界。
-│   └── narrative/
-│       ├── references/
-│       │   └── design-calibration.md  # 叙事设计校准参考，帮助检查任务意义、因果与表现质量。
-│       └── SKILL.md  # Story 生成约束：史料、映射、空间、玩法能力与故事任务输出。
-├── src/
-│   └── pastport/
-│       ├── adapters/
-│       │   ├── __init__.py  # PastPort service components.
-│       │   ├── assembly.py  # Build media manifests from reviewed asset identities; never from a prebuilt runtime template.
-│       │   ├── codex_provider.py  # Story-only model transport using the official SDK and saved ChatGPT login.
-│       │   ├── codex_traces.py  # Private local invocation evidence, separate from authoritative budget settlement.
-│       │   ├── content.py  # Offline adapters for explicitly supplied authored content; no model generation is implied.
-│       │   ├── database.py  # Short SQLite transactions with optimistic revisions and durable command consumption.
-│       │   ├── environment_spatial.py  # Read explicitly registered SDK worlds into Story's typed spatial input.
-│       │   ├── game_making.py  # Compose installed SDK entry points; preserve existing museum assets and Story.
-│       │   ├── gameplay_catalog.py  # Load the one packaged capability catalog; malformed catalogs cannot authorize games.
-│       │   ├── gameplay_verifier.py  # Verify only the registered local Demo Activity using a fixed Node runner.
-│       │   ├── matched_environment.py  # Read one registered native environment without running uploaded code or changing reviews.
-│       │   ├── model_narrative.py  # Story Agent adapter backed by the shared, metered model gateway.
-│       │   ├── model_provider.py  # Bounded Responses HTTP adapter and explicit deterministic test provider.
-│       │   ├── package_files.py  # Read regular local package files without following a file symlink or blocking on a pipe.
-│       │   ├── pdf_text.py  # Optional pypdf extraction in a disposable process with explicit resource limits.
-│       │   ├── player_process.py  # Bounded Node transport for the shared browser/headless preparation components.
-│       │   ├── player_saves.py  # Durable, version-checked SQLite saves with one transaction for state and receipts.
-│       │   ├── previews.py  # Private SQLite preview metadata and atomic player state, outside release storage.
-│       │   ├── resources.py  # Explicit local asset catalog and source URI adapter, bounded to one configured directory.
-│       │   ├── runtime_resources.py  # Resolve the single shared host distribution without requiring a checkout.
-│       │   ├── skills.py  # Read only server-approved Skill paths and fingerprint every included file.
-│       │   ├── story_3d.py  # Join approved shared assembly to the separately versioned local 3D delivery bridge.
-│       │   ├── story_materials.py  # Normalize explicitly registered upstream exports without regenerating matches.
-│       │   └── story_workflow.py  # Run the existing metered editorial graph up to its Story output boundary.
-│       ├── api/
-│       │   ├── __init__.py  # PastPort service components.
-│       │   ├── api-client.mjs  # Stable operation identities. Rendering and automatic retry policy belong to the view controller.
-│       │   ├── app.py  # Local authenticated editorial API with strict JSON transport and a durable background worker.
-│       │   ├── player-view.mjs  # 后台玩家组件视图：渲染状态并提交玩家操作。
-│       │   ├── private_views.py  # Private content routes; all bytes resolve through server-selected package/source identities.
-│       │   ├── request_logging.py  # Request correlation without retaining URLs, bodies, headers or client identities.
-│       │   ├── settings.py  # Server-side accounts and explicit test configuration.
-│       │   ├── transport.py  # Bounded strict JSON request parsing shared by authenticated routes.
-│       │   ├── views.mjs  # Safe DOM helpers; package and source text is never executable markup.
-│       │   ├── workbench.css  # 审核工作台页面布局与样式。
-│       │   ├── workbench.html  # 审核工作台页面结构与控件容器。
-│       │   └── workbench.mjs  # 审核工作台浏览器控制器，连接后端接口与页面操作。
-│       ├── application/
-│       │   ├── __init__.py  # PastPort service components.
-│       │   ├── activity.py  # Meter automatic workflow wall time once, excluding human and queue waiting.
-│       │   ├── change_impact.py  # Version-bound mechanical comparison; uncertainty never grants human approval.
-│       │   ├── environment_inputs.py  # Validate existing execution authority around explicitly injected local input reads.
-│       │   ├── execution_guard.py  # Validate persisted server grants before any shared child operation.
-│       │   ├── execution_models.py  # Pinned execution configuration and durable receipts, independent of provider SDKs.
-│       │   ├── execution_runtime.py  # Composition root for grants, provider configuration and services given to module factories.
-│       │   ├── game_making.py  # Checkpointed Main orchestration; SDKs retain their own internal execution authority.
-│       │   ├── gameplay_preparation.py  # Derive supported source-reading mechanics without rewriting authored task meaning.
-│       │   ├── model_gateway.py  # Account for a bounded model call before validating or returning its typed output.
-│       │   ├── models.py  # Application records use clear names and reuse the frozen shared contracts.
-│       │   ├── module_selection.py  # Explicit composition choices; injected implementations never silently fall back.
-│       │   ├── narrative_rules.py  # Compile explicit story choice bindings into the existing deterministic rule engine.
-│       │   ├── narrative_state.py  # Reconcile closed native Story state without inventing initial values or outcomes.
-│       │   ├── operational_service.py  # Human interventions preserve spending facts, review history and execution limits.
-│       │   ├── operations.py  # Authenticated intervention commands and immutable audit records.
-│       │   ├── package_loader.py  # Load a runtime package against trusted identity and explicit consumer capabilities.
-│       │   ├── player_components.py  # Bind shared JS preparation components to a trusted runtime package and release.
-│       │   ├── player_preparation.py  # Typed preparation protocol, separate from committed player actions and saves.
-│       │   ├── player_runtime.py  # Trusted shared-JS runtime contracts and the implementation of PlayerRuntimePort.
-│       │   ├── player_service.py  # Saved player sessions; JS owns gameplay and the repository owns atomic durability.
-│       │   ├── preview_normalization.py  # Mechanical repairs for explicitly authorized internal-preview model output.
-│       │   ├── preview_service.py  # Preview-only assembly and sessions; no review or release mutations occur here.
-│       │   ├── previews.py  # Typed private preview boundaries, independent of approval and publication.
-│       │   ├── publication.py  # Stage durable immutable files, then atomically publish their recorded identity.
-│       │   ├── reliability.py  # Typed authority, accounting and release records shared by local service boundaries.
-│       │   ├── research_execution.py  # One bounded research role: durable steps, no tool-invented permissions or new questions.
-│       │   ├── resources.py  # Enforce identity, size and raw-byte hashes for all injected resource readers.
-│       │   ├── routing.py  # Application-owned legal routes and cumulative research/revision limits.
-│       │   ├── service.py  # Application operations enforce identity, review authority and optimistic versions.
-│       │   ├── source_tools.py  # Registered-source reading and deterministic local tools, bounded by frozen questions.
-│       │   ├── source_views.py  # Read registered source bytes and saved extraction records without research/model calls.
-│       │   ├── story_authoring.py  # Story-only checks and readable export; no plugin, frontend or assembly work.
-│       │   ├── story_editing.py  # Stable game field locks and declared targets, shared by manual and module revisions.
-│       │   ├── task_copy.py  # Reject repeated inventory counts that contradict the canonical task requirements.
-│       │   ├── updates.py  # Revalidate immutable records rather than bypassing their boundary validators.
-│       │   └── workflow_control.py  # Durable control manifests; module suggestions cannot grant approval or reset limits.
-│       ├── data/
-│       │   └── gameplay-capabilities.json  # 共享玩法能力目录；Story 创作约束、玩法编译和宿主校验使用同源能力声明。
-│       ├── development/
-│       │   ├── __init__.py  # Offline development tools; never production module fallbacks.
-│       │   ├── acceptance_models.py  # Versioned development reports, separate from shared content and runtime contracts.
-│       │   ├── acceptance_scenario.py  # Authenticated test-only workflow scenario for interchangeable offline ports.
-│       │   ├── browser_check.py  # Run real-browser acceptance against a fresh synthetic localhost service.
-│       │   ├── browser_fixture.py  # Dedicated synthetic localhost server for browser acceptance, never production data.
-│       │   ├── fault_acceptance.py  # Run fixed F9 fault gates and retain a safe, version-bound local test report.
-│       │   ├── module_acceptance.py  # Run the offline F9 acceptance kit with replaceable trusted local factories.
-│       │   ├── module_check.py  # Run independent module smoke checks without an API, database or workflow worker.
-│       │   ├── player_check.py  # Run F7 shared-JS conformance and report actual full action-vector results.
-│       │   ├── player_contracts.py  # Export TypeScript declarations and the JSON schemas used by player components.
-│       │   └── reference_modules.py  # Independent, request-bound synthetic ports for the offline acceptance kit.
-│       ├── domain/
-│       │   ├── __init__.py  # Framework-independent domain contracts.
-│       │   ├── capabilities.py  # Explicit capabilities for the existing contract profile, independent of sample content.
-│       │   ├── common.py  # Immutable wire contracts and content identity; no framework or provider imports.
-│       │   ├── evidence.py  # Evidence candidates and snapshots; validation never grants human approval.
-│       │   ├── game.py  # Bounded, declarative game data. This module does not interpret actions.
-│       │   ├── game_making.py  # Private game-production inputs, with explicit reuse rather than implied generation.
-│       │   ├── gameplay_preparation.py  # Gameplay preparation outputs are plans, never committed Story state or UI code.
-│       │   ├── mechanics.py  # Shared task requirements and capability limits, independent of plugin implementations.
-│       │   ├── modules.py  # Typed module messages for independent implementation against contract 0.1.0.
-│       │   ├── narrative_repair.py  # Small narrative-state patches that leave authored prose and evidence untouched.
-│       │   ├── package_loading.py  # Safe, stable failures for package consumers, independent of HTTP or storage.
-│       │   ├── packages.py  # Cross-package contract checking, distinct from authorisation and runtime execution.
-│       │   ├── player_saves.py  # Player save ownership and immutable persistence identities.
-│       │   ├── resources.py  # Resource identities and local registrations, independent of provider or filesystem APIs.
-│       │   ├── story_inputs.py  # Read-only, source-bound authoring input; not a new game wire or approval grant.
-│       │   └── workflow.py  # Workflow messages express intent and observations, never authentication proof.
-│       ├── player/
-│       │   ├── __init__.py  # Shared browser/Node player engine, atomic action semantics and conformance utilities.
-│       │   ├── actions.mjs  # 处理玩家动作，检查前置条件并生成状态变化与回执。
-│       │   ├── context.mjs  # 建立游戏包对应的玩家上下文，校验身份、能力和规则。
-│       │   ├── contracts.d.ts  # 由 Python 玩家契约生成的 TypeScript 类型声明。
-│       │   ├── errors.mjs  # Safe operational errors never include source text, arbitrary keys or file paths.
-│       │   ├── generated-schemas.mjs  # 由 Python 契约生成的玩家边界 Schema；应通过生成工具更新。
-│       │   ├── preparation.d.mts  # 玩家组件准备接口的 TypeScript 类型声明。
-│       │   ├── preparation.mjs  # 将已验证游戏包准备为共享玩家组件上下文。
-│       │   ├── rules.mjs  # 执行条件判断、规则匹配和效果计算。
-│       │   ├── runner.mjs  # Node JSON 协议入口，供 Python 调用共享玩家运行时。
-│       │   ├── runtime.d.mts  # 玩家动作运行接口的 TypeScript 类型声明。
-│       │   ├── runtime.mjs  # 共享游戏状态引擎，按动作推进状态并返回结果。
-│       │   ├── validation.mjs  # Schema 校验、规范化序列化、内容哈希和集合一致性工具。
-│       │   └── vectors.mjs  # 执行玩家动作一致性测试向量。
-│       ├── ports/
-│       │   ├── __init__.py  # Dependency-injected module boundaries.
-│       │   ├── editorial.py  # Storage and content boundaries for application services and the workflow.
-│       │   ├── execution.py  # Shared services supplied to independently constructed content modules.
-│       │   ├── game_making.py  # Production-stage boundary; domain/application do not depend on SDK facades.
-│       │   ├── gameplay_preparation.py  # A local plugin verifier cannot approve Story, geometry or global task completion.
-│       │   ├── modules.py  # Process-local boundaries. No SDK, database, retry loop or fake success lives here.
-│       │   ├── package_files.py  # Bounded file input for runtime package loading.
-│       │   ├── player_preparation.py  # A typed process boundary; engine rules remain in the shared JavaScript implementation.
-│       │   ├── player_saves.py  # Atomic player persistence, separate from the authoritative editorial review database.
-│       │   ├── resources.py  # A provider-independent resource boundary; implementations enforce their own storage scope.
-│       │   ├── source_text.py  # Optional text extraction over already verified registered-source bytes.
-│       │   └── story_inputs.py  # Explicit read-only input injection; neither generation nor review mutation.
-│       ├── workflow/
-│       │   ├── __init__.py  # PastPort service components.
-│       │   ├── branching.py  # Bounded research, revision and professional review within the existing graph nodes.
-│       │   ├── stages.py  # Persist each stage result before graph checkpointing; human gates query business records.
-│       │   └── worker.py  # One durable local graph executor. Business records remain the authority at human gates.
-│       ├── __init__.py  # PastPort shared contracts.
-│       ├── __main__.py  # Start one authenticated local editorial service.
-│       ├── contracts.py  # Public schema registry; versions and wire names are part of the compatibility contract.
-│       ├── game_trial_cli.py  # Run Main's provider-disabled paired-SDK integration from one explicit manifest.
-│       ├── gameplay_cli.py  # Prepare supported gameplay from a locked Story run, without model or build calls.
-│       ├── observability.py  # Application-owned JSON diagnostics; never a business audit or payload dump.
-│       ├── py.typed  # PEP 561 类型标记，让安装方的类型检查器识别本包类型。
-│       └── story_cli.py  # Run Story authoring only, using explicitly selected upstream outputs.
-├── tests/
-│   ├── browser/
-│   │   └── workbench.test.mjs  # 工作台浏览器交互的自动回归测试。
-│   ├── fixtures/
-│   │   └── reference/
-│   │       ├── action-request.json  # 玩家动作请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── assembly-request.json  # 游戏装配请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── assembly-result.json  # 游戏装配结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── budget-policy.json  # 执行预算策略的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── bundle.json  # 内容 bundle 与路线引用的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── conflict-runtime.json  # 含规则效果冲突的运行包的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── discover-request.json  # 候选发现请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── discover-result.json  # 候选发现结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── draft-request.json  # 正式故事草稿请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── draft-result.json  # 正式故事草稿结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── evidence.json  # 证据包的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── execution-metadata.json  # 执行元数据的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── index-request.json  # 史料索引请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── index-result.json  # 史料索引结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-cross-project.json  # 跨项目引用拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-direction.json  # 无效方向引用拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-empty-complete.json  # 空完成结果拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-extra-field.json  # 额外字段拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-negative-budget.json  # 负预算拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-stale-bundle.json  # 过期 bundle 拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-tool-narrative.json  # 无效工具/叙事边界拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── invalid-untyped-budget.json  # 未正确类型化的预算拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── inventory-request.json  # 物件清单请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── inventory-result.json  # 物件清单结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── manifest.json  # 样例文件、Schema 与预期有效性清单的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── narrative.json  # 叙事包的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── player-state.json  # 玩家状态的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── reference-mapping.json  # 参考物件映射的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── research-request.json  # 研究请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── research-result.json  # 研究结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── resources.json  # 注册资源目录的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── review-request.json  # 审核请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── review-result.json  # 审核结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── revise-request.json  # 修订请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── revise-result.json  # 修订结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── route.json  # 路线包的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── runtime.json  # 运行游戏包的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── skill-result.json  # Skill 执行结果的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── synthetic-hatch.svg  # 自动测试使用的合成纹理图，不是正式环境资产。
-│   │       ├── synthetic-source.txt  # 仅供自动测试的合成史料文字，不是真实历史证据。
-│   │       ├── validation-request.json  # 校验请求的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── vector-effect-conflict.json  # 规则效果冲突的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── vector-idempotency.json  # 重复动作幂等的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── vector-locked_scene.json  # 锁定场景拒绝访问的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── vector-stale_revision.json  # 过期版本拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       ├── vector-success.json  # 成功动作状态变化的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   │       └── workflow-state.json  # 工作流状态的测试夹具；用于契约及行为验证，不是正式项目数据。
-│   ├── api-client.test.mjs  # 后台 API 客户端请求与错误的自动回归测试。
-│   ├── player-components.test.mjs  # 玩家组件准备与运行边界的自动回归测试。
-│   ├── player-runtime.test.mjs  # 共享玩家状态运行规则的自动回归测试。
-│   ├── test_change_impact.py  # 回归测试：Actual version-bound diff without granting or rewriting approvals.
-│   ├── test_codex_traces.py  # 回归测试：Codex lifecycle tests use a local SDK counterpart and make no model calls.
-│   ├── test_contracts.py  # 回归测试：Executable wire and cross-package invariants, not historical or player validation.
-│   ├── test_f9_faults.py  # 回归测试：F9 fault acceptance across injected modules and actual process death boundaries.
-│   ├── test_fault_acceptance.py  # 回归测试：A saved fault gate must report failures, skips and empty suites honestly.
-│   ├── test_game_making.py  # 回归测试：Main stage recovery must not repeat Story or accept stale inputs/resources.
-│   ├── test_gameplay_preparation.py  # 回归测试：Gameplay planning preserves Story meaning and does not certify presentation.
-│   ├── test_handoff_docs.py  # 回归测试：The user has one project entry, one technical PRD and five SDK guides.
-│   ├── test_internal_preview_continuation.py  # 回归测试：Private continuation preserves uncertainty without giving publication authority.
-│   ├── test_model_narrative.py  # 回归测试：Metered Story Agent adapter tests using deterministic local fixtures.
-│   ├── test_model_provider.py  # 回归测试：Provider wire behavior is tested through HTTPX without contacting a paid API.
-│   ├── test_module_acceptance.py  # 回归测试：Exercise the offline kit, rejection boundaries and isolated factory lifecycle.
-│   ├── test_module_check.py  # 回归测试：Verify the standalone handoff checker rejects incorrect adapters without starting services.
-│   ├── test_module_integration.py  # 回归测试：Replace either module and resource storage without modifying workflow internals.
-│   ├── test_narrative_state.py  # 回归测试：State reconciliation changes dead stores only; live state is never guessed.
-│   ├── test_observability.py  # 回归测试：Safe structured logs preserve correlation, cancellation and host configuration.
-│   ├── test_operations.py  # 回归测试：F6 interventions use authenticated HTTP, durable SQLite and the real workflow worker.
-│   ├── test_package_loader.py  # 回归测试：Package load boundaries: trusted hashes, unsupported gameplay and bounded file input.
-│   ├── test_pdf_source_text.py  # 回归测试：PDF extraction stays optional, located, bounded and inside the shared read ledger.
-│   ├── test_player_components.py  # 回归测试：Typed preparation components and trusted package bindings used by the F7 runtime.
-│   ├── test_player_runtime.py  # 回归测试：Real JS, durable SQLite CAS, crash recovery and private HTTP session isolation.
-│   ├── test_ports.py  # 回归测试：Module substitution against typed fixtures, independent of providers or a workflow graph.
-│   ├── test_preview_normalization.py  # 回归测试：Preview repairs preserve meaning-bearing data and leave ambiguous cases unresolved.
-│   ├── test_previews.py  # 回归测试：Actual draft previews before approval, private resources and isolation boundaries.
-│   ├── test_reliability.py  # 回归测试：Fault injection at business commits, reservations and private publication boundaries.
-│   ├── test_repository_checker.py  # 回归测试：Regression checks for real Markdown targets and false anchors in examples.
-│   ├── test_repository_docs.py  # 回归测试：Keep explicit documentation anchors valid without hiding broken references.
-│   ├── test_resources.py  # 回归测试：Resource storage is replaceable; identity, bounded reads and hashes stay enforced.
-│   ├── test_sdk_boundaries.py  # 回归测试：Package installation cannot silently activate providers or reverse SDK dependencies.
-│   ├── test_service.py  # 回归测试：Real SQLite, HTTP and LangGraph integration with explicitly synthetic content adapters.
-│   ├── test_shared_execution.py  # 回归测试：Shared calls use real HTTP/SQLite/graph boundaries with explicit fake provider receipts.
-│   ├── test_story_automation.py  # 回归测试：Story-only graph generates through its model port and never reaches game assembly.
-│   ├── test_story_inputs.py  # 回归测试：Native input reads preserve scope, review state, manual edits and pinned revisions.
-│   ├── test_workflow_branches.py  # 回归测试：Real HTTP/SQLite/graph branch tests with fixed, explicitly synthetic counterpart modules.
-│   └── test_workflow_control.py  # 回归测试：Skill control translation preserves the frozen module vocabulary and human authority.
-├── tools/
-│   ├── check_contracts.py  # Export deterministic schemas or check committed schemas and complete wire samples.
-│   ├── check_handoff.py  # Check the deliberately small current documentation contract.
-│   ├── check_javascript.mjs  # Syntax and content-rendering guard for the native JS surfaces.
-│   ├── check_repository.py  # Offline checks for repository guidance; this is not a product runtime test.
-│   ├── gameplay_lifecycle.mjs  # 运行实际 Activity 配置、有解性及完成/失败/退出/恢复生命周期检查。
-│   └── prepare_presentation.mjs  # 确定性合并故事、玩法计划和环境信息，生成视点、导航及界面绑定。
-├── .gitattributes  # Git 文件属性与换行等仓库级规则。
-├── .gitignore  # 排除本地环境、私有输入、运行产物和缓存，防止误提交。
-├── .python-version  # 指定项目使用的 Python 版本。
-├── AGENTS.md  # 开发代理的架构、实现、验证和文档维护约束。
-├── LICENSE  # 本模块的许可证；分发源码或安装包时保留。
-├── README.md  # 项目安装、启动、复跑和逐文件导航的统一入口。
-├── package-lock.json  # 锁定 Node 依赖树和完整性，支持可复现安装。
-├── package.json  # Node 工具依赖和检查、测试等脚本命令。
-├── pyproject.toml  # 本项目的包名、依赖、命令入口与构建配置。
-└── uv.lock  # 锁定 Python workspace 及第三方依赖解析版本。
-```
+├── <a href=".github/">.github/</a>  — 开发工具约束与 GitHub 自动检查配置
+│   ├── <a href=".github/workflows/">workflows/</a>  — GitHub Actions 持续集成任务
+│   │   └── <a href=".github/workflows/ci.yml">ci.yml</a>  — GitHub Actions 持续集成：安装依赖并执行仓库检查与测试。
+│   └── <a href=".github/copilot-instructions.md">copilot-instructions.md</a>  — Copilot 的仓库开发约束与规范入口。
+├── <a href="docs/">docs/</a>  — 唯一技术 PRD：系统架构、接口和验收范围
+│   └── <a href="docs/TECHNICAL_PRD.md">TECHNICAL_PRD.md</a>  — 当前唯一技术 PRD：main/SDK 职责、架构、技术栈、输入输出及验收边界。
+├── <a href="packages/">packages/</a>  — 五个独立 SDK；点击各包查看源码及专属 README
+│   ├── <a href="packages/evidence-sdk/">evidence-sdk/</a>  — 证据 SDK：史料提取、照片观察、匹配与来源记录
+│   ├── <a href="packages/gameplay-sdk/">gameplay-sdk/</a>  — 玩法准备与呈现 SDK：编译玩法配置并绑定视点、导航和界面
+│   ├── <a href="packages/matched-environment-sdk/">matched-environment-sdk/</a>  — 环境 SDK：审核数据、VR/3D 挂载、导航与空间信息
+│   ├── <a href="packages/story-sdk/">story-sdk/</a>  — Story SDK：根据史料、环境与玩法能力生成剧情和任务
+│   └── <a href="packages/stylization-sdk/">stylization-sdk/</a>  — 转绘 SDK：保留环境结构，处理全景与三维外观
+├── <a href="prototype/">prototype/</a>  — 当前仍被构建流程引用的试玩宿主源码
+│   └── <a href="prototype/story-agent-demo/">story-agent-demo/</a>  — 游戏前端、插件、三维桥接和组包实现
+│       ├── <a href="prototype/story-agent-demo/engine/">engine/</a>  — 试玩宿主使用的共享 JavaScript 游戏规则与状态模块
+│       │   ├── <a href="prototype/story-agent-demo/engine/actions.mjs">actions.mjs</a>  — 处理玩家动作，检查前置条件并生成状态变化与回执。
+│       │   ├── <a href="prototype/story-agent-demo/engine/context.mjs">context.mjs</a>  — 建立游戏包对应的玩家上下文，校验身份、能力和规则。
+│       │   ├── <a href="prototype/story-agent-demo/engine/errors.mjs">errors.mjs</a>  — Safe operational errors never include source text, arbitrary keys or file paths.
+│       │   ├── <a href="prototype/story-agent-demo/engine/generated-schemas.mjs">generated-schemas.mjs</a>  — 由 Python 契约生成的玩家边界 Schema；应通过生成工具更新。
+│       │   ├── <a href="prototype/story-agent-demo/engine/rules.mjs">rules.mjs</a>  — 执行条件判断、规则匹配和效果计算。
+│       │   ├── <a href="prototype/story-agent-demo/engine/runtime.mjs">runtime.mjs</a>  — 共享游戏状态引擎，按动作推进状态并返回结果。
+│       │   └── <a href="prototype/story-agent-demo/engine/validation.mjs">validation.mjs</a>  — Schema 校验、规范化序列化、内容哈希和集合一致性工具。
+│       ├── <a href="prototype/story-agent-demo/app.css">app.css</a>  — 试玩主界面的布局、对话、任务和玩法样式。
+│       ├── <a href="prototype/story-agent-demo/app.mjs">app.mjs</a>  — 试玩页面主控制器，连接对话、任务、插件、场景与操作。
+│       ├── <a href="prototype/story-agent-demo/build-story-package.mjs">build-story-package.mjs</a>  — 独立游戏构建入口：读取故事及绑定计划，检查资源并组装可运行包。
+│       ├── <a href="prototype/story-agent-demo/cinematic-view.mjs">cinematic-view.mjs</a>  — 演出式视图控制：镜头、移动输入和物件交互。
+│       ├── <a href="prototype/story-agent-demo/content.mjs">content.mjs</a>  — Authored story and presentation data. All personal incidents are fictional.
+│       ├── <a href="prototype/story-agent-demo/coverage.mjs">coverage.mjs</a>  — 按实际拼板放置规则求解覆盖题，提前拒绝无解配置。
+│       ├── <a href="prototype/story-agent-demo/dialogue.mjs">dialogue.mjs</a>  — Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue.
+│       ├── <a href="prototype/story-agent-demo/gameplay-catalog.mjs">gameplay-catalog.mjs</a>  — 由共享能力 JSON 生成的浏览器能力目录，勿独立修改。
+│       ├── <a href="prototype/story-agent-demo/gameplay.mjs">gameplay.mjs</a>  — 将任务玩法声明转换为已登记插件的绑定计划并校验身份。
+│       ├── <a href="prototype/story-agent-demo/gameplay.test.mjs">gameplay.test.mjs</a>  — 玩法计划匹配与任务身份的自动回归测试。
+│       ├── <a href="prototype/story-agent-demo/generated-story.mjs">generated-story.mjs</a>  — 将生成的 Story 输入校验并转换成宿主可用的剧情与任务。
+│       ├── <a href="prototype/story-agent-demo/index.html">index.html</a>  — 试玩宿主页面的 HTML 入口。
+│       ├── <a href="prototype/story-agent-demo/interaction.mjs">interaction.mjs</a>  — 协调物件点击、查看与接近动作，避免交互手势冲突。
+│       ├── <a href="prototype/story-agent-demo/navigation.mjs">navigation.mjs</a>  — 检查导航连接、度量空间和行走约束是否合法。
+│       ├── <a href="prototype/story-agent-demo/plugins-contract.test.mjs">plugins-contract.test.mjs</a>  — 插件能力契约及配置的自动回归测试。
+│       ├── <a href="prototype/story-agent-demo/plugins.mjs">plugins.mjs</a>  — 本地 Activity 插件执行器，运行问答、归类、拼板等玩法并返回结果。
+│       ├── <a href="prototype/story-agent-demo/prepared-game.mjs">prepared-game.mjs</a>  — 读取玩法与呈现准备产物，检查故事、物件和能力目录身份后交给宿主。
+│       ├── <a href="prototype/story-agent-demo/prepared-game.test.mjs">prepared-game.test.mjs</a>  — 准备产物身份与宿主输入的自动回归测试。
+│       ├── <a href="prototype/story-agent-demo/scene3d-bridge.mjs">scene3d-bridge.mjs</a>  — Story-side interaction contract; the scene host alone owns navigation.
+│       ├── <a href="prototype/story-agent-demo/scene3d-bridge.test.mjs">scene3d-bridge.test.mjs</a>  — 3D 场景桥接与到达处理的自动回归测试。
+│       ├── <a href="prototype/story-agent-demo/scene3d-navigation.mjs">scene3d-navigation.mjs</a>  — Preserve source navigation poses; screen bearings are camera-relative UI only.
+│       ├── <a href="prototype/story-agent-demo/scene3d-runtime.js">scene3d-runtime.js</a>  — 注入独立 3D 视图的运行桥接，传递导航和剧情交互，不修改上游场景文件。
+│       ├── <a href="prototype/story-agent-demo/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
+│       ├── <a href="prototype/story-agent-demo/serve3d.mjs">serve3d.mjs</a>  — 本地 3D 试玩 HTTP 服务，提供生成包及隔离场景资源。
+│       ├── <a href="prototype/story-agent-demo/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
+│       ├── <a href="prototype/story-agent-demo/shots.mjs">shots.mjs</a>  — Per-object staging data; floor masks are game presentation, not surveyed geometry.
+│       ├── <a href="prototype/story-agent-demo/spatial-navigation.test.mjs">spatial-navigation.test.mjs</a>  — 空间导航与移动约束的自动回归测试。
+│       ├── <a href="prototype/story-agent-demo/story-package.mjs">story-package.mjs</a>  — 故事包编译器，校验博物馆快照与契约并生成宿主输入。
+│       ├── <a href="prototype/story-agent-demo/story-package.test.mjs">story-package.test.mjs</a>  — 故事包编译与资源绑定的自动回归测试。
+│       └── <a href="prototype/story-agent-demo/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+├── <a href="schemas/">schemas/</a>  — 由类型模型生成的 JSON Schema 边界契约
+│   ├── <a href="schemas/action-request.schema.json">action-request.schema.json</a>  — 自动生成的 ActionRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/action-result.schema.json">action-result.schema.json</a>  — 自动生成的 ActionResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/action-vector.schema.json">action-vector.schema.json</a>  — 自动生成的 ActionVector JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/artifact-ref.schema.json">artifact-ref.schema.json</a>  — 自动生成的 ArtifactRef JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/assembly-request.schema.json">assembly-request.schema.json</a>  — 自动生成的 AssemblyRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/assembly-result.schema.json">assembly-result.schema.json</a>  — 自动生成的 AssemblyResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/budget-policy.schema.json">budget-policy.schema.json</a>  — 自动生成的 BudgetPolicy JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/bundle.schema.json">bundle.schema.json</a>  — 自动生成的 PackageBundle JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/discover-request.schema.json">discover-request.schema.json</a>  — 自动生成的 DiscoverRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/discover-result.schema.json">discover-result.schema.json</a>  — 自动生成的 ModuleResult[CandidateSetDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/draft-request.schema.json">draft-request.schema.json</a>  — 自动生成的 DraftRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/draft-result.schema.json">draft-result.schema.json</a>  — 自动生成的 ModuleResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/evidence-request.schema.json">evidence-request.schema.json</a>  — 自动生成的 EvidenceRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/evidence.schema.json">evidence.schema.json</a>  — 自动生成的 EvidencePackage JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/execution-metadata.schema.json">execution-metadata.schema.json</a>  — 自动生成的 ExecutionMetadata JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/game.schema.json">game.schema.json</a>  — 自动生成的 GameContent JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/index-request.schema.json">index-request.schema.json</a>  — 自动生成的 IndexRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/index-result.schema.json">index-result.schema.json</a>  — 自动生成的 ModuleResult[SourceIndexDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/inventory-request.schema.json">inventory-request.schema.json</a>  — 自动生成的 InventoryRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/inventory-result.schema.json">inventory-result.schema.json</a>  — 自动生成的 ModuleResult[SourceManifestDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/narrative.schema.json">narrative.schema.json</a>  — 自动生成的 NarrativePackage JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/node-result.schema.json">node-result.schema.json</a>  — 自动生成的 NodeResult JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/player-state.schema.json">player-state.schema.json</a>  — 自动生成的 PlayerState JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/research-request.schema.json">research-request.schema.json</a>  — 自动生成的 ResearchRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/research-result.schema.json">research-result.schema.json</a>  — 自动生成的 ModuleResult[EvidenceFindings] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/review-decision.schema.json">review-decision.schema.json</a>  — 自动生成的 ReviewDecision JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/review-request.schema.json">review-request.schema.json</a>  — 自动生成的 NarrativeReviewRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/review-result.schema.json">review-result.schema.json</a>  — 自动生成的 ModuleResult[NarrativeReview] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/revise-request.schema.json">revise-request.schema.json</a>  — 自动生成的 ReviseRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/revise-result.schema.json">revise-result.schema.json</a>  — 自动生成的 ModuleResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/route.schema.json">route.schema.json</a>  — 自动生成的 RouteRecord JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/runtime-capabilities.schema.json">runtime-capabilities.schema.json</a>  — 自动生成的 RuntimeCapabilities JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/runtime.schema.json">runtime.schema.json</a>  — 自动生成的 RuntimePackage JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/skill-result.schema.json">skill-result.schema.json</a>  — 自动生成的 SkillResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/source-locator.schema.json">source-locator.schema.json</a>  — 自动生成的 SourceLocator JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/tool-request.schema.json">tool-request.schema.json</a>  — 自动生成的 ToolRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/validation-report.schema.json">validation-report.schema.json</a>  — 自动生成的 ValidationReport JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/validation-request.schema.json">validation-request.schema.json</a>  — 自动生成的 PackageValidationRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   └── <a href="schemas/workflow-state.schema.json">workflow-state.schema.json</a>  — 自动生成的 WorkflowState JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+├── <a href="skills/">skills/</a>  — 随共享运行时携带的工作流规则源文件
+│   ├── <a href="skills/evidence-review/">evidence-review/</a>  — 证据核对与研究规则
+│   │   ├── <a href="skills/evidence-review/references/">references/</a>  — 证据审核的判定示例
+│   │   │   └── <a href="skills/evidence-review/references/review-examples.md">review-examples.md</a>  — 证据审查规则的示例与判定参考。
+│   │   └── <a href="skills/evidence-review/SKILL.md">SKILL.md</a>  — main 证据审查/研究工作流规则：出处、核实状态和证据边界。
+│   ├── <a href="skills/gameplay-preparation/">gameplay-preparation/</a>  — 玩法匹配、配置和呈现准备规则
+│   │   └── <a href="skills/gameplay-preparation/SKILL.md">SKILL.md</a>  — 玩法准备工作规范：匹配、配置、验证、空间及呈现职责边界。
+│   └── <a href="skills/narrative/">narrative/</a>  — 剧情与任务设计规则
+│       ├── <a href="skills/narrative/references/">references/</a>  — 叙事设计质量校准参考
+│       │   └── <a href="skills/narrative/references/design-calibration.md">design-calibration.md</a>  — 叙事设计校准参考，帮助检查任务意义、因果与表现质量。
+│       └── <a href="skills/narrative/SKILL.md">SKILL.md</a>  — Story 生成约束：史料、映射、空间、玩法能力与故事任务输出。
+├── <a href="src/">src/</a>  — 主项目与下游 SDK 共用的 Python 源码
+│   └── <a href="src/pastport/">pastport/</a>  — 共享运行时：服务、编排、业务用例和游戏规则
+│       ├── <a href="src/pastport/adapters/">adapters/</a>  — 具体实现与外部接线：模型、数据库、文件或 SDK
+│       │   ├── <a href="src/pastport/adapters/__init__.py">__init__.py</a>  — PastPort service components.
+│       │   ├── <a href="src/pastport/adapters/assembly.py">assembly.py</a>  — Build media manifests from reviewed asset identities; never from a prebuilt runtime template.
+│       │   ├── <a href="src/pastport/adapters/codex_provider.py">codex_provider.py</a>  — Story-only model transport using the official SDK and saved ChatGPT login.
+│       │   ├── <a href="src/pastport/adapters/codex_traces.py">codex_traces.py</a>  — Private local invocation evidence, separate from authoritative budget settlement.
+│       │   ├── <a href="src/pastport/adapters/content.py">content.py</a>  — Offline adapters for explicitly supplied authored content; no model generation is implied.
+│       │   ├── <a href="src/pastport/adapters/database.py">database.py</a>  — Short SQLite transactions with optimistic revisions and durable command consumption.
+│       │   ├── <a href="src/pastport/adapters/environment_spatial.py">environment_spatial.py</a>  — Read explicitly registered SDK worlds into Story&#x27;s typed spatial input.
+│       │   ├── <a href="src/pastport/adapters/game_making.py">game_making.py</a>  — Compose installed SDK entry points; preserve existing museum assets and Story.
+│       │   ├── <a href="src/pastport/adapters/gameplay_catalog.py">gameplay_catalog.py</a>  — Load the one packaged capability catalog; malformed catalogs cannot authorize games.
+│       │   ├── <a href="src/pastport/adapters/gameplay_verifier.py">gameplay_verifier.py</a>  — Verify only the registered local Demo Activity using a fixed Node runner.
+│       │   ├── <a href="src/pastport/adapters/matched_environment.py">matched_environment.py</a>  — Read one registered native environment without running uploaded code or changing reviews.
+│       │   ├── <a href="src/pastport/adapters/model_narrative.py">model_narrative.py</a>  — Story Agent adapter backed by the shared, metered model gateway.
+│       │   ├── <a href="src/pastport/adapters/model_provider.py">model_provider.py</a>  — Bounded Responses HTTP adapter and explicit deterministic test provider.
+│       │   ├── <a href="src/pastport/adapters/package_files.py">package_files.py</a>  — Read regular local package files without following a file symlink or blocking on a pipe.
+│       │   ├── <a href="src/pastport/adapters/pdf_text.py">pdf_text.py</a>  — Optional pypdf extraction in a disposable process with explicit resource limits.
+│       │   ├── <a href="src/pastport/adapters/player_process.py">player_process.py</a>  — Bounded Node transport for the shared browser/headless preparation components.
+│       │   ├── <a href="src/pastport/adapters/player_saves.py">player_saves.py</a>  — Durable, version-checked SQLite saves with one transaction for state and receipts.
+│       │   ├── <a href="src/pastport/adapters/previews.py">previews.py</a>  — Private SQLite preview metadata and atomic player state, outside release storage.
+│       │   ├── <a href="src/pastport/adapters/resources.py">resources.py</a>  — Explicit local asset catalog and source URI adapter, bounded to one configured directory.
+│       │   ├── <a href="src/pastport/adapters/runtime_resources.py">runtime_resources.py</a>  — Resolve the single shared host distribution without requiring a checkout.
+│       │   ├── <a href="src/pastport/adapters/skills.py">skills.py</a>  — Read only server-approved Skill paths and fingerprint every included file.
+│       │   ├── <a href="src/pastport/adapters/story_3d.py">story_3d.py</a>  — Join approved shared assembly to the separately versioned local 3D delivery bridge.
+│       │   ├── <a href="src/pastport/adapters/story_materials.py">story_materials.py</a>  — Normalize explicitly registered upstream exports without regenerating matches.
+│       │   └── <a href="src/pastport/adapters/story_workflow.py">story_workflow.py</a>  — Run the existing metered editorial graph up to its Story output boundary.
+│       ├── <a href="src/pastport/api/">api/</a>  — HTTP API、服务配置与工作台资源
+│       │   ├── <a href="src/pastport/api/__init__.py">__init__.py</a>  — PastPort service components.
+│       │   ├── <a href="src/pastport/api/api-client.mjs">api-client.mjs</a>  — Stable operation identities. Rendering and automatic retry policy belong to the view controller.
+│       │   ├── <a href="src/pastport/api/app.py">app.py</a>  — Local authenticated editorial API with strict JSON transport and a durable background worker.
+│       │   ├── <a href="src/pastport/api/player-view.mjs">player-view.mjs</a>  — 后台玩家组件视图：渲染状态并提交玩家操作。
+│       │   ├── <a href="src/pastport/api/private_views.py">private_views.py</a>  — Private content routes; all bytes resolve through server-selected package/source identities.
+│       │   ├── <a href="src/pastport/api/request_logging.py">request_logging.py</a>  — Request correlation without retaining URLs, bodies, headers or client identities.
+│       │   ├── <a href="src/pastport/api/settings.py">settings.py</a>  — Server-side accounts and explicit test configuration.
+│       │   ├── <a href="src/pastport/api/transport.py">transport.py</a>  — Bounded strict JSON request parsing shared by authenticated routes.
+│       │   ├── <a href="src/pastport/api/views.mjs">views.mjs</a>  — Safe DOM helpers; package and source text is never executable markup.
+│       │   ├── <a href="src/pastport/api/workbench.css">workbench.css</a>  — 审核工作台页面布局与样式。
+│       │   ├── <a href="src/pastport/api/workbench.html">workbench.html</a>  — 审核工作台页面结构与控件容器。
+│       │   └── <a href="src/pastport/api/workbench.mjs">workbench.mjs</a>  — 审核工作台浏览器控制器，连接后端接口与页面操作。
+│       ├── <a href="src/pastport/application/">application/</a>  — 业务用例与执行流程
+│       │   ├── <a href="src/pastport/application/__init__.py">__init__.py</a>  — PastPort service components.
+│       │   ├── <a href="src/pastport/application/activity.py">activity.py</a>  — Meter automatic workflow wall time once, excluding human and queue waiting.
+│       │   ├── <a href="src/pastport/application/change_impact.py">change_impact.py</a>  — Version-bound mechanical comparison; uncertainty never grants human approval.
+│       │   ├── <a href="src/pastport/application/environment_inputs.py">environment_inputs.py</a>  — Validate existing execution authority around explicitly injected local input reads.
+│       │   ├── <a href="src/pastport/application/execution_guard.py">execution_guard.py</a>  — Validate persisted server grants before any shared child operation.
+│       │   ├── <a href="src/pastport/application/execution_models.py">execution_models.py</a>  — Pinned execution configuration and durable receipts, independent of provider SDKs.
+│       │   ├── <a href="src/pastport/application/execution_runtime.py">execution_runtime.py</a>  — Composition root for grants, provider configuration and services given to module factories.
+│       │   ├── <a href="src/pastport/application/game_making.py">game_making.py</a>  — Checkpointed Main orchestration; SDKs retain their own internal execution authority.
+│       │   ├── <a href="src/pastport/application/gameplay_preparation.py">gameplay_preparation.py</a>  — Derive supported source-reading mechanics without rewriting authored task meaning.
+│       │   ├── <a href="src/pastport/application/model_gateway.py">model_gateway.py</a>  — Account for a bounded model call before validating or returning its typed output.
+│       │   ├── <a href="src/pastport/application/models.py">models.py</a>  — Application records use clear names and reuse the frozen shared contracts.
+│       │   ├── <a href="src/pastport/application/module_selection.py">module_selection.py</a>  — Explicit composition choices; injected implementations never silently fall back.
+│       │   ├── <a href="src/pastport/application/narrative_rules.py">narrative_rules.py</a>  — Compile explicit story choice bindings into the existing deterministic rule engine.
+│       │   ├── <a href="src/pastport/application/narrative_state.py">narrative_state.py</a>  — Reconcile closed native Story state without inventing initial values or outcomes.
+│       │   ├── <a href="src/pastport/application/operational_service.py">operational_service.py</a>  — Human interventions preserve spending facts, review history and execution limits.
+│       │   ├── <a href="src/pastport/application/operations.py">operations.py</a>  — Authenticated intervention commands and immutable audit records.
+│       │   ├── <a href="src/pastport/application/package_loader.py">package_loader.py</a>  — Load a runtime package against trusted identity and explicit consumer capabilities.
+│       │   ├── <a href="src/pastport/application/player_components.py">player_components.py</a>  — Bind shared JS preparation components to a trusted runtime package and release.
+│       │   ├── <a href="src/pastport/application/player_preparation.py">player_preparation.py</a>  — Typed preparation protocol, separate from committed player actions and saves.
+│       │   ├── <a href="src/pastport/application/player_runtime.py">player_runtime.py</a>  — Trusted shared-JS runtime contracts and the implementation of PlayerRuntimePort.
+│       │   ├── <a href="src/pastport/application/player_service.py">player_service.py</a>  — Saved player sessions; JS owns gameplay and the repository owns atomic durability.
+│       │   ├── <a href="src/pastport/application/preview_normalization.py">preview_normalization.py</a>  — Mechanical repairs for explicitly authorized internal-preview model output.
+│       │   ├── <a href="src/pastport/application/preview_service.py">preview_service.py</a>  — Preview-only assembly and sessions; no review or release mutations occur here.
+│       │   ├── <a href="src/pastport/application/previews.py">previews.py</a>  — Typed private preview boundaries, independent of approval and publication.
+│       │   ├── <a href="src/pastport/application/publication.py">publication.py</a>  — Stage durable immutable files, then atomically publish their recorded identity.
+│       │   ├── <a href="src/pastport/application/reliability.py">reliability.py</a>  — Typed authority, accounting and release records shared by local service boundaries.
+│       │   ├── <a href="src/pastport/application/research_execution.py">research_execution.py</a>  — One bounded research role: durable steps, no tool-invented permissions or new questions.
+│       │   ├── <a href="src/pastport/application/resources.py">resources.py</a>  — Enforce identity, size and raw-byte hashes for all injected resource readers.
+│       │   ├── <a href="src/pastport/application/routing.py">routing.py</a>  — Application-owned legal routes and cumulative research/revision limits.
+│       │   ├── <a href="src/pastport/application/service.py">service.py</a>  — Application operations enforce identity, review authority and optimistic versions.
+│       │   ├── <a href="src/pastport/application/source_tools.py">source_tools.py</a>  — Registered-source reading and deterministic local tools, bounded by frozen questions.
+│       │   ├── <a href="src/pastport/application/source_views.py">source_views.py</a>  — Read registered source bytes and saved extraction records without research/model calls.
+│       │   ├── <a href="src/pastport/application/story_authoring.py">story_authoring.py</a>  — Story-only checks and readable export; no plugin, frontend or assembly work.
+│       │   ├── <a href="src/pastport/application/story_editing.py">story_editing.py</a>  — Stable game field locks and declared targets, shared by manual and module revisions.
+│       │   ├── <a href="src/pastport/application/task_copy.py">task_copy.py</a>  — Reject repeated inventory counts that contradict the canonical task requirements.
+│       │   ├── <a href="src/pastport/application/updates.py">updates.py</a>  — Revalidate immutable records rather than bypassing their boundary validators.
+│       │   └── <a href="src/pastport/application/workflow_control.py">workflow_control.py</a>  — Durable control manifests; module suggestions cannot grant approval or reset limits.
+│       ├── <a href="src/pastport/data/">data/</a>  — 共享运行时携带的数据与玩法能力目录
+│       │   └── <a href="src/pastport/data/gameplay-capabilities.json">gameplay-capabilities.json</a>  — 共享玩法能力目录；Story 创作约束、玩法编译和宿主校验使用同源能力声明。
+│       ├── <a href="src/pastport/development/">development/</a>  — 开发用离线、故障、浏览器和模块验收工具
+│       │   ├── <a href="src/pastport/development/__init__.py">__init__.py</a>  — Offline development tools; never production module fallbacks.
+│       │   ├── <a href="src/pastport/development/acceptance_models.py">acceptance_models.py</a>  — Versioned development reports, separate from shared content and runtime contracts.
+│       │   ├── <a href="src/pastport/development/acceptance_scenario.py">acceptance_scenario.py</a>  — Authenticated test-only workflow scenario for interchangeable offline ports.
+│       │   ├── <a href="src/pastport/development/browser_check.py">browser_check.py</a>  — Run real-browser acceptance against a fresh synthetic localhost service.
+│       │   ├── <a href="src/pastport/development/browser_fixture.py">browser_fixture.py</a>  — Dedicated synthetic localhost server for browser acceptance, never production data.
+│       │   ├── <a href="src/pastport/development/fault_acceptance.py">fault_acceptance.py</a>  — Run fixed F9 fault gates and retain a safe, version-bound local test report.
+│       │   ├── <a href="src/pastport/development/module_acceptance.py">module_acceptance.py</a>  — Run the offline F9 acceptance kit with replaceable trusted local factories.
+│       │   ├── <a href="src/pastport/development/module_check.py">module_check.py</a>  — Run independent module smoke checks without an API, database or workflow worker.
+│       │   ├── <a href="src/pastport/development/player_check.py">player_check.py</a>  — Run F7 shared-JS conformance and report actual full action-vector results.
+│       │   ├── <a href="src/pastport/development/player_contracts.py">player_contracts.py</a>  — Export TypeScript declarations and the JSON schemas used by player components.
+│       │   └── <a href="src/pastport/development/reference_modules.py">reference_modules.py</a>  — Independent, request-bound synthetic ports for the offline acceptance kit.
+│       ├── <a href="src/pastport/domain/">domain/</a>  — 领域模型、身份及数据约束
+│       │   ├── <a href="src/pastport/domain/__init__.py">__init__.py</a>  — Framework-independent domain contracts.
+│       │   ├── <a href="src/pastport/domain/capabilities.py">capabilities.py</a>  — Explicit capabilities for the existing contract profile, independent of sample content.
+│       │   ├── <a href="src/pastport/domain/common.py">common.py</a>  — Immutable wire contracts and content identity; no framework or provider imports.
+│       │   ├── <a href="src/pastport/domain/evidence.py">evidence.py</a>  — Evidence candidates and snapshots; validation never grants human approval.
+│       │   ├── <a href="src/pastport/domain/game.py">game.py</a>  — Bounded, declarative game data. This module does not interpret actions.
+│       │   ├── <a href="src/pastport/domain/game_making.py">game_making.py</a>  — Private game-production inputs, with explicit reuse rather than implied generation.
+│       │   ├── <a href="src/pastport/domain/gameplay_preparation.py">gameplay_preparation.py</a>  — Gameplay preparation outputs are plans, never committed Story state or UI code.
+│       │   ├── <a href="src/pastport/domain/mechanics.py">mechanics.py</a>  — Shared task requirements and capability limits, independent of plugin implementations.
+│       │   ├── <a href="src/pastport/domain/modules.py">modules.py</a>  — Typed module messages for independent implementation against contract 0.1.0.
+│       │   ├── <a href="src/pastport/domain/narrative_repair.py">narrative_repair.py</a>  — Small narrative-state patches that leave authored prose and evidence untouched.
+│       │   ├── <a href="src/pastport/domain/package_loading.py">package_loading.py</a>  — Safe, stable failures for package consumers, independent of HTTP or storage.
+│       │   ├── <a href="src/pastport/domain/packages.py">packages.py</a>  — Cross-package contract checking, distinct from authorisation and runtime execution.
+│       │   ├── <a href="src/pastport/domain/player_saves.py">player_saves.py</a>  — Player save ownership and immutable persistence identities.
+│       │   ├── <a href="src/pastport/domain/resources.py">resources.py</a>  — Resource identities and local registrations, independent of provider or filesystem APIs.
+│       │   ├── <a href="src/pastport/domain/story_inputs.py">story_inputs.py</a>  — Read-only, source-bound authoring input; not a new game wire or approval grant.
+│       │   └── <a href="src/pastport/domain/workflow.py">workflow.py</a>  — Workflow messages express intent and observations, never authentication proof.
+│       ├── <a href="src/pastport/player/">player/</a>  — 共享 JavaScript 游戏状态、规则与动作运行时
+│       │   ├── <a href="src/pastport/player/__init__.py">__init__.py</a>  — Shared browser/Node player engine, atomic action semantics and conformance utilities.
+│       │   ├── <a href="src/pastport/player/actions.mjs">actions.mjs</a>  — 处理玩家动作，检查前置条件并生成状态变化与回执。
+│       │   ├── <a href="src/pastport/player/context.mjs">context.mjs</a>  — 建立游戏包对应的玩家上下文，校验身份、能力和规则。
+│       │   ├── <a href="src/pastport/player/contracts.d.ts">contracts.d.ts</a>  — 由 Python 玩家契约生成的 TypeScript 类型声明。
+│       │   ├── <a href="src/pastport/player/errors.mjs">errors.mjs</a>  — Safe operational errors never include source text, arbitrary keys or file paths.
+│       │   ├── <a href="src/pastport/player/generated-schemas.mjs">generated-schemas.mjs</a>  — 由 Python 契约生成的玩家边界 Schema；应通过生成工具更新。
+│       │   ├── <a href="src/pastport/player/preparation.d.mts">preparation.d.mts</a>  — 玩家组件准备接口的 TypeScript 类型声明。
+│       │   ├── <a href="src/pastport/player/preparation.mjs">preparation.mjs</a>  — 将已验证游戏包准备为共享玩家组件上下文。
+│       │   ├── <a href="src/pastport/player/rules.mjs">rules.mjs</a>  — 执行条件判断、规则匹配和效果计算。
+│       │   ├── <a href="src/pastport/player/runner.mjs">runner.mjs</a>  — Node JSON 协议入口，供 Python 调用共享玩家运行时。
+│       │   ├── <a href="src/pastport/player/runtime.d.mts">runtime.d.mts</a>  — 玩家动作运行接口的 TypeScript 类型声明。
+│       │   ├── <a href="src/pastport/player/runtime.mjs">runtime.mjs</a>  — 共享游戏状态引擎，按动作推进状态并返回结果。
+│       │   ├── <a href="src/pastport/player/validation.mjs">validation.mjs</a>  — Schema 校验、规范化序列化、内容哈希和集合一致性工具。
+│       │   └── <a href="src/pastport/player/vectors.mjs">vectors.mjs</a>  — 执行玩家动作一致性测试向量。
+│       ├── <a href="src/pastport/ports/">ports/</a>  — 业务依赖的 Protocol 接口契约
+│       │   ├── <a href="src/pastport/ports/__init__.py">__init__.py</a>  — Dependency-injected module boundaries.
+│       │   ├── <a href="src/pastport/ports/editorial.py">editorial.py</a>  — Storage and content boundaries for application services and the workflow.
+│       │   ├── <a href="src/pastport/ports/execution.py">execution.py</a>  — Shared services supplied to independently constructed content modules.
+│       │   ├── <a href="src/pastport/ports/game_making.py">game_making.py</a>  — Production-stage boundary; domain/application do not depend on SDK facades.
+│       │   ├── <a href="src/pastport/ports/gameplay_preparation.py">gameplay_preparation.py</a>  — A local plugin verifier cannot approve Story, geometry or global task completion.
+│       │   ├── <a href="src/pastport/ports/modules.py">modules.py</a>  — Process-local boundaries. No SDK, database, retry loop or fake success lives here.
+│       │   ├── <a href="src/pastport/ports/package_files.py">package_files.py</a>  — Bounded file input for runtime package loading.
+│       │   ├── <a href="src/pastport/ports/player_preparation.py">player_preparation.py</a>  — A typed process boundary; engine rules remain in the shared JavaScript implementation.
+│       │   ├── <a href="src/pastport/ports/player_saves.py">player_saves.py</a>  — Atomic player persistence, separate from the authoritative editorial review database.
+│       │   ├── <a href="src/pastport/ports/resources.py">resources.py</a>  — A provider-independent resource boundary; implementations enforce their own storage scope.
+│       │   ├── <a href="src/pastport/ports/source_text.py">source_text.py</a>  — Optional text extraction over already verified registered-source bytes.
+│       │   └── <a href="src/pastport/ports/story_inputs.py">story_inputs.py</a>  — Explicit read-only input injection; neither generation nor review mutation.
+│       ├── <a href="src/pastport/workflow/">workflow/</a>  — 工作流节点、阶段路由与恢复
+│       │   ├── <a href="src/pastport/workflow/__init__.py">__init__.py</a>  — PastPort service components.
+│       │   ├── <a href="src/pastport/workflow/branching.py">branching.py</a>  — Bounded research, revision and professional review within the existing graph nodes.
+│       │   ├── <a href="src/pastport/workflow/stages.py">stages.py</a>  — Persist each stage result before graph checkpointing; human gates query business records.
+│       │   └── <a href="src/pastport/workflow/worker.py">worker.py</a>  — One durable local graph executor. Business records remain the authority at human gates.
+│       ├── <a href="src/pastport/__init__.py">__init__.py</a>  — PastPort shared contracts.
+│       ├── <a href="src/pastport/__main__.py">__main__.py</a>  — Start one authenticated local editorial service.
+│       ├── <a href="src/pastport/contracts.py">contracts.py</a>  — Public schema registry; versions and wire names are part of the compatibility contract.
+│       ├── <a href="src/pastport/game_trial_cli.py">game_trial_cli.py</a>  — Run Main&#x27;s provider-disabled paired-SDK integration from one explicit manifest.
+│       ├── <a href="src/pastport/gameplay_cli.py">gameplay_cli.py</a>  — Prepare supported gameplay from a locked Story run, without model or build calls.
+│       ├── <a href="src/pastport/observability.py">observability.py</a>  — Application-owned JSON diagnostics; never a business audit or payload dump.
+│       ├── <a href="src/pastport/py.typed">py.typed</a>  — PEP 561 类型标记，让安装方的类型检查器识别本包类型。
+│       └── <a href="src/pastport/story_cli.py">story_cli.py</a>  — Run Story authoring only, using explicitly selected upstream outputs.
+├── <a href="tests/">tests/</a>  — main 的自动回归测试与测试夹具
+│   ├── <a href="tests/browser/">browser/</a>  — 浏览器工作台交互测试
+│   │   └── <a href="tests/browser/workbench.test.mjs">workbench.test.mjs</a>  — 工作台浏览器交互的自动回归测试。
+│   ├── <a href="tests/fixtures/">fixtures/</a>  — 自动测试专用输入与预期数据
+│   │   └── <a href="tests/fixtures/reference/">reference/</a>  — Schema、工作流及玩家状态的合成参考样例
+│   │       ├── <a href="tests/fixtures/reference/action-request.json">action-request.json</a>  — 玩家动作请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/assembly-request.json">assembly-request.json</a>  — 游戏装配请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/assembly-result.json">assembly-result.json</a>  — 游戏装配结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/budget-policy.json">budget-policy.json</a>  — 执行预算策略的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/bundle.json">bundle.json</a>  — 内容 bundle 与路线引用的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/conflict-runtime.json">conflict-runtime.json</a>  — 含规则效果冲突的运行包的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/discover-request.json">discover-request.json</a>  — 候选发现请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/discover-result.json">discover-result.json</a>  — 候选发现结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/draft-request.json">draft-request.json</a>  — 正式故事草稿请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/draft-result.json">draft-result.json</a>  — 正式故事草稿结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/evidence.json">evidence.json</a>  — 证据包的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/execution-metadata.json">execution-metadata.json</a>  — 执行元数据的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/index-request.json">index-request.json</a>  — 史料索引请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/index-result.json">index-result.json</a>  — 史料索引结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-cross-project.json">invalid-cross-project.json</a>  — 跨项目引用拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-direction.json">invalid-direction.json</a>  — 无效方向引用拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-empty-complete.json">invalid-empty-complete.json</a>  — 空完成结果拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-extra-field.json">invalid-extra-field.json</a>  — 额外字段拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-negative-budget.json">invalid-negative-budget.json</a>  — 负预算拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-stale-bundle.json">invalid-stale-bundle.json</a>  — 过期 bundle 拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-tool-narrative.json">invalid-tool-narrative.json</a>  — 无效工具/叙事边界拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/invalid-untyped-budget.json">invalid-untyped-budget.json</a>  — 未正确类型化的预算拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/inventory-request.json">inventory-request.json</a>  — 物件清单请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/inventory-result.json">inventory-result.json</a>  — 物件清单结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/manifest.json">manifest.json</a>  — 样例文件、Schema 与预期有效性清单的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/narrative.json">narrative.json</a>  — 叙事包的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/player-state.json">player-state.json</a>  — 玩家状态的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/reference-mapping.json">reference-mapping.json</a>  — 参考物件映射的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/research-request.json">research-request.json</a>  — 研究请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/research-result.json">research-result.json</a>  — 研究结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/resources.json">resources.json</a>  — 注册资源目录的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/review-request.json">review-request.json</a>  — 审核请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/review-result.json">review-result.json</a>  — 审核结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/revise-request.json">revise-request.json</a>  — 修订请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/revise-result.json">revise-result.json</a>  — 修订结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/route.json">route.json</a>  — 路线包的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/runtime.json">runtime.json</a>  — 运行游戏包的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/skill-result.json">skill-result.json</a>  — Skill 执行结果的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/synthetic-hatch.svg">synthetic-hatch.svg</a>  — 自动测试使用的合成纹理图，不是正式环境资产。
+│   │       ├── <a href="tests/fixtures/reference/synthetic-source.txt">synthetic-source.txt</a>  — 仅供自动测试的合成史料文字，不是真实历史证据。
+│   │       ├── <a href="tests/fixtures/reference/validation-request.json">validation-request.json</a>  — 校验请求的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/vector-effect-conflict.json">vector-effect-conflict.json</a>  — 规则效果冲突的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/vector-idempotency.json">vector-idempotency.json</a>  — 重复动作幂等的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/vector-locked_scene.json">vector-locked_scene.json</a>  — 锁定场景拒绝访问的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/vector-stale_revision.json">vector-stale_revision.json</a>  — 过期版本拒绝的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       ├── <a href="tests/fixtures/reference/vector-success.json">vector-success.json</a>  — 成功动作状态变化的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   │       └── <a href="tests/fixtures/reference/workflow-state.json">workflow-state.json</a>  — 工作流状态的测试夹具；用于契约及行为验证，不是正式项目数据。
+│   ├── <a href="tests/api-client.test.mjs">api-client.test.mjs</a>  — 后台 API 客户端请求与错误的自动回归测试。
+│   ├── <a href="tests/player-components.test.mjs">player-components.test.mjs</a>  — 玩家组件准备与运行边界的自动回归测试。
+│   ├── <a href="tests/player-runtime.test.mjs">player-runtime.test.mjs</a>  — 共享玩家状态运行规则的自动回归测试。
+│   ├── <a href="tests/test_change_impact.py">test_change_impact.py</a>  — 回归测试：Actual version-bound diff without granting or rewriting approvals.
+│   ├── <a href="tests/test_codex_traces.py">test_codex_traces.py</a>  — 回归测试：Codex lifecycle tests use a local SDK counterpart and make no model calls.
+│   ├── <a href="tests/test_contracts.py">test_contracts.py</a>  — 回归测试：Executable wire and cross-package invariants, not historical or player validation.
+│   ├── <a href="tests/test_f9_faults.py">test_f9_faults.py</a>  — 回归测试：F9 fault acceptance across injected modules and actual process death boundaries.
+│   ├── <a href="tests/test_fault_acceptance.py">test_fault_acceptance.py</a>  — 回归测试：A saved fault gate must report failures, skips and empty suites honestly.
+│   ├── <a href="tests/test_game_making.py">test_game_making.py</a>  — 回归测试：Main stage recovery must not repeat Story or accept stale inputs/resources.
+│   ├── <a href="tests/test_gameplay_preparation.py">test_gameplay_preparation.py</a>  — 回归测试：Gameplay planning preserves Story meaning and does not certify presentation.
+│   ├── <a href="tests/test_handoff_docs.py">test_handoff_docs.py</a>  — 回归测试：The user has one project entry, one technical PRD and five SDK guides.
+│   ├── <a href="tests/test_internal_preview_continuation.py">test_internal_preview_continuation.py</a>  — 回归测试：Private continuation preserves uncertainty without giving publication authority.
+│   ├── <a href="tests/test_model_narrative.py">test_model_narrative.py</a>  — 回归测试：Metered Story Agent adapter tests using deterministic local fixtures.
+│   ├── <a href="tests/test_model_provider.py">test_model_provider.py</a>  — 回归测试：Provider wire behavior is tested through HTTPX without contacting a paid API.
+│   ├── <a href="tests/test_module_acceptance.py">test_module_acceptance.py</a>  — 回归测试：Exercise the offline kit, rejection boundaries and isolated factory lifecycle.
+│   ├── <a href="tests/test_module_check.py">test_module_check.py</a>  — 回归测试：Verify the standalone handoff checker rejects incorrect adapters without starting services.
+│   ├── <a href="tests/test_module_integration.py">test_module_integration.py</a>  — 回归测试：Replace either module and resource storage without modifying workflow internals.
+│   ├── <a href="tests/test_narrative_state.py">test_narrative_state.py</a>  — 回归测试：State reconciliation changes dead stores only; live state is never guessed.
+│   ├── <a href="tests/test_observability.py">test_observability.py</a>  — 回归测试：Safe structured logs preserve correlation, cancellation and host configuration.
+│   ├── <a href="tests/test_operations.py">test_operations.py</a>  — 回归测试：F6 interventions use authenticated HTTP, durable SQLite and the real workflow worker.
+│   ├── <a href="tests/test_package_loader.py">test_package_loader.py</a>  — 回归测试：Package load boundaries: trusted hashes, unsupported gameplay and bounded file input.
+│   ├── <a href="tests/test_pdf_source_text.py">test_pdf_source_text.py</a>  — 回归测试：PDF extraction stays optional, located, bounded and inside the shared read ledger.
+│   ├── <a href="tests/test_player_components.py">test_player_components.py</a>  — 回归测试：Typed preparation components and trusted package bindings used by the F7 runtime.
+│   ├── <a href="tests/test_player_runtime.py">test_player_runtime.py</a>  — 回归测试：Real JS, durable SQLite CAS, crash recovery and private HTTP session isolation.
+│   ├── <a href="tests/test_ports.py">test_ports.py</a>  — 回归测试：Module substitution against typed fixtures, independent of providers or a workflow graph.
+│   ├── <a href="tests/test_preview_normalization.py">test_preview_normalization.py</a>  — 回归测试：Preview repairs preserve meaning-bearing data and leave ambiguous cases unresolved.
+│   ├── <a href="tests/test_previews.py">test_previews.py</a>  — 回归测试：Actual draft previews before approval, private resources and isolation boundaries.
+│   ├── <a href="tests/test_reliability.py">test_reliability.py</a>  — 回归测试：Fault injection at business commits, reservations and private publication boundaries.
+│   ├── <a href="tests/test_repository_checker.py">test_repository_checker.py</a>  — 回归测试：Regression checks for real Markdown targets and false anchors in examples.
+│   ├── <a href="tests/test_repository_docs.py">test_repository_docs.py</a>  — 回归测试：Keep explicit documentation anchors valid without hiding broken references.
+│   ├── <a href="tests/test_resources.py">test_resources.py</a>  — 回归测试：Resource storage is replaceable; identity, bounded reads and hashes stay enforced.
+│   ├── <a href="tests/test_sdk_boundaries.py">test_sdk_boundaries.py</a>  — 回归测试：Package installation cannot silently activate providers or reverse SDK dependencies.
+│   ├── <a href="tests/test_service.py">test_service.py</a>  — 回归测试：Real SQLite, HTTP and LangGraph integration with explicitly synthetic content adapters.
+│   ├── <a href="tests/test_shared_execution.py">test_shared_execution.py</a>  — 回归测试：Shared calls use real HTTP/SQLite/graph boundaries with explicit fake provider receipts.
+│   ├── <a href="tests/test_story_automation.py">test_story_automation.py</a>  — 回归测试：Story-only graph generates through its model port and never reaches game assembly.
+│   ├── <a href="tests/test_story_inputs.py">test_story_inputs.py</a>  — 回归测试：Native input reads preserve scope, review state, manual edits and pinned revisions.
+│   ├── <a href="tests/test_workflow_branches.py">test_workflow_branches.py</a>  — 回归测试：Real HTTP/SQLite/graph branch tests with fixed, explicitly synthetic counterpart modules.
+│   └── <a href="tests/test_workflow_control.py">test_workflow_control.py</a>  — 回归测试：Skill control translation preserves the frozen module vocabulary and human authority.
+├── <a href="tools/">tools/</a>  — 契约、仓库、文档、玩法生命周期与呈现工具
+│   ├── <a href="tools/check_contracts.py">check_contracts.py</a>  — Export deterministic schemas or check committed schemas and complete wire samples.
+│   ├── <a href="tools/check_handoff.py">check_handoff.py</a>  — Check the deliberately small current documentation contract.
+│   ├── <a href="tools/check_javascript.mjs">check_javascript.mjs</a>  — Syntax and content-rendering guard for the native JS surfaces.
+│   ├── <a href="tools/check_repository.py">check_repository.py</a>  — Offline checks for repository guidance; this is not a product runtime test.
+│   ├── <a href="tools/gameplay_lifecycle.mjs">gameplay_lifecycle.mjs</a>  — 运行实际 Activity 配置、有解性及完成/失败/退出/恢复生命周期检查。
+│   └── <a href="tools/prepare_presentation.mjs">prepare_presentation.mjs</a>  — 确定性合并故事、玩法计划和环境信息，生成视点、导航及界面绑定。
+├── <a href=".gitattributes">.gitattributes</a>  — Git 文件属性与换行等仓库级规则。
+├── <a href=".gitignore">.gitignore</a>  — 排除本地环境、私有输入、运行产物和缓存，防止误提交。
+├── <a href=".python-version">.python-version</a>  — 指定项目使用的 Python 版本。
+├── <a href="AGENTS.md">AGENTS.md</a>  — 开发代理的架构、实现、验证和文档维护约束。
+├── <a href="LICENSE">LICENSE</a>  — 本模块的许可证；分发源码或安装包时保留。
+├── <a href="README.md">README.md</a>  — 项目安装、启动、复跑和逐文件导航的统一入口。
+├── <a href="package-lock.json">package-lock.json</a>  — 锁定 Node 依赖树和完整性，支持可复现安装。
+├── <a href="package.json">package.json</a>  — Node 工具依赖和检查、测试等脚本命令。
+├── <a href="pyproject.toml">pyproject.toml</a>  — 本项目的包名、依赖、命令入口与构建配置。
+└── <a href="uv.lock">uv.lock</a>  — 锁定 Python workspace 及第三方依赖解析版本。
+</pre>
 <!-- END FILE INVENTORY -->
 
 ## 验证到哪里
