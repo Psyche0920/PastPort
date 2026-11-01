@@ -1,11 +1,8 @@
-"""Adapt only a 3D result's review links; keep shared content and source evidence."""
-
+"""Shared VR/3D review markup and original per-result source bridge."""
 from pathlib import Path
 
 
-def connect_review(root: Path) -> None:
-    review = root / "index.html"
-    text = review.read_text()
+def shared_review_markup(text: str) -> str:
     for before, after in (
         ("VR中显示的内容", "全景 / 3D 共用介绍"),
         ("修改VR弹窗文字", "修改全景与3D介绍"),
@@ -33,7 +30,12 @@ def connect_review(root: Path) -> None:
             1,
         )
         text += '\n<script src="/scene3d/shared_content.js"></script>\n'
-    review.write_text(text)
+    return text
+
+
+def connect_review(root: Path) -> None:
+    review = root / "index.html"
+    review.write_text(shared_review_markup(review.read_text()))
     source = root / "vr_trial/index.html"
     html = source.read_text()
     if "pastport-source-ready" not in html:

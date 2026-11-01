@@ -2,35 +2,95 @@
 
 把原始史料、已匹配的博物馆环境和空间信息，转换为可浏览、可完成任务的遗址游戏。
 
-**当前：五个 SDK 已与本地 main 集成；真实材料的保存结果复跑、组包与 3D 通关已验证。main 新入口目前只复跑已保存故事，不重新调用模型。源码通过 Git 管理；本地试玩产物不随源码发布。**
+**当前：五个 SDK 已与本地 main 集成；真实材料的保存结果复跑、组包与 3D 通关已验证。命令行复跑不调用模型；Organizer分别提供缓存复用与明确授权后的新生成。源码通过 Git 管理；本地试玩产物不随源码发布。**
 
-## 直接试玩
+[开发交接：伟胜 / Matt的修改范围、输入输出与任务](handoff.md)
 
-[打开本轮 3D 试玩](http://127.0.0.1:18839/?scene=3d)。恢复到测试结局时，点“重新开始”。链接仅在本机服务运行时可用。
+## 启动与使用
 
-当前工作区：`/Users/hanweijia/PastPort`。
+当前应用仓库是 `/Users/hanweijia/PastPort`，以这里的本地 main 源码为准。需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。
 
-服务已运行时直接打开链接；服务关闭后，在该目录执行：
+首次安装或依赖变化后执行；已安装时跳过：
+
+```sh
+cd /Users/hanweijia/PastPort
+uv sync --extra authoring --extra game-making
+```
+
+### Organizer：主办方入口
+
+[打开本机 Organizer](http://127.0.0.1:18840/organizer/)。服务已运行时直接打开，不重复启动；关闭后用下面的现有 CLI 启动，不依赖临时启动脚本：
+
+```sh
+cd /Users/hanweijia/PastPort
+.venv/bin/python -m pastport \
+  --accounts var/organizer-integration/staff-accounts.json \
+  --data-directory var/organizer-integration/server \
+  --organizer-catalog var/organizer-integration/catalog.json \
+  --organizer-player-assets "/Users/hanweijia/Documents/ChatGPT/PastPort/work/main-integration/var/sdk-real-material-20261031-01/story-authoring/game-3d-open-roof-v3/assets" \
+  --evidence-mode disabled --narrative-mode disabled --resources-mode disabled \
+  --port 18840
+```
+
+这条命令使用当前电脑已有的私有配置和已设置的管理员账号，不创建新账号。用原管理员账号密码登录，不需要填写令牌；右上角可手动选择中文 / English，刷新后保留选择。服务重启后需要重新登录。保持终端打开，Ctrl+C 停止；端口被占用时先确认是否已有服务，不结束未知进程。
+
+`disabled` 参数关闭旧 editorial 演示通道，不关闭 Organizer 经 SDK 执行的明确授权生成路径。当前播放器 assets 仍登记在上面显示的本机材料目录中；它是私有输入依赖，不是另一个应用仓库，也不随 Git clone 提供。换机器时准备自己的私有配置、材料与播放器资源，并替换参数中的路径。不要复制或公开账号配置、API密钥与材料。
+
+### 制作流程
+
+1. **准备资料与环境**：选择下表中的材料起点。勾灰框复用整套默认资料和已有环境，零模型、零Marble调用；不勾则使用上传材料执行所选阶段，需要生成3D时单独授权Marble。完整原生3D环境不重复生成。
+2. **资料与审核**：自动承接上一步。使用环境SDK的同一套VR/3D审核界面，核对照片、史料、介绍和审核状态；可在全景与3D中查看。介绍/审核共用，位置和导航各自保存。保存后自动同步当前输入，无需重复选项目或确认传递。
+3. **准备故事**：旧故事先做来源、任务、玩法和空间兼容检查。通过即可复用；仅介绍发生待核对改动时需本人确认；关键依据或任务条件失效不能跳过。保存版本号变化而内容相同，不要求确认。也可明确授权SOL 6.1 Medium生成新故事，失败不自动重试。两种路径都在故事就绪后停下。
+4. **制作游戏**：故事就绪后点击“开始制作”，执行玩法准备、呈现绑定、组包与资源检查；在“制作进度与交付”打开玩家预览。不会再生成环境或故事。
+
+切换界面语言不翻译史料、介绍或故事，不保存表单或调用模型，也不丢弃未保存输入。体验目标时长是Story创作目标，不是制作耗时或精确游玩计时。
+
+| 上传起点 | 环境阶段执行内容 | 已有成果 |
+|---|---|---|
+| 原始史料PDF + 现场物件照片 + 可选360°导览 | Evidence生成映射 → 环境匹配 → 3D | 缺导览时先保存映射，补导览并查看摘要后继续 |
+| 原始PDF + 映射PDF + 360°导览 | 环境匹配 → 3D | 复用映射PDF |
+| 原始PDF + 原生匹配VR包 | 校验导入 → 3D | 复用VR绑定、审核和导航 |
+| 原始PDF + 原生已挂载双点位3D包 | 校验并导入 | 复用3D、物件、审核、位置和导航，不调用Marble |
+
+默认选项使用已登记、同源且完整的PDF、照片、映射、VR/3D资料；后续故事仍需单独选择。跨PDF、文件变化、来源不一致或缺失时停止，不暗中换用缓存。上传包作为数据读取，不执行其中代码。**普通全景不等于已匹配VR，裸3D模型不等于已挂载环境**；直接“裸模型＋PDF”的自动匹配入口尚未实现。
+
+### 本机保存位置
+
+| 内容 | 当前保存位置与用途 |
+|---|---|
+| 制作记录与项目元数据 | `var/organizer-integration/server/organizer/organizer.sqlite3` |
+| 上传、审核输入快照、故事与每次制作缓存 | `var/organizer-integration/server/organizer/`，按项目和任务隔离 |
+| 可玩游戏包 | 对应任务 `jobs/<任务>/builds/<构建>/game-3d/`；以网页显示的实际路径为准 |
+| 物件介绍与审核数据库 | 环境项目自己的 `pastport_matching.sqlite3`；“资料与审核”显示当前完整路径并可复制 |
+| 当前默认资料登记 | `var/organizer-integration/catalog.json`，引用整套私有材料 |
+| 运行与验收证据 | `var/organizer-integration/`；不随源码公开 |
+
+游戏包是缓存里的最终成品，不是另一份完整重复缓存。关闭网页不会删除保存结果。页面显示的路径属于后台所在电脑。旧游戏包保持快照，审核变化不会即时改写已生成成品；需重新制作才能交付新版本。
+
+### 保存结果复跑与独立试玩
+
+维护者可用已保存故事复核并重新组包，不调用模型：
+
+```sh
+cd /Users/hanweijia/PastPort
+.venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
+```
+
+命令自动完成复核、玩法、呈现、组包与文件检查，不需另起组包服务。同一输入/实现可恢复；变化后采用新的输出目录，不覆盖旧输入锁或成品。该命令只复跑保存结果；新故事可从Organizer授权生成，SDK命令见各包说明。
+
+保留的独立试玩基线为[本机3D试玩](http://127.0.0.1:18839/?scene=3d)，不等于Organizer最新任务。服务关闭时可启动：
 
 ```sh
 PASTPORT_PORT=18839 node var/runtime-layout-20261101/release-run/game-3d/serve3d.mjs
 ```
 
-保持终端打开；Ctrl+C 停止。**无需另外启动组包器服务，也不用把网址传给组包器。**
+日常使用Organizer任务自己的“打开玩家预览”，由main启动已登记的本机预览服务，无需猜构建路径。当前不是公网部署。
 
-## 安装与复跑
+### 当前交付范围
 
-需要 Python 3.12、uv、Node.js 和可用 WebGL 浏览器。私有 PDF、场景、审核数据及保存的 Story 不在 Git 仓库中；仅 clone 代码不会自动得到这些材料。
+Organizer支持单管理员登录、四种材料起点、整套默认复用、审核自动衔接、旧故事兼容检查、新故事生成、真实进度与成品入口。中英文手动切换已验证。缓存到游戏的零模型链路及已有环境的新故事有实际运行记录；逐种新材料完整调用Evidence/Marble的外部生成验收仍未全部完成。
 
-```sh
-cd /Users/hanweijia/PastPort
-uv sync --extra authoring --extra game-making
-.venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
-```
-
-安装已完成时可跳过 `uv sync`。上面的请求指向已验收的保存故事；输入和实现不变时复用已有阶段。复跑命令自动完成：输入校验 → 保存故事复核 → 玩法准备 → 呈现绑定 → 组包 → 文件完整性检查。不新增模型调用。相同输入/实现可恢复已有阶段；改动后使用新输出目录，不能覆盖旧成果。
-
-新故事生成是单独的 `pastport-story` 命令，使用模型额度，详见 Story SDK；本 README 的复跑命令不会启用它。其他机器需自行准备对应输入及请求 manifest。
+Story新生成采用固定内容计划，由代码编译编号、状态、规则和引用；格式通过不代表故事好玩或历史内容获批。风格转绘SDK存在，但Organizer还没有新转绘操作，只能复用已有结果。User仍是现有游戏前端，本轮没有新增玩家账号或跨设备后台存档。源码是当前基线，既有wheel不自动包含后续源码修复，需要重新构建才能交付更新。
 
 ## 架构与模块
 
@@ -72,7 +132,7 @@ main 用现有 LangGraph、SQLite 和 typed SDK 组织执行。Story 生成前�
 
 ```mermaid
 flowchart TB
-    Main[main 命令入口] --> App[application / workflow：编排、状态与恢复]
+    Main[main：Organizer API与命令入口] --> App[application / workflow：编排、状态与恢复]
     App --> Ports[ports：调用契约]
     Ports --> Adapters[adapters：具体适配]
     Adapters --> Upstream[Evidence / Environment / Stylization SDK]
@@ -96,7 +156,7 @@ flowchart TB
 <!-- BEGIN FILE INVENTORY -->
 ## 文件结构与用途
 
-目录和文件名称均可点击；同一行说明用途。SDK内部文件见各自README；本树列出 321 个 main 与公共维护文件。
+目录和文件名称均可点击；同一行说明用途。SDK内部文件见各自README；本树列出 main 与公共维护文件。
 
 <pre>
 PastPort/
@@ -106,21 +166,28 @@ PastPort/
 │   └── <a href=".github/copilot-instructions.md">copilot-instructions.md</a>  — Copilot 的仓库开发约束与规范入口。
 ├── <a href="docs/">docs/</a>  — 唯一技术 PRD：系统架构、接口和验收范围
 │   └── <a href="docs/TECHNICAL_PRD.md">TECHNICAL_PRD.md</a>  — 当前唯一技术 PRD：main/SDK 职责、架构、技术栈、输入输出及验收边界。
-├── <a href="frontend/">frontend/</a>  — 游戏前端源码；不承担故事生成或游戏组包
-│   └── <a href="frontend/game/">game/</a>  — 玩家页面：对话、任务操作、3D场景交互和会话
-│       ├── <a href="frontend/game/app.css">app.css</a>  — 试玩主界面的布局、对话、任务和玩法样式。
-│       ├── <a href="frontend/game/app.mjs">app.mjs</a>  — 试玩页面主控制器，连接对话、任务、插件、场景与操作。
-│       ├── <a href="frontend/game/cinematic-view.mjs">cinematic-view.mjs</a>  — 演出式视图控制：镜头、移动输入和物件交互。
-│       ├── <a href="frontend/game/dialogue.mjs">dialogue.mjs</a>  — Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue.
-│       ├── <a href="frontend/game/index.html">index.html</a>  — 试玩宿主页面的 HTML 入口。
-│       ├── <a href="frontend/game/interaction.mjs">interaction.mjs</a>  — 协调物件点击、查看与接近动作，避免交互手势冲突。
-│       ├── <a href="frontend/game/navigation.mjs">navigation.mjs</a>  — 检查导航连接、度量空间和行走约束是否合法。
-│       ├── <a href="frontend/game/scene3d-bridge.mjs">scene3d-bridge.mjs</a>  — Story-side interaction contract; the scene host alone owns navigation.
-│       ├── <a href="frontend/game/scene3d-navigation.mjs">scene3d-navigation.mjs</a>  — Preserve source navigation poses; screen bearings are camera-relative UI only.
-│       ├── <a href="frontend/game/scene3d-runtime.js">scene3d-runtime.js</a>  — 注入独立 3D 视图的运行桥接，传递导航和剧情交互，不修改上游场景文件。
-│       ├── <a href="frontend/game/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
-│       ├── <a href="frontend/game/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
-│       └── <a href="frontend/game/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+├── <a href="frontend/">frontend/</a>  — Organizer制作后台与User游戏界面的前端源码
+│   ├── <a href="frontend/game/">game/</a>  — 现有User玩家界面：对话、任务、3D交互与会话；本轮不改
+│   │   ├── <a href="frontend/game/app.css">app.css</a>  — 试玩主界面的布局、对话、任务和玩法样式。
+│   │   ├── <a href="frontend/game/app.mjs">app.mjs</a>  — 试玩页面主控制器，连接对话、任务、插件、场景与操作。
+│   │   ├── <a href="frontend/game/cinematic-view.mjs">cinematic-view.mjs</a>  — 演出式视图控制：镜头、移动输入和物件交互。
+│   │   ├── <a href="frontend/game/dialogue.mjs">dialogue.mjs</a>  — Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue.
+│   │   ├── <a href="frontend/game/index.html">index.html</a>  — 试玩宿主页面的 HTML 入口。
+│   │   ├── <a href="frontend/game/interaction.mjs">interaction.mjs</a>  — 协调物件点击、查看与接近动作，避免交互手势冲突。
+│   │   ├── <a href="frontend/game/navigation.mjs">navigation.mjs</a>  — 检查导航连接、度量空间和行走约束是否合法。
+│   │   ├── <a href="frontend/game/scene3d-bridge.mjs">scene3d-bridge.mjs</a>  — Story-side interaction contract; the scene host alone owns navigation.
+│   │   ├── <a href="frontend/game/scene3d-navigation.mjs">scene3d-navigation.mjs</a>  — Preserve source navigation poses; screen bearings are camera-relative UI only.
+│   │   ├── <a href="frontend/game/scene3d-runtime.js">scene3d-runtime.js</a>  — 注入独立 3D 视图的运行桥接，传递导航和剧情交互，不修改上游场景文件。
+│   │   ├── <a href="frontend/game/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
+│   │   ├── <a href="frontend/game/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
+│   │   └── <a href="frontend/game/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+│   └── <a href="frontend/organizer/">organizer/</a>  — Organizer制作前端：认证、真实上传、登记材料复用/重新生成、执行进度与交付
+│       ├── <a href="frontend/organizer/index.html">index.html</a>  — 由 main 的 /organizer/ 提供的真实制作页；需 HTTP 服务与登录。
+│       ├── <a href="frontend/organizer/app.mjs">app.mjs</a>  — 按资料与环境→原审核后台→故事→最终玩法与组包编排；分别控制复用/新生成。
+│       ├── <a href="frontend/organizer/i18n.mjs">i18n.mjs</a>  — Organizer中英文界面词库、手动切换和无刷新文本绑定；不翻译资料或表单内容。
+│       ├── <a href="frontend/organizer/review.mjs">review.mjs</a>  — 嵌入原物件编号审核界面；处理审核保存通知、未保存状态和Story前版本确认。
+│       ├── <a href="frontend/organizer/app.css">app.css</a>  — Organizer布局、响应式样式和操作状态。
+│       └── <a href="frontend/organizer/sketch.html">sketch.html</a>  — Organizer交互设计源稿：四种材料起点、对应审核、复用进度与交付；尚未连接后台。
 ├── <a href="gameplay/">gameplay/</a>  — 玩法计划与呈现输入准备；复用插件和共享契约
 │   ├── <a href="gameplay/plugins/">plugins/</a>  — 本地小游戏执行器、拼板求解与生成的玩法能力目录
 │   │   ├── <a href="gameplay/plugins/coverage.mjs">coverage.mjs</a>  — 按实际拼板放置规则求解覆盖题，提前拒绝无解配置。
@@ -146,6 +213,8 @@ PastPort/
 │   ├── <a href="schemas/bundle.schema.json">bundle.schema.json</a>  — 自动生成的 PackageBundle JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
 │   ├── <a href="schemas/discover-request.schema.json">discover-request.schema.json</a>  — 自动生成的 DiscoverRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
 │   ├── <a href="schemas/discover-result.schema.json">discover-result.schema.json</a>  — 自动生成的 ModuleResult[CandidateSetDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
+│   ├── <a href="schemas/story-plan.schema.json">story-plan.schema.json</a>  — 内容计划的公开Schema，不含执行图编号、规则和状态声明。
+│   ├── <a href="schemas/story-plan-result.schema.json">story-plan-result.schema.json</a>  — 固定内容计划生成结果及无法表达时的明确返回。
 │   ├── <a href="schemas/draft-request.schema.json">draft-request.schema.json</a>  — 自动生成的 DraftRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
 │   ├── <a href="schemas/draft-result.schema.json">draft-result.schema.json</a>  — 自动生成的 ModuleResult[NarrativeDraft] JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
 │   ├── <a href="schemas/evidence-request.schema.json">evidence-request.schema.json</a>  — 自动生成的 EvidenceRequest JSON Schema，定义边界字段、类型和约束；通过契约工具更新。
@@ -189,6 +258,15 @@ PastPort/
 ├── <a href="src/">src/</a>  — 主项目与下游 SDK 共用的 Python 源码
 │   └── <a href="src/pastport/">pastport/</a>  — 共享运行时：服务、编排、业务用例和游戏规则
 │       ├── <a href="src/pastport/adapters/">adapters/</a>  — 具体实现与外部接线：模型、数据库、文件或 SDK
+│       │   ├── <a href="src/pastport/adapters/organizer_processes.py">organizer_processes.py</a>  — 持有并关闭原生SDK子进程组；超时不自动重发。
+│       │   ├── <a href="src/pastport/adapters/organizer_archives.py">organizer_archives.py</a>  — 有界解包、文件哈希、SQLite快照检查及隔离的轻量资源快照；上传程序不执行。
+│       │   ├── <a href="src/pastport/adapters/organizer_native.py">organizer_native.py</a>  — 四种原生上传起点的SDK调用、共享审核保留、空间与史料输入导出。
+│       │   ├── <a href="src/pastport/adapters/organizer_review.py">organizer_review.py</a>  — 复用环境SDK同源审核库、原审核页面、版本化编辑和本机新输入导出。
+│       │   ├── <a href="src/pastport/adapters/organizer_review_environment.py">organizer_review_environment.py</a>  — 当前SDK的VR/3D环境查看、独立位置与导航编辑资源接线。
+│       │   ├── <a href="src/pastport/adapters/passwords.py">passwords.py</a>  — 管理员密码的加盐派生、校验和安全格式检查。
+│       │   ├── <a href="src/pastport/adapters/organizer_previews.py">organizer_previews.py</a>  — 拥有并关闭本机3D预览进程，分配监听端口与独立预览会话。
+│       │   ├── <a href="src/pastport/adapters/organizer_store.py">organizer_store.py</a>  — Organizer项目和制作记录的SQLite持久化、连接释放及服务互斥。
+│       │   ├── <a href="src/pastport/adapters/organizer_production.py">organizer_production.py</a>  — 已登记环境的 Story 新生成与缓存复跑，复用原有预算和组包链。
 │       │   ├── <a href="src/pastport/adapters/__init__.py">__init__.py</a>  — PastPort service components.
 │       │   ├── <a href="src/pastport/adapters/assembly.py">assembly.py</a>  — Build media manifests from reviewed asset identities; never from a prebuilt runtime template.
 │       │   ├── <a href="src/pastport/adapters/codex_provider.py">codex_provider.py</a>  — Story-only model transport using the official SDK and saved ChatGPT login.
@@ -211,9 +289,12 @@ PastPort/
 │       │   ├── <a href="src/pastport/adapters/runtime_resources.py">runtime_resources.py</a>  — Resolve the single shared host distribution without requiring a checkout.
 │       │   ├── <a href="src/pastport/adapters/skills.py">skills.py</a>  — Read only server-approved Skill paths and fingerprint every included file.
 │       │   ├── <a href="src/pastport/adapters/story_3d.py">story_3d.py</a>  — Join approved shared assembly to the separately versioned local 3D delivery bridge.
+│       │   ├── <a href="src/pastport/adapters/story_reuse.py">story_reuse.py</a>  — 旧故事依赖检查与独立复用记录；不调用模型、不覆盖父故事。
 │       │   ├── <a href="src/pastport/adapters/story_materials.py">story_materials.py</a>  — Normalize explicitly registered upstream exports without regenerating matches.
 │       │   └── <a href="src/pastport/adapters/story_workflow.py">story_workflow.py</a>  — Run the existing metered editorial graph up to its Story output boundary.
 │       ├── <a href="src/pastport/api/">api/</a>  — HTTP API、服务配置与工作台资源
+│       │   ├── <a href="src/pastport/api/organizer.py">organizer.py</a>  — 沿用main账户的制作HTTP接口、真实上传、进度、恢复与预览接线。
+│       │   ├── <a href="src/pastport/api/organizer_accounts.py">organizer_accounts.py</a>  — 单管理员账号密码登录、既有角色范围与一次性本机初始化。
 │       │   ├── <a href="src/pastport/api/__init__.py">__init__.py</a>  — PastPort service components.
 │       │   ├── <a href="src/pastport/api/api-client.mjs">api-client.mjs</a>  — Stable operation identities. Rendering and automatic retry policy belong to the view controller.
 │       │   ├── <a href="src/pastport/api/app.py">app.py</a>  — Local authenticated editorial API with strict JSON transport and a durable background worker.
@@ -227,6 +308,9 @@ PastPort/
 │       │   ├── <a href="src/pastport/api/workbench.html">workbench.html</a>  — 审核工作台页面结构与控件容器。
 │       │   └── <a href="src/pastport/api/workbench.mjs">workbench.mjs</a>  — 审核工作台浏览器控制器，连接后端接口与页面操作。
 │       ├── <a href="src/pastport/application/">application/</a>  — 业务用例与执行流程
+│       │   ├── <a href="src/pastport/application/source_lineage.py">source_lineage.py</a>  — 区分原史料与映射PDF，保留引用来源并处理缺失和歧义。
+│       │   ├── <a href="src/pastport/application/organizer_cache.py">organizer_cache.py</a>  — 完整同源缓存包的逐文件哈希和跨阶段来源核对，禁止将不同PDF结果设为默认。
+│       │   ├── <a href="src/pastport/application/organizer.py">organizer.py</a>  — 制作请求去重、输入指纹、项目权限、两种执行方式及中断恢复。
 │       │   ├── <a href="src/pastport/application/__init__.py">__init__.py</a>  — PastPort service components.
 │       │   ├── <a href="src/pastport/application/activity.py">activity.py</a>  — Meter automatic workflow wall time once, excluding human and queue waiting.
 │       │   ├── <a href="src/pastport/application/change_impact.py">change_impact.py</a>  — Version-bound mechanical comparison; uncertainty never grants human approval.
@@ -259,7 +343,10 @@ PastPort/
 │       │   ├── <a href="src/pastport/application/service.py">service.py</a>  — Application operations enforce identity, review authority and optimistic versions.
 │       │   ├── <a href="src/pastport/application/source_tools.py">source_tools.py</a>  — Registered-source reading and deterministic local tools, bounded by frozen questions.
 │       │   ├── <a href="src/pastport/application/source_views.py">source_views.py</a>  — Read registered source bytes and saved extraction records without research/model calls.
+│       │   ├── <a href="src/pastport/application/story_compiler.py">story_compiler.py</a>  — 将内容计划编译为任务、规则、状态、语言键与一致的下游引用。
+│       │   ├── <a href="src/pastport/application/story_plan_schema.py">story_plan_schema.py</a>  — 生成前将内容选择限制到已登记的物件和史料。
 │       │   ├── <a href="src/pastport/application/story_authoring.py">story_authoring.py</a>  — Story-only checks and readable export; no plugin, frontend or assembly work.
+│       │   ├── <a href="src/pastport/application/story_reference_contract.py">story_reference_contract.py</a>  — 从已锁定Evidence编译模型可选引用键，限制内部ID重复填写并校验返回值。
 │       │   ├── <a href="src/pastport/application/story_editing.py">story_editing.py</a>  — Stable game field locks and declared targets, shared by manual and module revisions.
 │       │   ├── <a href="src/pastport/application/task_copy.py">task_copy.py</a>  — Reject repeated inventory counts that contradict the canonical task requirements.
 │       │   ├── <a href="src/pastport/application/updates.py">updates.py</a>  — Revalidate immutable records rather than bypassing their boundary validators.
@@ -279,6 +366,9 @@ PastPort/
 │       │   ├── <a href="src/pastport/development/player_contracts.py">player_contracts.py</a>  — Export TypeScript declarations and the JSON schemas used by player components.
 │       │   └── <a href="src/pastport/development/reference_modules.py">reference_modules.py</a>  — Independent, request-bound synthetic ports for the offline acceptance kit.
 │       ├── <a href="src/pastport/domain/">domain/</a>  — 领域模型、身份及数据约束
+│       │   ├── <a href="src/pastport/domain/organizer_inputs.py">organizer_inputs.py</a>  — 上传输入、有限授权、阶段结果及准备环境的不可变数据契约。
+│       │   ├── <a href="src/pastport/domain/organizer_review.py">organizer_review.py</a>  — 审核资料、来源绑定、版本化修改和确认输入的不可变契约。
+│       │   ├── <a href="src/pastport/domain/organizer.py">organizer.py</a>  — 项目材料、缓存目录、执行请求、状态和四起点计划的不可变契约。
 │       │   ├── <a href="src/pastport/domain/__init__.py">__init__.py</a>  — Framework-independent domain contracts.
 │       │   ├── <a href="src/pastport/domain/capabilities.py">capabilities.py</a>  — Explicit capabilities for the existing contract profile, independent of sample content.
 │       │   ├── <a href="src/pastport/domain/common.py">common.py</a>  — Immutable wire contracts and content identity; no framework or provider imports.
@@ -287,6 +377,8 @@ PastPort/
 │       │   ├── <a href="src/pastport/domain/game_making.py">game_making.py</a>  — Private game-production inputs, with explicit reuse rather than implied generation.
 │       │   ├── <a href="src/pastport/domain/gameplay_preparation.py">gameplay_preparation.py</a>  — Gameplay preparation outputs are plans, never committed Story state or UI code.
 │       │   ├── <a href="src/pastport/domain/mechanics.py">mechanics.py</a>  — Shared task requirements and capability limits, independent of plugin implementations.
+│       │   ├── <a href="src/pastport/domain/story_reuse.py">story_reuse.py</a>  — 兼容检查结论、任务冲突及父故事和当前环境的版本凭据。
+│       │   ├── <a href="src/pastport/domain/story_plan.py">story_plan.py</a>  — 模型只写剧情、任务与选择后果的固定结构，不允许自写执行规则。
 │       │   ├── <a href="src/pastport/domain/modules.py">modules.py</a>  — Typed module messages for independent implementation against contract 0.1.0.
 │       │   ├── <a href="src/pastport/domain/narrative_repair.py">narrative_repair.py</a>  — Small narrative-state patches that leave authored prose and evidence untouched.
 │       │   ├── <a href="src/pastport/domain/package_loading.py">package_loading.py</a>  — Safe, stable failures for package consumers, independent of HTTP or storage.
@@ -311,6 +403,10 @@ PastPort/
 │       │   ├── <a href="src/pastport/player/validation.mjs">validation.mjs</a>  — Schema 校验、规范化序列化、内容哈希和集合一致性工具。
 │       │   └── <a href="src/pastport/player/vectors.mjs">vectors.mjs</a>  — 执行玩家动作一致性测试向量。
 │       ├── <a href="src/pastport/ports/">ports/</a>  — 业务依赖的 Protocol 接口契约
+│       │   ├── <a href="src/pastport/ports/organizer_inputs.py">organizer_inputs.py</a>  — 可替换的原生材料准备与用量读取边界。
+│       │   ├── <a href="src/pastport/ports/story_reuse.py">story_reuse.py</a>  — 主流程与旧故事兼容实现之间的类型化调用契约。
+│       │   ├── <a href="src/pastport/ports/organizer_review.py">organizer_review.py</a>  — 可替换审核读取、写入、原界面和新环境导出接口。
+│       │   ├── <a href="src/pastport/ports/organizer.py">organizer.py</a>  — 可替换的制作执行与元数据持久化边界。
 │       │   ├── <a href="src/pastport/ports/__init__.py">__init__.py</a>  — Dependency-injected module boundaries.
 │       │   ├── <a href="src/pastport/ports/editorial.py">editorial.py</a>  — Storage and content boundaries for application services and the workflow.
 │       │   ├── <a href="src/pastport/ports/execution.py">execution.py</a>  — Shared services supplied to independently constructed content modules.
@@ -330,6 +426,7 @@ PastPort/
 │       │   └── <a href="src/pastport/workflow/worker.py">worker.py</a>  — One durable local graph executor. Business records remain the authority at human gates.
 │       ├── <a href="src/pastport/__init__.py">__init__.py</a>  — PastPort shared contracts.
 │       ├── <a href="src/pastport/__main__.py">__main__.py</a>  — Start one authenticated local editorial service.
+│       ├── <a href="src/pastport/account_cli.py">account_cli.py</a>  — 可选管理员密码维护命令；普通工作人员仍在网页登录。
 │       ├── <a href="src/pastport/contracts.py">contracts.py</a>  — Public schema registry; versions and wire names are part of the compatibility contract.
 │       ├── <a href="src/pastport/game_trial_cli.py">game_trial_cli.py</a>  — Run Main&#x27;s provider-disabled paired-SDK integration from one explicit manifest.
 │       ├── <a href="src/pastport/gameplay_cli.py">gameplay_cli.py</a>  — Prepare supported gameplay from a locked Story run, without model or build calls.
@@ -337,6 +434,14 @@ PastPort/
 │       ├── <a href="src/pastport/py.typed">py.typed</a>  — PEP 561 类型标记，让安装方的类型检查器识别本包类型。
 │       └── <a href="src/pastport/story_cli.py">story_cli.py</a>  — Run Story authoring only, using explicitly selected upstream outputs.
 ├── <a href="tests/">tests/</a>  — main 的自动回归测试与测试夹具
+│   ├── <a href="tests/test_source_lineage.py">test_source_lineage.py</a>  — 原史料页码投射、引用歧义与同源OCR缺页保留检查。
+│   ├── <a href="tests/test_organizer_inputs.py">test_organizer_inputs.py</a>  — 四起点HTTP及SDK路由、补材料恢复和不可信归档回归。
+│   ├── <a href="tests/test_organizer_previews.py">test_organizer_previews.py</a>  — 真实Node预览的会话隔离、监听继承与资源关闭检查。
+│   ├── <a href="tests/test_organizer_cache.py">test_organizer_cache.py</a>  — 完整缓存、防跨PDF混用、单文件变化及默认项完整性回归。
+│   ├── <a href="tests/test_organizer.py">test_organizer.py</a>  — 制作API的权限、输入、缓存/新生成、去重与恢复测试。
+│   ├── <a href="tests/test_organizer_i18n.mjs">test_organizer_i18n.mjs</a>  — 中英文手动切换、动态状态和原始资料保护检查。
+│   ├── <a href="tests/test_organizer_review.py">test_organizer_review.py</a>  — 原审核页面接线、权限、版本冲突、审核历史和Story前确认回归。
+│   ├── <a href="tests/test_organizer_accounts.py">test_organizer_accounts.py</a>  — 管理员账号密码、既有权限和会话安全回归。
 │   ├── <a href="tests/browser/">browser/</a>  — 浏览器工作台交互测试
 │   │   └── <a href="tests/browser/workbench.test.mjs">workbench.test.mjs</a>  — 工作台浏览器交互的自动回归测试。
 │   ├── <a href="tests/fixtures/">fixtures/</a>  — 自动测试专用输入与预期数据
@@ -433,8 +538,11 @@ PastPort/
 │   ├── <a href="tests/test_sdk_boundaries.py">test_sdk_boundaries.py</a>  — 回归测试：Package installation cannot silently activate providers or reverse SDK dependencies.
 │   ├── <a href="tests/test_service.py">test_service.py</a>  — 回归测试：Real SQLite, HTTP and LangGraph integration with explicitly synthetic content adapters.
 │   ├── <a href="tests/test_shared_execution.py">test_shared_execution.py</a>  — 回归测试：Shared calls use real HTTP/SQLite/graph boundaries with explicit fake provider receipts.
+│   ├── <a href="tests/test_story_reuse.py">test_story_reuse.py</a>  — 验证位置、审核、史料和介绍修改后的复用、冲突拦截与授权。
+│   ├── <a href="tests/test_story_plan.py">test_story_plan.py</a>  — 验证内容计划编译、真实JS通关、原回执保留及非法结构不重试。
 │   ├── <a href="tests/test_story_automation.py">test_story_automation.py</a>  — 回归测试：Story-only graph generates through its model port and never reaches game assembly.
 │   ├── <a href="tests/test_story_inputs.py">test_story_inputs.py</a>  — 回归测试：Native input reads preserve scope, review state, manual edits and pinned revisions.
+│   ├── <a href="tests/test_story_reference_contract.py">test_story_reference_contract.py</a>  — 验证已登记引用可生成、内部ID被输出Schema排除、空范围和变更Schema被拦截。
 │   ├── <a href="tests/test_workflow_branches.py">test_workflow_branches.py</a>  — 回归测试：Real HTTP/SQLite/graph branch tests with fixed, explicitly synthetic counterpart modules.
 │   └── <a href="tests/test_workflow_control.py">test_workflow_control.py</a>  — 回归测试：Skill control translation preserves the frozen module vocabulary and human authority.
 ├── <a href="tools/">tools/</a>  — 契约、仓库、文档、玩法生命周期与呈现工具
@@ -454,6 +562,7 @@ PastPort/
 ├── <a href=".gitignore">.gitignore</a>  — 排除本地环境、私有输入、运行产物和缓存，防止误提交。
 ├── <a href=".python-version">.python-version</a>  — 指定项目使用的 Python 版本。
 ├── <a href="AGENTS.md">AGENTS.md</a>  — 开发代理的架构、实现、验证和文档维护约束。
+├── <a href="handoff.md">handoff.md</a>  — 伟胜与Matt的分工、修改位置、输入输出、接口兼容规则和下一步任务。
 ├── <a href="LICENSE">LICENSE</a>  — 本模块的许可证；分发源码或安装包时保留。
 ├── <a href="README.md">README.md</a>  — 项目安装、启动、复跑和逐文件导航的统一入口。
 ├── <a href="package-lock.json">package-lock.json</a>  — 锁定 Node 依赖树和完整性，支持可复现安装。
@@ -463,23 +572,6 @@ PastPort/
 </pre>
 <!-- END FILE INVENTORY -->
 
-## 验证到哪里
+## 技术规范
 
-| 检查 | 结果 |
-|---|---|
-| main Python 回归 | 523 项通过 |
-| 严格类型检查 | 127 文件通过 |
-| Schema/样例一致性 | 39 个契约通过 |
-| JS 游戏与组包回归 | 35 项通过，1 项无关私有夹具跳过 |
-| 仓库外安装 | 六个发行文件共同安装、联跑及文件身份校验通过 |
-| 真实材料与试玩 | 62 页原件导出、两点位、三任务、三块板、两结局自动检查和浏览器通关 |
-
-本轮匹配、建模、转绘和故事生成均复用已有成果；重新执行的是读取复核、玩法准备、呈现和组包。未核实状态继续保留。新 main 入口的从零生成、更多材料/设备、性能成本及人类游戏质量验收仍未完成。
-
-## 技术规范与交付位置
-
-唯一统一说明：[技术 PRD · 1.0 初稿](docs/TECHNICAL_PRD.md)。包含 workflow architecture、tech stack、各模块输入输出、权限预算、恢复、测试和下一阶段。
-
-本次拆分后的请求、验收记录、截图及六个 wheel 在 `var/runtime-layout-20261101/`，当前游戏包为其中的 `release-run/game-3d/`。原先 `var/main-sdk-integration-20261101/run-01/` 和 `run-02/` 两份试玩保留。这些是本地产物，不随 GitHub 源码推送。
-
-项目许可证见 [LICENSE](LICENSE)。各 SDK 的来源与许可证通知随包保留；机器使用的 AGENTS/Skill 不是另一套用户操作指南。
+[技术PRD · 当前唯一初稿](docs/TECHNICAL_PRD.md)说明workflow architecture、技术栈、main与SDK的输入输出、权限、预算、恢复和验收边界。各SDK的开发与使用细节见上方包内README。当前运行证据在忽略的本机 `var/organizer-integration/`；历史发行包和回退试玩仍保留在 `var/runtime-layout-20261101/`，不把旧发行文件当作最新源码的安装包。

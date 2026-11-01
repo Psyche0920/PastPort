@@ -8,3 +8,5 @@
 - Verify the affected behavior and rendered interaction. Installation, static checks, saved-response replay, fresh generation, browser success, human game-quality acceptance and publication are separate evidence layers. New Python must pass strict typing; never weaken tests to hide an implementation defect.
 - Run the relevant deterministic checks, tools/check_repository.py, tools/check_handoff.py and git diff --check. Documentation checks enforce one root README, five SDK READMEs and docs/TECHNICAL_PRD.md; machine Skills, licenses/provenance and non-document test fixtures remain separate resources.
 - Do not commit, push, merge, deploy or make paid calls without task authorization. Do not spawn agents by default. Use minimum sufficient context and avoid repeated status filler. Stop immediately on a user stop instruction.
+
+- User-requested root `handoff.md` is the team ownership/input-output/change-impact handoff. Keep it linked from README and the PRD; it is the explicit exception to the no-parallel-guides rule and must not duplicate startup or architecture specifications.

@@ -1,0 +1,192 @@
+<style>
+#pp-organizer-sketch{--pp-bg:light-dark(#f5f4ef,#151d1a);--pp-paper:light-dark(#ffffff,#202b26);--pp-text:light-dark(#253b31,#e4ede6);--pp-muted:light-dark(#66756d,#a9bbb0);--pp-line:light-dark(#dce2dc,#405047);--pp-accent:light-dark(#234c3d,#a4d5b8);--pp-on-accent:light-dark(#ffffff,#142b20);--pp-soft:light-dark(#eaf0e9,#2d3e32);--pp-gold:light-dark(#826333,#d9ba7f);font-family:Inter,"PingFang SC",system-ui,sans-serif;font-size:14px;color:var(--pp-text);background:var(--pp-bg);border:1px solid var(--pp-line);border-radius:12px;overflow:hidden;min-width:0}
+#pp-organizer-sketch *{box-sizing:border-box}
+#pp-organizer-sketch [hidden]{display:none!important}
+#pp-organizer-sketch h1,#pp-organizer-sketch h2,#pp-organizer-sketch h3,#pp-organizer-sketch p{margin:0}
+#pp-organizer-sketch h1{font-size:25px;font-weight:500;line-height:1.4}
+#pp-organizer-sketch h2{font-size:18px;font-weight:500}
+#pp-organizer-sketch h3{font-size:15px;font-weight:500}
+#pp-organizer-sketch button,#pp-organizer-sketch input,#pp-organizer-sketch select,#pp-organizer-sketch textarea{font:inherit;color:inherit;max-width:100%}
+#pp-organizer-sketch button{padding:9px 14px;background:var(--pp-paper);border:1px solid var(--pp-line);border-radius:7px;cursor:pointer}
+#pp-organizer-sketch button:hover{background:var(--pp-soft)}
+#pp-organizer-sketch button:disabled{opacity:.5;cursor:default}
+#pp-organizer-sketch button.pp-primary{background:var(--pp-accent);color:var(--pp-on-accent);border-color:var(--pp-accent)}
+#pp-organizer-sketch button:focus-visible,#pp-organizer-sketch input:focus-visible,#pp-organizer-sketch select:focus-visible{outline:2px solid var(--pp-accent);outline-offset:3px}
+#pp-organizer-sketch .pp-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 24px;background:var(--pp-paper);border-bottom:1px solid var(--pp-line)}
+#pp-organizer-sketch .pp-brand{font-weight:500;font-size:18px;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+#pp-organizer-sketch .pp-mark{color:var(--pp-gold)}
+#pp-organizer-sketch .pp-topmeta{display:flex;gap:12px;align-items:center;color:var(--pp-muted);padding-right:70px}
+#pp-organizer-sketch .pp-pill{font-size:12px;border:1px solid var(--pp-line);padding:4px 8px;border-radius:20px;white-space:nowrap}
+#pp-organizer-sketch .pp-layout{display:grid;grid-template-columns:178px minmax(0,1fr);min-height:680px}
+#pp-organizer-sketch .pp-side{padding:24px 14px;background:var(--pp-paper);border-right:1px solid var(--pp-line);display:flex;flex-direction:column;gap:8px}
+#pp-organizer-sketch .pp-label{font-size:12px;color:var(--pp-muted);letter-spacing:.05em}
+#pp-organizer-sketch .pp-side .pp-project{padding:0 8px 16px;display:grid;gap:7px;border-bottom:1px solid var(--pp-line);margin-bottom:10px}
+#pp-organizer-sketch .pp-side button{text-align:left;border-color:transparent;background:transparent;display:flex;align-items:center;gap:10px}
+#pp-organizer-sketch .pp-side button[aria-selected=true]{background:var(--pp-soft);color:var(--pp-accent);font-weight:500}
+#pp-organizer-sketch .pp-side .pp-sidefoot{margin-top:auto;padding:24px 8px 0;color:var(--pp-muted);font-size:12px;line-height:1.7}
+#pp-organizer-sketch .pp-content{padding:26px;min-width:0}
+#pp-organizer-sketch .pp-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+#pp-organizer-sketch .pp-heading p{color:var(--pp-muted);margin-top:6px;line-height:1.6}
+#pp-organizer-sketch .pp-columns{display:grid;grid-template-columns:minmax(0,1fr) 208px;gap:20px;align-items:start}
+#pp-organizer-sketch .pp-stack{display:grid;gap:18px;min-width:0}
+#pp-organizer-sketch .pp-section{padding:18px;background:var(--pp-paper);border:1px solid var(--pp-line);border-radius:9px;min-width:0}
+#pp-organizer-sketch .pp-section h3{margin-bottom:12px}
+#pp-organizer-sketch .pp-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#pp-organizer-sketch label{display:grid;gap:7px;min-width:0}
+#pp-organizer-sketch input,#pp-organizer-sketch select,#pp-organizer-sketch textarea{background:var(--pp-paper);border:1px solid var(--pp-line);border-radius:6px;padding:9px;width:100%}
+#pp-organizer-sketch textarea{resize:vertical;min-height:64px;line-height:1.5}
+#pp-organizer-sketch .pp-upload{padding:17px;border:1px dashed var(--pp-line);border-radius:7px;display:grid;gap:8px;margin-top:12px}
+#pp-organizer-sketch .pp-help{font-size:12px;color:var(--pp-muted);line-height:1.65}
+#pp-organizer-sketch .pp-full{grid-column:1/-1}
+#pp-organizer-sketch .pp-summary{display:grid;gap:14px}
+#pp-organizer-sketch .pp-summary dl{margin:0;display:grid;gap:12px}
+#pp-organizer-sketch .pp-summary dl div{display:flex;justify-content:space-between;gap:10px}
+#pp-organizer-sketch dt{color:var(--pp-muted)}
+#pp-organizer-sketch dd{margin:0;text-align:right}
+#pp-organizer-sketch .pp-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+#pp-organizer-sketch .pp-summary .pp-primary{width:100%}
+#pp-organizer-sketch .pp-route{display:grid;gap:0;margin-top:12px}
+#pp-organizer-sketch .pp-stage{display:grid;grid-template-columns:28px 1fr auto;gap:12px;padding:16px 0;align-items:start;border-bottom:1px solid var(--pp-line)}
+#pp-organizer-sketch .pp-stage:last-child{border:0}
+#pp-organizer-sketch .pp-number{display:grid;place-items:center;height:26px;width:26px;border-radius:50%;background:var(--pp-soft);color:var(--pp-muted)}
+#pp-organizer-sketch .pp-stage[data-status=done] .pp-number,#pp-organizer-sketch .pp-stage[data-status=running] .pp-number{background:var(--pp-accent);color:var(--pp-on-accent)}
+#pp-organizer-sketch .pp-stage p{font-size:12px;color:var(--pp-muted);margin-top:4px;line-height:1.6}
+#pp-organizer-sketch .pp-state{font-size:12px;color:var(--pp-muted);white-space:nowrap}
+#pp-organizer-sketch .pp-bar{height:5px;background:var(--pp-soft);border-radius:4px;overflow:hidden;margin-top:18px}
+#pp-organizer-sketch .pp-bar span{display:block;width:0;height:100%;background:var(--pp-accent)}
+#pp-organizer-sketch .pp-message{padding:14px 0;color:var(--pp-gold);line-height:1.6}
+#pp-organizer-sketch .pp-row{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:16px 0;border-bottom:1px solid var(--pp-line);flex-wrap:wrap}
+#pp-organizer-sketch .pp-row:last-child{border:0}
+#pp-organizer-sketch .pp-row p{margin-top:5px;color:var(--pp-muted);font-size:12px}
+#pp-organizer-sketch .pp-scene{min-height:240px;border:1px dashed var(--pp-line);background:var(--pp-soft);display:grid;align-content:center;justify-items:center;gap:12px;text-align:center;padding:22px;border-radius:7px}
+#pp-organizer-sketch .pp-scene p{max-width:300px;color:var(--pp-muted);line-height:1.6}
+#pp-organizer-sketch .pp-task{padding:16px;background:var(--pp-paper);border:1px solid var(--pp-line);border-radius:7px;margin-top:12px;display:grid;gap:10px}
+#pp-organizer-sketch .pp-task .pp-actions{margin:0}
+#pp-organizer-sketch .pp-deliveries{display:grid;gap:12px;margin-top:16px}
+#pp-organizer-sketch .pp-footer{padding:12px 24px;border-top:1px solid var(--pp-line);color:var(--pp-muted);font-size:12px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;background:var(--pp-paper)}
+#pp-organizer-sketch .pp-note{margin-top:14px;line-height:1.7;color:var(--pp-muted);font-size:12px}
+#pp-organizer-sketch details{margin-top:14px;color:var(--pp-muted);font-size:12px;line-height:1.7}
+#pp-organizer-sketch summary{cursor:pointer}
+@media(max-width:800px){#pp-organizer-sketch .pp-columns{grid-template-columns:1fr}#pp-organizer-sketch .pp-summary{grid-template-columns:1fr 1fr}#pp-organizer-sketch .pp-summary .pp-primary,#pp-organizer-sketch .pp-summary>.pp-help{grid-column:1/-1}#pp-organizer-sketch .pp-content{padding:20px}}
+@media(max-width:560px){#pp-organizer-sketch .pp-layout{grid-template-columns:1fr}#pp-organizer-sketch .pp-side{border-right:0;border-bottom:1px solid var(--pp-line);padding:12px;display:grid;grid-template-columns:1fr 1fr}#pp-organizer-sketch .pp-side .pp-project,#pp-organizer-sketch .pp-sidefoot{display:none}#pp-organizer-sketch .pp-top{padding:14px}#pp-organizer-sketch .pp-topmeta{padding:0}#pp-organizer-sketch .pp-fields,#pp-organizer-sketch .pp-summary{grid-template-columns:1fr}#pp-organizer-sketch .pp-content{padding:16px}#pp-organizer-sketch .pp-heading{margin-bottom:16px}#pp-organizer-sketch .pp-stage{grid-template-columns:26px 1fr}#pp-organizer-sketch .pp-state{grid-column:2}#pp-organizer-sketch button{min-height:42px}}
+#pp-organizer-sketch .pp-entry-picker{padding:0;margin:0 0 14px;border:0;min-width:0}
+#pp-organizer-sketch .pp-entry-picker legend{margin-bottom:12px;font-weight:500}
+#pp-organizer-sketch .pp-entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#pp-organizer-sketch .pp-entry{display:flex;align-items:flex-start;gap:10px;padding:14px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-paper);cursor:pointer;min-width:0}
+#pp-organizer-sketch .pp-entry:has(input:checked){border-color:var(--pp-accent);background:var(--pp-soft)}
+#pp-organizer-sketch .pp-entry input,#pp-organizer-sketch .pp-inline-check input{width:16px;height:16px;flex:0 0 16px;margin:3px 0 0;accent-color:var(--pp-accent)}
+#pp-organizer-sketch .pp-entry span{display:grid;gap:5px;min-width:0}
+#pp-organizer-sketch .pp-entry small{font-size:12px;color:var(--pp-muted);line-height:1.5}
+#pp-organizer-sketch .pp-inline-check{display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.65}
+#pp-organizer-sketch .pp-context{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0 20px;color:var(--pp-muted);font-size:12px;line-height:1.65}
+#pp-organizer-sketch .pp-check-space{margin-top:12px}
+#pp-organizer-sketch .pp-review-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+#pp-organizer-sketch .pp-review-columns>div{border:1px dashed var(--pp-line);padding:16px;border-radius:6px;display:grid;gap:10px}
+#pp-organizer-sketch .pp-summary dd{overflow-wrap:anywhere}
+#pp-organizer-sketch .pp-summary dl div{display:grid;grid-template-columns:34px 1fr}
+#pp-organizer-sketch .pp-help{overflow-wrap:anywhere}
+#pp-organizer-sketch .pp-section .pp-row>div{min-width:0;flex:1 1 200px}
+@media(max-width:560px){#pp-organizer-sketch .pp-entry-grid,#pp-organizer-sketch .pp-review-columns{grid-template-columns:1fr}}
+
+#pp-organizer-sketch .pp-resume-summary{margin:16px 0;padding:18px;border:1px solid var(--pp-line);border-radius:8px;background:var(--pp-soft)}
+#pp-organizer-sketch .pp-resume-summary ul{padding-left:20px;margin:0;color:var(--pp-muted);font-size:12px;line-height:1.8}
+</style>
+<div id="pp-organizer-sketch" aria-label="PastPort统一制作网站草图">
+ <header class="pp-top"><div class="pp-brand"><span class="pp-mark">P●</span> PastPort <span class="pp-label">Organizer</span></div><div class="pp-topmeta"><span class="pp-pill">可点击草图 · 模拟数据</span><span>Organizer · 主办方</span></div></header>
+ <div class="pp-layout">
+  <nav class="pp-side" role="tablist" aria-label="项目工作区">
+   <div class="pp-project"><span class="pp-label">当前项目</span><strong>穆拉迪耶遗址</strong><span class="pp-help">同一份资料 · 同一套场景</span></div>
+   <button id="pp-nav-make" role="tab" aria-selected="true" aria-controls="pp-panel-make" data-page="make">＋ 制作游戏</button>
+   <button id="pp-nav-materials" role="tab" aria-selected="false" aria-controls="pp-panel-materials" data-page="materials">▤ 资料与审核</button>
+   <button id="pp-nav-runs" role="tab" aria-selected="false" aria-controls="pp-panel-runs" data-page="runs">◷ 制作进度</button>
+   <button id="pp-nav-delivery" role="tab" aria-selected="false" aria-controls="pp-panel-delivery" data-page="delivery">▷ 预览与交付</button>
+   <div class="pp-sidefoot">一个项目贯穿全程<br>不需要切换其他后台</div>
+  </nav>
+  <main class="pp-content">
+   <section id="pp-panel-make" role="tabpanel" aria-labelledby="pp-nav-make">
+    <div class="pp-heading"><div><h1>从你已有的材料继续制作</h1><p>选择起点，复用已完成的成果，不必从头再做。</p></div></div>
+    <fieldset class="pp-entry-picker"><legend>你现在准备到哪一步？</legend><div class="pp-entry-grid">
+     <label class="pp-entry"><input type="radio" name="pp-entry" value="raw" checked><span><strong>原始资料</strong><small>原始PDF ＋ 现场照片</small></span></label>
+     <label class="pp-entry"><input type="radio" name="pp-entry" value="mapping"><span><strong>已有映射PDF</strong><small>原始PDF ＋ 映射PDF ＋ 360°导览</small></span></label>
+     <label class="pp-entry"><input type="radio" name="pp-entry" value="vr"><span><strong>已有匹配VR</strong><small>复用热点、物件与审核记录</small></span></label>
+     <label class="pp-entry"><input type="radio" name="pp-entry" value="3d"><span><strong>已有挂载3D</strong><small>复用模型、物件、导航和审核记录</small></span></label>
+    </div></fieldset>
+    <div class="pp-context"><span id="pp-entry-hint"></span><label class="pp-inline-check"><input id="pp-demo-materials" type="checkbox" checked>使用示例材料演示</label></div>
+    <div class="pp-columns"><div class="pp-stack">
+     <section class="pp-section"><h3>1　准备本次材料</h3><label>游戏名称<input id="pp-name" value="穆拉迪耶 · 一场遗址探索" maxlength="80"></label>
+      <div class="pp-upload"><label><strong>原始史料PDF</strong><input id="pp-pdf" type="file" accept="application/pdf,.pdf" aria-label="原始史料PDF"></label><span id="pp-pdf-note" class="pp-help"></span><span class="pp-help">已有项目可关联原件，无需重复上传；映射PDF不能代替原始史料。</span></div>
+      <div id="pp-input-raw" class="pp-input-branch"><div class="pp-upload"><label><strong>现场物件照片</strong><input id="pp-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="现场物件照片"></label><span id="pp-photos-note" class="pp-help"></span></div>
+       <label class="pp-inline-check pp-check-space"><input id="pp-has-tour" type="checkbox" checked>我还准备了360°全景导览</label><div id="pp-raw-tour" class="pp-upload"><label>360°全景导览<input id="pp-tour-raw" type="file" accept=".html,.zip" aria-label="原始资料的360度导览"></label><span id="pp-tour-raw-note" class="pp-help"></span></div><p id="pp-no-tour" class="pp-help pp-check-space" hidden>没有360°导览也能先生成映射资料；补齐导览后再继续环境和游戏制作。</p><p id="pp-mapping-ready" class="pp-help pp-check-space" hidden>本项目的映射草稿已生成；本次将校验后复用。</p>
+      </div>
+      <div id="pp-input-mapping" class="pp-input-branch" hidden><div class="pp-upload"><label><strong>映射PDF</strong><input id="pp-mapping-pdf" type="file" accept=".pdf,application/pdf" aria-label="映射PDF"></label><span id="pp-mapping-note" class="pp-help"></span></div><div class="pp-upload"><label><strong>360°全景导览</strong><input id="pp-tour-mapping" type="file" accept=".html,.zip" aria-label="映射资料的360度导览"></label><span id="pp-tour-mapping-note" class="pp-help"></span></div><p class="pp-help pp-check-space">复用映射文档；继续把对应物件定位到全景环境中，不重生成映射PDF。</p></div>
+      <div id="pp-input-vr" class="pp-input-branch" hidden><div class="pp-upload"><label><strong>已匹配VR项目包</strong><input id="pp-vr-package" type="file" accept=".zip,.json" aria-label="已匹配VR项目包"></label><span id="pp-vr-note" class="pp-help"></span><span class="pp-help">包含导览、热点、物件、审核记录与来源关联；普通全景图片不属于已匹配VR。</span></div><p class="pp-help pp-check-space">映射和VR物件信息随项目复用，无需重新上传映射PDF。接下来生成并挂载3D。</p></div>
+      <div id="pp-input-3d" class="pp-input-branch" hidden><div class="pp-upload"><label><strong>已挂载3D环境包</strong><input id="pp-3d-package" type="file" accept=".zip,.json" aria-label="已挂载3D环境包"></label><span id="pp-3d-note" class="pp-help"></span><span class="pp-help">包含模型资源、物件编号与挂载、共享审核数据及导航。</span></div><label class="pp-inline-check pp-check-space"><input id="pp-includes-bindings" type="checkbox" checked>环境包已经包含物件挂载和审核记录</label><div id="pp-binding-upload" class="pp-upload" hidden><label><strong>补充物件绑定与审核数据</strong><input id="pp-bindings" type="file" accept=".zip,.json" aria-label="物件绑定与审核数据"></label><span id="pp-bindings-note" class="pp-help"></span><span class="pp-help">只有裸模型不能直接安排物件任务；补齐后再继续。</span></div><p class="pp-help pp-check-space">校验后复用现有3D、映射和空间结果，不重新识别或建模。</p></div>
+      <button type="button" data-go="materials" class="pp-check-space">查看这个起点的资料与审核 →</button>
+     </section>
+     <section class="pp-section"><h3>2　选择体验</h3><div class="pp-fields"><label>目标体验时长<select id="pp-length"><option>约10分钟</option><option>约5分钟</option><option>约15分钟</option></select></label><label>语言<select id="pp-language"><option>中文 / English</option><option>中文</option><option>English</option></select></label><label class="pp-full">希望玩家带走什么？<textarea id="pp-goal" placeholder="例如：通过观察遗址，理解建筑如何随时代变化。"></textarea></label></div><label class="pp-inline-check pp-check-space"><input id="pp-restyle" type="checkbox">重新统一场景风格</label><p class="pp-help pp-check-space">默认沿用场景外观。体验时长是Story的创作目标，不是生成耗时或精确计时保证。</p><details><summary>高级设置</summary><p>能力、支持格式和模型用量限制由后台提供；正式制作前显示本次生成与复用范围。当前仅演示。</p></details></section>
+    </div><aside class="pp-section pp-summary"><h3>这次会做什么</h3><span class="pp-pill" id="pp-summary-start"></span><dl><div><dt>复用</dt><dd id="pp-summary-reuse"></dd></div><div><dt>生成</dt><dd id="pp-summary-create"></dd></div><div><dt>交付</dt><dd id="pp-summary-output"></dd></div></dl><p class="pp-help" id="pp-summary-next"></p><button class="pp-primary" id="pp-generate">开始制作 →</button><p class="pp-help">草图不上传文件、不调用模型。正式复用须校验来源、物件身份与版本。</p><p id="pp-form-error" role="alert" class="pp-help" hidden></p></aside></div>
+   </section>
+   <section id="pp-panel-materials" role="tabpanel" aria-labelledby="pp-nav-materials" hidden>
+    <div class="pp-heading"><div><h1>资料与审核</h1><p id="pp-review-context"></p></div><button data-go="make">返回当前制作</button></div>
+    <section class="pp-section"><div id="pp-material-rows"></div></section>
+    <section id="pp-review-detail" class="pp-section" style="margin-top:18px" hidden><span class="pp-label" id="pp-review-kind"></span><h3 id="pp-review-title" style="margin-top:8px"></h3><p id="pp-review-description" class="pp-note"></p><div class="pp-review-columns"><div><h3 id="pp-review-left"></h3><p id="pp-review-left-body" class="pp-help"></p></div><div><h3 id="pp-review-right"></h3><p id="pp-review-right-body" class="pp-help"></p></div></div><label style="margin-top:14px">核对备注<textarea placeholder="补充核对意见（仅草图，不写入真实数据库）。"></textarea></label><div class="pp-actions"><button id="pp-review-save">演示保存备注</button><span id="pp-review-status" class="pp-help" aria-live="polite"></span></div><p class="pp-note">与制作页共用同一项目、同一份材料和物件档案；未核实项保留原状态。</p></section>
+   </section>
+   <section id="pp-panel-runs" role="tabpanel" aria-labelledby="pp-nav-runs" hidden>
+    <div class="pp-heading"><div><h1>制作进度</h1><p id="pp-run-title">还没有启动本次制作。</p></div><span class="pp-pill" id="pp-run-state">等待开始</span></div>
+    <section class="pp-section"><div class="pp-heading" style="margin-bottom:0"><h2 id="pp-job-title">遗址探索游戏</h2><span class="pp-help" id="pp-step-count">0 / 5 步</span></div><div class="pp-bar" role="progressbar" aria-label="模拟制作步骤" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"><span></span></div><div class="pp-route" id="pp-route"></div><p id="pp-run-message" class="pp-message" aria-live="polite"></p><div id="pp-resume-summary" class="pp-resume-summary" hidden aria-live="polite"><h3>恢复前，先确认本次结果</h3><p id="pp-resume-origin" class="pp-help"></p><div class="pp-review-columns"><div><h3>已经保留</h3><ul id="pp-resume-saved"></ul></div><div><h3>接下来继续</h3><p id="pp-resume-next" class="pp-help"></p></div></div><p class="pp-note">继续时沿用同一次执行找回的结果，不重新生成已经完成的内容。</p><div class="pp-actions"><button id="pp-resume-confirm" class="pp-primary">确认结果，继续制作 →</button></div></div>
+<div class="pp-actions"><button id="pp-stop" hidden>停止后续步骤</button><button id="pp-add-tour" hidden>补充360°导览，继续制作</button><button id="pp-check-call" hidden>核对这次执行的状态</button><button id="pp-open-delivery" class="pp-primary" data-go="delivery" hidden>打开预览与交付 →</button><button data-go="make">查看制作要求</button></div><details><summary>制作详情</summary><p>页面读取统一的任务状态。已完成步骤保留结果；中断不默认重发模型请求。内部模块更新不改变主办方操作方式。</p></details></section>
+    <div class="pp-actions"><span class="pp-help">草图演示场景</span><select id="pp-scenario" aria-label="选择草图演示场景"><option value="normal">正常生成</option><option value="interrupted">生成中断与找回结果</option></select><button id="pp-replay">重新演示</button></div><p class="pp-note">进度仅为交互演示，不代表真实生成耗时。</p>
+   </section>
+   <section id="pp-panel-delivery" role="tabpanel" aria-labelledby="pp-nav-delivery" hidden>
+    <div class="pp-heading"><div><h1>预览与交付</h1><p>管理制作结果；玩家体验使用独立的User界面。</p></div><span class="pp-pill" id="pp-delivery-state">等待生成</span></div>
+    <div id="pp-delivery-empty" class="pp-section"><h3>游戏尚未生成</h3><p class="pp-note">当前起点完成后，在这里查看阶段成果和下一步需要的材料。</p><div class="pp-actions"><button class="pp-primary" data-go="make">返回材料</button><button data-go="runs">查看制作进度</button></div></div>
+    <div id="pp-delivery-ready" hidden><section class="pp-section"><h2>本版游戏已准备好</h2><p class="pp-note">Organizer负责管理这一版产物。试玩将打开独立User入口，不把玩家界面混入制作后台。</p><div class="pp-actions"><button class="pp-primary" disabled>打开独立试玩（待接线）</button><span class="pp-help">本轮只设计Organizer，不改User。</span></div></section><section class="pp-section pp-deliveries" style="margin-top:18px"><h3>交付与来源</h3><p class="pp-help">可运行游戏包 · 版本与资源清单 · 史料出处 · 未核实项目</p><div class="pp-actions" style="margin:0"><button id="pp-manifest">查看交付清单示意</button><button data-go="materials">返回本项目审核记录</button><button data-go="make">调整要求，制作下一版</button></div><p id="pp-manifest-copy" class="pp-help" hidden>此处列出最终产物及各阶段生成/复用记录。草图未生成真实下载文件，也未连接生成服务。</p></section></div>
+   </section>
+
+  </main>
+ </div>
+ <footer class="pp-footer"><span>统一网站：制作 → 资料审核 → 进度 → 试玩交付</span><span>设计草图 · 未连接真实后台</span></footer>
+</div>
+<script>
+(()=>{
+ const root=document.getElementById('pp-organizer-sketch'),q=s=>root.querySelector(s);
+ const entries={raw:{title:'原始资料',hint:'先生成照片与史料的映射。360°导览可一起提供，也可以之后补齐。',reuse:'原始史料',create:'映射、环境与故事游戏'},mapping:{title:'已有映射PDF',hint:'读取原始史料与映射PDF，从全景定位和环境搭建继续。',reuse:'映射PDF',create:'VR、3D与故事游戏'},vr:{title:'已有匹配VR',hint:'保留原来的热点、物件、审核内容和导航，从3D制作继续。',reuse:'映射与匹配VR',create:'3D与故事游戏'},'3d':{title:'已有挂载3D',hint:'复用已挂载的3D及空间信息，直接进入故事和玩法制作。',reuse:'3D、物件、审核与导航',create:'故事、玩法与游戏'}};
+ const samples={'pp-pdf':'原始史料.pdf · 62页','pp-photos':'8张现场物件照片','pp-mapping-pdf':'映射资料.pdf','pp-tour-raw':'现场360导览.zip','pp-tour-mapping':'现场360导览.zip','pp-vr-package':'已匹配VR项目包.zip','pp-3d-package':'已挂载3D环境包.zip'};
+ const notes={'pp-pdf':'pp-pdf-note','pp-photos':'pp-photos-note','pp-mapping-pdf':'pp-mapping-note','pp-tour-raw':'pp-tour-raw-note','pp-tour-mapping':'pp-tour-mapping-note','pp-vr-package':'pp-vr-note','pp-3d-package':'pp-3d-note','pp-bindings':'pp-bindings-note'};
+ const state={entry:'raw',page:'make',stage:-1,status:'idle',timer:null,scenario:'normal',plan:[],mappingReady:false};
+ const design={details:true};
+ function go(page){state.page=page;root.querySelectorAll('[data-page]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.page===page)));root.querySelectorAll('[role=tabpanel]').forEach(p=>p.hidden=p.id!=='pp-panel-'+page);}
+ function has(id){return q('#'+id).files.length>0||q('#pp-demo-materials').checked&&Object.hasOwn(samples,id);}
+ function selected(id){const input=q('#'+id);return input.files.length?Array.from(input.files).map(f=>f.name).join('、'):(q('#pp-demo-materials').checked?samples[id]||'未提供':'未选择');}
+ function partial(){return state.entry==='raw'&&!q('#pp-has-tour').checked;}
+ function buildPlan(){const e=state.entry,existing=['vr','3d'].includes(e),noTour=partial();return [
+ {key:'source',title:'登记并读取原始史料',detail:'保留原文出处、材料版本与核实状态。',mode:'run'},
+ {key:'mapping',title:'照片与历史对象映射',detail:e==='raw'&&!state.mappingReady?'识别现场物件，生成有出处的映射草稿。':'核对已有对应关系和原件，不重新生成映射PDF。',mode:e==='raw'&&!state.mappingReady?'run':'reuse'},
+ {key:'vr',title:'全景物件定位与VR环境',detail:noTour?'需要360°导览；映射资料先保存。':existing?'校验并复用热点、物件、审核记录和导航。':'结合360°导览与映射，建立共享物件档案。',mode:noTour?'wait':existing?'reuse':'run'},
+ {key:'3d',title:'3D生成与物件挂载',detail:e==='3d'?'读取已有绑定和空间结果，不重新建模。':'从全景调用已配置的3D服务，再挂载物件和导航。',mode:e==='3d'?'reuse':'run'},
+ {key:'style',title:'场景风格处理',detail:q('#pp-restyle').checked?'按本次要求处理外观，保留物件与几何身份。':'沿用当前外观。',mode:q('#pp-restyle').checked?'run':'skip'},
+ {key:'story',title:'编排剧情与任务',detail:'根据目标时长、史料、空间和已有玩法能力规划。',mode:'run'},
+ {key:'gameplay',title:'准备玩法和呈现',detail:'生成插件参数，绑定物件、站位、导航和界面。',mode:'run'},
+ {key:'package',title:'组包、检查与试玩',detail:'检查依赖与资源，把游戏运行代码和内容装好。',mode:'run'}];}
+ function reviewData(){const common=[{key:'source',title:'原始史料与出处',description:selected('pp-pdf'),status:has('pp-pdf')?'已关联':'待提供'}];if(state.entry==='raw')return [...common,{key:'photos',title:'现场物件照片',description:selected('pp-photos'),status:has('pp-photos')?'已选择':'待提供'},{key:'mapping',title:'照片 ↔ 历史对象 ↔ 原文出处',description:state.mappingReady?'映射草稿已生成，待按需要核对。':'制作后在这里核对识别结果、对应理由和来源。',status:state.mappingReady?'草稿可核对':'待生成'},...(q('#pp-has-tour').checked?[{key:'vr',title:'360°导览材料',description:selected('pp-tour-raw'),status:'待定位'}]:[])];if(state.entry==='mapping')return [...common,{key:'mapping',title:'已有映射PDF与对应关系',description:selected('pp-mapping-pdf'),status:has('pp-mapping-pdf')?'待核对':'待提供'},{key:'vr',title:'360°导览与物件定位',description:selected('pp-tour-mapping'),status:'待定位'}];if(state.entry==='vr')return [...common,{key:'vr',title:'匹配VR、热点与物件',description:selected('pp-vr-package'),status:has('pp-vr-package')?'校验后复用':'待提供'},{key:'content',title:'共享物件内容与审核记录',description:'查看介绍、历史对应、出处与已有修改。',status:'保留原状态'},{key:'navigation',title:'VR点位连接与导航',description:'读取现有点位与转场，不重新安排来源编号。',status:'校验后复用'}];return [...common,{key:'3d',title:'3D模型与物件挂载',description:selected('pp-3d-package'),status:has('pp-3d-package')?'校验后复用':'待提供'},{key:'content',title:'绑定、史料与共享审核记录',description:q('#pp-includes-bindings').checked?'随3D项目关联，同一个物件档案。':selected('pp-bindings'),status:q('#pp-includes-bindings').checked||has('pp-bindings')?'保留原状态':'缺少绑定数据'},{key:'navigation',title:'3D导航与空间限制',description:'核对各视点的位置、连通关系、观察与接近限制。',status:'未知仍保留未知'}];}
+ function openReview(item){q('#pp-review-detail').hidden=false;q('#pp-review-kind').textContent='当前起点：'+entries[state.entry].title;q('#pp-review-title').textContent=item.title;const descriptions={source:['原始史料','原文与页码','区分原文内容与后续故事虚构，保留可追溯出处。'],photos:['现场照片','识别的物件','查看多角度照片及重复物件身份，不把照片像素当三维坐标。'],mapping:['现场物件与照片','历史对应与原文','核对替代关系、年代、对应理由与来源；没有根据的关联保留未核实。'],vr:['全景与热点位置','物件档案与来源','查看编号在全景里的位置；已有VR复用原记录，新导览则继续定位。'],content:['同一个物件档案','介绍、出处与审核记录','修改共享内容后供VR、3D和Story共同读取，不另建一份审核库。'],'3d':['3D中的物件挂载','来源与绑定身份','复用已挂载物件的位置和身份；只有裸模型时要补绑定信息。'],navigation:state.entry==='vr'?['点位与导航箭头','目标点位与进入朝向','复用已登记的导航连接，保留箭头位置和进入朝向。']:['3D视点、位置与路线','观察、接近与操作限制','不要求所有物件都能走近；远观任务与移动任务分开，移动仍须符合空间连续性。']};const d=descriptions[item.key];q('#pp-review-description').textContent=d[2];q('#pp-review-left').textContent=d[0];q('#pp-review-right').textContent=d[1];q('#pp-review-left-body').textContent='在这里展示当前项目关联的材料；草图仅示意布局。';q('#pp-review-right-body').textContent='在这里核对同一版本记录；不自动把未知状态标成通过。';q('#pp-review-status').textContent='';}
+ function updateInputs(){root.querySelectorAll('.pp-input-branch').forEach(p=>p.hidden=p.id!=='pp-input-'+state.entry);q('#pp-entry-hint').textContent=entries[state.entry].hint;q('#pp-raw-tour').hidden=!q('#pp-has-tour').checked;q('#pp-no-tour').hidden=q('#pp-has-tour').checked;q('#pp-binding-upload').hidden=q('#pp-includes-bindings').checked;q('#pp-mapping-ready').hidden=!(state.entry==='raw'&&state.mappingReady);for(const [id,note] of Object.entries(notes)){const uploaded=q('#'+id).files.length>0;q('#'+note).textContent=selected(id)+(uploaded?' · 已选择，未上传':has(id)?' · 示例材料':'');}q('#pp-summary-start').textContent=entries[state.entry].title;q('#pp-summary-reuse').textContent=state.entry==='raw'&&state.mappingReady?'已生成的映射草稿':entries[state.entry].reuse;q('#pp-summary-create').textContent=partial()?'映射PDF':entries[state.entry].create+(q('#pp-restyle').checked?'、风格处理':'');q('#pp-summary-output').textContent=partial()?'映射资料，随后补360°':'可玩的游戏';q('#pp-summary-next').textContent=partial()?'映射完成后暂停，补充360°即可继续；不会把资料阶段当成游戏已生成。':'每个复用阶段仍核对来源与版本，未核实项保留标记。';q('#pp-generate').textContent=partial()?'先生成映射PDF →':'开始制作 →';q('#pp-review-context').textContent='当前起点：'+entries[state.entry].title+' · 与制作页共用材料，不重复上传';const rows=q('#pp-material-rows');rows.replaceChildren();for(const item of reviewData()){const row=document.createElement('div');row.className='pp-row';const copy=document.createElement('div'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=item.title;p.textContent=item.description;copy.append(h,p);const badge=document.createElement('span');badge.className='pp-pill';badge.textContent=item.status;const b=document.createElement('button');b.textContent='查看与核对';b.addEventListener('click',()=>openReview(item));row.append(copy,badge,b);rows.append(row);}}
+ function draw(){const plan=state.plan.length?state.plan:buildPlan(),route=q('#pp-route');route.replaceChildren();plan.forEach((item,i)=>{const row=document.createElement('div');row.className='pp-stage';const done=i<state.stage||state.status==='done';let text=item.mode==='reuse'?'将校验并复用':item.mode==='skip'?'沿用原外观':item.mode==='wait'?'需补材料':'等待';if(done)text=item.mode==='reuse'?'已校验并复用':item.mode==='skip'?'沿用原外观':'已完成';else if(i===state.stage)text=state.status==='running'?'进行中':state.status==='interrupted'?'核对执行状态':state.status==='awaiting'?'等待360°':state.status==='resume_ready'?'结果已找回，待确认':'已停止';row.dataset.status=done?'done':i===state.stage&&state.status==='running'?'running':'pending';const n=document.createElement('span');n.className='pp-number';n.textContent=done?'✓':String(i+1);const copy=document.createElement('div'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=item.title;p.textContent=item.detail;p.hidden=!design.details;copy.append(h,p);const label=document.createElement('span');label.className='pp-state';label.textContent=text;row.append(n,copy,label);route.append(row);});const complete=state.status==='done'?plan.length:Math.max(0,state.stage);q('.pp-bar').setAttribute('aria-valuemax',String(plan.length));q('.pp-bar').setAttribute('aria-valuenow',String(complete));q('.pp-bar span').style.width=complete/plan.length*100+'%';q('#pp-step-count').textContent=complete+' / '+plan.length+' 步';q('#pp-run-state').textContent=({idle:'等待开始',running:'制作中',interrupted:'需要核对',stopped:'已停止后续步骤',resume_ready:'等待确认恢复',awaiting:'等待补充材料',done:'可预览'})[state.status];q('#pp-stop').hidden=state.status!=='running';q('#pp-check-call').hidden=!['interrupted','stopped'].includes(state.status);q('#pp-add-tour').hidden=state.status!=='awaiting';q('#pp-open-delivery').hidden=!['done','awaiting'].includes(state.status);q('#pp-open-delivery').textContent=state.status==='awaiting'?'查看映射阶段产物 →':'打开预览与交付 →';q('#pp-resume-summary').hidden=state.status!=='resume_ready';const locked=['running','interrupted','stopped','resume_ready'].includes(state.status);q('#pp-generate').disabled=locked;q('#pp-replay').disabled=locked;root.querySelectorAll('input[name=pp-entry],#pp-demo-materials,#pp-has-tour,#pp-includes-bindings,#pp-restyle').forEach(c=>c.disabled=locked);root.querySelectorAll('#pp-panel-make input[type=file],#pp-name,#pp-length,#pp-language,#pp-goal').forEach(c=>c.disabled=locked);q('#pp-delivery-empty').hidden=state.status==='done';q('#pp-delivery-ready').hidden=state.status!=='done';q('#pp-delivery-state').textContent=state.status==='done'?'草稿可预览':state.status==='awaiting'?'映射资料已完成':'等待生成';q('#pp-delivery-empty h3').textContent=state.status==='awaiting'?'映射草稿已完成，游戏尚未生成':'游戏尚未生成';q('#pp-delivery-empty .pp-note').textContent=state.status==='awaiting'?'本项目保留映射PDF、原文出处和未核实清单。补充360°导览后，复用这份映射继续环境制作。':'完成制作后，在同一网站打开预览、查看来源和交付文件。';}
+ function next(){if(state.status!=='running')return;const item=state.plan[state.stage];if(item.mode==='wait'){state.status='awaiting';q('#pp-run-message').textContent='映射资料已生成并保存在当前项目；需要360°导览后才能继续定位、环境和游戏制作。';updateInputs();draw();return;}if(item.key==='story'&&state.scenario==='interrupted'){state.status='interrupted';q('#pp-run-message').textContent='生成等待中断，是否完成仍在核对。保留现有结果，不自动重发模型请求。';draw();return;}if(item.key==='mapping'&&state.entry==='raw')state.mappingReady=true;if(state.stage===state.plan.length-1){state.status='done';q('#pp-run-message').textContent='模拟制作完成。复用与生成记录、来源和未核实状态随本版保留。';updateInputs();draw();return;}state.stage++;draw();state.timer=setTimeout(next,state.plan[state.stage].mode==='run'?600:160);}
+ function validate(){const needed=[['pp-pdf','原始史料PDF']];if(state.entry==='raw'){if(!state.mappingReady)needed.push(['pp-photos','现场物件照片']);if(q('#pp-has-tour').checked)needed.push(['pp-tour-raw','360°导览']);}if(state.entry==='mapping')needed.push(['pp-mapping-pdf','映射PDF'],['pp-tour-mapping','360°导览']);if(state.entry==='vr')needed.push(['pp-vr-package','已匹配VR项目包']);if(state.entry==='3d'){needed.push(['pp-3d-package','已挂载3D环境包']);if(!q('#pp-includes-bindings').checked)needed.push(['pp-bindings','物件绑定与审核数据']);}if(!q('#pp-name').value.trim())return '请填写游戏名称。';const missing=needed.filter(([id])=>!has(id)).map(([,name])=>name);return missing.length?'还需要：'+missing.join('、')+'。':'';}
+ function start(){const error=validate();q('#pp-form-error').hidden=!error;q('#pp-form-error').textContent=error;if(error){go('make');return;}clearTimeout(state.timer);state.plan=buildPlan();state.stage=0;state.status='running';state.scenario=q('#pp-scenario').value;q('#pp-job-title').textContent=q('#pp-name').value.trim();q('#pp-run-title').textContent='起点：'+entries[state.entry].title+' · 材料与要求已锁定（演示）';q('#pp-run-message').textContent='复用阶段仍核对来源与版本；只生成缺少的部分。';go('runs');draw();state.timer=setTimeout(next,600);}
+ root.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.page==='materials')updateInputs();go(b.dataset.page);}));root.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.go==='materials')updateInputs();go(b.dataset.go);}));
+ root.querySelectorAll('input[name=pp-entry]').forEach(c=>c.addEventListener('change',()=>{clearTimeout(state.timer);state.entry=c.value;state.stage=-1;state.status='idle';state.plan=[];q('#pp-review-detail').hidden=true;q('#pp-form-error').hidden=true;updateInputs();draw();}));
+ root.querySelectorAll('#pp-panel-make input[type=file]').forEach(input=>input.addEventListener('change',()=>{if(['pp-pdf','pp-photos'].includes(input.id))state.mappingReady=false;updateInputs();draw();}));
+ for(const id of ['pp-demo-materials','pp-has-tour','pp-includes-bindings','pp-restyle'])q('#'+id).addEventListener('change',()=>{updateInputs();draw();});
+ q('#pp-generate').addEventListener('click',start);q('#pp-replay').addEventListener('click',start);
+ q('#pp-stop').addEventListener('click',()=>{clearTimeout(state.timer);state.status='stopped';q('#pp-run-message').textContent='已停止安排后续步骤；已发出的请求需先核对，现有产物保留。';draw();});
+ q('#pp-check-call').addEventListener('click',()=>{state.scenario='normal';state.status='resume_ready';q('#pp-run-message').textContent='已找到本次执行的可恢复结果。先查看下面的摘要，确认后再继续。';q('#pp-resume-origin').textContent='起点：'+entries[state.entry].title+' · 当前步骤：'+state.plan[state.stage].title+'（演示）';const saved=q('#pp-resume-saved');saved.replaceChildren();for(const step of state.plan.slice(0,state.stage+1).filter(x=>x.mode!=='skip')){const li=document.createElement('li');li.textContent=step.title+(step.mode==='reuse'?' · 已校验并复用':step===state.plan[state.stage]?' · 本次结果已找回':' · 已完成');saved.append(li);}q('#pp-resume-next').textContent=state.plan.slice(state.stage+1).filter(x=>x.mode!=='skip').map(x=>x.title).join(' → ')||'检查最终交付结果';draw();});
+ q('#pp-resume-confirm').addEventListener('click',()=>{state.status='running';q('#pp-run-message').textContent='已确认恢复摘要，继续后续处理。';draw();state.timer=setTimeout(next,600);});
+ q('#pp-add-tour').addEventListener('click',()=>{q('#pp-has-tour').checked=true;state.status='idle';state.stage=-1;state.plan=[];updateInputs();draw();go('make');q('#pp-tour-raw').focus();});
+ q('#pp-review-save').addEventListener('click',()=>q('#pp-review-status').textContent='演示已保存；未写入真实审核库。');
+ q('#pp-manifest').addEventListener('click',()=>q('#pp-manifest-copy').hidden=!q('#pp-manifest-copy').hidden);
+ updateInputs();draw();
+ if(globalThis.Tweak){const tweaks=new Tweak({container:root,onChange:()=>root.querySelectorAll('.pp-stage p').forEach(p=>p.hidden=!design.details)});tweaks.addToggle(design,'details',{label:'显示步骤说明'});}
+})();
+</script>

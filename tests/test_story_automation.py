@@ -196,6 +196,14 @@ class ModelCounterpart:
         self.calls += 1
         assert "museum" in request.input_text and "original-pdf" in request.input_text
         assert "gameplay_capabilities" in request.input_text
+        schema = json.loads(request.output_schema_json)
+        reference_keys = schema["$defs"]["AuthoringTaskReport"]["properties"]["heritage_refs"][
+            "items"
+        ]["enum"]
+        assert "object-1" in reference_keys and "claim-object-1" in reference_keys
+        assert all(not key.startswith("object:") for key in reference_keys)
+        # The prompt does not ask the model to reproduce the native identity.
+        assert '"stable_id"' not in request.input_text
         if self.invalid:
             output = "{}"
         else:
@@ -275,7 +283,12 @@ def test_story_only_generates_exports_and_resumes_without_another_model_call(
     materials = material_fixture(tmp_path / "inputs")
     provider = ModelCounterpart()
     runner = StoryAutomationWorkflow(
-        materials, tmp_path / "out", ROOT / "skills", "Synthetic scope only", provider
+        materials,
+        tmp_path / "out",
+        ROOT / "skills",
+        "Synthetic scope only",
+        provider,
+        structure_profile="authored_graph",
     )
     result = asyncio.run(runner.run())
     assert result.is_file()
@@ -290,7 +303,12 @@ def test_failed_model_is_accounted_for_and_not_implicitly_retried(tmp_path: Path
     materials = material_fixture(tmp_path / "inputs")
     provider = ModelCounterpart(invalid=True)
     runner = StoryAutomationWorkflow(
-        materials, tmp_path / "out", ROOT / "skills", "Synthetic scope only", provider
+        materials,
+        tmp_path / "out",
+        ROOT / "skills",
+        "Synthetic scope only",
+        provider,
+        structure_profile="authored_graph",
     )
     with pytest.raises(ServiceError):
         asyncio.run(runner.run())
@@ -334,7 +352,12 @@ def test_saved_revalidation_keeps_provider_disabled_even_if_output_stays_invalid
     materials = material_fixture(tmp_path / "inputs")
     provider = ModelCounterpart(invalid=True)
     runner = StoryAutomationWorkflow(
-        materials, tmp_path / "out", ROOT / "skills", "Synthetic scope only", provider
+        materials,
+        tmp_path / "out",
+        ROOT / "skills",
+        "Synthetic scope only",
+        provider,
+        structure_profile="authored_graph",
     )
     with pytest.raises(ServiceError):
         asyncio.run(runner.run())
@@ -345,6 +368,7 @@ def test_saved_revalidation_keeps_provider_disabled_even_if_output_stays_invalid
         "Synthetic scope only",
         provider,
         revalidate_saved_response=True,
+        structure_profile="authored_graph",
     )
     with pytest.raises(ServiceError):
         asyncio.run(replay.run())
@@ -364,6 +388,7 @@ def test_automatic_graph_reconciles_dead_state_in_the_first_run_without_extra_ca
             ROOT / "skills",
             "Synthetic state repair",
             provider,
+            structure_profile="authored_graph",
         ).run()
     )
     assert result.is_file()
@@ -389,6 +414,7 @@ def test_report_references_resolve_fiction_props_and_registered_heritage_namespa
             ROOT / "skills",
             "Synthetic reference checks",
             ModelCounterpart(),
+            structure_profile="authored_graph",
         ).run()
     )
     document = json.loads((output / "narrative-draft.json").read_text())
@@ -427,7 +453,12 @@ def test_unknown_transport_exits_promptly_exports_receipt_and_never_retries(tmp_
     provider = UnknownProvider()
     output = tmp_path / "out"
     runner = StoryAutomationWorkflow(
-        materials, output, ROOT / "skills", "Unknown receipt", provider
+        materials,
+        output,
+        ROOT / "skills",
+        "Unknown receipt",
+        provider,
+        structure_profile="authored_graph",
     )
     before = time.monotonic()
     with pytest.raises(ServiceError, match="inspect saved receipts"):
@@ -453,6 +484,7 @@ def test_report_may_use_exact_bound_object_without_duplicate_claim_id(tmp_path: 
             ROOT / "skills",
             "Task-linked evidence check",
             ModelCounterpart(),
+            structure_profile="authored_graph",
         ).run()
     )
     document = json.loads((output / "narrative-draft.json").read_text())
@@ -467,3 +499,38 @@ def test_report_may_use_exact_bound_object_without_duplicate_claim_id(tmp_path: 
     result = inspector.inspect(draft, materials.museum, claims, sources)
     assert result.status == "invalid"
     assert any("task-linked heritage evidence" in issue for issue in result.issues)
+
+
+def test_environment_bytes_remain_locked_across_noncanonical_json_and_replay(
+    tmp_path: Path,
+) -> None:
+    material_fixture(tmp_path / "inputs")
+    root = tmp_path / "inputs"
+    environment = root / "environment.json"
+    original = json.dumps(json.loads(environment.read_text()), separators=(",", ":")).encode()
+    environment.write_bytes(original)
+    materials = StoryMaterialReader().read(
+        root / "original.pdf", root / "document.json", environment, root / "media"
+    )
+    provider = ModelCounterpart()
+    output = tmp_path / "out"
+    runner = StoryAutomationWorkflow(
+        materials,
+        output,
+        ROOT / "skills",
+        "Synthetic scope only",
+        provider,
+        structure_profile="authored_graph",
+    )
+    asyncio.run(runner.run())
+    assert (output / "environment-input.json").read_bytes() == original
+    lock = json.loads((output / "input-lock.json").read_text())
+    assert lock["environment_sha256"] == hashlib.sha256(original).hexdigest()
+    # Reconcile an old, semantically identical formatted snapshot without another call.
+    (output / "environment-input.json").write_text(json.dumps(json.loads(original), indent=2))
+    asyncio.run(runner.run())
+    assert provider.calls == 1
+    assert (output / "environment-input.json").read_bytes() == original
+    assert json.loads((output / "environment-serialization-receipt.json").read_text())[
+        "semantic_content_unchanged"
+    ]

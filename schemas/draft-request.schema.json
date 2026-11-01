@@ -1390,6 +1390,15 @@
     },
     "selected_candidate": {
       "$ref": "#/$defs/SelectedCandidate"
+    },
+    "structure_profile": {
+      "default": "authored_graph",
+      "enum": [
+        "authored_graph",
+        "compiled_plan_v1"
+      ],
+      "title": "Structure Profile",
+      "type": "string"
     }
   },
   "required": [

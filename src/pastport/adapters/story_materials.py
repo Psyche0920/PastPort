@@ -54,6 +54,7 @@ class StoryMaterials:
     source_document_sha256: str
     environment_sha256: str
     original_pdf_sha256: str
+    environment_bytes: bytes
 
 
 class StoryMaterialReader:
@@ -213,7 +214,13 @@ class StoryMaterialReader:
             }
         )
         return StoryMaterials(
-            museum, manifest, index, hashlib.sha256(raw).hexdigest(), snapshot_hash, pdf_hash
+            museum,
+            manifest,
+            index,
+            hashlib.sha256(raw).hexdigest(),
+            snapshot_hash,
+            pdf_hash,
+            raw_museum,
         )
 
     @staticmethod

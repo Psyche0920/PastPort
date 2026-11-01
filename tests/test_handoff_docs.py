@@ -1,4 +1,4 @@
-"""The user has one project entry, one technical PRD and five SDK guides."""
+"""One project entry, the requested team handoff, one technical PRD and five SDK guides."""
 
 import importlib.util
 from pathlib import Path

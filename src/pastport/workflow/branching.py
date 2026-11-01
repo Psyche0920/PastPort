@@ -305,6 +305,7 @@ class BranchRunner:
             authoring_mode="internal_preview"
             if run.control.internal_preview_continuation
             else "reviewed",
+            structure_profile=stages.authoring_structure,
             host_constraints=stages.authoring_constraints,
             evidence=stages.evidence_view(run),
             selected_candidate=run.selected_candidate,

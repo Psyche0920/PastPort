@@ -120,3 +120,30 @@ def test_cancellation_is_preserved_and_does_not_become_geometry_success() -> Non
 
     with pytest.raises(Cancelled):
         OfflineSpatialAnalyzer().analyze(request(), collider(), check)
+
+
+def test_geometry_cache_reuses_identical_inputs_and_invalidates_changes(tmp_path, monkeypatch):
+    analyzer = OfflineSpatialAnalyzer(cache_directory=tmp_path / "cache")
+    original = analyzer._compute
+    calls = []
+    def compute(inputs, geometry, active):
+        calls.append((inputs, geometry))
+        return original(inputs, geometry, active)
+    monkeypatch.setattr(analyzer, "_compute", compute)
+    first = analyzer.analyze(request(), collider(), lambda: None)
+    assert analyzer.analyze(request(), collider(), lambda: None) == first
+    assert len(calls) == 1
+    moved = request().model_copy(update={"origin": Point3D(x=1.0,y=1.6,z=0.0)})
+    analyzer.analyze(moved, collider(), lambda: None)
+    assert len(calls) == 2
+    analyzer.analyze(request(), collider() + b" ", lambda: None)
+    assert len(calls) == 3
+    def cancelled():
+        raise RuntimeError("cancelled by caller")
+    with pytest.raises(RuntimeError, match="cancelled"):
+        analyzer.analyze(request(), collider(), cancelled)
+    assert len(calls) == 3
+    for cached in (tmp_path / "cache").glob("*.json"):
+        cached.write_text("broken cached JSON")
+    with pytest.raises(SpatialAnalysisError, match="cache is invalid"):
+        analyzer.analyze(request(), collider(), lambda: None)

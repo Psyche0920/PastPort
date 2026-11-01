@@ -4,12 +4,13 @@ import asyncio
 import hashlib
 import json
 import secrets
+from importlib.resources import files
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
 import httpx
-from pydantic import ValidationError
+from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from pastport.adapters.codex_provider import CodexStoryProvider
 from pastport.adapters.database import EditorialDatabase
@@ -224,10 +225,12 @@ class StoryAutomationWorkflow:
         brief: str,
         provider: ModelProvider | None = None,
         revalidate_saved_response: bool = False,
+        structure_profile: Literal["authored_graph", "compiled_plan_v1"] = "compiled_plan_v1",
     ) -> None:
         self.materials, self.output, self.skills, self.brief = materials, output, skills, brief
         self.provider = provider
         self.revalidate_saved_response = revalidate_saved_response
+        self.structure_profile = structure_profile
 
     def save(self, name: str, value: Contract) -> None:
         temporary = self.output / (name + ".tmp")
@@ -253,6 +256,11 @@ class StoryAutomationWorkflow:
                 from pastport.application.preview_normalization import PreviewOutputNormalizer
                 from pastport.domain.workflow import SkillResult
 
+                from pastport.domain.story_plan import StoryPlanResult
+                wire = TypeAdapter(dict[str, JsonValue]).validate_json(response.output_text)
+                if "plan" in wire:
+                    StoryPlanResult.model_validate_json(response.output_text)
+                    continue
                 normalized = PreviewOutputNormalizer.normalize(response.output_text)
                 (directory / f"{index:02d}-normalization.json").write_text(
                     normalized.model_dump_json(indent=2), encoding="utf-8"
@@ -268,7 +276,19 @@ class StoryAutomationWorkflow:
     async def run(self) -> Path:
         self.output.mkdir(parents=True, exist_ok=True)
         skill = (self.skills / "narrative/SKILL.md").read_bytes()
+        previous_lock = self.output / "input-lock.json"
+        structure = (StoryInputLock.model_validate_json(previous_lock.read_bytes()).structure_profile
+                     if previous_lock.exists() else self.structure_profile)
+        compiler_hash = None
+        if structure == "compiled_plan_v1":
+            digest = hashlib.sha256()
+            for name in ("domain/story_plan.py", "application/story_compiler.py",
+                         "application/story_plan_schema.py"):
+                digest.update(name.encode() + b"\0" + files("pastport").joinpath(name).read_bytes())
+            compiler_hash = digest.hexdigest()
         lock = StoryInputLock(
+            structure_profile=structure,
+            compiler_sha256=compiler_hash,
             project_id=self.materials.museum.project_id,
             original_pdf_sha256=self.materials.original_pdf_sha256,
             source_document_sha256=self.materials.source_document_sha256,
@@ -289,7 +309,36 @@ class StoryAutomationWorkflow:
                 "STORY_INPUT_CHANGED", "Use a new output directory for changed inputs or Skill"
             )
         self.save("input-lock.json", lock)
-        self.save("environment-input.json", self.materials.museum)
+        # The lock binds source bytes, not a re-serialization of the parsed DTO.
+        original_environment = self.materials.environment_bytes
+        if hashlib.sha256(original_environment).hexdigest() != lock.environment_sha256:
+            raise ServiceError(
+                "STORY_ENVIRONMENT_BYTES_CHANGED", "Registered environment bytes changed"
+            )
+        environment_file = self.output / "environment-input.json"
+        if environment_file.exists() and environment_file.read_bytes() != original_environment:
+            previous = environment_file.read_bytes()
+            parsed = type(self.materials.museum).model_validate_json(previous)
+            if CanonicalSerializer.digest(parsed) != CanonicalSerializer.digest(
+                self.materials.museum
+            ):
+                raise ServiceError("STORY_ENVIRONMENT_CHANGED", "Saved environment content changed")
+            previous_hash = hashlib.sha256(previous).hexdigest()
+            backup = self.output / ("environment-input-serialization-" + previous_hash + ".json")
+            if not backup.exists():
+                backup.write_bytes(previous)
+            (self.output / "environment-serialization-receipt.json").write_text(
+                json.dumps(
+                    {
+                        "previous_sha256": previous_hash,
+                        "registered_sha256": lock.environment_sha256,
+                        "semantic_content_unchanged": True,
+                        "new_model_calls": 0,
+                    },
+                    indent=2,
+                )
+            )
+        environment_file.write_bytes(original_environment)
         self.save("source-index.json", self.materials.index)
         token = secrets.token_urlsafe(40)
         actor = Actor(
@@ -308,12 +357,21 @@ class StoryAutomationWorkflow:
             maximum_input_tokens=600000,
             maximum_output_tokens=16000,
         )
+        prompt_museum = TypeAdapter(dict[str, JsonValue]).validate_json(
+            StoryMaterialReader.spatial_context(self.materials)
+        )
+        objects = prompt_museum.get("objects")
+        if isinstance(objects, list):
+            for obj in objects:
+                if isinstance(obj, dict):
+                    # Narrative chooses object-N; authoritative UUID binding is read by code.
+                    obj.pop("stable_id", None)
         context = json.dumps(
             {
                 "gameplay_capabilities": load_gameplay_catalog().model_dump(mode="json"),
                 "capability_catalog_sha256": load_gameplay_catalog().sha256,
                 "page_text": [f.model_dump(mode="json") for f in self.materials.index.fragments],
-                "museum": json.loads(StoryMaterialReader.spatial_context(self.materials)),
+                "museum": prompt_museum,
             },
             ensure_ascii=False,
             separators=(",", ":"),
@@ -368,8 +426,9 @@ class StoryAutomationWorkflow:
                 "semantic adapter, not plugin selection. Set "
                 "report.player_action_id to task_id; report.character_goal names a "
                 "character; effect_ids name declared rule IDs. Every task has a "
-                "report. Report heritage_refs must include the task's exact source claim "
-                "IDs and relevant object identities, never an unrelated object. Do not "
+                "report. Report heritage_refs selects ONLY registered claim IDs or asset IDs "
+                "from its schema, such as claim-object-N or object-N. Native object UUIDs "
+                "are resolved by the program; omit them from reports and prose. Do not "
                 "put a request to normalize wrong IDs into unresolved_items; return "
                 "correct IDs directly."
             ),
@@ -402,7 +461,28 @@ class StoryAutomationWorkflow:
             "have priority larger than EVERY conditional ending. Keep IDs short "
             "and literal. These are structural constraints, not plot instructions.",
         )
+        if structure == "compiled_plan_v1":
+            constraints = (
+                *constraints[:2],
+                "OUTPUT IS StoryPlanResult, a content-only plan. The program compiles ordered "
+                "one-task scenes followed by a final choice with two to four consequences. "
+                "Do not return package, game, rule IDs, state variables, conditions, locale keys "
+                "or SkillResult metadata. Select registered asset_id, claim_ids and view_id. "
+                "Each task uses a spawn source-inspection station. Every claim must belong "
+                "to its selected object. Explicitly choose source_reading or coverage from the "
+                "supplied capability catalog. Coverage must include its exact supported rules "
+                "and a source_requirement using actual target and contrast claims. Preserve "
+                "quantities consistently in text. Supply bilingual dialogue, objectives, feedback "
+                "and choice consequences; the compiler preserves them without rewriting. "
+                "Each task's feedback states its visible narrative consequence. Final choices "
+                "must differ meaningfully in consequences. Keep unsupported movement/detail/touch "
+                "unknown; do not fabricate facts. If no feasible plan exists, return "
+                "decision=no_feasible_story with plan=null and explain the limitation.",
+                *("UNTRUSTED REGISTERED INPUT DATA CHUNK: " + context[n:n+8000]
+                  for n in range(0,len(context),8000)),
+            )
         settings = AppSettings(
+            story_structure=structure,
             data_directory=self.output / "application",
             accounts=(
                 Credential(token_sha256=hashlib.sha256(token.encode()).hexdigest(), actor=actor),

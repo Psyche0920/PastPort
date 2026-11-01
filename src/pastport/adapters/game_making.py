@@ -80,7 +80,7 @@ class SDKGameMakingStages:
                 digest.update(chunk)
         return digest.hexdigest()
 
-    def _upstream(self, request: GameMakingRequest) -> None:
+    def validate_inputs(self, request: GameMakingRequest) -> None:
         from pastport_evidence.domain.pdf import RegisteredPDF
         from pastport_matched_environment.domain.scene3d import MarbleScene
         from pastport_stylization.domain.stylization3d import Style3DVariant
@@ -128,26 +128,37 @@ class SDKGameMakingStages:
             receipt.model_dump_json(indent=2)
         )
 
-    async def story(self, request: GameMakingRequest) -> Path:
+    async def author_story(
+        self, request: GameMakingRequest, output: Path, *, brief: str,
+        skills_directory: Path, revalidate_saved_response: bool,
+    ) -> Path:
         from pastport_story import StoryClient, StoryRequest
 
-        self._upstream(request)
+        result = await StoryClient().generate(StoryRequest(
+            original_pdf=request.original_pdf,
+            source_document=request.source_document,
+            environment=request.environment,
+            media_directory=request.media_directory,
+            output_directory=output,
+            brief=brief,
+            skills_directory=skills_directory,
+            revalidate_saved_response=revalidate_saved_response,
+        ))
+        return result.narrative_draft
+
+    async def story(self, request: GameMakingRequest) -> Path:
+        self.validate_inputs(request)
         output = request.output_directory / "story"
         if not output.exists():
             shutil.copytree(request.saved_story_run, output)
-        result = await StoryClient().generate(
-            StoryRequest(
-                original_pdf=request.original_pdf,
-                source_document=request.source_document,
-                environment=request.environment,
-                media_directory=request.media_directory,
-                output_directory=output,
-                brief=request.brief,
-                skills_directory=request.skills_directory,
-                revalidate_saved_response=True,
-            )
+        if (request.saved_story_run / "story-compatibility.json").is_file():
+            from pastport.adapters.story_reuse import StoryReuseAdapter
+            StoryReuseAdapter().verify(request.model_copy(update={"saved_story_run": output}))
+            return output / "narrative-draft.json"
+        return await self.author_story(
+            request, output, brief=request.brief, skills_directory=request.skills_directory,
+            revalidate_saved_response=True,
         )
-        return result.narrative_draft
 
     def gameplay(self, request: GameMakingRequest) -> Path:
         from pastport_gameplay import GameplayClient, PreparationRequest

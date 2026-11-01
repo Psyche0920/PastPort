@@ -42,8 +42,9 @@ injected transports; the SDK facade adds no direct model/provider bypass.
 - Environment: `EnvironmentBuildWorkflow(pdftoppm, transport).run(pdf, tour, grant,
   workspace, run_id, ...) -> BuildSummary`.
 - Review/preview: `StudioApplication(workspace)` exposes its existing local app.
-  It owns child preview lifecycles; it is not mounted into Main's authenticated API
-  here. Local staff endpoints require separate deployment/security validation.
+  It owns child preview lifecycles. Main Organizer embeds the trusted packaged review UI
+  behind its authenticated source-scoped routes; uploads do not supply executable review HTML.
+  Direct standalone staff endpoints retain their separate local deployment boundary.
 
 Source-only review links are not portable authority credentials. Export through the
 owning reviewed-snapshot interface; do not rebuild an existing DB from sample data.
@@ -130,7 +131,7 @@ and unconfirmed calibration stay unconfirmed even when geometry can be evaluated
 | File | Responsibility |
 |---|---|
 | `domain/spatial_analysis.py` | Bounded request/result schema for geometry evidence |
-| `application/spatial_analysis.py` | Killable offline Node transport and identity checks |
+| `application/spatial_analysis.py` | Killable offline Node transport, identity checks and input-bound geometry cache |
 | `scene3d_assets/spatial_analysis.mjs` | World-space triangle index, direct routes and sight rays |
 
 Main injects its registered spatial reader once; each environment read automatically runs
@@ -140,7 +141,7 @@ calibration, arrows, collider and algorithm. Process failures remain explicit un
 <!-- BEGIN FILE INVENTORY -->
 ## 文件结构与用途
 
-每个文件的用途直接写在同一行。以下覆盖本范围内的 **111 个维护文件**；依赖环境、缓存、私有产物和历史备份不属于源码清单。
+每个文件的用途直接写在同一行。以下覆盖本范围内的 **115 个维护文件**；依赖环境、缓存、私有产物和历史备份不属于源码清单。
 
 ```text
 matched-environment-sdk/
@@ -176,13 +177,18 @@ matched-environment-sdk/
 │       │   ├── pdf_ingestion.py  # Register a source PDF and persist page text and rendered-page references.
 │       │   ├── projection.py  # Invert stored image transforms before interpreting model pixels as VR angles.
 │       │   ├── reference_environment.py  # Assemble a new, isolated review candidate from a hash-bound visual handoff.
+│       │   ├── review_repository.py  # 原编号后台与Organizer共用的版本审核、历史持久化实现。
+│       │   ├── vr_positions.py  # 原全景编号位置的版本化保存，与3D锚点保持独立。
+│       │   ├── vr_content.py  # 原编号后台与Organizer共用的介绍版本、人工作文和审计记录。
 │       │   ├── reference_preview.py  # Own isolated local reference servers, loading only packaged runtime code.
 │       │   ├── scene3d.py  # Attach an existing Marble world to a labelled environment without rematching.
 │       │   ├── scene3d_arrows.py  # Seed 3D navigation once from VR; all later spatial edits stay local to this result.
+│       │   ├── scene3d_projection.py  # Offline candidate and arrow initialization; preserves saved edits and checks calibration versions.
 │       │   ├── scene3d_export.py  # Portable scene assets and source-bound game data from one consistent review snapshot.
 │       │   ├── scene3d_review.py  # Adapt only a 3D result's review links; keep shared content and source evidence.
 │       │   ├── scene3d_tour.py  # Export separate source-ordered worlds and their saved navigation as one package.
 │       │   ├── shared_content.py  # One content authority per source environment; spatial state remains per result.
+│       │   ├── vr_export.py  # Portable matched-VR snapshot including consistent shared review data.
 │       │   ├── spatial_analysis.py  # Bounded offline geometry subprocess using the SDK's bundled Three.js loader.
 │       │   ├── storage.py  # Durable atomic metadata writes shared by generation and job storage.
 │       │   ├── studio.py  # Local generation jobs; subprocess ownership is separate from editorial state.
@@ -229,6 +235,7 @@ matched-environment-sdk/
 │       │   ├── navigation_boundary.js  # A one-way, unbounded vertical plane through an arrow; no altitude/radius test.
 │       │   ├── shared_content.js  # 在 3D 场景中读取共享物件内容，让多视点复用同一物件档案。
 │       │   ├── spark.module.js  # Spark Gaussian Splat 渲染库，显示点云式三维场景。
+│       │   ├── project_candidates.mjs  # Headless source-ray projection with bundled Three.js and no external geometry resources.
 │       │   ├── spatial_analysis.mjs  # Offline advisory geometry analysis; never changes player state or collision rules.
 │       │   ├── three.core.js  # @license Copyright 2010-2025 Three.js Authors SPDX-License-Identifier: MIT
 │       │   ├── three.module.js  # @license Copyright 2010-2025 Three.js Authors SPDX-License-Identifier: MIT
@@ -260,6 +267,7 @@ matched-environment-sdk/
 │   ├── test_scene3d_candidates.py  # 回归测试：Automatic proposals must remain separate from authoritative human anchors.
 │   ├── test_scene3d_submission.py  # 回归测试：Financial regression checks: submission replay and source backup, without providers.
 │   ├── test_shared_content.py  # 回归测试：Shared identities/content must not collapse viewpoint state or divergent edits.
+│   ├── test_scene3d_projection.py  # Real geometry projection, saved-coordinate preservation and stale-calibration rejection.
 │   ├── test_spatial_analysis.py  # 回归测试：Execute the packaged geometry analyzer against a deterministic floor and wall.
 │   ├── test_studio.py  # 回归测试：Upload boundaries and interruption handling, without model execution.
 │   ├── test_tour_preview.py  # 回归测试：Independent tours retain saved navigation and reject unregistered destinations.
@@ -270,3 +278,18 @@ matched-environment-sdk/
 └── pyproject.toml  # 本项目的包名、依赖、命令入口与构建配置。
 ```
 <!-- END FILE INVENTORY -->
+
+### Portable native inputs for Organizer
+
+`pastport-matched-environment environment-export --environment /registered/result --output /new/matched-vr.zip` exports the current native VR data, consistent local spatial database and shared review content. It copies no credentials and grants no historical approval. Mounted 3D uses the existing `export_tour` ZIP with two native views, not a bare GLB/SPZ or a generated game directory.
+
+Organizer preserves imported anchors and manually dragged arrows. Missing automatic candidates can be initialized headlessly with `OfflineCandidateProjector`; the result retains calibration state and never becomes human-approved identity merely because geometry was computed.
+
+Organizer keeps the existing numbered-object review layout and controls. Its same-origin
+routes delegate saves to `ReviewRepository` and `VRContentService`, including optimistic
+versions and audit history; the server supplies the logged-in actor identity. Legacy preview
+templates import these same implementations. Upstream outputs enter the current VR/3D shared review UI automatically, without a second
+project selection or transfer confirmation. Saved changes automatically export a new local
+environment input, without rerunning models/Marble or overwriting an old game package.
+
+`export_scene(..., include_assets=False)` 供本机审核输入更新使用：保留当前元数据、原导览和审核快照，不在中间ZIP中重复装入场景二进制；默认仍导出完整可搬运场景。

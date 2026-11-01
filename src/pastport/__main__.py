@@ -18,6 +18,12 @@ from pastport.observability import LoggingConfiguration
 
 
 def main() -> None:
+    if len(sys.argv) > 1 and sys.argv[1] == "account-password":
+        from pastport.account_cli import main as account_main
+
+        sys.argv.pop(1)
+        account_main()
+        return
     if len(sys.argv) > 1 and sys.argv[1] == "gameplay-prepare":
         from pastport.gameplay_cli import main as gameplay_main
 
@@ -58,6 +64,12 @@ def main() -> None:
     parser.add_argument("--story-3d-preparation-directory", type=Path)
     parser.add_argument("--story-3d-museum-directory", type=Path)
     parser.add_argument("--story-3d-output-directory", type=Path)
+    parser.add_argument(
+        "--organizer-player-assets", type=Path, help="Registered shared player UI assets"
+    )
+    parser.add_argument(
+        "--organizer-catalog", type=Path, help="Private registered reusable production inputs"
+    )
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument(
         "--log-level", choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"), default="INFO"
@@ -84,6 +96,9 @@ def main() -> None:
         settings = AppSettings(
             data_directory=arguments.data_directory,
             accounts=accounts.accounts,
+            accounts_file=arguments.accounts,
+            organizer_catalog=arguments.organizer_catalog,
+            organizer_player_assets=arguments.organizer_player_assets,
             environment="test" if arguments.test_fixture_directory else "production",
             fixture_directory=arguments.test_fixture_directory,
             content_directory=arguments.content_directory,

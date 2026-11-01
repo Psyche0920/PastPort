@@ -6,7 +6,7 @@
 |---|---|
 | Inputs | Original PDF/Evidence, reviewed object content, matched space/navigation, gameplay capabilities and brief. |
 | Outputs | Readable script, NarrativeDraft, explicit task gameplay/spatial intents, author report and execution receipts. |
-| Workflow | Lock four input constraints → generate or revalidate saved response → typed/source/rule checks. |
+| Workflow | Lock four input constraints → generate content plan → deterministic graph compilation → typed/source/rule checks; old saved runs retain their pinned contract. |
 | Technology | Shared Python 3.12/FastAPI/LangGraph/SQLite runtime; metered Sol 6.1 Medium transport. |
 
 Unified architecture and exact current verification scope: [Technical PRD](../../docs/TECHNICAL_PRD.md#sdk-modules). Main reuses the registered upstream outputs and saved Story in its current replay entry; this is not a new recognition/rendering/model run.
@@ -30,6 +30,49 @@ Both distributions are local release candidates. Use the matching wheelhouse;
 this does not imply either package has been published to an external registry.
 Python 3.12 and a previously signed-in Codex CLI are required for real generation.
 Sol 6.1 Medium uses account quota; SDK installation and offline validation do not.
+
+## Reuse after review or spatial edits
+
+Organizer's shared runtime performs provider-free compatibility checks before
+reusing an old story against a new environment version. It selects a successful
+parent only from the same authorized source lineage, verifies story locks and
+source identities, and checks task evidence, current spatial intents and gameplay
+executability. Unused-object edits do not invalidate unrelated tasks. A changed
+used introduction or source mapping is conservatively reported for that task;
+compatibility is not inferred from a marker merely being visible. If only a used
+introduction changed and executable checks pass, Organizer offers explicit
+confirmation bound to that report, environment, parent story and exact changes.
+The confirmed reuse records its actor/time and leaves the story unchanged.
+Changed source mapping, missing objects or non-executable tasks remain blocked.
+
+A successful check creates a separate reuse record with unchanged narrative
+bytes, new environment/index locks and a hash-bound parent reference. Existing
+model receipts and usage remain with their original run. Game preparation
+validates this proof instead of re-running a model response under changed inputs.
+No Story generation or paid repair is implicit in this path.
+
+## Fixed structure for new Story runs
+
+New automatic runs use `compiled_plan_v1`: the model returns a `StoryPlanResult`
+with bilingual task content, registered source/object/view selections, supported
+gameplay requirements and final choice consequences. The shared runtime's
+[compiler](../../src/pastport/application/story_compiler.py) generates every internal
+task/scene/rule ID, locale key, variable declaration, completion transition and
+ending reference. Runtime/plugin contracts downstream remain `NarrativeDraft`.
+
+This first profile supports 1–8 ordered one-task scenes and 2–4 final choices.
+It does not represent arbitrary mid-story branching or model-authored state
+machines. Unsupported structure must return an explicit infeasibility reason.
+Source validity, spatial executability, capability limits and quantity consistency
+remain separately checked. The raw metered response is retained; compilation does
+not trigger a repair call or erase previous failed generations. Existing runs use
+the structure profile pinned by their input lock; locks without that field mean
+legacy `authored_graph`. An old failed graph is never silently converted.
+
+The fixed path has passed deterministic-provider generation/resume and the real
+JS runtime's task-to-ending execution. No fresh paid generation has been performed
+for this change. Existing wheel archives predate this change and need rebuilding
+before independent-install acceptance can be claimed.
 
 ## Implementation location
 
@@ -98,6 +141,18 @@ Human approval remains false. `revalidate_saved_response=True` disables model
 transport and validates a saved response only; it cannot recover absent usage.
 An explicitly injected Python provider runs under the core's test-only policy.
 
+## Model reference binding
+
+New Story generation selects registered claim IDs and asset IDs (for example,
+`claim-object-86` and `object-86`). Native object UUIDs are omitted from the model's
+object projection. The model gateway constrains `authoring_report.heritage_refs`
+to the pinned Evidence package's keys **before** computing the schema identity and
+reserving the model call, then validates the returned keys again after metering.
+The existing environment/asset join supplies native identities for downstream use.
+Known but unrelated object references still fail task-linked checks; they are not
+silently replaced. Original provider responses and usage receipts remain intact.
+Legacy saved drafts retain their original schema and inspection path.
+
 ## Boundaries
 
 Existing source/review/spatial identities and uncertainty are retained. The SDK
@@ -159,3 +214,7 @@ story-sdk/
 └── pyproject.toml  # 本项目的包名、依赖、命令入口与构建配置。
 ```
 <!-- END FILE INVENTORY -->
+
+### Byte-bound environment snapshots
+
+Story preserves the exact registered environment JSON bytes because `input-lock.json` binds their file hash. It does not serialize the DTO again before handing it to Gameplay. Revalidation can reconcile a prior formatting-only snapshot only after checking semantic equality, preserving its previous bytes and a zero-call reconciliation receipt. Changed semantic content remains an error. Narrative Skill rules do not replace this file-integrity contract.

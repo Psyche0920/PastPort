@@ -1,0 +1,422 @@
+{
+  "$defs": {
+    "CoveragePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "capability_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Capability Id",
+          "type": "string"
+        },
+        "fiction_notice": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Fiction Notice",
+          "type": "string"
+        },
+        "kind": {
+          "const": "coverage",
+          "title": "Kind",
+          "type": "string"
+        },
+        "learning_goal": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Learning Goal",
+          "type": "string"
+        },
+        "rules": {
+          "$ref": "#/$defs/CoverageProblem"
+        },
+        "source_requirement": {
+          "$ref": "#/$defs/SourceChoiceRequirement"
+        }
+      },
+      "required": [
+        "kind",
+        "capability_id",
+        "rules",
+        "source_requirement",
+        "learning_goal",
+        "fiction_notice"
+      ],
+      "title": "CoveragePlan",
+      "type": "object"
+    },
+    "CoverageProblem": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Height",
+          "type": "integer"
+        },
+        "pieces": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maximum": 8,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "maximum": 8,
+                "minimum": 1,
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Pieces",
+          "type": "array"
+        },
+        "rotation_allowed": {
+          "default": true,
+          "title": "Rotation Allowed",
+          "type": "boolean"
+        },
+        "width": {
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "pieces"
+      ],
+      "title": "CoverageProblem",
+      "type": "object"
+    },
+    "ReadingPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "source_reading",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "ReadingPlan",
+      "type": "object"
+    },
+    "SourceChoiceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "contrast_claim_ids": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Contrast Claim Ids",
+          "type": "array"
+        },
+        "target_claim_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Target Claim Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_claim_id",
+        "contrast_claim_ids"
+      ],
+      "title": "SourceChoiceRequirement",
+      "type": "object"
+    },
+    "StoryPlanChoice": {
+      "additionalProperties": false,
+      "properties": {
+        "consequence": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "label": {
+          "$ref": "#/$defs/StoryText"
+        }
+      },
+      "required": [
+        "label",
+        "consequence"
+      ],
+      "title": "StoryPlanChoice",
+      "type": "object"
+    },
+    "StoryPlanTask": {
+      "additionalProperties": false,
+      "properties": {
+        "accessibility": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "asset_id": {
+          "pattern": "^object-[1-9][0-9]*$",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "claim_ids": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Claim Ids",
+          "type": "array"
+        },
+        "dialogue": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "feedback": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "gameplay": {
+          "discriminator": {
+            "mapping": {
+              "coverage": "#/$defs/CoveragePlan",
+              "source_reading": "#/$defs/ReadingPlan"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReadingPlan"
+            },
+            {
+              "$ref": "#/$defs/CoveragePlan"
+            }
+          ],
+          "title": "Gameplay"
+        },
+        "hints": {
+          "items": {
+            "$ref": "#/$defs/StoryText"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Hints",
+          "type": "array"
+        },
+        "objective": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "reasoning": {
+          "$ref": "#/$defs/TaskReasoning"
+        },
+        "title": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "view_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "View Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_id",
+        "claim_ids",
+        "view_id",
+        "title",
+        "dialogue",
+        "objective",
+        "feedback",
+        "hints",
+        "accessibility",
+        "gameplay",
+        "reasoning"
+      ],
+      "title": "StoryPlanTask",
+      "type": "object"
+    },
+    "StoryText": {
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "En",
+          "type": "string"
+        },
+        "zh": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Zh",
+          "type": "string"
+        }
+      },
+      "required": [
+        "en",
+        "zh"
+      ],
+      "title": "StoryText",
+      "type": "object"
+    },
+    "TaskReasoning": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_answer": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Accepted Answer",
+          "type": "string"
+        },
+        "counterexample": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Counterexample",
+          "type": "string"
+        },
+        "inference_steps": {
+          "items": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Inference Steps",
+          "type": "array"
+        },
+        "player_premises": {
+          "items": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Player Premises",
+          "type": "array"
+        },
+        "property_used": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Property Used",
+          "type": "string"
+        },
+        "removal_test": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Removal Test",
+          "type": "string"
+        },
+        "substitution_test": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Substitution Test",
+          "type": "string"
+        }
+      },
+      "required": [
+        "property_used",
+        "player_premises",
+        "inference_steps",
+        "accepted_answer",
+        "removal_test",
+        "substitution_test",
+        "counterexample"
+      ],
+      "title": "TaskReasoning",
+      "type": "object"
+    }
+  },
+  "$id": "urn:pastport:contract:0.1.0:story-plan",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "capability_catalog_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Capability Catalog Sha256",
+      "type": "string"
+    },
+    "choices": {
+      "items": {
+        "$ref": "#/$defs/StoryPlanChoice"
+      },
+      "maxItems": 4,
+      "minItems": 2,
+      "title": "Choices",
+      "type": "array"
+    },
+    "fiction_notice": {
+      "maxLength": 10000,
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Fiction Notice",
+      "type": "string"
+    },
+    "protagonist_goal": {
+      "$ref": "#/$defs/StoryText"
+    },
+    "protagonist_name": {
+      "$ref": "#/$defs/StoryText"
+    },
+    "structure": {
+      "const": "compiled_plan_v1",
+      "title": "Structure",
+      "type": "string"
+    },
+    "tasks": {
+      "items": {
+        "$ref": "#/$defs/StoryPlanTask"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Tasks",
+      "type": "array"
+    },
+    "unresolved_items": {
+      "items": {
+        "maxLength": 10000,
+        "minLength": 1,
+        "pattern": "\\S",
+        "type": "string"
+      },
+      "title": "Unresolved Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "structure",
+    "protagonist_name",
+    "protagonist_goal",
+    "tasks",
+    "choices",
+    "fiction_notice",
+    "capability_catalog_sha256",
+    "unresolved_items"
+  ],
+  "title": "StoryPlan",
+  "type": "object"
+}

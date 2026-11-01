@@ -27,7 +27,7 @@ def test_sdk_dependencies_are_one_way_and_main_runtime_stays_independent() -> No
         "pastport_stylization",
     }
     # Optional SDK imports are allowed only in explicit lazy composition adapters.
-    allowed = {"environment_spatial.py", "game_making.py"}
+    allowed = {"environment_spatial.py", "game_making.py", "organizer_native.py", "organizer_review.py", "organizer_review_environment.py"}
     for path in (ROOT / "src/pastport").rglob("*.py"):
         text = path.read_text()
         if any(name in text for name in ("from pastport_story", "from pastport_gameplay",

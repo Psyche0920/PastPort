@@ -13,8 +13,8 @@ from pastport_matched_environment.application.reference_environment import diges
 from pastport_matched_environment.domain.scene3d import SceneRenderVariant
 
 
-def export_scene(root: Path, archive: Path) -> None:
-    """Export current edits without rebuilding or mutating their database."""
+def export_scene(root: Path, archive: Path, *, include_assets: bool = True) -> None:
+    """Export edits; metadata-only mode omits binaries for local input preparation."""
     attachment = record(read_json(root / "scene3d/attachment.json"))
     scene = record(attachment["scene"])
     render_name = "scene.spz"
@@ -168,6 +168,7 @@ def export_scene(root: Path, archive: Path) -> None:
                 "translation_xyz": [0, scene["ground_plane_offset"], 0],
             },
             "game_data": "game-data.json",
+            "assets_included": include_assets,
             "audit_database": "review.sqlite3",
             "rights_and_acceptance": "source rights retained; manual acceptance pending",
             "note": "Generated appearance is not historical evidence. No paid HQ mesh export.",
@@ -217,7 +218,7 @@ def export_scene(root: Path, archive: Path) -> None:
                 raise ValueError("Original tour payload is missing")
             bundle.writestr("source-tour.json", json.dumps(json.loads(match[1])))
             bundle.write(snapshot, "review.sqlite3")
-            for path in paths:
+            for path in paths if include_assets else ():
                 relative = path.relative_to(root)
                 name = (
                     "scene/" + path.name if relative.parts[0] == "scene3d" else relative.as_posix()

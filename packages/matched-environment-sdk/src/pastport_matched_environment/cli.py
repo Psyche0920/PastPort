@@ -39,6 +39,9 @@ def main() -> None:
         render_environment.add_argument("--" + name, type=Path, required=True)
     render_environment.add_argument("--serve", action="store_true")
     render_environment.add_argument("--port", type=int, default=8795)
+    export_vr = subcommands.add_parser("environment-export", help="Export a portable matched VR snapshot")
+    export_vr.add_argument("--environment", type=Path, required=True)
+    export_vr.add_argument("--output", type=Path, required=True)
     studio = subcommands.add_parser("studio", help="Open browser upload, generation and review")
     studio.add_argument("--workspace", type=Path, default=Path(".runtime/studio"))
     studio.add_argument("--port", type=int, default=8794)
@@ -70,6 +73,12 @@ def main() -> None:
     generate3d.add_argument("--credit-budget", type=int, required=True)
     generate3d.add_argument("--authorize-marble", action="store_true")
     arguments = parser.parse_args()
+    if arguments.command == "environment-export":
+        from pastport_matched_environment.application.vr_export import MatchedVRExporter
+
+        result = MatchedVRExporter().export(arguments.environment, arguments.output)
+        print(result.model_dump_json(indent=2))
+        return
     if arguments.command == "tour-preview":
         import uvicorn
 

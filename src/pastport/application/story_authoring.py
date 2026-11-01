@@ -13,6 +13,8 @@ from pastport.domain.story_inputs import EnvironmentSnapshot
 
 
 class StoryInputLock(Contract):
+    structure_profile: Literal["authored_graph", "compiled_plan_v1"] = "authored_graph"
+    compiler_sha256: Sha256 | None = None
     project_id: Identifier
     original_pdf_sha256: Sha256
     source_document_sha256: Sha256
@@ -158,7 +160,8 @@ class StoryDraftInspector:
             unrelated = {
                 obj.stable_id
                 for obj in museum.objects
-                if obj.stable_id in report.heritage_refs and obj.stable_id not in related_objects
+                if (obj.stable_id in report.heritage_refs or f"object-{obj.object_number}" in report.heritage_refs)
+                and obj.stable_id not in related_objects
             }
             if unrelated:
                 issues.append(f"Task {report.task_id} has an unrelated heritage object")

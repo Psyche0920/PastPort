@@ -8,7 +8,7 @@ SDK_NAMES = (
     "evidence-sdk", "matched-environment-sdk", "stylization-sdk", "story-sdk", "gameplay-sdk",
 )
 PRD = "docs/TECHNICAL_PRD.md"
-ROUTE_FILES = ("README.md", "AGENTS.md", ".github/copilot-instructions.md")
+ROUTE_FILES = ("README.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md")
 REQUIRED_TOPICS = (
     "architecture-and-ownership", "technology-stack", "workflow", "contracts-and-versions",
     "sdk-modules", "story-and-agents", "verification-and-delivery",
@@ -22,7 +22,7 @@ EXCLUDED = frozenset({
 def check(root: Path) -> tuple[str, ...]:
     root = root.resolve()
     errors: list[str] = []
-    allowed = {"README.md", "AGENTS.md", ".github/copilot-instructions.md", PRD}
+    allowed = {"README.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md", PRD}
     allowed.update(f"packages/{name}/README.md" for name in SDK_NAMES)
     for relative in sorted(allowed):
         path = root / relative
@@ -87,7 +87,7 @@ def main() -> int:
     if errors:
         print("\n".join(errors))
         return 1
-    print("Documentation contract passed: root README, five SDK guides and one technical PRD.")
+    print("Documentation contract passed: root README, team handoff, five SDK guides and one technical PRD.")
     return 0
 
 

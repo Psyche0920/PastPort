@@ -112,6 +112,7 @@ class StageRunner:
         package_loader: RuntimePackageLoader,
         execution: "ExecutionRuntime | None" = None,
         authoring_constraints: tuple[str, ...] = (),
+        authoring_structure: Literal["authored_graph", "compiled_plan_v1"] = "authored_graph",
     ) -> None:
         self.database = database
         self.releases = releases
@@ -126,6 +127,7 @@ class StageRunner:
         self.package_loader = package_loader
         self.execution = execution
         self.authoring_constraints = authoring_constraints
+        self.authoring_structure = authoring_structure
         self.activity = ActivityMeter(database)
         self.router = WorkflowRouter(database)
         self.branches = BranchRunner(self)

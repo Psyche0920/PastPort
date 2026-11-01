@@ -15,12 +15,15 @@ from pydantic import ValidationError
 from pastport.adapters.assembly import PackageAssembler
 from pastport.adapters.content import LocalContentFiles, LocalEvidenceAdapter, LocalNarrativeAdapter
 from pastport.adapters.database import EditorialDatabase
+from pastport.adapters.organizer_store import OrganizerStore
 from pastport.adapters.package_files import LocalPackageFileReader
 from pastport.adapters.player_process import NodePlayerProcess, PlayerComponentError
 from pastport.adapters.player_saves import SQLitePlayerSaves
 from pastport.adapters.previews import SQLitePreviews
 from pastport.adapters.resources import LocalResourceReader
 from pastport.adapters.story_3d import Story3DAssemblyAdapter
+from pastport.api.organizer import OrganizerRoutes
+from pastport.api.organizer_accounts import OrganizerAccounts
 from pastport.api.private_views import PrivateViewRoutes, static_router
 from pastport.api.request_logging import RequestLoggingMiddleware
 from pastport.api.settings import AppSettings
@@ -42,6 +45,8 @@ from pastport.application.models import (
 from pastport.application.module_selection import select_module
 from pastport.application.operational_service import OperationalService
 from pastport.application.operations import AmendBudget, ReconcileUsage, ResubmitReview
+from pastport.application.organizer import OrganizerService
+from pastport.ports.story_reuse import StoryReusePort
 from pastport.application.package_loader import RuntimePackageLoader
 from pastport.application.player_preparation import PlayerInitialStateResponse
 from pastport.application.player_runtime import (
@@ -58,6 +63,7 @@ from pastport.application.workflow_control import RequestNarrativeAction
 from pastport.domain.capabilities import initial_capabilities
 from pastport.domain.common import CanonicalSerializer, Contract
 from pastport.domain.game import ActionRequest
+from pastport.domain.organizer import OrganizerCatalog
 from pastport.domain.package_loading import PackageLoadError
 from pastport.domain.player_saves import (
     CreatePlayerSave,
@@ -67,6 +73,9 @@ from pastport.domain.player_saves import (
 )
 from pastport.ports.execution import ModuleServices
 from pastport.ports.modules import AssemblyPort, EvidencePort, NarrativePort, PackageValidatorPort
+from pastport.ports.organizer import OrganizerProduction
+from pastport.ports.organizer_review import OrganizerReviewGateway
+from pastport.ports.organizer_inputs import OrganizerInputPreparer
 from pastport.ports.resources import ResourceReader
 from pastport.ports.source_text import SourceTextExtractor
 from pastport.ports.story_inputs import MatchedEnvironmentReader
@@ -77,6 +86,10 @@ from pastport.workflow.worker import EditorialWorker
 def create_app(
     settings: AppSettings,
     *,
+    organizer_production: OrganizerProduction | None = None,
+    organizer_inputs: OrganizerInputPreparer | None = None,
+    organizer_reviews: OrganizerReviewGateway | None = None,
+    organizer_story_reuse: StoryReusePort | None = None,
     evidence: EvidencePort | None = None,
     narrative: NarrativePort | None = None,
     assembly: AssemblyPort | None = None,
@@ -174,10 +187,41 @@ def create_app(
         RuntimePackageLoader(initial_capabilities(), LocalPackageFileReader()),
         execution,
         authoring_constraints=settings.story_host_constraints,
+        authoring_structure=settings.story_structure,
     )
     player_repository = SQLitePlayerSaves(directory / "player.sqlite3")
     operations = OperationalService(database, authority, stages.review_targets)
     worker = EditorialWorker(stages, directory / "checkpoints.sqlite3")
+
+    if organizer_production is None:
+        from pastport.adapters.organizer_production import SDKOrganizerProduction
+        from pastport.adapters.organizer_review import SDKOrganizerReview
+
+        organizer_production = SDKOrganizerProduction()
+        if organizer_story_reuse is None:
+            from pastport.adapters.story_reuse import StoryReuseAdapter
+            organizer_story_reuse = StoryReuseAdapter()
+        if organizer_reviews is None:
+            organizer_reviews = SDKOrganizerReview()
+    organizer_catalog = (
+        OrganizerCatalog.model_validate_json(settings.organizer_catalog.read_bytes())
+        if settings.organizer_catalog is not None
+        else OrganizerCatalog()
+    )
+    if organizer_inputs is None:
+        from pastport.adapters.organizer_native import SDKUploadedInputPreparer
+
+        organizer_inputs = SDKUploadedInputPreparer()
+    organizer_store = OrganizerStore(directory / "organizer")
+    organizer = OrganizerService(
+        organizer_store,
+        organizer_catalog,
+        organizer_production,
+        input_preparer=organizer_inputs,
+        player_assets=settings.organizer_player_assets,
+        reviews=organizer_reviews,
+        story_reuse=organizer_story_reuse,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -188,7 +232,13 @@ def create_app(
             await task
             raise ServiceError("WORKER_START_FAILED", "Worker could not start", 503)
         try:
-            yield
+            with organizer_store.ownership():
+                organizer.startup()
+                try:
+                    yield
+                finally:
+                    await organizer.close()
+                    await organizer_routes.previews.close()
         finally:
             worker.stop()
             await task
@@ -204,15 +254,26 @@ def create_app(
 
     app.add_middleware(RequestLoggingMiddleware, environment=settings.environment)
 
+    organizer_accounts = OrganizerAccounts(
+        settings.accounts,
+        settings.accounts_file,
+        allow_local_setup=settings.organizer_local_admin_setup,
+    )
+
     def authenticate(request: Request) -> Actor:
         authorization = request.headers.get("Authorization", "")
         if not authorization.startswith("Bearer "):
             raise ServiceError("AUTHENTICATION_REQUIRED", "Bearer authentication is required", 401)
         digest = hashlib.sha256(authorization[7:].encode()).hexdigest()
-        for account in settings.accounts:
-            if hmac.compare_digest(digest, account.token_sha256):
+        for account in organizer_accounts.credentials():
+            if account.token_sha256 is not None and hmac.compare_digest(
+                digest, account.token_sha256
+            ):
                 return account.actor
         raise ServiceError("AUTHENTICATION_INVALID", "Authentication failed", 401)
+
+    organizer_routes = OrganizerRoutes(organizer, authenticate, organizer_accounts)
+    app.include_router(organizer_routes.router())
 
     def receipt(
         request: Request, actor: Actor, payload: Contract, status_code: int

@@ -2,11 +2,28 @@
 name: narrative
 description: Discover, draft or revise evidence-grounded PastPort heritage games with playable tasks, character consequences and continuous spatial progression. Use for story candidates and narrative review; not for approving history, changing engine code or publishing packages.
 metadata:
-  version: "0.7.1"
+  version: "0.8.0"
   owner: Matt
 ---
 
 # Heritage narrative production
+
+## Content-only compiled plan
+
+When the server pins `structure_profile=compiled_plan_v1`, return the supplied
+`StoryPlanResult` schema. Design ordered tasks and final choices with bilingual
+content, explicit supported gameplay requirements, reasoning and consequences.
+Select only registered object assets, source claims and views from the four input
+constraints. Do not emit runtime rule/scene/task IDs, variables, condition trees,
+locale keys, package identities or a SkillResult envelope: the compiler owns them.
+Each task's feedback makes its consequence visible. Coverage requirements must
+remain grounded in the selected source and exactly match the capability catalog.
+If this profile cannot express the requested story, return `no_feasible_story`
+with a reason instead of inventing unsupported control flow.
+
+Legacy `authored_graph` runs retain their pinned NarrativeDraft contract; do not
+reinterpret old responses as plans or rewrite an old failed output to claim a
+fresh-generation pass. The server-supplied schema determines the active mode.
 
 Create an experience in which understanding heritage changes a decision, relationship or consequence. Use the declared runtime and approved scope. Muradiye is a compatibility reference with weaknesses, not a story to reskin at every site.
 

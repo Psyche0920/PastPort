@@ -1,6 +1,7 @@
 """Bounded offline geometry subprocess using the SDK's bundled Three.js loader."""
 
 import os
+import hashlib
 import shutil
 import subprocess
 import tempfile
@@ -20,10 +21,11 @@ class SpatialAnalysisError(ValueError):
 
 
 class OfflineSpatialAnalyzer:
-    def __init__(self, timeout_seconds: float = 60.0) -> None:
+    def __init__(self, timeout_seconds: float = 60.0, *, cache_directory: Path | None = None) -> None:
         if not 0 < timeout_seconds <= 120:
             raise ValueError("Spatial timeout must be in (0, 120]")
         self.timeout_seconds = timeout_seconds
+        self.cache_directory = cache_directory
         self.assets = Path(__file__).resolve().parents[1] / "scene3d_assets"
 
     @property
@@ -34,6 +36,50 @@ class OfflineSpatialAnalyzer:
         self,
         request: SpatialProbeRequest,
         collider: bytes,
+        check_active: Callable[[], None],
+    ) -> SpatialProbeResult:
+        check_active()
+        if self.cache_directory is None:
+            return self._compute(request, collider, check_active)
+        if len(collider) > 100 * 1024**2:
+            raise SpatialAnalysisError("Collider exceeds the geometry profile")
+        # Bind every numeric input and executable dependency. Text-only changes
+        # may reuse geometry; marker, navigation, scale or algorithm edits cannot.
+        identity = hashlib.sha256(request.model_dump_json().encode())
+        identity.update(hashlib.sha256(collider).digest())
+        for name in ("spatial_analysis.mjs", "three.module.js", "three.core.js",
+                     "GLTFLoader.js", "BufferGeometryUtils.js"):
+            identity.update(hashlib.sha256((self.assets / name).read_bytes()).digest())
+        directory = self.cache_directory
+        directory.mkdir(parents=True, exist_ok=True)
+        cached = directory / (identity.hexdigest() + ".json")
+        if cached.is_file():
+            if cached.is_symlink() or cached.stat().st_size > 8 * 1024**2:
+                raise SpatialAnalysisError("Geometry cache exceeds its trusted profile")
+            try:
+                result = SpatialProbeResult.model_validate_json(cached.read_bytes())
+            except ValidationError as error:
+                raise SpatialAnalysisError("Geometry cache is invalid") from error
+            if tuple(node.key for node in request.nodes) != tuple(item.key for item in result.objects):
+                raise SpatialAnalysisError("Geometry cache node identities differ")
+            check_active()
+            return result
+        result = self._compute(request, collider, check_active)
+        # Only complete validated results are reusable; readers never see a
+        # partially written cache even when two local exports finish together.
+        with tempfile.NamedTemporaryFile(dir=directory, delete=False) as pending:
+            temporary = Path(pending.name)
+            try:
+                pending.write(result.model_dump_json().encode())
+                pending.flush()
+                check_active()
+                temporary.replace(cached)
+            finally:
+                temporary.unlink(missing_ok=True)
+        return result
+
+    def _compute(
+        self, request: SpatialProbeRequest, collider: bytes,
         check_active: Callable[[], None],
     ) -> SpatialProbeResult:
         node = shutil.which("node")

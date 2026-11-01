@@ -49,7 +49,11 @@ from pastport.domain.workflow import (
     WorkflowState,
 )
 
+from pastport.domain.story_plan import StoryPlan, StoryPlanResult
+
 SCHEMAS: dict[str, type[Contract]] = {
+    "story-plan": StoryPlan,
+    "story-plan-result": StoryPlanResult,
     "artifact-ref": ArtifactRef,
     "source-locator": SourceLocator,
     "evidence-request": EvidenceRequest,

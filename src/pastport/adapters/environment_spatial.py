@@ -121,6 +121,7 @@ class SdkEnvironmentSpatialReader:
         rules: SpatialTaskRules | None = None,
         *,
         analyze_geometry: bool = True,
+        geometry_cache: Path | None = None,
     ) -> None:
         if not 1 <= len(worlds) <= 100:
             raise ValueError("Register 1 to 100 spatial worlds")
@@ -128,6 +129,7 @@ class SdkEnvironmentSpatialReader:
         self.authority = content_authority_root.resolve(strict=True)
         self.rules = rules or SpatialTaskRules()
         self.analyze_geometry = analyze_geometry
+        self.geometry_cache = geometry_cache
 
     def read_spatial(
         self, snapshot: EnvironmentSnapshot, context: ExecutionContext
@@ -218,7 +220,7 @@ class SdkEnvironmentSpatialReader:
                     navigation=self._arrows(root, payload.binding),
                 )
                 if self.analyze_geometry:
-                    world = self._assess(world, collider, snapshot, context)
+                    world = self._assess(world, collider, snapshot, context, self.geometry_cache)
                 worlds.append(world)
         except (ValueError, OSError, sqlite3.Error) as error:
             raise ServiceError(
@@ -264,6 +266,7 @@ class SdkEnvironmentSpatialReader:
         collider: bytes,
         snapshot: EnvironmentSnapshot,
         context: ExecutionContext,
+        geometry_cache: Path | None = None,
     ) -> SpatialWorld:
         from pastport_matched_environment.application.spatial_analysis import (
             OfflineSpatialAnalyzer,
@@ -271,7 +274,7 @@ class SdkEnvironmentSpatialReader:
         )
         from pastport_matched_environment.domain.spatial_analysis import SpatialProbeRequest
 
-        analyzer = OfflineSpatialAnalyzer()
+        analyzer = OfflineSpatialAnalyzer(cache_directory=geometry_cache)
         catalogue = {item.object_number: item for item in snapshot.objects}
 
         def interactions(number: int) -> tuple[str, ...]:
