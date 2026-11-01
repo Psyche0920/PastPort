@@ -34,6 +34,9 @@ def documentation_fixture(root: Path) -> None:
         with root_readme.open("a") as stream:
             stream.write(f"\n[SDK](packages/{name}/README.md)")
 
+    (root / "README_EN.md").write_text(root_readme.read_text().replace(module.PRD, module.PRD_EN))
+    (root / module.PRD_EN).write_text(prd.read_text())
+
 
 def test_duplicate_guides_are_rejected(tmp_path: Path) -> None:
     documentation_fixture(tmp_path)
@@ -79,3 +82,15 @@ def test_machine_resources_and_provenance_are_not_parallel_guides(tmp_path: Path
     path.parent.mkdir(parents=True)
     path.write_text("Unwanted extra user entry")
     assert any("src/pastport/README.md: duplicate guide" in e for e in checker().check(tmp_path))
+
+
+def test_requested_translations_are_required_not_parallel_guides(tmp_path: Path) -> None:
+    documentation_fixture(tmp_path)
+    translated = tmp_path / checker().PRD_EN
+    translated.unlink()
+    assert any("TECHNICAL_PRD_EN.md: missing current documentation entry" in error
+               for error in checker().check(tmp_path))
+    documentation_fixture(tmp_path)
+    (tmp_path / "README_EN.md").write_text("English without a specification link")
+    assert any("README_EN.md: missing translated PRD route" in error
+               for error in checker().check(tmp_path))

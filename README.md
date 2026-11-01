@@ -1,5 +1,7 @@
 # PastPort
 
+中文 · [English](README_EN.md)
+
 把原始史料、已匹配的博物馆环境和空间信息，转换为可浏览、可完成任务的遗址游戏。
 
 **当前：五个 SDK 已与本地 main 集成；真实材料的保存结果复跑、组包与 3D 通关已验证。命令行复跑不调用模型；Organizer分别提供缓存复用与明确授权后的新生成。源码通过 Git 管理；本地试玩产物不随源码发布。**
@@ -165,7 +167,8 @@ PastPort/
 │   │   └── <a href=".github/workflows/ci.yml">ci.yml</a>  — GitHub Actions 持续集成：安装依赖并执行仓库检查与测试。
 │   └── <a href=".github/copilot-instructions.md">copilot-instructions.md</a>  — Copilot 的仓库开发约束与规范入口。
 ├── <a href="docs/">docs/</a>  — 唯一技术 PRD：系统架构、接口和验收范围
-│   └── <a href="docs/TECHNICAL_PRD.md">TECHNICAL_PRD.md</a>  — 当前唯一技术 PRD：main/SDK 职责、架构、技术栈、输入输出及验收边界。
+│   ├── <a href="docs/TECHNICAL_PRD.md">TECHNICAL_PRD.md</a>  — 当前唯一技术 PRD：main/SDK 职责、架构、技术栈、输入输出及验收边界。
+│   └── <a href="docs/TECHNICAL_PRD_EN.md">TECHNICAL_PRD_EN.md</a> — 同一技术规范的英文译本；架构、契约、启动方式与验收边界。
 ├── <a href="frontend/">frontend/</a>  — Organizer制作后台与User游戏界面的前端源码
 │   ├── <a href="frontend/game/">game/</a>  — 现有User玩家界面：对话、任务、3D交互与会话；本轮不改
 │   │   ├── <a href="frontend/game/app.css">app.css</a>  — 试玩主界面的布局、对话、任务和玩法样式。
@@ -565,6 +568,7 @@ PastPort/
 ├── <a href="handoff.md">handoff.md</a>  — wcheung与maslan的分工、修改位置、输入输出、接口兼容规则和下一步任务。
 ├── <a href="LICENSE">LICENSE</a>  — 本模块的许可证；分发源码或安装包时保留。
 ├── <a href="README.md">README.md</a>  — 项目安装、启动、复跑和逐文件导航的统一入口。
+├── <a href="README_EN.md">README_EN.md</a> — 根README的英文译本，包含完整可点击目录树和逐文件用途。
 ├── <a href="package-lock.json">package-lock.json</a>  — 锁定 Node 依赖树和完整性，支持可复现安装。
 ├── <a href="package.json">package.json</a>  — Node 工具依赖和检查、测试等脚本命令。
 ├── <a href="pyproject.toml">pyproject.toml</a>  — 本项目的包名、依赖、命令入口与构建配置。

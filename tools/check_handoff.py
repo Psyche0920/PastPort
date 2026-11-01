@@ -8,6 +8,8 @@ SDK_NAMES = (
     "evidence-sdk", "matched-environment-sdk", "stylization-sdk", "story-sdk", "gameplay-sdk",
 )
 PRD = "docs/TECHNICAL_PRD.md"
+PRD_EN = "docs/TECHNICAL_PRD_EN.md"
+TRANSLATIONS = ("README_EN.md", PRD_EN)
 ROUTE_FILES = ("README.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md")
 REQUIRED_TOPICS = (
     "architecture-and-ownership", "technology-stack", "workflow", "contracts-and-versions",
@@ -23,17 +25,22 @@ def check(root: Path) -> tuple[str, ...]:
     root = root.resolve()
     errors: list[str] = []
     allowed = {"README.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md", PRD}
+    allowed.update(TRANSLATIONS)
     allowed.update(f"packages/{name}/README.md" for name in SDK_NAMES)
     for relative in sorted(allowed):
         path = root / relative
         if not path.is_file():
             errors.append(f"{relative}: missing current documentation entry")
-    prd = root / PRD
-    if prd.is_file():
-        text = prd.read_text()
-        for topic in REQUIRED_TOPICS:
-            if f'id="{topic}"' not in text:
-                errors.append(f"{PRD}: missing technical topic: {topic}")
+    for relative in (PRD, PRD_EN):
+        specification = root / relative
+        if specification.is_file():
+            text = specification.read_text()
+            for topic in REQUIRED_TOPICS:
+                if f'id="{topic}"' not in text:
+                    errors.append(f"{relative}: missing technical topic: {topic}")
+    english_readme = root / "README_EN.md"
+    if english_readme.is_file() and PRD_EN not in english_readme.read_text():
+        errors.append(f"README_EN.md: missing translated PRD route: {PRD_EN}")
     for relative in ROUTE_FILES:
         path = root / relative
         if path.is_file() and PRD not in path.read_text():
@@ -56,11 +63,11 @@ def check(root: Path) -> tuple[str, ...]:
     if docs.is_dir():
         for path in sorted(docs.rglob("*")):
             if (
-                path.is_file() and path != prd
+                path.is_file() and path.relative_to(root).as_posix() not in {PRD, PRD_EN}
                 and not any(part in EXCLUDED for part in path.relative_to(root).parts)
             ):
                 errors.append(
-                    f"{path.relative_to(root)}: archive historical docs/resources; keep only {PRD}"
+                    f"{path.relative_to(root)}: archive historical docs/resources; keep only {PRD} and its English translation"
                 )
     for folder, directories, names in os.walk(root):
         directories[:] = sorted(
@@ -87,7 +94,7 @@ def main() -> int:
     if errors:
         print("\n".join(errors))
         return 1
-    print("Documentation contract passed: root README, team handoff, five SDK guides and one technical PRD.")
+    print("Documentation contract passed: bilingual root README/technical PRD, team handoff and five SDK guides.")
     return 0
 
 
