@@ -596,3 +596,5 @@ PastPort/
 The [Technical PRD: current initial specification](docs/TECHNICAL_PRD_EN.md) defines workflow architecture, technology, main/SDK inputs and outputs, permissions, budgets, recovery and acceptance. SDK READMEs above cover development and usage. Current evidence remains in ignored local `var/organizer-integration/`. Historical wheels/fallback previews remain in `var/runtime-layout-20261101/`; do not treat old distributions as packages of current source.
 
 The Admin production workflow disables cumulative recorded-token stop thresholds under explicit user authorization for both Evidence and environment matching. Actual usage remains recorded. Authorized call counts, timeouts, source validation and unknown-usage recovery checks remain enforced. Continuation creates a new output revision and reuses successful receipts, preserving old PDFs and original grants. Standalone SDK execution still honors its explicit grant by default.
+
+[Change history](CHANGELOG.md)

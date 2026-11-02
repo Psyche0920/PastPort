@@ -12,3 +12,5 @@
 - User-requested root `handoff.md` is the team ownership/input-output/change-impact handoff. Keep it linked from README and the PRD; it is the explicit exception to the no-parallel-guides rule and must not duplicate startup or architecture specifications.
 
 - User-requested `README_EN.md` and `docs/TECHNICAL_PRD_EN.md` are full English translations of the existing Chinese entry/specification, not separate guides or product versions. Keep structure, commands, file inventory and acceptance boundaries aligned, with reciprocal language links.
+
+- User-requested root `CHANGELOG.md` records dated changes and verification limits; it is an allowed change history, not a parallel startup or architecture guide.

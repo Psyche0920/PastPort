@@ -77,7 +77,7 @@ def check(root: Path) -> tuple[str, ...]:
         for name in sorted(names):
             path = Path(folder) / name
             relative = path.relative_to(root).as_posix()
-            if path.suffix != ".md" or relative in allowed:
+            if path.suffix != ".md" or relative in allowed or relative == "CHANGELOG.md":
                 continue
             # Machine Skills and their supporting resources are not user guides.
             if relative.startswith("skills/"):
