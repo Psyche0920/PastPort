@@ -8,6 +8,14 @@
 
 [开发交接：wcheung / maslan的修改范围、输入输出与任务](handoff.md)
 
+## 团队本机测试资料
+
+maslan（Mert）和wcheung可从[本仓库的私有材料Release](https://github.com/Psyche0920/PastPort/releases/tag/material-handoff-2026-11-02)下载 **`pastport-maslan-wcheung-murat-2026-11-02.tar.gz`**（约714 MiB）。这是已核对的同源 `murat-sdk-replay` 完整集：原始PDF、保存的Story、已挂载双点位3D环境及可玩成品；不是裸模型导入，也不需要重新生成。
+
+解压后进入 `pastport-materials`，执行 `sh start_game.sh`，浏览器打开 `http://127.0.0.1:18824/?scene=3d`；需要Node.js 22+，无需模型密钥、Organizer账号或Marble。完整输入、准备好的组包请求和操作说明在包内 `MANIFEST.md` / `RUN.md`。校验文件 `ARCHIVE_SHA256SUMS` 位于同一Release；包内还有逐文件 `SHA256SUMS`。
+
+材料作为Release附件单独下载，普通 `git clone` 和GitHub自动生成的“Source code”压缩包不包含它。仓库访问权限保持不变，仅供团队私有本机测试；不代表历史、内容质量或公开分发已获批准。
+
 ## 启动与使用
 
 当前应用仓库是 `/Users/hanweijia/PastPort`，以这里的本地 main 源码为准。需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。

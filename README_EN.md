@@ -8,6 +8,14 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Development handoff: wcheung / maslan ownership, source locations, inputs/outputs and tasks](handoff.md)
 
+## Private local test materials
+
+maslan (Mert) and wcheung can download **`pastport-maslan-wcheung-murat-2026-11-02.tar.gz`** (about 714 MiB) from [this repository's private material Release](https://github.com/Psyche0920/PastPort/releases/tag/material-handoff-2026-11-02). It is the verified, complete same-source `murat-sdk-replay` set: original PDF, saved Story, mounted two-view 3D museum and existing playable game. It is not the raw-model import and requires no new generation.
+
+After extraction, enter `pastport-materials`, run `sh start_game.sh`, and open `http://127.0.0.1:18824/?scene=3d`. Node.js 22+ is required; no model key, Organizer account or Marble call is needed. Inputs, prepared assembly content and instructions are documented in the included `MANIFEST.md` / `RUN.md`. `ARCHIVE_SHA256SUMS` is a separate asset in the same Release; the archive also contains per-file `SHA256SUMS`.
+
+Download the material asset separately: a normal `git clone` and GitHub's auto-generated “Source code” archives do not contain it. Repository access remains unchanged. This is for private local team testing, not approval of historical accuracy, content quality or public distribution.
+
 ## Startup and use
 
 The application repository is `/Users/hanweijia/PastPort`; its local main source is the baseline. Requires Python 3.12, uv, Node.js and a WebGL-capable browser.
