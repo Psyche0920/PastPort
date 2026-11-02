@@ -80,8 +80,15 @@ class StoryReuseAdapter:
                 current.media_directory,
             )
             catalog = load_gameplay_catalog()
+            spatial_only_repair = bool(
+                old_check.status == "invalid" and old_check.issues
+                and all(re.fullmatch(r"Task [A-Za-z0-9_.:-]+ (?:has an invalid spatial intent|has no registered source-inspection station)", issue) for issue in old_check.issues)
+                and old.metric_spatial and current_materials.museum.metric_spatial
+                and any(world.geometry is None or world.geometry.result is None for world in old.metric_spatial.worlds)
+                and all(world.geometry and world.geometry.result for world in current_materials.museum.metric_spatial.worlds)
+            )
             if (
-                old_check.status != "ready"
+                (old_check.status != "ready" and not spatial_only_repair)
                 or old_check.story_draft_sha256 != CanonicalSerializer.digest(draft)
                 or old_check.narrative_sha256 != CanonicalSerializer.digest(draft.package)
                 or old_lock.environment_sha256 != hashlib.sha256(old_environment).hexdigest()

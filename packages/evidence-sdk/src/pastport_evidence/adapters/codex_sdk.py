@@ -141,10 +141,10 @@ class CodexSDKTransport:
                                 pass  # Caller records unknown usage and blocks redispatch.
                             raise
                         if result.status != TurnStatus.completed or not result.final_response:
-                            raise ModelExecutionError("Codex turn did not return completed JSON")
+                            raise ModelExecutionError("Codex turn did not return completed JSON", failure_code="incomplete_response")
                         if result.usage is None:
                             raise ModelExecutionError(
-                                "Codex turn omitted usage; reconciliation needed"
+                                "Codex turn omitted usage; reconciliation needed", failure_code="usage_missing"
                             )
                         usage = result.usage.total
                         return ExecutionOutput(
@@ -160,11 +160,12 @@ class CodexSDKTransport:
             raise
         except TimeoutError as error:
             raise ModelExecutionError(
-                "Codex request timed out; usage may have been consumed"
+                "Codex request timed out; usage may have been consumed", failure_code="transport_timeout"
             ) from error
         except (CodexError, OSError, ValueError, RuntimeError) as error:
             if isinstance(error, ModelExecutionError):
                 raise
             raise ModelExecutionError(
-                f"Codex SDK request failed ({type(error).__name__}); no retry or fallback"
+                f"Codex SDK request failed ({type(error).__name__}); no retry or fallback",
+                failure_code="sdk_error"
             ) from error

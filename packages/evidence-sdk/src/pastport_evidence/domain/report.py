@@ -23,12 +23,14 @@ class ImageFrame:
     width: float
     height: float
     caption: str
+    target: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class ReportPage:
     texts: tuple[TextFrame, ...]
     images: tuple[ImageFrame, ...] = ()
+    bookmark: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

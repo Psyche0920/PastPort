@@ -2,7 +2,7 @@
 name: evidence-review
 description: Prepare and audit sourced heritage records, image mappings, rights evidence and spatial claims for PastPort. Use for indexing, targeted research or claim review before narrative generation; not for SQL tuning, story writing or granting human approval.
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
   owner: Weng
 ---
 
@@ -35,6 +35,14 @@ Use only supplied tools. Return proposed records for application validation/pers
 6. Check image identity, visible feature, represented period and reuse permission independently. A modern pool can establish visible shape, not a fictional delivery or ancient water operation. Organizer provision does not itself grant public redistribution.
 7. Check location/adjacency separately from folder membership. Unknown coordinates, gates and passages stay unknown. Never invent walking times or building connections.
 8. Return one reasoned judgment per target. Preserve unrelated completed records; identify changed targets and dependent content.
+
+## Historical content shown to players
+
+The information popup presents the selected historical subject, source-supported historical information and a reopenable source locator. Keep modern-object recognition, proxy suitability explanations, matching rationale, model execution notes and review workflow instructions in the organizer workbench; these are not the popup's historical body. A modern proxy is an interaction target, not proof of historical identity.
+
+Prefer the organizer's registered PDF. Preserve an exact original excerpt and page identity; label any translation or paraphrase separately. Supplement from other passages of that PDF before asking for external research. External additions require an available authorized research capability, an inspected source and a per-claim source locator; distinguish them from PDF evidence and record contradictions. A Skill does not implement that capability or authorize additional calls. Where the runtime only supports local PDF retrieval, report an external-research gap instead of pretending to browse or filling it from model memory.
+
+The application must preserve these boundaries in the SDK's actual versioned prompts, validated outputs and popup renderer. Reading this Skill alone does not change a separately packaged SDK. Keep historical facts, interpretation, proxy mapping and original Story fiction distinct through review and assembly. Preserve manual editorial overrides when refreshing generated content.
 
 ## Output and handoff
 

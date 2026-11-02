@@ -54,6 +54,10 @@ class SubscriptionExecutor:
             if db is not None:
                 db.close()
 
+    def token_threshold_enabled(self) -> bool:
+        """Standalone grants retain their limits; Admin explicitly opts out by policy."""
+        return not (self._path.parent / "no-token-threshold-authorized.txt").is_file()
+
     def reserved_calls(self) -> int:
         with self._connection() as db:
             row = db.execute(
@@ -71,11 +75,11 @@ class SubscriptionExecutor:
         if any(row[0] != "completed" for row in rows):
             raise ExecutionRecoveryRequired("Unknown prior usage blocks further dispatch")
         tokens = sum(ExecutionOutput.model_validate_json(row[1]).total_tokens for row in rows)
-        if tokens >= self.grant.max_recorded_tokens:
+        if self.token_threshold_enabled() and tokens >= self.grant.max_recorded_tokens:
             return 0
         return max(0, self.grant.max_calls - len(rows))
 
-    def remaining_recorded_tokens(self) -> int:
+    def remaining_recorded_tokens(self) -> int | None:
         with self._connection() as db:
             rows = db.execute(
                 "SELECT state,result FROM executions WHERE project=? AND grant_ref=?",
@@ -84,7 +88,7 @@ class SubscriptionExecutor:
         if any(row[0] != "completed" for row in rows):
             raise ExecutionRecoveryRequired("Unknown prior usage blocks further dispatch")
         used = sum(ExecutionOutput.model_validate_json(row[1]).total_tokens for row in rows)
-        return max(0, self.grant.max_recorded_tokens - used)
+        return max(0, self.grant.max_recorded_tokens - used) if self.token_threshold_enabled() else None
 
     def execute(self, request: ExecutionInput) -> ExecutionOutput:
         grant = self.grant
@@ -116,7 +120,7 @@ class SubscriptionExecutor:
             used_tokens = sum(
                 ExecutionOutput.model_validate_json(row[1]).total_tokens for row in rows
             )
-            if len(rows) >= grant.max_calls or used_tokens >= grant.max_recorded_tokens:
+            if len(rows) >= grant.max_calls or (self.token_threshold_enabled() and used_tokens >= grant.max_recorded_tokens):
                 raise ExecutionDenied("Subscription grant call/token threshold reached")
             db.execute("INSERT INTO executions VALUES (?,?,?,'dispatching',NULL,NULL)", key)
         try:

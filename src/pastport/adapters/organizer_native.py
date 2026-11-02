@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from importlib.resources import files
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
@@ -63,6 +64,7 @@ class _HistoricalObject(_Native):
     historical_title: str | None
     historical_image: str | None
     historical_image_page: int | None
+    historical_image_role: Literal["object_image", "context_image", "text_evidence"] | None = None
     introduction: str | None
     introduction_version: int | None
     pairing_version: int
@@ -263,9 +265,9 @@ class NativeGameInputExporter:
             for root in worlds.worlds
         }
         scene_ids = tuple(view.id for view in native_tour.scenes)
-        if len(worlds.worlds) != 2 or len(by_scene) != 2 or set(by_scene) != set(scene_ids):
+        if len(worlds.worlds) not in (1, 2) or len(by_scene) != len(worlds.worlds) or set(by_scene) != set(scene_ids):
             raise ServiceError(
-                "GAME_HOST_VIEW_PROFILE", "当前宿主要求同一导览的两个完整3D视点。", 422
+                "GAME_HOST_VIEW_PROFILE", "当前宿主要求同一导览的一至两个完整3D视点。", 422
             )
         # Host world indices follow the source-tour order; entry selection must not
         # swap geometry relative to scene IDs, hotspot positions or navigation.
@@ -410,7 +412,7 @@ class NativeGameInputExporter:
             if index == 1:
                 for item in data.objects:
                     obj = next((o for o in snapshot.objects if o.object_number == item.id), None)
-                    if obj is None or obj.quote is None or item.historical_image is None:
+                    if obj is None or item.historical_image is None:
                         continue
                     source = (root / item.historical_image).resolve()
                     if not source.is_relative_to(root.resolve()) or not source.is_file():
@@ -443,15 +445,15 @@ class NativeGameInputExporter:
                             "pairing_version": item.pairing_version,
                             "image_review": item.image_review,
                             "text_review": item.text_review,
-                            "image_role": "object_image",
+                            "image_role": item.historical_image_role or "text_evidence",
                             "image_page": item.historical_image_page,
                             "image_source_pdf_sha256": native_hash,
-                            "text_page": obj.quote.pdf_page,
-                            "text_source_pdf_sha256": document.source.asset.sha256,
+                            "text_page": obj.quote.pdf_page if obj.quote else item.historical_image_page,
+                            "text_source_pdf_sha256": document.source.asset.sha256 if obj.quote else native_hash,
                             "media_path": "media/" + name,
                             "media_sha256": BoundedNativeArchive.digest(target),
                             "content_version": item.introduction_version or 0,
-                            "content": item.introduction or obj.quote.text,
+                            "content": item.introduction or (obj.quote.text if obj.quote else "原始史料定位未对齐，请核对映射来源PDF；不用于剧情任务依据。"),
                             "scope_warning": obj.evidence_limitation
                             or "原生映射候选；不推断独立审核或历史复原。",
                         }
@@ -474,7 +476,7 @@ class NativeGameInputExporter:
                 if arrow.target_scene_id in scene_ids
             ]
             payloads.append({"root": f"worlds/{index}", "snapshot": state})
-        if not objects:
+        if not objects or not any(obj.quote for obj in snapshot.objects):
             raise ServiceError(
                 "NO_SOURCE_BOUND_OBJECTS", "没有可定位到原始史料的物件引用；未调用Story模型。", 422
             )
@@ -553,10 +555,19 @@ class SDKUploadedInputPreparer:
 
     @staticmethod
     def _stages(output: Path) -> tuple[str, ...]:
-        order = ("evidence", "matched_environment", "scene3d_1", "scene3d_2", "input_handoff")
+        order = ("local_scene_import", "evidence", "matched_environment", "scene3d_1", "scene3d_2", "input_handoff")
         return tuple(
             stage for stage in order if (output / "native-receipts" / (stage + ".json")).is_file()
         )
+
+    @staticmethod
+    def _completion_message(prepared: GameMakingRequest) -> str:
+        snapshot = EnvironmentSnapshot.model_validate_json(prepared.environment.read_bytes())
+        candidates = {obj.object_number for obj in snapshot.objects}
+        located = {position.object_number for position in snapshot.positions}
+        missing = sorted(candidates - located)
+        detail = "；未定位编号：" + "、".join(map(str, missing)) if missing else "；全部候选已有定位"
+        return f"环境资料已交接：{len(candidates)}个候选，{len(candidates & located)}个已定位{detail}。历史关联与空间位置仍待审核。"
 
     @staticmethod
     def _one(request: NativeInputRequest, role: str) -> Path | None:
@@ -579,9 +590,9 @@ class SDKUploadedInputPreparer:
             ):
                 raise ServiceError("UPLOADED_INPUT_CHANGED", "上传材料已改变或缺失。", 409)
             suffix = Path(asset.filename).suffix.lower()
-            if asset.role == "photos" and suffix not in (".jpg", ".jpeg", ".png", ".webp"):
+            if asset.role == "photos" and suffix not in ((".jpg", ".jpeg", ".png", ".webp", ".zip") if request.entry_level == "raw3d" else (".jpg", ".jpeg", ".png", ".webp")):
                 raise ServiceError("PHOTO_FORMAT_UNSUPPORTED", "现场照片需为JPEG、PNG或WebP。", 422)
-            if suffix not in (".pdf", ".jpg", ".jpeg", ".png", ".webp", ".html", ".zip"):
+            if suffix not in (".pdf", ".jpg", ".jpeg", ".png", ".webp", ".html", ".zip", ".spz", ".ply"):
                 raise ServiceError("MATERIAL_FORMAT_UNSUPPORTED", "材料格式不受当前入口支持。", 422)
             target = inputs / (asset.file_id + suffix)
             if target.exists():
@@ -633,8 +644,6 @@ class SDKUploadedInputPreparer:
         return prepared
 
     def prepare(self, request: NativeInputRequest, output: Path) -> NativePreparedInputs:
-        from pastport_evidence.application.document_package import OutputPaths
-        from pastport_evidence.domain.execution import SubscriptionGrant as EvidenceGrant
         from pastport_matched_environment.domain.environment import RunResultPointer
         from pastport_matched_environment.domain.execution import (
             SubscriptionGrant as EnvironmentGrant,
@@ -655,21 +664,28 @@ class SDKUploadedInputPreparer:
             raise ServiceError(
                 "PLAYER_ASSETS_INVALID", "共享播放器资源超过配置范围或包含链接。", 503
             )
+        environment_workspace = output / "environment-build"
+        environment_workspace.mkdir(parents=True, exist_ok=True)
+        token_policy = environment_workspace / "no-token-threshold-authorized.txt"
+        if not token_policy.exists():
+            token_policy.write_text("User explicitly removed Admin token thresholds; preserve call authorization, usage and timeout limits.")
         inputs = self._copy_inputs(request, output)
         prepared_file = output / "prepared-request.json"
         if prepared_file.is_file():
+            prepared_request = GameMakingRequest.model_validate_json(prepared_file.read_bytes())
             return NativePreparedInputs(
-                state="ready",
-                request=GameMakingRequest.model_validate_json(prepared_file.read_bytes()),
+                state="ready", request=prepared_request,
                 completed_stages=self._stages(output),
-                message="已复用原生输入交接结果。",
+                message=self._completion_message(prepared_request),
             )
         original = self._path(request, inputs, "original_pdf")
         if original is None:
             raise ServiceError("ORIGINAL_PDF_REQUIRED", "缺少原始史料PDF。", 422)
         tour_input = self._path(request, inputs, "tour")
         tour = self._tour_preflight(request, tour_input, output) if tour_input else None
-        if request.entry_level == "3d":
+        if request.entry_level == "raw3d":
+            worlds = self._raw_scene(request, inputs, original, output)
+        elif request.entry_level == "3d":
             archive = self._path(request, inputs, "mounted_3d")
             if archive is None or archive.suffix != ".zip":
                 raise ServiceError(
@@ -701,55 +717,7 @@ class SDKUploadedInputPreparer:
             else:
                 mapping = self._path(request, inputs, "mapping_pdf")
                 if request.entry_level == "raw":
-                    photos = tuple(asset for asset in request.files if asset.role == "photos")
-                    if not 1 <= len(photos) <= 100:
-                        raise ServiceError(
-                            "PHOTOS_REQUIRED", "原始材料起点需要1至100张现场照片。", 422
-                        )
-                    folder = output / "photos"
-                    folder.mkdir(exist_ok=True)
-                    for asset in photos:
-                        suffix = Path(asset.filename).suffix.lower()
-                        target = folder / (asset.file_id + suffix)
-                        if not target.exists():
-                            shutil.copyfile(inputs / target.name, target)
-                    workspace = output / "evidence"
-                    result_file = workspace / "result.json"
-                    if not result_file.exists():
-                        grant = EvidenceGrant(
-                            grant_ref="org_" + request.job_id + "_evidence",
-                            project_id=request.project_id,
-                            max_calls=request.options.max_evidence_calls,
-                            max_recorded_tokens=request.options.max_recorded_tokens,
-                            timeout_seconds=240,
-                        )
-                        grant_file = output / "evidence-grant.json"
-                        if not grant_file.exists():
-                            grant_file.write_text(grant.model_dump_json())
-                        self.runner.run(
-                            "pastport_evidence.cli",
-                            (
-                                "--pdf",
-                                str(original),
-                                "--photos",
-                                str(folder),
-                                "--workspace",
-                                str(workspace),
-                                "--grant",
-                                str(grant_file),
-                                "--run-id",
-                                request.job_id,
-                                "--large-pdf",
-                            ),
-                            240 * request.options.max_evidence_calls + 120,
-                        )
-                    documents = OutputPaths.model_validate_json(result_file.read_bytes())
-                    mapping = Path(documents.pdf).resolve()
-                    if not mapping.is_relative_to(workspace.resolve()):
-                        raise ServiceError(
-                            "MAPPING_OUTPUT_SCOPE", "映射PDF输出不在本次工作区内。", 409
-                        )
-                    self._record(output, "evidence", mapping)
+                    mapping = self._evidence(request, original, inputs, output)
                     if tour is None:
                         return NativePreparedInputs(
                             state="awaiting_materials",
@@ -855,8 +823,149 @@ class SDKUploadedInputPreparer:
             state="ready",
             request=prepared,
             completed_stages=self._stages(output),
-            message="原始资料、审核与3D空间已交接，可继续Story生成。",
+            message=self._completion_message(prepared),
         )
+
+    @staticmethod
+    def _photos(request: NativeInputRequest, inputs: Path, output: Path) -> Path:
+        from PIL import Image
+        photos = tuple(asset for asset in request.files if asset.role == "photos")
+        if not 1 <= len(photos) <= 100:
+            raise ServiceError("PHOTOS_REQUIRED", "需要1至100张照片或一个照片ZIP。", 422)
+        folder = output / "photos"
+        folder.mkdir(exist_ok=True)
+        for asset in photos:
+            source = inputs / (asset.file_id + Path(asset.filename).suffix.lower())
+            if source.suffix == ".zip":
+                extracted = output / ("photo-archive-" + asset.file_id)
+                if not extracted.exists():
+                    BoundedNativeArchive().extract(source, extracted)
+                candidates = tuple(p for p in extracted.rglob("*") if p.is_file() and "__MACOSX" not in p.parts and not p.name.startswith("._") and p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"))
+            else:
+                candidates = (source,)
+            if len(candidates) > 100:
+                raise ServiceError("PHOTOS_REQUIRED", "照片数量超过100张。", 422)
+            for index, photo in enumerate(candidates):
+                if photo.stat().st_size > 20 * 1024**2:
+                    raise ServiceError("PHOTO_TOO_LARGE", "单张照片超过20MiB。", 422)
+                with Image.open(photo) as image:
+                    if image.width*image.height > 40000000:
+                        raise ServiceError("PHOTO_TOO_LARGE", "照片像素超过读取范围。", 422)
+                    image.verify()
+                target = folder / (asset.file_id + "-" + str(index) + photo.suffix.lower())
+                if target.exists():
+                    if BoundedNativeArchive.digest(target) != BoundedNativeArchive.digest(photo):
+                        raise ServiceError("PHOTO_SNAPSHOT_CHANGED", "照片输入快照已变化。", 409)
+                else:
+                    shutil.copyfile(photo, target)
+        if not 1 <= len(tuple(folder.iterdir())) <= 100:
+            raise ServiceError("PHOTOS_REQUIRED", "照片ZIP为空或总数超过100张。", 422)
+        return folder
+
+    def _evidence(self, request: NativeInputRequest, original: Path, inputs: Path, output: Path) -> Path:
+        from pastport_evidence.application.document_package import OutputPaths
+        from pastport_evidence.domain.execution import SubscriptionGrant as EvidenceGrant
+        folder = self._photos(request, inputs, output)
+        workspace = output / "evidence"
+        workspace.mkdir(parents=True, exist_ok=True)
+        policy = workspace / "candidate-policy.json"
+        if not policy.exists():
+            policy.write_text("candidate-index-v1")
+        result_file = workspace / "result.json"
+        workspace.mkdir(parents=True, exist_ok=True)
+        no_token_threshold = True  # User-authorized Admin policy; call ceilings remain enforced.
+        amendment = workspace / "budget-amendment.json"
+        if no_token_threshold and (not amendment.exists() or amendment.read_text().strip() != "0"):
+            amendment.write_text("0")
+        if amendment.is_file():
+            amended_limit = int(amendment.read_text())
+            if amended_limit not in (0, 1_000_000):
+                raise ServiceError("BUDGET_AMENDMENT_INVALID", "Unsupported budget amendment", 409)
+            result_file = workspace / f"result-budget-{amended_limit}.json"
+        if (workspace / "candidate-policy.json").is_file():
+            result_file = workspace / f"result-indexed-{amended_limit if amendment.is_file() else None}-linked-pdf.json"
+        if not result_file.exists():
+            grant = EvidenceGrant(
+                grant_ref="org_" + request.job_id + "_evidence",
+                project_id=request.project_id,
+                max_calls=request.options.max_evidence_calls,
+                max_recorded_tokens=request.options.max_recorded_tokens,
+                timeout_seconds=240,
+            )
+            grant_file = output / "evidence-grant.json"
+            if not grant_file.exists():
+                grant_file.write_text(grant.model_dump_json())
+            self.runner.run(
+                "pastport_evidence.cli",
+                (
+                    "--pdf",
+                    str(original),
+                    "--photos",
+                    str(folder),
+                    "--workspace",
+                    str(workspace),
+                    "--grant",
+                    str(grant_file),
+                    "--run-id",
+                    request.job_id,
+                    "--large-pdf",
+                    *(("--no-token-threshold",) if no_token_threshold else ()),
+                ),
+                240 * request.options.max_evidence_calls + 120,
+            )
+        documents = OutputPaths.model_validate_json(result_file.read_bytes())
+        if any("budget_exhausted" in gap for gap in documents.gaps):
+            raise ServiceError("EVIDENCE_BUDGET_EXHAUSTED", "史料匹配预算已用尽，结果与回执已保留；不会把未完成匹配交给下游。", 409)
+        mapping = Path(documents.pdf).resolve()
+        if not mapping.is_relative_to(workspace.resolve()):
+            raise ServiceError(
+                "MAPPING_OUTPUT_SCOPE", "映射PDF输出不在本次工作区内。", 409
+            )
+        self._record(output, "evidence", mapping)
+        return mapping
+
+    def _raw_scene(self, request: NativeInputRequest, inputs: Path, original: Path, output: Path) -> NativeWorldSet:
+        from pastport_matched_environment.domain.environment import RunResultPointer
+        from pastport_matched_environment.domain.execution import SubscriptionGrant as EnvironmentGrant
+        splat = self._path(request, inputs, "scene_splat")
+        mesh = self._path(request, inputs, "scene_mesh")
+        if splat is None or mesh is None or splat.suffix != ".spz" or mesh.suffix != ".ply":
+            raise ServiceError("RAW_SCENE_REQUIRED", "请上传同场景SPZ和三角碰撞PLY。", 422)
+        # Shared Evidence flow needs recognition, candidate retrieval and matching.
+        # Twenty-object early stopping makes an all-photo estimate misleading;
+        # the executor enforces the remaining grant at every actual dispatch.
+        if request.options.max_evidence_calls < 3:
+            raise ServiceError(
+                "EVIDENCE_BUDGET_TOO_SMALL",
+                "识别、候选页检索和匹配至少需要3次调用；当前上限不足，未调用模型。",
+                422,
+            )
+        imported = output / "raw-scene"
+        if not (imported / "tour.html").exists():
+            self.runner.run("pastport_matched_environment.cli", ("raw-scene-import", "--spz", str(splat), "--mesh", str(mesh), "--workspace", str(imported)), 270)
+        self._record(output, "local_scene_import", imported / "scene/raw-scene.json")
+        mapping = self._evidence(request, original, inputs, output)
+        workspace = output / "environment-build"
+        environment_run_id = request.job_id + "-" + BoundedNativeArchive.digest(mapping)[:12] + "-cube-v1"
+        pointer_file = workspace / "runs" / environment_run_id / "result-pointer.json"
+        if not pointer_file.exists():
+            grant = EnvironmentGrant(grant_ref="org_"+request.job_id+"_environment", project_id=request.project_id,
+                                     max_calls=request.options.max_environment_calls, max_recorded_tokens=request.options.max_recorded_tokens, timeout_seconds=240)
+            grant_file = output / "environment-grant.json"
+            if not grant_file.exists():
+                grant_file.write_text(grant.model_dump_json())
+            self.runner.run("pastport_matched_environment.cli", ("environment-build", "--pdf", str(mapping), "--tour", str(imported / "tour.html"), "--grant", str(grant_file), "--workspace", str(workspace), "--run-id", environment_run_id, "--large-pdf"), 240*request.options.max_environment_calls+120)
+        pointer = RunResultPointer.model_validate_json(pointer_file.read_bytes())
+        environment = workspace / "runs" / pointer.result_run_id / "result"
+        self._record(output, "matched_environment", environment / "import-manifest.json")
+        tour = self.admission.tour(environment)
+        if len(tour.scenes) != 1:
+            raise ServiceError("RAW_SCENE_VIEW_PROFILE", "导入单场景不得伪造第二个视点。", 422)
+        attachment = output / "scene3d-1"
+        if not (attachment / "delivery.json").exists():
+            self.runner.run("pastport_matched_environment.cli", ("scene3d-attach", "--environment", str(environment), "--world", str(imported / "scene/scene.json"), "--workspace", str(attachment), "--source-scene", tour.scenes[0].id, "--local-scene"), 120)
+        self._record(output, "scene3d_1", attachment / "delivery.json")
+        return NativeWorldSet(environment, (attachment / "result",), tour.firstSceneId)
 
     def model_calls(self, output: Path) -> int | None:
         count = 0

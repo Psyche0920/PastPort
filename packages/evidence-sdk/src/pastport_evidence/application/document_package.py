@@ -41,7 +41,7 @@ class DocumentPackageExporter:
     def write(self, root: Path, bundle: PreparedDocuments, source: RegisteredPDF) -> Path:
         root.mkdir(parents=True, exist_ok=True)
         fingerprint = hashlib.sha256(
-            ("document-layout-v2:" + digest(font_path()) + bundle.model_dump_json()).encode()
+            ("document-layout-v4-linked-jpeg:" + digest(font_path()) + bundle.model_dump_json()).encode()
         ).hexdigest()
         target = root / fingerprint
         if target.exists():

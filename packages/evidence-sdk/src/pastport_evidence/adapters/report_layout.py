@@ -124,6 +124,9 @@ class ReportLayout:
             )
             evidence = obj.source_evidence
             title = f"{obj.entity.display_number:02d} · {obj.entity.label[:40]}"
+            indexed = bool(evidence and evidence.original_quote.strip() and sightings)
+            bookmark = f"evidence-{obj.entity.display_number}" if indexed else None
+            header = f"{obj.entity.display_number} -> {obj.historical_subject_id}" if indexed else title
             history = evidence.title if evidence else "未找到合适的历史对象"
             content = [
                 f"现场物品：{obj.entity.label}",
@@ -161,7 +164,7 @@ class ReportLayout:
             # that would otherwise be lost behind a single representative crop.
             count = max(len(chunks), len(sightings), 1)
             for index in range(count):
-                texts = [TextFrame(title, 32, 24, 778, 24, 16)]
+                texts = [TextFrame(header if index == 0 else title, 32, 24, 778, 24, 16)]
                 texts.append(
                     TextFrame(
                         f"对象图文对照 · {index + 1}/{count} · 自动生成草稿", 32, 550, 778, 16, 9
@@ -175,7 +178,7 @@ class ReportLayout:
                         caption += "（跨视角身份待确认）"
                     images.append(
                         ImageFrame(
-                            self.assets.resolve_path(sighting.crop), 32, 75, 300, 190, caption
+                            self.assets.resolve_path(sighting.crop), 32, 75, 300, 190, caption, bookmark
                         )
                     )
                     texts.append(TextFrame(caption, 32, 55, 300, 18, 9))
@@ -232,7 +235,7 @@ class ReportLayout:
                             ),
                         )
                     )
-                pages.append(ReportPage(tuple(texts), tuple(images)))
+                pages.append(ReportPage(tuple(texts), tuple(images), bookmark if index == 0 else None))
         if gaps:
             gap_lines = self.wrap("待确认或未完成事项\n\n" + "\n".join(dict.fromkeys(gaps)), 750)
             for start in range(0, len(gap_lines), 27):

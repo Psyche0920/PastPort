@@ -46,6 +46,12 @@ This uses existing private configuration and the administrator account on this c
 
 The `disabled` options disable older editorial demo channels, not explicitly authorized Organizer SDK generation. Current player assets remain registered in the local materials directory shown above. They are private input dependencies, not another application repository, and are absent from a Git clone. On another machine, supply private configuration/materials/player resources and replace the paths. Do not copy or publish account configuration, API keys or private materials.
 
+
+Existing-3D uploads: select “Original PDF + photos + existing SPZ / PLY scene”, leave defaults unchecked, enter a new project ID and upload all four inputs. Save, review the finite call budgets, then prepare the environment. Continue through review → Story → game build. Recognition/Story calls require explicit consent; Marble calls are zero. Photos accept images or ZIP; PLY must be a binary little-endian triangle mesh. Local Chrome and Node.js are required for capture. An insufficient Evidence budget stops before dispatch: 44 photos and 62 PDF pages require at least 43 first-pass calls, plus per-object verification. The old eight-call default is not a full-set budget. Wiring/simulated execution and a real single-object handoff have been checked; a fresh full-set model run remains upload-test acceptance.
+
+
+New photo jobs use a compact policy: two photos per batch, at most 12 new entities and 24 sightings, schema-bounded names/features/explanations, and a 120-second deadline or the shorter authorized timeout. Overflow is reported as incomplete and stops acceptance. Existing policies and paid receipts stay unchanged; failures are not automatically retried. These bounds have offline regression evidence, not fresh-model speed acceptance.
+
 ### Production workflow
 
 1. **Prepare materials and environment:** select an entry point from the table below. Check the grey box to reuse the complete default materials/environment with zero model/Marble calls. Unchecked uses uploads at the selected stage; separately authorize Marble when 3D generation is required. Complete native 3D inputs are not regenerated.
@@ -62,7 +68,7 @@ Switching interface language does not translate evidence/descriptions/stories, s
 | Original PDF + native matched-VR archive | Validate/import → 3D | VR bindings, review and navigation |
 | Original PDF + native mounted two-view 3D archive | Validate/import | 3D, objects, review, positions/navigation; no Marble calls |
 
-Defaults use a complete registered same-source PDF/photo/mapping/VR/3D set; Story is selected separately. Changed files, mixed PDFs, missing data or inconsistent provenance stop execution without cache substitution. Uploaded packages are data, not executable code. **An ordinary panorama is not matched VR; a raw model is not a mounted environment.** Automatic raw-model-plus-PDF matching is not implemented yet.
+Defaults use a complete registered same-source PDF/photo/mapping/VR/3D set; Story is selected separately. Changed files, mixed PDFs, missing data or inconsistent provenance stop execution without cache substitution. Uploaded packages are data, not executable code. **An ordinary panorama is not matched VR; a raw model is not a mounted environment.** The new PDF + photos + SPZ/PLY upload path prepares a mounted, reviewable environment before Story; the raw model alone is still not a mounted environment.
 
 ### Local storage
 
@@ -97,6 +103,8 @@ PASTPORT_PORT=18839 node var/runtime-layout-20261101/release-run/game-3d/serve3d
 Normally use each Organizer task's Open player preview button; main starts the registered local preview service, avoiding guessed build paths. This is not a public deployment.
 
 ### Current delivery scope
+
+History identifies each project and offers Continue this project and View materials and review for saved results. The active selection is stored per authenticated operator in the local Organizer database and restored after refresh, login or service restart. Restoration connects saved environment, review and Story state without starting generation. The review project selector stays visible.
 
 Organizer supports single-admin login, four material starts, complete default reuse, automatic review handoff, saved-story compatibility, new Story, real progress and game access. Manual Chinese/English selection has been checked. Zero-call cache-to-game execution and new Story from registered environments have real run evidence. Fresh external Evidence/Marble execution for every material path has not been fully accepted.
 
@@ -586,3 +594,5 @@ PastPort/
 ## Technical specification
 
 The [Technical PRD: current initial specification](docs/TECHNICAL_PRD_EN.md) defines workflow architecture, technology, main/SDK inputs and outputs, permissions, budgets, recovery and acceptance. SDK READMEs above cover development and usage. Current evidence remains in ignored local `var/organizer-integration/`. Historical wheels/fallback previews remain in `var/runtime-layout-20261101/`; do not treat old distributions as packages of current source.
+
+The Admin production workflow disables cumulative recorded-token stop thresholds under explicit user authorization for both Evidence and environment matching. Actual usage remains recorded. Authorized call counts, timeouts, source validation and unknown-usage recovery checks remain enforced. Continuation creates a new output revision and reuses successful receipts, preserving old PDFs and original grants. Standalone SDK execution still honors its explicit grant by default.

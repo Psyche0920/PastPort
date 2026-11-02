@@ -15,6 +15,7 @@ export class TriangleIndex {
       if(!mesh.isMesh)return;
       const position=mesh.geometry.attributes.position,index=mesh.geometry.index;
       const count=index?index.count:position.count;
+      if(triangles.length+Math.ceil(count/3)>600000)throw Error('triangle limit');
       for(let i=0;i<count;i+=3){
         const vertices=[0,1,2].map(j=>new THREE.Vector3().fromBufferAttribute(
           position,index?index.getX(i+j):i+j).applyMatrix4(mesh.matrixWorld));
@@ -23,7 +24,7 @@ export class TriangleIndex {
           normal:new THREE.Triangle(...vertices).getNormal(new THREE.Vector3())});
       }
     });
-    if(triangles.length>300000)throw Error('triangle limit');
+    if(triangles.length>600000)throw Error('triangle limit');
     this.root=this.build(triangles);
   }
   build(items) {

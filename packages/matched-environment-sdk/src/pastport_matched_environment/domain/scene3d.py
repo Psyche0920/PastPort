@@ -9,7 +9,7 @@ from pastport_matched_environment.domain.models import DomainModel
 
 class MarbleScene(DomainModel):
     schema_version: Literal[1] = 1
-    kind: Literal["marble_3d"] = "marble_3d"
+    kind: Literal["marble_3d", "imported_3d"] = "marble_3d"
     scene_id: str
     binding: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     splat: Literal["scene.spz"] = "scene.spz"

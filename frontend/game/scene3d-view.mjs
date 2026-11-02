@@ -91,6 +91,7 @@ export class Scene3DView {
       this.notify(`请沿已登记的导航箭头前往点位 ${target}，再查看这份资料。`);return;
     }
     if(this.session.current.access&&!this.supportsInspection(number)){
+      if(!this.session.current.requiredSources.includes(number)){this.cancelMotion();this.inspect(number);return;}
       this.notify('当前视点没有这个物件的资料查看绑定，请沿导航到对应视点。');return;
     }
     if(!this.ready||this.canObserve(number)){this.cancelMotion();this.inspect(number);return;}

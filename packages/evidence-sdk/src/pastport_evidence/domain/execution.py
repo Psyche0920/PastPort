@@ -59,6 +59,11 @@ class SDKReadiness(DomainModel):
 class ModelExecutionError(RuntimeError):
     """Execution failed without implicit retry, fallback or inferred billing."""
 
+    def __init__(self, message: str, *, failure_code: str = "execution_failed") -> None:
+        super().__init__(message)
+        self.failure_code = failure_code
+
+
 
 class ExecutionDenied(ModelExecutionError):
     """A grant, authentication, capability or quota prevents dispatch."""

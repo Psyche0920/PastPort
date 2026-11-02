@@ -334,7 +334,18 @@ def create_app(
         return JSONResponse(
             {
                 "code": "INPUT_INVALID",
-                "message": "Request does not match the contract",
+                "message": (
+                    "项目编号不能含空格或中文，请使用英文字母、数字及 - _ . :，例如 3d-test。"
+                    if request.url.path == "/organizer/api/materials"
+                    and "project_id" in fields
+                    else "证据模型调用上限须为1至100的整数。"
+                    if request.url.path.startswith("/organizer/api/")
+                    and any(field.split(".")[-1] == "max_evidence_calls" for field in fields)
+                    else "环境匹配模型调用上限须为1至40的整数。"
+                    if request.url.path.startswith("/organizer/api/")
+                    and any(field.split(".")[-1] == "max_environment_calls" for field in fields)
+                    else "Request does not match the contract"
+                ),
                 "retryable": False,
                 "owner": "workflow",
                 "field_path": fields[0] if fields else "",

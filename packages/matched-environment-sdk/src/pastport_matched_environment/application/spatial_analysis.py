@@ -109,7 +109,7 @@ class OfflineSpatialAnalyzer:
                 source.seek(0)
                 try:
                     with subprocess.Popen(
-                        [node, "--max-old-space-size=512", "spatial_analysis.mjs", "--run"],
+                        [node, "--max-old-space-size=1536", "spatial_analysis.mjs", "--run"],
                         cwd=root,
                         stdin=source,
                         stdout=output,

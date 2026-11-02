@@ -55,6 +55,34 @@ class PhotoInspectionPayload(DomainModel):
     gaps: tuple[str, ...] = ()
 
 
+class CompactEntityProposal(EntityProposal):
+    """Bound description cost without conflating physical object identities."""
+
+    label: Annotated[str, Field(min_length=1, max_length=60)]
+    category: Annotated[str, Field(min_length=1, max_length=40)]
+    distinguishing_features: Annotated[
+        tuple[Annotated[str, Field(min_length=1, max_length=80)], ...],
+        Field(min_length=1, max_length=3),
+    ]
+    same_identity_evidence: Annotated[
+        tuple[Annotated[str, Field(min_length=1, max_length=120)], ...], Field(max_length=3)
+    ] = ()
+
+
+class CompactPhotoSighting(PhotoSighting):
+    basis: Annotated[str, Field(min_length=1, max_length=120)]
+
+
+class CompactPhotoInspectionPayload(DomainModel):
+    """New-call schema bounds are validated before inventory acceptance."""
+
+    entities: Annotated[tuple[CompactEntityProposal, ...], Field(max_length=12)] = ()
+    sightings: Annotated[tuple[CompactPhotoSighting, ...], Field(max_length=24)] = ()
+    gaps: Annotated[
+        tuple[Annotated[str, Field(min_length=1, max_length=160)], ...], Field(max_length=8)
+    ] = ()
+
+
 class PhotoInspection(PhotoInspectionPayload):
     receipt_ref: str
 

@@ -170,7 +170,7 @@ class SDKOrganizerReview:
                 positions=tuple(position for position in snapshot.positions if position.object_number == item.id),
                 locations=tuple(location for world in (snapshot.metric_spatial.worlds if snapshot.metric_spatial else ()) for location in world.objects if location.object_number == item.id),
             ))
-        return OrganizerReviewView(database_path=(binding.root / "pastport_matching.sqlite3").resolve(), source_id=source.source_id, project_id=source.project_id, title=source.title,
+        return OrganizerReviewView(view_count=len(binding.worlds), database_path=(binding.root / "pastport_matching.sqlite3").resolve(), source_id=source.source_id, project_id=source.project_id, title=source.title,
             revision=hashlib.sha256((revision + ":" + spatial_revision + ":" + BoundedNativeArchive.digest(request.environment)).encode()).hexdigest(), snapshot_current=current, objects=tuple(objects))
 
     def save(self, source: OrganizerSource, request: GameMakingRequest, number: int, change: ReviewChange, actor_id: str) -> None:

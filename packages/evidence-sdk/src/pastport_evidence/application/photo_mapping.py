@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import hashlib
+import json
+import shutil
 from itertools import islice
 from pathlib import Path
 
@@ -23,7 +27,7 @@ from pastport_evidence.application.preparation import (
     MappingPreparation,
     _ActionStage,
 )
-from pastport_evidence.application.prompting import load_semantic_prompt
+from pastport_evidence.application.prompting import load_semantic_prompt, resolve_prompt_profile
 from pastport_evidence.domain.execution import SubscriptionGrant
 from pastport_evidence.domain.mapping import MappedObject
 from pastport_evidence.domain.models import DomainModel, ProcessingLimits, ProjectAssetRef
@@ -88,11 +92,12 @@ class PhotoMappingWorkflow:
             or sum(p.stat().st_size for p in photos) > 200 * 1024 * 1024
         ):
             raise PhotoInputError("Photos exceed per-file or total limits")
+        profile = resolve_prompt_profile(workspace)
         digest = hashlib.sha256(b"photo-documents-v1")
         for prompt in (
-            load_semantic_prompt("photo_inspection", "v1"),
-            load_semantic_prompt("pdf_matching", "v2"),
-            load_semantic_prompt("evidence_association", "v2"),
+            load_semantic_prompt("photo_inspection", profile.photo),
+            load_semantic_prompt("pdf_matching", profile.mapping),
+            load_semantic_prompt("evidence_association", profile.evidence),
         ):
             digest.update(prompt.encode())
         expected: dict[Path, str] = {}
@@ -113,6 +118,33 @@ class PhotoMappingWorkflow:
         executor = SubscriptionExecutor(
             workspace / "codex-executions.sqlite3", grant, self.transport
         )
+        token_limit = executor._token_limit()
+        revision = token_limit if token_limit == 0 or token_limit > grant.max_recorded_tokens else None
+        if revision is not None:
+            old_artifacts = artifacts
+            artifacts = artifacts.with_name(artifacts.name + f"-budget-{revision}")
+            artifacts.mkdir(parents=True, exist_ok=True)
+            for name in ("pdf.json", "photos.json", "photo-inventory.json", "recognition.json"):
+                source = old_artifacts / name
+                if source.is_file() and not (artifacts / name).exists():
+                    shutil.copyfile(source, artifacts / name)
+        indexed = (workspace / "candidate-policy.json").is_file()
+        if indexed:
+            if (workspace / "candidate-policy.json").read_text().strip() != 'candidate-index-v1':
+                raise PhotoInputError("Unknown candidate retrieval policy")
+            previous = artifacts
+            artifacts = artifacts.with_name(artifacts.name + "-indexed")
+            artifacts.mkdir(parents=True, exist_ok=True)
+            for name in ("pdf.json", "photos.json", "photo-inventory.json", "recognition.json"):
+                if (previous / name).is_file() and not (artifacts / name).exists():
+                    shutil.copyfile(previous / name, artifacts / name)
+        if indexed:
+            previous = artifacts
+            artifacts = artifacts.with_name(artifacts.name + "-linked-pdf")
+            artifacts.mkdir(parents=True, exist_ok=True)
+            for name in ("pdf.json", "photos.json", "photo-inventory.json", "recognition.json", "candidate-pages.json", "mapping.json", "review-draft.json"):
+                if (previous / name).is_file() and not (artifacts / name).exists():
+                    shutil.copyfile(previous / name, artifacts / name)
         preparation = MappingPreparation(
             workspace=workspace,
             artifacts=artifacts,
@@ -121,8 +153,9 @@ class PhotoMappingWorkflow:
             binding=binding,
             assets=assets,
             executor=executor,
-            mapping_prompt_version="v2",
-            evidence_prompt_version="v2",
+            mapping_prompt_version=profile.mapping,
+            evidence_prompt_version=profile.evidence,
+            indexed_retrieval=indexed,
         )
 
         def ingest() -> StageOutput:
@@ -156,8 +189,10 @@ class PhotoMappingWorkflow:
             )
             inventory = PhotoRecognitionService(
                 SQLiteSceneRepository(workspace / "identities.sqlite3"),
-                CodexSemanticGateway(executor, assets),
+                CodexSemanticGateway(executor, assets, photo_prompt_version=profile.photo),
                 assets,
+                batch_size=2 if profile.photo in ("v2", "v3") else 4,
+                entity_limit=20 if profile.photo == "v3" else None,
             ).run(
                 grant.project_id,
                 photo_input.photos,
@@ -222,8 +257,17 @@ class PhotoMappingWorkflow:
                 references=("artifact:mapping-pdf", "artifact:mapping-idml"), gaps=draft.gaps
             )
 
+        def tracked(name: str, action: Callable[[], StageOutput]) -> Callable[[], StageOutput]:
+            def run() -> StageOutput:
+                path = workspace / "progress.json"
+                previous = json.loads(path.read_text()) if path.exists() else {}
+                previous["phase"] = name
+                atomic_write(path, json.dumps(previous))
+                return action()
+            return run
+
         stages = tuple(
-            FixedStage(name, _ActionStage(action))
+            FixedStage(name, _ActionStage(tracked(name, action)))
             for name, action in (
                 ("ingest_photos", ingest),
                 ("recognize_photos", recognize),
@@ -233,10 +277,10 @@ class PhotoMappingWorkflow:
             )
         )
         results = FixedWorkflow(
-            StageJournal(workspace / "stages.sqlite3"), stages, "photo-documents-v1"
+            StageJournal(workspace / (f"stages-indexed-{revision}-linked-pdf.sqlite3" if indexed else f"stages-budget-{revision}.sqlite3" if revision is not None else "stages.sqlite3")), stages, "photo-documents-v1"
         ).run(grant.project_id, run_id, binding)
         result_path = artifacts / "export-result.json"
         output = OutputPaths.model_validate_json(result_path.read_bytes())
         DocumentPackageExporter.validate(Path(output.pdf).parent)
-        atomic_write(workspace / "result.json", output.model_dump_json())
+        atomic_write(workspace / (f"result-indexed-{revision}-linked-pdf.json" if indexed else f"result-budget-{revision}.json" if revision is not None else "result.json"), output.model_dump_json())
         return results

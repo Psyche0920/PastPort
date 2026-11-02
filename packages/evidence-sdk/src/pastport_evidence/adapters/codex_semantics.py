@@ -7,7 +7,8 @@ from pastport_evidence.adapters.execution import SubscriptionExecutor
 from pastport_evidence.adapters.structured_output import StrictOutputSchema
 from pastport_evidence.application.photos import PhotoRecognitionService
 from pastport_evidence.application.prompting import load_semantic_prompt
-from pastport_evidence.domain.build import PDFMatchPayload, PDFMatchRequest
+from pastport_evidence.domain.build import PDFMatchPayload, PDFMatchRequest, CandidatePagePlan, CandidatePageRequest
+from pastport_evidence.domain.execution import SubscriptionGrant
 from pastport_evidence.domain.evidence import (
     EvidencePayload,
     EvidenceProposal,
@@ -16,6 +17,7 @@ from pastport_evidence.domain.evidence import (
 from pastport_evidence.domain.execution import ExecutionDenied, ExecutionInput
 from pastport_evidence.domain.models import DomainModel, ProjectAssetRef
 from pastport_evidence.domain.photos import (
+    CompactPhotoInspectionPayload,
     PhotoInspection,
     PhotoInspectionPayload,
     PhotoInspectionRequest,
@@ -36,8 +38,10 @@ class CodexSemanticGateway:
         executor: SubscriptionExecutor,
         assets: AssetStore,
         evidence_images: tuple[EvidenceImageBinding, ...] = (),
+        photo_prompt_version: Literal["v1", "v2", "v3"] = "v1",
     ) -> None:
         (self._executor, self._assets) = (executor, assets)
+        self._photo_prompt_version = photo_prompt_version
         self._images = {item.image_id: item.image for item in evidence_images}
         if len(self._images) != len(evidence_images):
             raise ValueError("Source crop IDs must be unique")
@@ -83,14 +87,16 @@ class CodexSemanticGateway:
         (payload, receipt) = self._execute(
             "photo_inspection",
             request,
-            PhotoInspectionPayload,
+            CompactPhotoInspectionPayload if self._photo_prompt_version in ("v2", "v3") else PhotoInspectionPayload,
             tuple(p.image for p in request.photos) + tuple(r.image for r in request.references),
             request.grant_ref,
             request.model_id,
-            "v1",
+            self._photo_prompt_version,
             "photo-identity-v1",
         )
-        result = PhotoInspection(**payload.model_dump(), receipt_ref=receipt)
+        result = PhotoInspection.model_validate_json(
+            json.dumps({**payload.model_dump(mode="json"), "receipt_ref": receipt})
+        )
         PhotoRecognitionService.validate(request, result)
         return result
 
@@ -117,6 +123,14 @@ class CodexSemanticGateway:
             request.policy_version,
         )
         return EvidenceProposal(**payload.model_dump(), receipt_ref=receipt)
+
+    def candidate_pages(self, request: CandidatePageRequest, grant: SubscriptionGrant) -> CandidatePagePlan:
+        payload, _ = self._execute("pdf_matching", request, CandidatePagePlan, (),
+            grant.grant_ref, grant.model_id, "index-v1", "candidate-index-v1")
+        allowed = {page.page_index for page in request.pages}
+        if len(set(payload.page_indices)) != len(payload.page_indices) or not set(payload.page_indices) <= allowed:
+            raise ValueError("Candidate plan changed source page identity")
+        return payload
 
     def match_pdf(self, request: PDFMatchRequest) -> tuple[PDFMatchPayload, str]:
         (payload, receipt) = self._execute(

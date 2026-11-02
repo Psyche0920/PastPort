@@ -53,6 +53,7 @@ def export_scene(root: Path, archive: Path, *, include_assets: bool = True) -> N
                 COALESCE(v.human_override,v.ai_draft) AS introduction,
                 v.version AS introduction_version,h.title_en AS historical_title,
                 h.media_path AS historical_image,h.image_page AS historical_image_page,
+                h.image_role AS historical_image_role,
                 psg.exact_text,psg.pdf_page AS text_page,t.translation_zh,t.limitation,
                 a.point_json,a.version AS anchor_version,a.identity_basis,a.relation_basis
                 FROM modern_objects o JOIN pairings p ON p.modern_id=o.id

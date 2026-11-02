@@ -44,7 +44,8 @@ class Scene3DDelivery(DomainModel):
 class Scene3DAttachment:
     """Immutable per-workspace attachment; SQLite backup preserves human overrides."""
 
-    def __init__(self, source: Path, world: Path, workspace: Path, source_scene: str) -> None:
+    def __init__(self, source: Path, world: Path, workspace: Path, source_scene: str, *, local_scene: bool = False) -> None:
+        self.local_scene = local_scene
         self.source, self.world, self.workspace = (
             source.resolve(),
             world.resolve(),
@@ -71,7 +72,7 @@ class Scene3DAttachment:
         FixedWorkflow(
             StageJournal(self.workspace / "stages.sqlite3"),
             (
-                FixedStage("marble_import", AttachmentStage(self, "import")),
+                FixedStage("local_scene_import" if self.local_scene else "marble_import", AttachmentStage(self, "import")),
                 FixedStage("preserve_environment", AttachmentStage(self, "copy")),
                 FixedStage("attach_3d", AttachmentStage(self, "attach")),
             ),
@@ -80,6 +81,19 @@ class Scene3DAttachment:
         return Scene3DDelivery.model_validate_json((self.workspace / "delivery.json").read_bytes())
 
     def import_world(self) -> StageOutput:
+        if self.local_scene:
+            from pastport_matched_environment.application.inputs import InputValidationError
+            scene = load_scene(self.world.parent)
+            if scene.kind != "imported_3d" or self.world.name != "scene.json":
+                raise InputValidationError("Expected a registered imported scene")
+            target = self.workspace / "marble"
+            target.mkdir(exist_ok=False)
+            for name in ("scene.json", scene.splat, scene.collider, scene.panorama, "raw-scene.json", "capture.json"):
+                source = self.world.parent / name
+                if source.is_symlink() or not source.is_file():
+                    raise InputValidationError("Imported scene resource is missing or linked")
+                shutil.copyfile(source, target / name)
+            return StageOutput(references=("asset:registered-local-3d",))
         MarbleImporter().prepare(self.world, self.workspace / "marble")
         return StageOutput(references=("asset:existing-marble-world",))
 
@@ -159,6 +173,16 @@ class Scene3DAttachment:
         binding = hashlib.sha256(
             (scene.binding + digest(self.output / "pastport_matching.sqlite3") + selected).encode()
         ).hexdigest()
+        origin = {"x": 0.0, "y": scene.ground_plane_offset, "z": 0.0}
+        origin_editor = ""
+        origin_basis = ""
+        if self.local_scene:
+            from pastport_matched_environment.application.raw_scene import SceneCapture
+
+            capture = SceneCapture.model_validate_json((scene_folder / "capture.json").read_bytes())
+            origin = dict(zip(("x", "y", "z"), capture.origin, strict=True))
+            origin_editor = "system:registered-local-capture"
+            origin_basis = "Registered rendering camera; calibration and identity remain unconfirmed"
         db_path = self.output / "pastport_matching.sqlite3"
         with closing(sqlite3.connect(db_path)) as db, db:
             db.executescript("""
@@ -180,12 +204,12 @@ class Scene3DAttachment:
                     json.dumps(
                         {
                             "confirmed": False,
-                            "origin": {"x": 0.0, "y": scene.ground_plane_offset, "z": 0.0},
+                            "origin": origin,
                             "yaw_degrees": 0.0,
                             "pitch_degrees": 0.0,
                             "roll_degrees": 0.0,
-                            "editor": "",
-                            "basis": "",
+                            "editor": origin_editor,
+                            "basis": origin_basis,
                         }
                     ),
                 ),

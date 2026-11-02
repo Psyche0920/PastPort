@@ -17,6 +17,7 @@ from pastport.domain.common import CanonicalSerializer
 from pastport.domain.game_making import GameMakingRequest
 from pastport.domain.organizer import (
     OrganizerCatalog,
+    OrganizerNativeProgress,
     OrganizerJob,
     OrganizerMaterials,
     OrganizerPlan,
@@ -25,6 +26,7 @@ from pastport.domain.organizer import (
     OrganizerSource,
     OrganizerSourceView,
     OrganizerStart,
+    OrganizerWorkspace,
 )
 from pastport.domain.organizer_inputs import (
     NativeInputRequest,
@@ -124,6 +126,34 @@ class OrganizerService:
         if snapshot.project_id != source.project_id:
             raise ServiceError("ORGANIZER_PROJECT_MISMATCH", "登记项目与环境来源不一致。", 409)
         return request
+
+    def workspace(self, actor: Actor) -> OrganizerWorkspace | None:
+        # Repository keys scope the selection to the authenticated account.
+        try:
+            value = self.store.get("workspace", actor.actor_id, OrganizerWorkspace)
+        except ServiceError as error:
+            if error.code != "ORGANIZER_NOT_FOUND":
+                raise
+        else:
+            source = self.source(value.source_id, actor)
+            return self._workspace(source)
+        for job in self.jobs(actor):
+            if job.input_kind == "uploads" and job.prepared_source_id and job.status in (
+                "environment_ready", "story_ready", "completed"
+            ):
+                return self._workspace(self.source(job.prepared_source_id, actor))
+        return None
+
+    def _workspace(self, source: OrganizerSource) -> OrganizerWorkspace:
+        request = self.request(source)
+        return OrganizerWorkspace(project_id=source.project_id, source_id=source.source_id,
+                                  story_ready=self.saved_ready(request))
+
+    def select_workspace(self, source_id: str, actor: Actor) -> OrganizerWorkspace:
+        source = self.source(source_id, actor)
+        selected = self._workspace(source)
+        self.store.save("workspace", actor.actor_id, selected)
+        return selected
 
     @staticmethod
     def fingerprint(request: GameMakingRequest) -> str:
@@ -244,14 +274,41 @@ class OrganizerService:
                     issues = StoryAuthoringCheck.model_validate_json(path.read_bytes()).issues
                 except (OSError, ValueError):
                     logger.warning("Organizer check receipt unavailable: %s", job_id)
+        message = job.message
+        progress_path = self.directory(job_id) / "native/evidence/progress.json"
+        if job.status == "running" and progress_path.is_file():
+            try:
+                progress = OrganizerNativeProgress.model_validate_json(progress_path.read_bytes())
+                labels = {"ingest_photos": "读取PDF与照片", "recognize_photos": "识别物件",
+                          "recognizing_photos": "识别物件", "photo_selection_complete": "物件选择完成",
+                          "map_pdf": "匹配PDF史料", "evidence": "核验史料", "export_mapping": "生成映射PDF"}
+                message = labels.get(progress.phase, progress.phase)
+                if progress.target_objects:
+                    message += f" · 已识别{progress.recognized_objects}/{progress.target_objects}个物件"
+                if progress.phase == "export_mapping":
+                    message += " · 正在排版导出"
+            except (OSError, ValueError):
+                logger.warning("Organizer progress unavailable")
+        if job.status == "running" and job.input_kind == "uploads":
+            # Evidence progress remains on disk after export; completed receipts
+            # take precedence so the UI cannot keep reporting PDF work in 3D.
+            if "input_handoff" in native_stages:
+                message = "环境输入交接中"
+            elif "scene3d_1" in native_stages:
+                message = "校验3D挂载与环境资料"
+            elif "matched_environment" in native_stages:
+                message = "挂载3D编号与导航"
+            elif "evidence" in native_stages:
+                message = "映射PDF已导出，正在匹配环境物件"
         return job.model_copy(
             update={
+                "message": message,
                 "completed_stages": stages,
                 "cache_directory": self.directory(job_id).resolve(),
                 "game_directory": self.game_directory(job).resolve() if job.result_ready else None,
                 "issues": issues,
                 "new_model_calls": self.model_calls(job),
-                "error_code": None if job.status == "completed" else job.error_code,
+                "error_code": job.error_code if job.status in ("failed", "recovery_required") else None,
             }
         )
 
@@ -373,6 +430,10 @@ class OrganizerService:
                 ),
             )
             if start.stop_after == "environment":
+                self.store.save("workspace", job.owner_id, OrganizerWorkspace(
+                    project_id=job.project_id, source_id=job.source_id,
+                    story_ready=self.saved_ready(request),
+                ))
                 self.store.save("job", job.job_id, job.model_copy(update={
                     "status": "environment_ready", "prepared_source_id": job.source_id,
                     "message": "默认资料与环境已准备，已自动接入资料审核；不会自动生成故事或游戏。",
@@ -393,12 +454,17 @@ class OrganizerService:
                     "new_model_calls": self.model_calls(job),
                 }))
                 return
+            prepared = self.register_prepared_source(
+                job, self.directory(job.job_id) / "organizer-production-request.json",
+                "已完成故事与环境，可继续制作", unique=True,
+            ) or job.source_id
             self.store.save(
                 "job",
                 job.job_id,
                 job.model_copy(
                     update={
                         "status": "completed",
+                        "prepared_source_id": prepared,
                         "message": "制作产物已生成并通过资源检查；不代表史料批准或发布。",
                         "result_ready": True,
                         "error_code": None,
@@ -572,6 +638,12 @@ class OrganizerService:
                 ("environment.scene3d", "story", "gameplay", "presentation", "assembly"),
                 ("已登记热点", "共享审核记录", "导航"),
             ),
+            "raw3d": (
+                ("original_pdf", "photos", "scene_splat", "scene_mesh"),
+                ("scene_splat", "scene_mesh"),
+                ("local_scene_import", "evidence.photo_mapping", "environment.environment_build", "input_handoff", "story", "gameplay", "presentation", "assembly"),
+                ("照片与原始史料对应", "导入3D的编号定位", "尺度和坐标待审核", "不调用Marble"),
+            ),
             "3d": (
                 ("original_pdf", "mounted_3d"),
                 ("mapping_pdf", "matched_vr", "mounted_3d"),
@@ -713,7 +785,7 @@ class OrganizerService:
                 project_id=project_id,
                 source_id="uploaded-" + job_id,
                 mode="regenerate",
-                input_kind="uploads",
+                input_kind="uploads", entry_level=material.entry_level,
                 status="queued",
                 message="已保存本次原生输入快照，等待制作。",
                 input_sha256=CanonicalSerializer.digest(request),
@@ -809,7 +881,7 @@ class OrganizerService:
                         raise ServiceError("ENVIRONMENT_HANDOFF_MISSING", "环境交接文件缺失。", 409)
                     self.store.save("job", job.job_id, job.model_copy(update={
                         "status": "environment_ready", "prepared_source_id": prepared_source,
-                        "message": "上传材料已准备为环境；请选择故事，尚未调用Story或组包。",
+                        "message": result.message + " 尚未调用Story或组包。",
                         "new_model_calls": self.model_calls(job),
                     }))
                     return
@@ -838,17 +910,19 @@ class OrganizerService:
                         self.production.run(prepared_request, start, output, resume=resume)
                     )
                 )
-                self.register_prepared_source(
+                completed_source = self.register_prepared_source(
                     job,
                     output / "organizer-production-request.json",
                     "已完成故事与环境，可直接复用",
-                )
+                    unique=True,
+                ) or prepared_source
                 self.store.save(
                     "job",
                     job.job_id,
                     job.model_copy(
                         update={
                             "status": "completed",
+                            "prepared_source_id": completed_source,
                             "message": "原生材料已自动交接到故事、玩法、呈现与组包。",
                             "new_model_calls": self.model_calls(job),
                             "result_ready": True,
@@ -895,7 +969,12 @@ class OrganizerService:
             "prepared-"
             + hashlib.sha256((job.owner_id + ":" + (job.job_id if unique else job.project_id)).encode()).hexdigest()[:32]
         )
+        prepared_request = GameMakingRequest.model_validate_json(request_file.read_bytes())
+        nested_binding = prepared_request.environment.parent / "review-binding.json"
+        if not nested_binding.resolve().is_relative_to(request_file.parent.resolve()):
+            nested_binding = request_file.parent / "review-binding.json"
         binding_file = next((path for path in (
+            nested_binding,
             request_file.parent / "review-binding.json",
             self.directory(job.job_id) / "review-binding.json",
             self.directory(job.job_id) / "native/review-binding.json",
@@ -910,6 +989,10 @@ class OrganizerService:
             request_file=request_file,
         )
         self.store.save("native_source", source_id, source)
+        self.store.save("workspace", job.owner_id, OrganizerWorkspace(
+            project_id=job.project_id, source_id=source_id,
+            story_ready=self.saved_ready(prepared_request),
+        ))
         return source_id
 
     async def recover_uploaded(
@@ -983,6 +1066,11 @@ class OrganizerService:
         for _ in range(8):
             if current.bundle_file is not None or current.review_binding_file is not None:
                 return current.model_copy(update={"source_id": source.source_id, "title": source.title})
+            prepared = GameMakingRequest.model_validate_json(current.request_file.read_bytes())
+            binding_file = prepared.environment.parent / "review-binding.json"
+            if binding_file.resolve().is_relative_to(current.request_file.parent.resolve()) and binding_file.is_file():
+                return current.model_copy(update={"source_id": source.source_id,
+                    "title": source.title, "review_binding_file": binding_file})
             start_file = current.request_file.parent / "organizer-start.json"
             if not start_file.is_file():
                 break

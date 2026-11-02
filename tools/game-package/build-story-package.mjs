@@ -85,7 +85,7 @@ async function build(inputFile,museumDirectory,output,preparationFile=null,envir
   const narrativeSchema=await readJson(path.resolve(sourceRoot,'../../schemas/draft-result.schema.json'));
   const compiled=await new StoryPackageCompiler().compile(input,museum,{narrativeSchema});
   const worlds=await readJson(path.join(museumDirectory,'data/scene3d-input.json'));
-  requireValue(Array.isArray(worlds.worlds)&&worlds.worlds.length===2,'Current 3D adapter requires two prepared worlds');
+  requireValue(Array.isArray(worlds.worlds)&&[1,2].includes(worlds.worlds.length),'Current 3D adapter requires one or two prepared worlds');
   await mkdir(path.dirname(output),{recursive:true});
   const staging=await mkdtemp(path.join(path.dirname(output),'.story-3d-build-'));
   try {

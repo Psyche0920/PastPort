@@ -26,17 +26,23 @@ class PDFRenderer:
         canvas.setTitle("PastPort - Photo Evidence Mapping (Draft)")
         canvas.setAuthor("wehan")
         for page_number, page in enumerate(document.pages, 1):
+            if page.bookmark:
+                canvas.bookmarkPage(page.bookmark)
             for image in page.images:
                 with Image.open(image.path) as raw:
                     scale = min(image.width / raw.width, image.height / raw.height)
                     width, height = raw.width * scale, raw.height * scale
                     canvas.drawImage(
-                        ImageReader(raw),
+                        ImageReader(str(image.path)),
                         image.x,
                         document.height - image.y - height,
                         width=width,
                         height=height,
                     )
+                    if image.target:
+                        canvas.linkRect("Numbered evidence entry", image.target,
+                            (image.x, document.height-image.y-height, image.x+width, document.height-image.y),
+                            relative=0, thickness=0)
             for frame in page.texts:
                 canvas.setFont(FONT_NAME, frame.font_size)
                 canvas.drawString(frame.x, document.height - frame.y - frame.font_size, frame.text)

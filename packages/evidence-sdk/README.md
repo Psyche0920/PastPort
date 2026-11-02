@@ -40,6 +40,10 @@ grant, run_id, large_pdf=False)` returns stage outputs and writes the final type
 `OutputPaths` to the workspace's `result.json`. Exact signatures live in code.
 Default transports are optional; imports do not launch a model or service.
 
+## Historical display boundary
+
+The repository evidence-review Skill is editorial guidance; this SDK executes its packaged, versioned prompts. PDF mapping explanations are review metadata, not the player's historical popup body. The environment presentation layer displays source-supported historical content and the original locator, preserving manual overrides. The current evidence adapter can expand retrieval within the registered PDF; it does not implement autonomous external research. External supplements need a separately authorized retrieval path and inspected, claim-level source references.
+
 ## Source responsibilities
 
 | Source | Purpose |
@@ -132,3 +136,21 @@ evidence-sdk/
 └── pyproject.toml  # 本项目的包名、依赖、命令入口与构建配置。
 ```
 <!-- END FILE INVENTORY -->
+
+New workspaces pin [evidence_association_v3.txt](src/pastport_evidence/prompts/evidence_association_v3.txt): PDF-supported historical content stays separate from proxy/matching explanations. Existing workspaces retain v2, so a prompt update does not mutate paid execution identities. [test_prompt_policy.py](tests/test_prompt_policy.py) checks new/legacy policy pinning and unknown-version rejection without model calls.
+
+New workspaces also pin [photo_inspection_v2.txt](src/pastport_evidence/prompts/photo_inspection_v2.txt): two photos per batch, at most 12 new entity proposals and 24 sightings, bounded labels/features/basis/gaps, and a 120-second photo-call deadline (or the grant's shorter deadline). This is an execution bound, not a required object count. Explicit incomplete-inventory gaps stop acceptance rather than silently omit objects. Legacy v1 policies, saved requests and paid receipts stay unchanged; no automatic retry or budget increase. Operational failure code and cause type are stored separately in the execution ledger without prompts, credentials or arbitrary exception text.
+
+[Compact policy regression](tests/test_photo_bounds.py) checks schema overflow, short deadlines, sanitized failure diagnostics and blocked redispatch.
+
+Manual interrupted-call recovery uses `SubscriptionExecutor.approve_interrupted_retry(binding, reason)` only after the original worker has stopped and the operator has explicitly authorized replacement. It records a separate replacement binding and audit reason; completed results remain cache hits, the interrupted row/result stays unchanged, and both original and replacement count against the same grant call limit. Actual interrupted token usage remains unknown; recorded-token accounting is not a claim of total billed usage. `StageJournal.reconcile` records the interrupted running stage separately before Admin continuation. No automatic retry or implicit grant reset is introduced. Recovery regression checks preserve the original unknown row, enforce call ceilings and verify successful responses are not dispatched again.
+
+Admin's shared PDF workflow automates the earlier mapping method: recognize current photos, retrieve candidate pages from a source-bound text index, match the actual PDF images, validate exact source selectors locally, then export the mapping PDF for human review. VR and raw 3D uploads use this same Evidence entry point. One bounded text-only request selects at most twelve candidate pages; visual matching uses at most four three-page batches. Exact quotation validation does not dispatch a separate model request for every object. Historical associations remain candidates pending human review; source-exact text is not proof of a physical identity match. Uncovered objects, truncated extraction and non-exhaustive page coverage remain explicit gaps.
+
+The candidate plan and recognition checkpoints are cached only within the same immutable inputs/revision. New indexed revisions copy registered source/photo inputs and recognition checkpoints, leaving previous PDFs, journals, grants and receipts intact. Legacy non-indexed workspaces remain replayable. New materials are matched anew: the shared processing method never imports another project's object/subject associations.
+
+Admin explicitly supplies --no-token-threshold. This appends an audited token-threshold override without changing the grant or clearing usage. Zero denotes disabled threshold internally, not zero usage. New output revisions replay completed calls; standalone calls without this flag keep their original threshold.
+
+Generated mapping PDFs include internal numbered evidence links for source-supported candidates. The existing environment SDK reads this index and inspects the linked detail pages; unassigned objects remain visible in the PDF as gaps and are excluded from historical attachment. This is a processing index, not historical approval. Re-exporting a linked revision preserves prior PDFs and paid results. Raw-3D environment runs bind the mapping hash in their run ID while sharing the original grant ledger and call ceiling.
+
+New workspaces pin PDF matching policy `v3`: every recognized object is evaluated for visual, functional or explicitly documented narrative-proxy candidates. Missing evidence remains a numbered gap; this does not approve historical identity or relax 3D localization. Existing workspaces retain their pinned policy and receipts.

@@ -125,12 +125,14 @@ class StageJournal:
             ).fetchone()
             if row and row[0] == "completed":
                 return
-            if row != ("recovery_required", recovery.expected_error):
+            if row != ("recovery_required", recovery.expected_error) and not (
+                row == ("running", None) and recovery.expected_error == "InterruptedExecution"
+            ):
                 raise RecoveryRequired("Recovery requires the exact previously diagnosed failure")
             db.execute(
                 "INSERT INTO pipeline_recoveries "
                 "(project,run_id,stage,previous_status,error_type,reason) VALUES (?,?,?,?,?,?)",
-                (*key, row[0], row[1], recovery.reason),
+                (*key, row[0], row[1] or "InterruptedExecution", recovery.reason),
             )
             db.execute(
                 "UPDATE pipeline_stages SET status='reconciled' "

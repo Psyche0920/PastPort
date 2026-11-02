@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>PastPort registered 3D capture</title>
+<script type="importmap">{"imports":{"three":"./three.module.js","@sparkjsdev/spark":"./spark.module.js","three/addons/postprocessing/Pass.js":"./Pass.js"}}</script>
+<script type="module">
+import * as THREE from 'three';import {SparkRenderer,SplatMesh} from '@sparkjsdev/spark';
+try{
+ const started=performance.now();const mark=(label)=>console.log(label,Math.round(performance.now()-started));mark("modules_loaded");
+ const renderer=new THREE.WebGLRenderer({preserveDrawingBuffer:true,antialias:false});renderer.setSize(512,512);renderer.setClearColor(0x151515);document.body.append(renderer.domElement);
+ const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(90,1,.03,2000);camera.position.set(0,1.6,0);
+ const spark=new SparkRenderer({renderer});scene.add(spark);const group=new THREE.Group();group.quaternion.set(1,0,0,0);group.position.y=GROUND_OFFSET;scene.add(group);
+ const splat=new SplatMesh({url:'scene.spz'});group.add(splat);mark('loading_splat');await splat.initialized;mark('splat_initialized');console.log('splat_count',splat.numSplats);console.log('gl_renderer',renderer.getContext().getParameter(renderer.getContext().RENDERER));
+ spark.autoUpdate=false;spark.minSortIntervalMs=0;
+ const draw=async()=>{renderer.render(scene,camera);mark('drawing_started');await spark.update({scene,camera});const deadline=performance.now()+60000;while(spark.sorting||spark.sortDirty){if(performance.now()>deadline)throw Error('Gaussian ordering did not complete within 60 seconds');await new Promise(r=>setTimeout(r,20));}if(!(spark.activeSplats>0))throw Error('No visible Gaussian splats after sorting');renderer.render(scene,camera);renderer.getContext().finish();mark('drawing_completed');console.log('visible_splats',spark.activeSplats);};
+ await draw();window.captureReady=true;mark('ready');
+ window.captureFaces=async()=>{const records=[];for(const [x,y,z] of [[0,0,-1],[1,0,0],[0,0,1],[-1,0,0],[0,1,0],[0,-1,0]]){camera.up.set(0,Math.abs(y)===1?0:1,Math.abs(y)===1?-y:0);camera.lookAt(x,1.6+y,z);camera.updateMatrixWorld();await draw();records.push({image:renderer.domElement.toDataURL('image/png'),matrix:camera.matrixWorld.elements.slice()});}return records;};
+}catch(error){window.captureError=String(error.stack||error);}
+</script>

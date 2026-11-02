@@ -142,12 +142,16 @@ class Entity:
         )
 
     def introduction(self) -> str:
+        """Show source history; keep proxy reasoning in the editorial review record."""
+        title = self.historical_name[:200]
+        quote = self.quote.strip()
+        if len(quote) > 1100:
+            quote = quote[:1100].rsplit(" ", 1)[0] + "…"
+        historical_content = f"史料原文：\n{quote}" if quote else "此条仅有来源图像，请查看原始资料。"
         return (
-            f"{self.number:02d} · {self.name}\n\n展示替代：{self.historical_name}\n"
-            f"{self.explanation}\n\n替代设定：{self.proxy}\n"
-            f"本全景显示现代物件，不是历史文物或历史空间复原。\n\n适用限制：{self.limitation}\n"
-            f"来源：用户提供资料，PDF第{self.text_page}页。\n"
-            "状态：来自指定PDF的展示候选，尚未独立验收。"
+            f"{title}\n\n{historical_content}\n\n"
+            f"来源：原始史料 PDF 第 {self.text_page} 页。\n"
+            "展示说明：当前场景中的现代物件仅作交互入口，不是这件历史实物。"
         )
 
 
@@ -587,6 +591,14 @@ class CandidateBuilder:
                     check=True,
                     capture_output=True,
                 )
+            # Text-only evidence still needs a portable source image, never an invented
+            # historical-object photograph. Existing upstream crops remain unchanged.
+            for obj in entities:
+                history = self.output / f"media/history-{obj.number:02d}.png"
+                if not history.is_file():
+                    if obj.image_role != "text_evidence":
+                        raise ImportFailure(f"Missing historical image for object {obj.number}")
+                    shutil.copyfile(self.output / f"media/source-page-{obj.image_page:02d}.png", history)
             observation_id = 0
             for obj in entities:
                 q = quotes[obj.number]

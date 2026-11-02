@@ -156,7 +156,7 @@ class EnvironmentBuildWorkflow:
                 + title
                 + grant.model_id
                 + grant.effort
-                + "environment-sdk-v1"
+                + ("environment-sdk-raw-cube-v1" if (tour.parent / "scene/raw-scene.json").is_file() else "environment-sdk-v1")
                 + digest(policy)
             ).encode()
         ).hexdigest()
@@ -606,6 +606,27 @@ class EnvironmentRun:
             )
             for yaw in YAWS
         )
+        # Phone-capture scenes include overhead and floor objects. Six cube faces
+        # retain the same image/call bound while covering the complete sphere.
+        raw_manifest = self.tour_path.parent / "scene/raw-scene.json"
+        if raw_manifest.is_file():
+            from pastport_matched_environment.adapters.projection import PanoramaProjector
+            profile = json.loads(raw_manifest.read_text())
+            if profile.get("schema_version") != "pastport.raw-scene/1.0":
+                raise ValueError("Unsupported raw-scene view identity")
+            poses = ((0.0, 0.0), (90.0, 0.0), (180.0, 0.0), (-90.0, 0.0), (0.0, 80.0), (0.0, -80.0))
+            detail_transforms = tuple(PerspectiveTransform(
+                source_width=view.width, source_height=view.height,
+                image_width=1024, image_height=1024, center_yaw=yaw,
+                center_pitch=pitch, horizontal_fov=100.0,
+            ) for yaw, pitch in poses)
+            projector = PanoramaProjector()
+            cube_paths = tuple(self.run / f"cube-{index}-{i}.jpg" for i in range(6))
+            for path, transform in zip(cube_paths, detail_transforms, strict=True):
+                if not path.exists():
+                    path.write_bytes(projector.render(paths[0], transform))
+            paths = (paths[0],) + cube_paths
+            transforms = (transforms[0],) + detail_transforms
         # SDK images have a four-MiB limit. Overview keeps full spherical geometry.
         overview = self.run / f"overview-{index}.jpg"
         with Image.open(paths[0]) as raw:
@@ -683,6 +704,8 @@ class EnvironmentRun:
 
     def localize(self) -> StageOutput:
         locations: list[Json] = []
+        dispositions: list[Json] = []
+        located_ids: set[int] = set()
         gaps: list[str] = []
         inventory = self.inventory()
         self.discover_structure()
@@ -695,9 +718,12 @@ class EnvironmentRun:
                 if (
                     self.executor.remaining_calls() < 2
                     or observed_pair_tokens is not None
+                    and remaining is not None
                     and remaining < observed_pair_tokens
                 ):
                     gaps.append(f"localization_budget_exhausted:{view.view_id}:{offset}")
+                    dispositions.extend({"number": obj.number, "view_id": view.view_id,
+                        "status": "budget_exhausted", "reason": "Localization and independent audit require two authorized calls"} for obj in group)
                     continue
                 sheet = self.reference_sheet(group, f"references-{index}-{offset}.jpg")
                 request = SceneInput(
@@ -737,6 +763,12 @@ class EnvironmentRun:
                     )
                 if self.executor.remaining_calls() < 1:
                     gaps.append(f"location_audit_budget_exhausted:{view.view_id}:{offset}")
+                    dispositions.extend({
+                        "number": obj.number,
+                        "view_id": view.view_id,
+                        "status": "audit_pending",
+                        "reason": "Independent audit has no remaining authorized call; no point published",
+                    } for obj in group)
                     continue
                 audited = self.overlay(images, transforms, candidates.objects, f"{index}-{offset}")
                 review = self.call(
@@ -759,15 +791,21 @@ class EnvironmentRun:
                     or {p.number for p in review.objects} != expected
                 ):
                     raise ValueError("Location audit did not cover exactly the supplied identities")
-                pair_tokens = remaining - self.executor.remaining_recorded_tokens()
-                observed_pair_tokens = max(observed_pair_tokens or 0, pair_tokens)
+                after_tokens = self.executor.remaining_recorded_tokens()
+                if remaining is not None and after_tokens is not None:
+                    pair_tokens = remaining - after_tokens
+                    observed_pair_tokens = max(observed_pair_tokens or 0, pair_tokens)
                 verdicts = {p.number: p for p in review.objects}
                 for proposal in candidates.objects:
                     verdict = verdicts[proposal.number]
+                    dispositions.append({"number": proposal.number, "view_id": view.view_id,
+                        "status": "located" if proposal.status == "visible" and verdict.verdict == "confirmed" else verdict.verdict,
+                        "proposal_status": proposal.status, "reason": verdict.reason})
                     if proposal.status != "visible" or verdict.verdict != "confirmed":
                         gaps.append(f"unlocated:{proposal.number}:{view.view_id}:{verdict.verdict}")
                         continue
                     yaw, pitch = self.spherical(proposal, transforms)
+                    located_ids.add(proposal.number)
                     locations.append(
                         {
                             "object_number": proposal.number,
@@ -788,6 +826,14 @@ class EnvironmentRun:
                 "relationship_reviews": [],
             },
         )
+        write_json(self.run / "localization-report.json", {
+            "candidate_numbers": [obj.number for obj in inventory.objects],
+            "located_numbers": sorted(located_ids),
+            "unlocated_numbers": sorted({obj.number for obj in inventory.objects} - located_ids),
+            "dispositions": dispositions,
+            "historical_approval": "not_granted",
+            "view_profile": "raw_full_sphere_v1" if (self.tour_path.parent / "scene/raw-scene.json").is_file() else "panorama_horizontal_v1",
+        })
         write_json(self.run / "location-gaps.json", list(gaps))
         return StageOutput(references=("artifact:fresh-audited-positions",), gaps=tuple(gaps))
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import warnings
 from pathlib import Path
 from typing import Protocol
@@ -96,8 +97,15 @@ class PhotoRegistrar:
 
 class PhotoRecognitionService:
     def __init__(
-        self, repository: SceneRepository, inspector: PhotoInspector, assets: AssetStore
+        self, repository: SceneRepository, inspector: PhotoInspector, assets: AssetStore,
+        *, batch_size: int = 4, entity_limit: int | None = None
     ) -> None:
+        if batch_size not in (2, 4):
+            raise ValueError("Photo batch size must be 2 or 4")
+        self.batch_size = batch_size
+        self.entity_limit = entity_limit
+        if entity_limit is not None and entity_limit != 20:
+            raise ValueError("Supported selection target is 20")
         self.repository, self.inspector, self.assets = repository, inspector, assets
 
     def run(
@@ -121,7 +129,15 @@ class PhotoRecognitionService:
         calls = 0
         # Persist each request before dispatch: resumption uses its original catalog, not
         # a later expanded catalog that would change the immutable execution-cache key.
+        def progress(phase: str) -> None:
+            atomic_write(artifacts.parent.parent / "progress.json", json.dumps({
+                "phase": phase, "recognized_objects": len(self.repository.list_entities(project)),
+                "target_objects": self.entity_limit, "completed_calls": calls,
+            }))
+
         for phase in ("inventory", "recheck"):
+            if self.entity_limit and len(self.repository.list_entities(project)) >= self.entity_limit:
+                break
             known_ids = {e.object_id for e in self.repository.list_entities(project)}
             pending = {
                 p.photo_id
@@ -132,8 +148,10 @@ class PhotoRecognitionService:
                 )
                 or known_ids - {o.object_id for o in observations if o.photo.photo_id == p.photo_id}
             }
-            for batch_number, offset in enumerate(range(0, len(photos), 4)):
-                batch = photos[offset : offset + 4]
+            for batch_number, offset in enumerate(range(0, len(photos), self.batch_size)):
+                if self.entity_limit and len(self.repository.list_entities(project)) >= self.entity_limit:
+                    break
+                batch = photos[offset : offset + self.batch_size]
                 if phase == "recheck" and not any(p.photo_id in pending for p in batch):
                     continue
                 if calls >= max_calls:
@@ -169,12 +187,37 @@ class PhotoRecognitionService:
                         model_id=model,
                     )
                     atomic_write(request_path, request.model_dump_json())
+                progress("recognizing_photos")
                 result = self.inspector.inspect_photos(request)
                 self.validate(request, result)
+                if self.entity_limit is None and any(gap.startswith("inventory_incomplete") for gap in result.gaps):
+                    raise PhotoInputError("Bounded photo inventory is incomplete; review required, no silent truncation")
                 calls += 1
                 receipts.append(result.receipt_ref)
                 binding = hashlib.sha256(request.model_dump_json().encode()).hexdigest()
-                aliases = self.repository.resolve_proposals(project, binding, result.entities)
+                proposals = result.entities
+                if self.entity_limit is not None:
+                    remaining = self.entity_limit - len(self.repository.list_entities(project))
+                    selected = []
+                    selected_ids = {entity.object_id for entity in request.catalog}
+                    pending_proposals = list(proposals)
+                    while pending_proposals:
+                        ready = next((entity for entity in pending_proposals if entity.parent_ref is None or entity.parent_ref in selected_ids), None)
+                        if ready is None:
+                            break
+                        pending_proposals.remove(ready)
+                        if ready.existing_object_id is None:
+                            if remaining == 0:
+                                continue
+                            remaining -= 1
+                        selected.append(ready)
+                        selected_ids.add(ready.proposal_id)
+                    proposals = tuple(selected)
+                    result = result.model_copy(update={
+                        "entities": proposals,
+                        "sightings": tuple(s for s in result.sightings if s.target_ref in selected_ids),
+                    })
+                aliases = self.repository.resolve_proposals(project, binding, proposals)
                 ids = {e.object_id: e.object_id for e in request.catalog}
                 ids.update({key: entity.object_id for key, entity in aliases.items()})
                 for sighting in result.sightings:
@@ -210,6 +253,8 @@ class PhotoRecognitionService:
                     ]
                     observations.append(observation)
                 gaps.extend(result.gaps)
+                progress("recognizing_photos")
+        progress("photo_selection_complete")
         inventory = PhotoInventory(
             photos=photos,
             entities=self.repository.list_entities(project),

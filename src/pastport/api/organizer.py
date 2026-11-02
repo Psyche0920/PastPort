@@ -28,6 +28,7 @@ from pastport.domain.organizer import (
     OrganizerProjectCreate,
     OrganizerRecovery,
     OrganizerStart,
+    OrganizerSelection,
     OrganizerStorageView,
 )
 from pastport.domain.organizer_inputs import NativePreparedInputs, UploadedProductionStart
@@ -217,6 +218,19 @@ class OrganizerRoutes:
             response = Response(status_code=204)
             response.delete_cookie("pastport_organizer", path="/organizer")
             return response
+
+        @router.get("/api/workspace")
+        async def workspace(request: Request) -> JSONResponse:
+            value = await asyncio.to_thread(self.service.workspace, self.actor(request))
+            return JSONResponse(value.model_dump(mode="json") if value else None,
+                                headers={"Cache-Control": "no-store"})
+
+        @router.post("/api/workspace")
+        async def select_workspace(request: Request) -> JSONResponse:
+            actor = self.actor(request)
+            selection = await read_body(request, OrganizerSelection)
+            value = await asyncio.to_thread(self.service.select_workspace, selection.source_id, actor)
+            return JSONResponse(value.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
 
         @router.get("/api/storage")
         async def storage(request: Request) -> JSONResponse:
@@ -490,7 +504,7 @@ class OrganizerRoutes:
             project_id: str,
             request: Request,
             role: Literal[
-                "original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d"
+                "original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh"
             ],
             filename: str,
         ) -> JSONResponse:
@@ -508,6 +522,7 @@ class OrganizerRoutes:
                     "mapping": {"original_pdf", "mapping_pdf", "tour"},
                     "vr": {"original_pdf", "matched_vr"},
                     "3d": {"original_pdf", "mounted_3d"},
+                    "raw3d": {"original_pdf", "photos", "scene_splat", "scene_mesh"},
                 }[material.entry_level]
                 if role not in allowed:
                     raise ServiceError(

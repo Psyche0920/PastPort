@@ -27,6 +27,7 @@ def main() -> None:
     )
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--large-pdf", action="store_true")
+    parser.add_argument("--no-token-threshold", action="store_true", help="Explicit run-specific token threshold override; original call limit remains")
     args = parser.parse_args()
 
     from pastport_evidence.adapters.codex_sdk import CodexSDKTransport
@@ -35,6 +36,10 @@ def main() -> None:
     if executable is None:
         parser.error("Poppler pdftoppm is required (macOS: brew install poppler)")
     grant = SubscriptionGrant.model_validate_json(args.grant.read_bytes())
+    if args.no_token_threshold:
+        from pastport_evidence.adapters.execution import SubscriptionExecutor
+        SubscriptionExecutor(args.workspace / "codex-executions.sqlite3", grant,
+            CodexSDKTransport(grant.effort)).remove_token_threshold("User explicitly authorized continuing this run without the token threshold; preserve call ceilings and usage")
     print(
         "Starting: register inputs -> identify photos -> map historical objects "
         "-> verify evidence -> PDF + IDML",
@@ -43,7 +48,14 @@ def main() -> None:
     PhotoMappingWorkflow(PopplerPDFReader(Path(executable)), CodexSDKTransport(grant.effort)).run(
         args.pdf, args.photos, args.workspace, grant, args.run_id, args.large_pdf
     )
-    result = OutputPaths.model_validate_json((args.workspace / "result.json").read_bytes())
+    result_path = args.workspace / "result.json"
+    amendment = args.workspace / "budget-amendment.json"
+    if amendment.is_file():
+        result_path = args.workspace / f"result-budget-{int(amendment.read_text())}.json"
+    if (args.workspace / "candidate-policy.json").is_file():
+        revision = int(amendment.read_text()) if amendment.is_file() else None
+        result_path = args.workspace / f"result-indexed-{revision}-linked-pdf.json"
+    result = OutputPaths.model_validate_json(result_path.read_bytes())
     print(
         f"{result.status}\nPDF: {result.pdf}\nIDML: {result.idml}\n"
         f"Unresolved items: {len(result.gaps)}"

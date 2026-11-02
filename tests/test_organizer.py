@@ -325,3 +325,70 @@ def test_organizer_assets_are_versioned_and_not_cached(tmp_path: Path) -> None:
         assert 'interface-language' in page.text
         assert 'mountLocalization' in language.text
         assert '正在自动同步保存的审核版本' not in review.text
+
+
+@pytest.mark.parametrize("stage,expected", [
+    ("evidence", "映射PDF已导出，正在匹配环境物件"),
+    ("matched_environment", "挂载3D编号与导航"),
+    ("scene3d_1", "校验3D挂载与环境资料"),
+])
+def test_native_receipts_override_stale_pdf_progress(tmp_path: Path, stage: str, expected: str) -> None:
+    store = OrganizerStore(tmp_path / "organizer")
+    service = OrganizerService(store, OrganizerCatalog(), Production())
+    job = OrganizerJob(job_id="progress-test", owner_id="owner", project_id="fixture-project",
+        source_id="uploaded-test", mode="regenerate", status="running", input_kind="uploads",
+        entry_level="raw3d", message="Starting", input_sha256="a"*64,
+        request_key="progress-request", payload_sha256="b"*64)
+    store.save("job",job.job_id,job)
+    native = service.directory(job.job_id)/"native"
+    (native/"evidence").mkdir(parents=True)
+    (native/"evidence/progress.json").write_text(json.dumps({"phase":"export_mapping"}))
+    (native/"native-receipts").mkdir()
+    (native/"native-receipts"/(stage+".json")).write_text("{}")
+    actor=Actor(actor_id="owner",roles=("editor",),project_ids=("fixture-project",))
+    assert service.job(job.job_id,actor).message==expected
+
+
+def test_nested_native_handoff_keeps_its_review_binding(tmp_path: Path) -> None:
+    setup(tmp_path)
+    service=OrganizerService(OrganizerStore(tmp_path/'organizer'),OrganizerCatalog(),Production())
+    job=OrganizerJob(job_id='nested-handoff',owner_id='owner',project_id='fixture-project',
+        source_id='uploaded-test',mode='regenerate',status='environment_ready',
+        message='Ready',input_sha256='a'*64,request_key='request',payload_sha256='b'*64,
+        error_code='OLD_FAILURE')
+    root=service.directory(job.job_id)/'native';handoff=root/'handoff';handoff.mkdir(parents=True)
+    binding=handoff/'review-binding.json';binding.write_text('{}')
+    request=GameMakingRequest.model_validate_json((tmp_path/'request.json').read_bytes()).model_copy(update={'environment':handoff/'environment.json'})
+    request_file=root/'prepared-request.json';request_file.write_text(request.model_dump_json())
+    source_id=service.register_prepared_source(job,request_file,'Ready',unique=True)
+    actor=Actor(actor_id='owner',roles=('editor',),project_ids=('fixture-project',))
+    source=service.source(source_id,actor)
+    assert source.review_binding_file==binding
+    # Previously registered sources can recover the same nested binding too.
+    source=source.model_copy(update={'review_binding_file':None})
+    assert service.bound_review_source(source,actor).review_binding_file==binding
+    service.store.save('job',job.job_id,job)
+    assert service.job(job.job_id,actor).error_code is None
+
+
+def test_workspace_selection_survives_new_session_and_service_restart(tmp_path: Path) -> None:
+    settings, production = setup(tmp_path)
+    body={"source_id":"fixture"}
+    with TestClient(create_app(settings,organizer_production=production)) as client:
+        assert client.get('/organizer/api/workspace').status_code==401
+        assert client.get('/organizer/api/workspace',headers=headers()).json() is None
+        selected=client.post('/organizer/api/workspace',headers=headers(),json=body)
+        assert selected.status_code==200,selected.text
+        assert selected.json()['project_id']=='fixture-project'
+        assert selected.json()['story_ready'] is True
+        assert production.calls==[]
+        assert client.post('/organizer/api/workspace',headers={'Authorization':'Bearer outsider'},json=body).status_code in (403,404)
+        assert client.post('/organizer/api/workspace',headers=headers(),json={'source_id':'missing'}).status_code==404
+    with TestClient(create_app(settings,organizer_production=production)) as client:
+        assert client.post('/organizer/api/session',headers=headers()).status_code==200
+        assert client.get('/organizer/api/workspace').json()==selected.json()
+        assert client.delete('/organizer/api/session',headers={'X-PastPort-Edit':'1'}).status_code==204
+        assert client.get('/organizer/api/workspace').status_code==401
+        assert client.post('/organizer/api/session',headers=headers()).status_code==200
+        assert client.get('/organizer/api/workspace').json()==selected.json()
+        assert production.calls==[]

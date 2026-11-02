@@ -8,7 +8,7 @@ from pastport.domain.story_inputs import EnvironmentPosition, SpatialObjectLocat
 
 class OrganizerReviewBinding(Contract):
     root: Path
-    worlds: tuple[Path, ...] = Field(min_length=2, max_length=2)
+    worlds: tuple[Path, ...] = Field(min_length=1, max_length=2)
     import_sha256: Sha256
 
 class ReviewChange(Contract):
@@ -52,6 +52,7 @@ class OrganizerReviewObject(Contract):
     locations: tuple[SpatialObjectLocation, ...]
 
 class OrganizerReviewView(Contract):
+    view_count: int = Field(default=2, ge=1, le=2)
     database_path: Path
     source_id: Identifier
     project_id: Identifier

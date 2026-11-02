@@ -293,3 +293,15 @@ project selection or transfer confirmation. Saved changes automatically export a
 environment input, without rerunning models/Marble or overwriting an old game package.
 
 `export_scene(..., include_assets=False)` 供本机审核输入更新使用：保留当前元数据、原导览和审核快照，不在中间ZIP中重复装入场景二进制；默认仍导出完整可搬运场景。
+
+### Existing SPZ / PLY import
+
+`raw-scene-import --spz SCENE.spz --mesh SCENE.ply --workspace OUTPUT` imports an existing scene locally; it never calls Marble. PLY must be a binary little-endian triangle mesh. Local Chrome, Node.js and hardware WebGL render six derived observations, await actual scene rendering, and record camera matrices and input hashes. Uniform/blank views fail rather than enter matching. The output contains `scene/scene.json`, `raw-scene.json`, `capture.json` and `tour.html`; `scene3d-attach --local-scene` attaches a matched single-scene environment. Derived observations are not original photographs, and automatic positions/scale remain unapproved until reviewed. Organizer owns Evidence/matching authorization and downstream handoff.
+
+New implementation files: [raw_scene.py](src/pastport_matched_environment/application/raw_scene.py) (bounded geometry import and injected capture lifecycle), [raw_scene_render.mjs](src/pastport_matched_environment/scene3d_assets/raw_scene_render.mjs) (owned local capture process), [raw_scene_capture.html](src/pastport_matched_environment/scene3d_assets/raw_scene_capture.html) (awaited GPU rendering), [test_raw_scene.py](tests/test_raw_scene.py) (offline format/capture/source-change boundaries).
+
+Admin writes an explicit workspace token-policy marker to disable cumulative recorded-token stops. Remaining token allowance is then None; actual execution usage remains persisted, and call limits/timeouts/recovery checks remain active. Standalone workspaces without the marker retain their grant threshold.
+
+Offline geometry supports at most 600,000 triangles with a bounded 1,536 MiB Node heap, a 100 MiB collider/input profile, unchanged output limits and timeout. The triangle bound is checked before allocating triangle records. This supports the supplied 583,649-triangle phone-capture mesh without removing collision geometry or treating unknown geometry as allowed.
+
+Raw phone-capture scenes use one overview plus six detail views: four horizontal headings and upward/downward views at ±80 degrees. This keeps the eight-image request bound including the reference sheet, and preserves the existing two-call localization/audit pair. Ordinary VR retains its horizontal profile. The raw view profile has a separate run identity, so prior localization results are not silently reinterpreted. `localization-report.json` records per-object/view dispositions and located/unlocated numbers. Admin handoff messages report counts and missing numbers; an environment handoff is not a claim that every object is mounted or historically approved. A changed camera profile requires fresh localization authorization; local rendering itself issues zero model or Marble calls.

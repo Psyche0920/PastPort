@@ -15,7 +15,7 @@ class UploadedProductionStart(Contract):
     authorize_marble: bool = False
     marble_model: Literal["marble-1.1", "marble-1.0-draft"] = "marble-1.1"
     marble_credit_budget: int = Field(default=0, ge=0, le=100000)
-    max_evidence_calls: int = Field(default=8, ge=1, le=20)
+    max_evidence_calls: int = Field(default=8, ge=1, le=100)
     max_environment_calls: int = Field(default=20, ge=1, le=40)
     max_recorded_tokens: int = Field(default=250000, ge=1000, le=1000000)
     target_minutes: int = Field(default=10, ge=3, le=60)
@@ -24,7 +24,7 @@ class UploadedProductionStart(Contract):
 
 class UploadedAsset(Contract):
     file_id: Identifier
-    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d"]
+    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh"]
     path: Path
     filename: Text
     sha256: Sha256
@@ -34,7 +34,7 @@ class NativeInputRequest(Contract):
     project_id: Identifier
     owner_id: Identifier
     job_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
     files: tuple[UploadedAsset, ...]
     options: UploadedProductionStart
     shared_player_assets: Path

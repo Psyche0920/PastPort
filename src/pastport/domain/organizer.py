@@ -23,6 +23,16 @@ class OrganizerCatalog(Contract):
     sources: tuple[OrganizerSource, ...] = ()
 
 
+class OrganizerSelection(Contract):
+    source_id: Identifier
+
+
+class OrganizerWorkspace(Contract):
+    project_id: Identifier
+    source_id: Identifier
+    story_ready: bool
+
+
 class OrganizerStart(Contract):
     source_id: Identifier
     mode: Literal["reuse", "regenerate"]
@@ -67,6 +77,7 @@ class OrganizerJob(Contract):
         "story_ready",
     ]
     input_kind: Literal["registered", "uploads"] = "registered"
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"] | None = None
     completed_stages: tuple[str, ...] = ()
     message: Text
     new_model_calls: int | None = None
@@ -89,7 +100,7 @@ class OrganizerRecovery(Contract):
 
 class OrganizerFile(Contract):
     file_id: Identifier
-    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d"]
+    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh"]
     filename: Text
     sha256: Sha256
     size_bytes: int = Field(gt=0, le=4 * 1024**3)
@@ -98,17 +109,17 @@ class OrganizerFile(Contract):
 class OrganizerMaterials(Contract):
     project_id: Identifier
     owner_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
     files: tuple[OrganizerFile, ...] = ()
 
 
 class OrganizerProjectCreate(Contract):
     project_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
 
 
 class OrganizerPlan(Contract):
-    entry_level: Literal["raw", "mapping", "vr", "3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
     missing_roles: tuple[str, ...]
     reused: tuple[str, ...]
     stages: tuple[str, ...]
@@ -133,3 +144,10 @@ class OrganizerStorageView(Contract):
     cache_directory: Path
     uploads_directory: Path
     jobs_directory: Path
+
+
+class OrganizerNativeProgress(Contract):
+    phase: Text
+    recognized_objects: int = Field(default=0, ge=0)
+    target_objects: int | None = Field(default=None, ge=1)
+    completed_calls: int = Field(default=0, ge=0)

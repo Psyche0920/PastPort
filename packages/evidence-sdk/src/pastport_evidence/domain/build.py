@@ -61,3 +61,19 @@ class MappingInventory(DomainModel):
     pages: tuple[PDFMatchPage, ...]
     receipt_refs: tuple[str, ...]
     gaps: tuple[str, ...]
+
+
+class CandidateTextPage(DomainModel):
+    page_index: Annotated[int, Field(ge=0)]
+    text: Annotated[str, Field(max_length=2400)]
+
+
+class CandidatePageRequest(DomainModel):
+    objects: tuple[SceneEntity, ...]
+    pages: tuple[CandidateTextPage, ...]
+    source_sha256: str
+
+
+class CandidatePagePlan(DomainModel):
+    page_indices: Annotated[tuple[Annotated[int, Field(ge=0)], ...], Field(max_length=12)]
+    gaps: Annotated[tuple[Annotated[str, Field(max_length=200)], ...], Field(max_length=20)] = ()

@@ -20,6 +20,7 @@ from pastport_evidence.application.bootstrap import atomic_write
 from pastport_evidence.application.evidence import CorpusIndex, EvidenceService
 from pastport_evidence.domain.build import (
     MappingInventory,
+    CandidateTextPage, CandidatePagePlan, CandidatePageRequest,
     ObjectReferenceSheet,
     PDFMatchPage,
     PDFMatchRequest,
@@ -77,6 +78,8 @@ class MappingPreparation:
     mapping_prompt_version: str = field(default="v2", kw_only=True)
     evidence_prompt_version: str = field(default="v2", kw_only=True)
 
+    indexed_retrieval: bool = field(default=False, kw_only=True)
+
     def _write(self, name: str, value: DomainModel) -> None:
         atomic_write(self.artifacts / name, value.model_dump_json())
 
@@ -91,7 +94,7 @@ class MappingPreparation:
     def _photo_reference_sheets(
         self, entities: tuple[SceneEntity, ...]
     ) -> tuple[ObjectReferenceSheet, ...]:
-        if self.mapping_prompt_version != "v2":
+        if self.mapping_prompt_version not in ("v2", "v3"):
             return ()
         inventory = PhotoInventory.model_validate_json(
             (self.artifacts / "photo-inventory.json").read_bytes()
@@ -140,7 +143,23 @@ class MappingPreparation:
         corpus = CorpusIndex(document)
         pages: list[PDFMatchPage] = []
         gaps: list[str] = []
-        for page in document.pages:
+        selected_pages = document.pages
+        if self.indexed_retrieval and recognition.entities:
+            plan_file = self.artifacts / "candidate-pages.json"
+            if plan_file.exists():
+                plan = CandidatePagePlan.model_validate_json(plan_file.read_bytes())
+            else:
+                plan = CodexSemanticGateway(self.executor, self.assets).candidate_pages(
+                    CandidatePageRequest(objects=recognition.entities, source_sha256=document.source.asset.sha256,
+                        pages=tuple(CandidateTextPage(page_index=p.page_index, text=p.original_text[:2400]) for p in document.pages)), self.grant)
+                self._write("candidate-pages.json", plan)
+            valid = {p.page_index for p in document.pages}
+            if not plan.page_indices or not set(plan.page_indices) <= valid:
+                raise ValueError("No valid candidate source pages; retrieval must be reviewed")
+            selected_pages = tuple(p for p in document.pages if p.page_index in plan.page_indices)
+            gaps.extend(plan.gaps)
+            gaps.append("candidate_page_scope:not_exhaustive_source_scan")
+        for page in selected_pages:
             with Image.open(self.assets.resolve_path(page.rendered_page)) as raw:
                 image = raw.convert("RGB")
                 image.thumbnail((1536, 1536))
@@ -189,7 +208,7 @@ class MappingPreparation:
                             mode=self.mode,
                             prompt_version=self.mapping_prompt_version,
                             policy_version="narrative-proxy-v1"
-                            if self.mapping_prompt_version == "v2"
+                            if self.mapping_prompt_version in ("v2", "v3")
                             else "pdf-object-mapping-v1",
                             objects=recognition.entities[offset : offset + 100],
                             reference_sheets=self._photo_reference_sheets(
@@ -263,7 +282,7 @@ class MappingPreparation:
         ranks = {"same_object": 0, "same_kind": 1, "functional_analogy": 2, "substitution": 3}
         for object_id, candidates in by_object.items():
             pool = candidates
-            if self.mapping_prompt_version == "v2":
+            if self.mapping_prompt_version in ("v2", "v3"):
                 documented = [c for c in candidates if c.story_support == "documented_activity"]
                 pool = documented or candidates
             rank = min(ranks[c.relationship] for c in pool)
@@ -358,7 +377,17 @@ class MappingPreparation:
             )
             draft: HistoricalDescription | None = None
             evidence = None
-            if self.executor.remaining_calls() > 0 and selection.passages:
+            if self.indexed_retrieval:
+                exact = tuple(passage_by_id[key] for key in candidate.passage_ids)
+                for passage in exact:
+                    corpus.validate_passage(passage)
+                if exact:
+                    draft = HistoricalDescription(subject_id=candidate.subject.subject_id,
+                        version=1, introduction=exact[0].quote[:1200])
+                else:
+                    gaps.append(f"missing_exact_quote:{entity.object_id}")
+                gaps.append(f"historical_association_pending_human_review:{entity.object_id}")
+            elif self.executor.remaining_calls() > 0 and selection.passages:
                 service = EvidenceService(
                     corpus, CodexSemanticGateway(self.executor, self.assets, bindings)
                 )
@@ -390,7 +419,7 @@ class MappingPreparation:
             else:
                 gaps.append(f"evidence_unavailable_or_budget_exhausted:{entity.object_id}")
             claims = evidence.claims if evidence else ()
-            used = {key for claim in claims for key in claim.passage_ids}
+            used = set(candidate.passage_ids) if self.indexed_retrieval else {key for claim in claims for key in claim.passage_ids}
             passages = tuple(p for p in selection.passages if p.passage_id in used)
             objects.append(
                 MappedObject(
@@ -405,7 +434,7 @@ class MappingPreparation:
                         printed_page=None,
                         original_quote="\n\n".join(p.quote for p in passages),
                         translation="",
-                        scope="See independently scoped claims",
+                        scope="Exact source excerpt; historical association pending review" if self.indexed_retrieval else "See independently scoped claims",
                         limitation=candidate.basis,
                         source_page_sha256=hashlib.sha256(
                             source_page.original_text.encode()

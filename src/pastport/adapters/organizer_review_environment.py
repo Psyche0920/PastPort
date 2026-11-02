@@ -30,7 +30,7 @@ class SDKReviewEnvironment:
 
     def resource(self, view: int, relative: str, query: str, body: bytes | None, actor_id: str) -> ReviewEnvironmentResource:
         from pastport_matched_environment.application.shared_content import SharedContentAuthority
-        if view not in (0,1) or '..' in Path(relative).parts:
+        if view not in range(len(self.binding.worlds)) or '..' in Path(relative).parts:
             raise ServiceError('REVIEW_VIEW_UNKNOWN','此视点不属于当前环境。',404)
         root=self.binding.worlds[view]
         if SharedContentAuthority(root).database.resolve() != (self.binding.root/'pastport_matching.sqlite3').resolve():

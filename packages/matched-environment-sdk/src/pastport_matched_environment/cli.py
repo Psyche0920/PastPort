@@ -61,6 +61,10 @@ def main() -> None:
     for name in ("environment", "world", "workspace"):
         attach.add_argument("--" + name, type=Path, required=True)
     attach.add_argument("--source-scene", default="")
+    attach.add_argument("--local-scene", action="store_true")
+    raw_scene = subcommands.add_parser("raw-scene-import", help="Validate existing SPZ/PLY and render local observation views; no generation")
+    for name in ("spz", "mesh", "workspace"):
+        raw_scene.add_argument("--" + name, type=Path, required=True)
     generate3d = subcommands.add_parser(
         "scene3d-generate", help="Generate once from a matched panorama, then attach its records"
     )
@@ -73,6 +77,11 @@ def main() -> None:
     generate3d.add_argument("--credit-budget", type=int, required=True)
     generate3d.add_argument("--authorize-marble", action="store_true")
     arguments = parser.parse_args()
+    if arguments.command == "raw-scene-import":
+        from pastport_matched_environment.application.raw_scene import RawScenePreparation
+
+        print(RawScenePreparation().prepare(arguments.spz, arguments.mesh, arguments.workspace))
+        return
     if arguments.command == "environment-export":
         from pastport_matched_environment.application.vr_export import MatchedVRExporter
 
@@ -114,7 +123,8 @@ def main() -> None:
         from pastport_matched_environment.application.scene3d import Scene3DAttachment
 
         delivery = Scene3DAttachment(
-            arguments.environment, arguments.world, arguments.workspace, arguments.source_scene
+            arguments.environment, arguments.world, arguments.workspace, arguments.source_scene,
+            local_scene=arguments.local_scene,
         ).run()
         print(delivery.model_dump_json())
         return
