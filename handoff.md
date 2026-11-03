@@ -4,6 +4,8 @@ Use the current `main` as the integration baseline. **wcheung owns the pipeline 
 
 See the [Technical PRD](docs/TECHNICAL_PRD.md) for system architecture and contracts, and the [README](README.md) for installation, startup, accounts and storage locations. This handoff covers ownership, source locations, inputs, outputs, change impact and next tasks.
 
+The [current private playable Release](https://github.com/Psyche0920/PastPort/releases/tag/3d-review-playable-2026-11-03) is the shared baseline for visual and gameplay changes. Run it before editing, then compare changes from a separate working copy. For full upstream replay materials, use the older bundle listed in the [README](README.md). The new playable bundle does not import local Organizer history.
+
 ## 1. Ownership and handoff boundary
 
 ```mermaid

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 — IDML to playable 3D
+
+- Added native IDML, linked graphics, site photos and existing SPZ/PLY input. Photo scanning retains coverage gaps, and IDML matching and audit run in groups of up to 16 identities with separate receipts.
+- Registered the local 3D review version as Organizer history with a direct preview and Story continuation. The real run produced 108 recognized candidates, 48 source matches, 34 localized candidates and 30 projected 3D positions awaiting surface review.
+- Generated Story and assembled an openable game. Published the playable baseline and startup instructions in the private Release. Startup from an extracted bundle was checked locally.
+
 ## 2026-11-02 — Organizer raw 3D workflow baseline
 
 ### Added
