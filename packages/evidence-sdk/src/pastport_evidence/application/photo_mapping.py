@@ -93,6 +93,9 @@ class PhotoMappingWorkflow:
         ):
             raise PhotoInputError("Photos exceed per-file or total limits")
         profile = resolve_prompt_profile(workspace)
+        full_photo_scan = large_pdf and profile.photo == "v3"
+        if full_photo_scan:
+            profile = profile.model_copy(update={"photo": "v2"})
         digest = hashlib.sha256(b"photo-documents-v1")
         for prompt in (
             load_semantic_prompt("photo_inspection", profile.photo),
@@ -193,6 +196,7 @@ class PhotoMappingWorkflow:
                 assets,
                 batch_size=2 if profile.photo in ("v2", "v3") else 4,
                 entity_limit=20 if profile.photo == "v3" else None,
+                allow_partial_inventory=full_photo_scan,
             ).run(
                 grant.project_id,
                 photo_input.photos,

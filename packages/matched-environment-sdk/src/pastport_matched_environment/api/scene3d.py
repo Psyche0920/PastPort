@@ -124,8 +124,28 @@ class Scene3DStore:
                     (self.binding, alignment[0]),
                 )
             ]
+        source_ids = {
+            integer(record(row)["object_id"])
+            for row in sequence(self.attachment["source_hotspots"])
+        }
+        eligible = {
+            row["id"] for row in objects
+            if row["id"] in source_ids and row["historical_id"] is not None
+            and row["image_review"] != "unsuitable" and row["text_review"] != "unsuitable"
+            and row["proposal_state"] != "invalid_structural_relation"
+        }
+        saved = {
+            row["id"] for row in objects
+            if row["id"] in eligible and row["point_json"] is not None and row["version"] > 0
+        }
         payload = {
             **self.attachment,
+            "mounting_progress": {
+                "minimum": 15, "eligible": len(eligible), "saved": len(saved),
+                "saved_object_ids": sorted(saved), "missing_object_ids": sorted(eligible - saved),
+                "minimum_saved_reached": len(saved) >= 15,
+                "surface_verification": "requires_visual_acceptance",
+            },
             "alignment": {**json.loads(alignment[1]), "version": alignment[0]},
             "objects": objects,
             "candidates": candidates,

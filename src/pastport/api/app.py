@@ -239,6 +239,8 @@ def create_app(
                 finally:
                     await organizer.close()
                     await organizer_routes.previews.close()
+                    if organizer_routes.mounted_previews is not None:
+                        await organizer_routes.mounted_previews.close()
         finally:
             worker.stop()
             await task

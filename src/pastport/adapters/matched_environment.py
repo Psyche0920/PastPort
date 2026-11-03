@@ -24,6 +24,7 @@ from pastport.domain.story_inputs import (
     EnvironmentObject,
     EnvironmentPosition,
     EnvironmentQuote,
+    IDMLTextSelector,
     EnvironmentReadRequest,
     EnvironmentSnapshot,
     EnvironmentSpatialRevision,
@@ -62,6 +63,22 @@ class _Tour(_Native):
 
 class _Manifest(_Native):
     source_pdf_sha256: Sha256
+    source_format: Literal["pdf", "idml"] = "pdf"
+    source_units_sha256: Sha256 | None = None
+
+
+class _IDMLUnit(_Native):
+    unit_id: int
+    text: str
+    member: str
+    story_id: str
+    start: int
+    paragraph_index: int
+
+
+class _IDMLUnits(_Native):
+    source_format: Literal["idml"]
+    units: tuple[_IDMLUnit, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +89,7 @@ class EnvironmentRegistration:
     import_manifest_sha256: str
     source_pdf_sha256: str
     authority_roots: tuple[Path, ...] = ()
-    source_profile: Literal["standard", "large_pdf"] = "standard"
+    source_profile: Literal["standard", "large_pdf", "idml"] = "standard"
 
     def __post_init__(self) -> None:
         class Identity(Contract):
@@ -80,7 +97,7 @@ class EnvironmentRegistration:
             environment_id: Identifier
             import_manifest_sha256: Sha256
             source_pdf_sha256: Sha256
-            source_profile: Literal["standard", "large_pdf"]
+            source_profile: Literal["standard", "large_pdf", "idml"]
 
         Identity(
             project_id=self.project_id,
@@ -200,12 +217,34 @@ class NativeMatchedEnvironmentReader:
                 )
             manifest = _Manifest.model_validate_json(manifest_bytes)
             maximum = 512 if registration.source_profile == "large_pdf" else 64
-            source = self.files.file("source.pdf", maximum * 1024 * 1024)
+            source = self.files.file("source.idml" if manifest.source_format == "idml" else "source.pdf", maximum * 1024 * 1024)
+            if (manifest.source_format == "idml") != (registration.source_profile == "idml"):
+                raise ServiceError("ENVIRONMENT_SOURCE_FORMAT", "Native source kind differs from registration")
             if (
                 manifest.source_pdf_sha256 != request.source_pdf_sha256
                 or hashlib.sha256(source).hexdigest() != request.source_pdf_sha256
             ):
                 raise ServiceError("ENVIRONMENT_INPUT_CHANGED", "Original source PDF changed")
+            idml_units: dict[int, _IDMLUnit] = {}
+            if manifest.source_format == "idml":
+                units_bytes = self.files.file("source-units.json", 8 * 1024**2)
+                if hashlib.sha256(units_bytes).hexdigest() != manifest.source_units_sha256:
+                    raise ServiceError("ENVIRONMENT_INPUT_CHANGED", "IDML source selectors changed")
+                units = _IDMLUnits.model_validate_json(units_bytes)
+                idml_units = {unit.unit_id: unit for unit in units.units}
+                if len(idml_units) != len(units.units):
+                    raise ValueError("Duplicate IDML source unit identity")
+            def source_quote(text: str, unit_number: int) -> EnvironmentQuote:
+                if manifest.source_format == "pdf":
+                    return EnvironmentQuote(text=text, pdf_page=unit_number)
+                unit = idml_units[unit_number]
+                if unit.text.count(text) != 1:
+                    raise ValueError("IDML quotation is absent or ambiguous in source unit")
+                start = unit.start + unit.text.index(text)
+                return EnvironmentQuote(text=text, idml_selector=IDMLTextSelector(
+                    member=unit.member, story_id=unit.story_id, paragraph_index=unit.paragraph_index,
+                    start=start,end=start+len(text),
+                ))
             html = self.files.file("vr_trial/index.html", 64 * 1024 * 1024).decode("utf-8")
             matches = list(
                 re.finditer(
@@ -303,7 +342,7 @@ class NativeMatchedEnvironmentReader:
                             text_review=row["text_review"],
                             proposal_state=row["proposal_state"],
                             evidence_limitation=row["limitation"] or None,
-                            quote=EnvironmentQuote(text=row["exact_text"], pdf_page=row["pdf_page"])
+                            quote=source_quote(row["exact_text"], row["pdf_page"])
                             if row["exact_text"]
                             else None,
                         )
@@ -366,6 +405,7 @@ class NativeMatchedEnvironmentReader:
                 environment_id=request.environment_id,
                 import_manifest_sha256=request.import_manifest_sha256,
                 source_pdf_sha256=request.source_pdf_sha256,
+                source_format=manifest.source_format,
                 content_revision=content_revision,
                 spatial_revision=spatial_revision,
                 entry_view_id=tour.firstSceneId,

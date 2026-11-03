@@ -2,6 +2,7 @@
 import hashlib
 import json
 from html import escape
+from typing import Literal
 from importlib.resources import files
 from urllib.parse import urlsplit
 import shutil
@@ -22,6 +23,20 @@ from pastport.domain.story_inputs import EnvironmentSnapshot, SpatialPoint
 
 class _Native(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True)
+
+class _IDMLReviewRow(_Native):
+    number: int
+    name: str
+    historical_name: str | None
+    status: Literal["matched", "unmatched", "requires_review"]
+    reason: str
+    image_role: Literal["object_image", "context_image", "text_evidence"]
+
+
+class _IDMLReviewGap(_Native):
+    object_number: int
+    reason: str
+
 
 class _Object(_Native):
     id: int
@@ -156,21 +171,21 @@ class SDKOrganizerReview:
                 current = current and old.pairing_version == item.version and old.introduction_version == (introduction.version if introduction else 0)
             photo_ids = {obs.photo_id for obs in dataset.observations if obs.object_id == item.id}
             photos = tuple(ReviewImage(asset_id=self._asset(binding.root, p.media_path)[0], caption=p.filename) for p in dataset.photos if p.id in photo_ids)
-            image = ReviewImage(asset_id=self._asset(binding.root, evidence.media_path)[0], caption=f"映射来源PDF第{evidence.image_page}页 · {evidence.title_zh}") if evidence else None
+            image = ReviewImage(asset_id=self._asset(binding.root, evidence.media_path)[0], caption=(f"IDML原始配图 · {evidence.title_zh}" if snapshot.source_format == "idml" else f"映射来源PDF第{evidence.image_page}页 · {evidence.title_zh}")) if evidence else None
             objects.append(OrganizerReviewObject(
                 number=item.id, stable_id=item.stable_id, name=item.name,
                 historical_id=item.historical_id, historical_title=evidence.title_zh if evidence else None,
                 rationale=item.rationale, image_review=item.image_review, text_review=item.text_review,
                 pairing_version=item.version, introduction=introduction.content if introduction else None,
                 introduction_version=introduction.version if introduction else None,
-                quote=evidence.exact_text if evidence else None, quote_page=evidence.text_page if evidence else None,
+                quote=evidence.exact_text if evidence else None, quote_page=evidence.text_page if evidence and snapshot.source_format == "pdf" else None,
                 scope_warning=evidence.scope_warning if evidence else "没有配对史料，保留未知。",
                 photos=photos, source_image=image,
                 history=tuple(ObjectReviewHistory(image=h.image_verdict, text=h.text_verdict, note=h.note, reviewer=h.reviewer, created_at=h.created_at) for h in dataset.reviews if h.modern_id == item.id),
                 positions=tuple(position for position in snapshot.positions if position.object_number == item.id),
                 locations=tuple(location for world in (snapshot.metric_spatial.worlds if snapshot.metric_spatial else ()) for location in world.objects if location.object_number == item.id),
             ))
-        return OrganizerReviewView(view_count=len(binding.worlds), database_path=(binding.root / "pastport_matching.sqlite3").resolve(), source_id=source.source_id, project_id=source.project_id, title=source.title,
+        return OrganizerReviewView(source_format=snapshot.source_format, view_count=len(binding.worlds), database_path=(binding.root / "pastport_matching.sqlite3").resolve(), source_id=source.source_id, project_id=source.project_id, title=source.title,
             revision=hashlib.sha256((revision + ":" + spatial_revision + ":" + BoundedNativeArchive.digest(request.environment)).encode()).hexdigest(), snapshot_current=current, objects=tuple(objects))
 
     def save(self, source: OrganizerSource, request: GameMakingRequest, number: int, change: ReviewChange, actor_id: str) -> None:
@@ -197,7 +212,7 @@ class SDKOrganizerReview:
             return request.original_pdf
         binding, dataset, _ = self._dataset(source)
         if asset_id == "mapping-pdf":
-            return binding.root / "source.pdf"
+            return binding.root / ("source.idml" if request.original_pdf.suffix.lower() == ".idml" else "source.pdf")
         for relative in (*[p.media_path for p in dataset.photos], *[s.media_path for s in dataset.sources]):
             key, path = self._asset(binding.root, relative)
             if key == asset_id:
@@ -219,6 +234,69 @@ class SDKOrganizerReview:
         return prepared
 
 
+    def _idml_inventory(self, source: OrganizerSource) -> tuple[_IDMLReviewRow, ...]:
+        root = self.binding(source).root
+        index = root / "idml-review-inventory.json"
+        if index.is_file():
+            return TypeAdapter(tuple[_IDMLReviewRow, ...]).validate_json(index.read_bytes())
+        # Earlier native runs retain the original identity inventory and handoff gaps.
+        if root.name != "result" or root.parent.parent.name != "runs" or root.parent.parent.parent.name != "environment-build":
+            return ()
+        evidence = root.parents[3] / "evidence"
+        handoff = evidence / "native-handoff"
+        lock = evidence / "idml-input.sha256"
+        if not lock.is_file():
+            return ()
+        digest = lock.read_text().strip()
+        if len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+            return ()
+        from pastport_evidence.application.idml_handoff import IDMLEnvironmentHandoff
+        from pastport_evidence.domain.idml import IDMLMatchResult
+        from pastport_evidence.domain.photos import PhotoInventory
+
+        inventory = PhotoInventory.model_validate_json(
+            (evidence / "runs" / digest / "photo-inventory.json").read_bytes()
+        )
+        matches = IDMLMatchResult.model_validate_json((handoff / "idml-matches.json").read_bytes())
+        gaps = TypeAdapter(tuple[_IDMLReviewGap, ...]).validate_json(
+            (handoff / "mapping-gaps.json").read_bytes()
+        )
+        reasons = {gap.object_number: gap.reason for gap in gaps}
+        entities = {entity.object_id: entity for entity in inventory.entities}
+        conflicts = IDMLEnvironmentHandoff.identity_conflicts(matches, inventory)
+        rows = []
+        for match in matches.objects:
+            entity = entities[match.object_id]
+            status = match.status
+            if status == "matched" and entity.display_number in reasons:
+                status = "requires_review"
+            if match.object_id in conflicts:
+                status = "requires_review"
+                others = ", ".join(map(str, sorted(conflicts[match.object_id])))
+                reasons[entity.display_number] = f"现场照片选区与编号 {others} 高度重叠，请复核物件身份。"
+            rows.append(_IDMLReviewRow(
+                number=entity.display_number, name=entity.label,
+                historical_name=match.historical_name, status=status,
+                reason=reasons.get(entity.display_number, match.review_reason),
+                image_role=match.image_role,
+            ))
+        return tuple(rows)
+
+    def _idml_inventory_markup(self, source: OrganizerSource) -> str:
+        rows = self._idml_inventory(source)
+        if not rows:
+            return ""
+        states = {"matched": "史料候选", "unmatched": "未匹配", "requires_review": "待复核"}
+        images = {"object_image": "实物配图候选", "context_image": "背景参考图", "text_evidence": "无已确认实物照"}
+        items = []
+        for row in sorted(rows, key=lambda item: item.number):
+            items.append(
+                f"<li><strong>{row.number:02d} · {escape(row.name)}</strong> · {states[row.status]}"
+                f"<div>{escape(row.historical_name or '暂无对应历史对象')} · {images[row.image_role]}</div>"
+                f"<p>{escape(row.reason)}</p></li>"
+            )
+        return f"<details><summary>全部识别物件（{len(rows)} 项）</summary><ol>{''.join(items)}</ol></details>"
+
     def workbench(self, source: OrganizerSource, request: GameMakingRequest, actor_id: str, prefix: str) -> str:
         self.read(source, request)
         # Always render trusted installed UI. Never execute HTML/scripts uploaded with a scene.
@@ -227,6 +305,21 @@ class SDKOrganizerReview:
         html = shared_review_markup(template.read_text())
         html = html.replace("||1;const $", "||0;const $").replace("))id=1;", "))id=data.objects[0].id;")
         html = html.replace("叙事优先的合成演示：代理可以跨类别，但编号稳定、来源真实。图片关联与文字适用性分别复核。", "当前项目的同源物件审核；图片关联与文字适用性分别复核。保存后请在外层确认本次制作使用的资料版本。")
+        snapshot = EnvironmentSnapshot.model_validate_json(request.environment.read_bytes())
+        if snapshot.source_format == "idml":
+            html = html.replace("PDF 来源对象", "IDML 来源对象")
+            html = html.replace("<main>", self._idml_inventory_markup(source) + "<main>", 1)
+            html = html.replace("这是原文证据截图，没有已确认的实物照片。", "只有 IDML 原文依据，尚无已确认的实物照片。")
+            html = html.replace(
+                """${img(s.media_path,s.title_zh)}<p>来源截图：PDF 第 ${s.image_page} 页／印刷页 ${s.image_page+109}；建筑 ${esc(s.building_id)}；父对象 ${esc(s.parent_ref)}</p><a href="media/source-page-${String(s.image_page).padStart(2,'0')}.png" target="_blank">查看完整来源图片页</a>""",
+                "${s.image_role==='text_evidence'?'':img(s.media_path,s.title_zh)}",
+            )
+            html = html.replace("文字：PDF 第 ${s.text_page} 页／印刷页 ${s.text_page+109}。", "IDML原文单元（不是PDF页码）。")
+            html = html.replace("原PDF中的对象选区。", "IDML包中的来源图片；语义关联待审核。")
+            html = html.replace("英文原文与适用范围", "原文与适用范围")
+            html = html.replace("中文译文（人工整理，未独立审校）", "中文介绍（AI草稿，待人工审核）")
+            html = html.replace("规范化页面的 Unicode 字符偏移，非 PDF 字节或屏幕坐标。", "IDML原文单元的 Unicode 字符偏移，非排版页码或屏幕坐标。")
+            html = html.replace("查看完整来源图片页", "查看来源说明图")
         html = html.replace("${s.image_page+109}", "${s.image_printed_page??'未识别'}").replace("${s.text_page+109}", "${s.text_printed_page??'未识别'}")
         html = html.replace("${esc(last?.reviewer||'')}", escape(actor_id)).replace("${esc(vr.editor==='initial_trial_snapshot'?'':vr.editor)}", escape(actor_id))
         html = html.replace("${esc(vr.editor==='initial_trial_snapshot'?'':vr.editor)}", escape(actor_id))

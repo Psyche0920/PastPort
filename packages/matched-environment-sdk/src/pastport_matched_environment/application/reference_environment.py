@@ -15,7 +15,8 @@ import sys
 import unicodedata
 import uuid
 from contextlib import closing
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from html import escape
 from importlib.resources import files
@@ -29,6 +30,7 @@ from pypdf import PdfReader
 from pastport_matched_environment.adapters.assets import LocalAssetStore
 from pastport_matched_environment.adapters.tour import TourImporter
 from pastport_matched_environment.application.environment_agent import offline_input_limits
+from pastport_matched_environment.application.candidate_source import candidate_source
 
 type Json = None | bool | int | float | str | list[Json] | dict[str, Json]
 type Record = dict[str, Json]
@@ -100,6 +102,7 @@ class Entity:
     limitation: str
     quote: str
     observations: tuple[Observation, ...]
+    native_introduction: str | None = None
 
     @classmethod
     def parse(cls, raw: Record) -> Entity:
@@ -133,16 +136,21 @@ class Entity:
             page,
             integer(raw["image_page"]) if raw["image_page"] else page,
             json.dumps(raw["image_box"], ensure_ascii=False),
-            "object_image" if raw["image_page"] else "text_evidence",
+            string(raw["image_role"]) if raw.get("image_role") else "object_image" if raw["image_page"] else "text_evidence",
             string(raw["explanation"]),
             string(raw["proxy"]),
             string(raw["limit"]),
             string(raw["quote"]),
             tuple(views),
+            string(raw["introduction"]) if raw.get("introduction") else None,
         )
 
     def introduction(self) -> str:
         """Show source history; keep proxy reasoning in the editorial review record."""
+        if self.native_introduction is not None:
+            if not 1 <= len(self.native_introduction) <= 1500:
+                raise ImportFailure("Native introduction exceeds the shared display profile")
+            return self.native_introduction
         title = self.historical_name[:200]
         quote = self.quote.strip()
         if len(quote) > 1100:
@@ -227,6 +235,7 @@ class CandidateBuilder:
     ) -> None:
         self.reference, self.upstream, self.pdf = reference, upstream, pdf
         self.vr, self.locations, self.output = vr, locations, output
+        self.source = candidate_source(upstream)
 
     def build(self) -> None:
         if self.output.exists():
@@ -241,9 +250,19 @@ class CandidateBuilder:
             {o.stable_id for o in entities}
         ) != len(entities):
             raise ImportFailure("Duplicate modern identity")
-        if len({o.historical_id for o in entities}) != len(entities):
-            raise ImportFailure("Historical identities need explicit upstream conflict review")
-        if digest(self.pdf) != digest(self.upstream / "input.pdf"):
+        historical_counts = Counter(o.historical_id for o in entities)
+        if len(historical_counts) != len(entities):
+            if self.source.kind != "idml":
+                raise ImportFailure("Historical identities need explicit upstream conflict review")
+            # Each reviewed IDML pairing has its own citation and display evidence.
+            entities = tuple(
+                replace(o, historical_id="historical:" + hashlib.sha256(
+                    f"{o.historical_id}:{o.stable_id}".encode()
+                ).hexdigest()[:24])
+                if historical_counts[o.historical_id] > 1 else o
+                for o in entities
+            )
+        if digest(self.pdf) != digest(self.upstream / ("input.idml" if self.source.kind == "idml" else "input.pdf")):
             raise ImportFailure("PDF and upstream evidence differ")
         measured = record(read_json(self.locations))
         if measured["input_html_sha256"] != digest(self.vr):
@@ -280,8 +299,14 @@ class CandidateBuilder:
         shutil.copy2(
             self.reference / "vr_position_editor.js", self.output / "vr_trial/vr_position_editor.js"
         )
-        shutil.copy2(self.pdf, self.output / "mapping-demo.pdf")
-        shutil.copy2(self.upstream / "source.pdf", self.output / "source.pdf")
+        shutil.copy2(self.pdf, self.output / ("mapping-demo.idml" if self.source.kind == "idml" else "mapping-demo.pdf"))
+        shutil.copy2(self.source.path, self.output / self.source.filename)
+        if self.source.kind == "idml":
+            shutil.copy2(self.upstream / "source-units.json", self.output / "source-units.json")
+            for name in ("idml-document.json", "idml-matches.json", "idml-review-inventory.json"):
+                audit_source = self.upstream / name
+                if audit_source.is_file():
+                    shutil.copy2(audit_source, self.output / name)
         shutil.copy2(self.upstream / "objects.json", self.output / "evidence/upstream-objects.json")
         shutil.copy2(
             self.upstream / "quote-regions.json", self.output / "evidence/quote-regions.json"
@@ -442,7 +467,10 @@ class CandidateBuilder:
                 "created_at": datetime.now(UTC).isoformat(),
                 "input_pdf_sha256": digest(self.pdf),
                 "input_vr_sha256": digest(self.vr),
-                "source_pdf_sha256": digest(self.upstream / "source.pdf"),
+                "source_pdf_sha256": digest(self.source.path),
+                "source_format": self.source.kind,
+                "source_file": self.source.filename,
+                "source_units_sha256": digest(self.output / "source-units.json") if self.source.kind == "idml" else None,
                 "upstream_objects_sha256": digest(self.upstream / "objects.json"),
                 "reference_files": {
                     n: digest(self.reference / n)
@@ -505,9 +533,9 @@ class CandidateBuilder:
                 "INSERT INTO documents VALUES (?,?,?,?,?)",
                 (
                     "heritage",
-                    "source.pdf",
-                    digest(self.upstream / "source.pdf"),
-                    _pdf_page_count(self.upstream / "source.pdf"),
+                    self.source.filename,
+                    digest(self.source.path),
+                    self.source.count,
                     "local_user_supplied; public distribution unconfirmed",
                 ),
             )
@@ -540,57 +568,28 @@ class CandidateBuilder:
             pages = sorted(set(page_contexts) | {o.image_page for o in entities})
             printed: dict[int, int | None] = {}
             for page in pages:
-                result = subprocess.run(
-                    [
-                        "pdftotext",
-                        "-f",
-                        str(page),
-                        "-l",
-                        str(page),
-                        str(self.upstream / "source.pdf"),
-                        "-",
-                    ],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                )
-                first = result.stdout.strip().splitlines()[0].strip()
-                normalized_page = _source_text(result.stdout)
+                source_text = self.source.text(page)
+                first = source_text.strip().splitlines()[0].strip()
+                normalized_page = _source_text(source_text)
                 for obj in entities:
                     if obj.text_page == page and _source_text(obj.quote) not in normalized_page:
                         raise ImportFailure(
                             f"Quote for object {obj.number} is not present on source page {page}"
                         )
                 printed[page] = int(first) if first.isdecimal() else None
-                context = page_contexts.get(page, " ".join(result.stdout.split()))
+                context = page_contexts.get(page, " ".join(source_text.split()))
                 db.execute(
                     "INSERT INTO source_pages VALUES (?,?,?,?,?,?)",
                     (
                         page,
                         printed[page] or 0,
-                        result.stdout,
+                        source_text,
                         context,
                         hashlib.sha256(context.encode()).hexdigest(),
                         "upstream English-column normalized context; original full page retained",
                     ),
                 )
-                subprocess.run(
-                    [
-                        "pdftoppm",
-                        "-f",
-                        str(page),
-                        "-l",
-                        str(page),
-                        "-singlefile",
-                        "-scale-to",
-                        "1400",
-                        "-png",
-                        str(self.upstream / "source.pdf"),
-                        str(self.output / f"media/source-page-{page:02d}"),
-                    ],
-                    check=True,
-                    capture_output=True,
-                )
+                self.source.render(page, self.output / f"media/source-page-{page:02d}.png")
             # Text-only evidence still needs a portable source image, never an invented
             # historical-object photograph. Existing upstream crops remain unchanged.
             for obj in entities:
@@ -617,7 +616,7 @@ class CandidateBuilder:
                         obj.parent,
                         obj.parent,
                         obj.historical_name,
-                        obj.historical_id,
+                        obj.historical_name if self.source.kind == "idml" else obj.historical_id,
                         obj.image_page,
                         obj.image_box,
                         f"media/history-{obj.number:02d}.png",
@@ -654,7 +653,7 @@ class CandidateBuilder:
                     (
                         obj.historical_id,
                         passage[0],
-                        obj.explanation,
+                        obj.native_introduction or obj.explanation,
                         "upstream scope retained",
                         obj.limitation,
                         "specified upstream PDF evidence",
@@ -681,7 +680,7 @@ class CandidateBuilder:
                     (
                         obj.historical_id,
                         "候选·待独立验收",
-                        obj.explanation,
+                        obj.native_introduction or obj.explanation,
                         obj.limitation,
                         "upstream execution",
                         "指定PDF与原文证据",

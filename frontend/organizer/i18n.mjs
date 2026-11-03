@@ -1,5 +1,12 @@
 // UI-only catalog. Source documents, editable content and artifacts are never translated.
 export const messages = Object.freeze({
+  "IDML + Links历史配图 + 现场照片 + 已有 SPZ / PLY 场景": "IDML + linked historical images + site photos + existing SPZ / PLY scene",
+  "原始史料 IDML": "Original historical source IDML",
+  "IDML配套历史图片（Links ZIP，最多3GB）": "Linked historical images (Links ZIP, up to 3 GB)",
+  "IDML史料与现场物件映射": "Map IDML history to site objects",
+  "IDML映射物件的3D定位": "Locate IDML-mapped objects in 3D",
+  "读取IDML与历史配图": "Read IDML and historical graphics",
+
   "正在核对已保存的资料与审核状态。": "Checking saved materials and review state.",
   "继续此项目": "Continue this project",
   "查看资料与审核": "View materials and review",

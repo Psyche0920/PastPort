@@ -276,17 +276,25 @@ class OrganizerService:
                     logger.warning("Organizer check receipt unavailable: %s", job_id)
         message = job.message
         progress_path = self.directory(job_id) / "native/evidence/progress.json"
-        if job.status == "running" and progress_path.is_file():
+        if job.status in ("running", "failed", "recovery_required") and progress_path.is_file():
             try:
                 progress = OrganizerNativeProgress.model_validate_json(progress_path.read_bytes())
-                labels = {"ingest_photos": "读取PDF与照片", "recognize_photos": "识别物件",
+                labels = {"idml_import": "读取IDML与历史配图", "idml_mapping": "匹配IDML文物与介绍", "idml_mapping_ready": "IDML映射已完成，正在交接3D", "ingest_photos": "读取PDF与照片", "recognize_photos": "识别物件",
                           "recognizing_photos": "识别物件", "photo_selection_complete": "物件选择完成",
                           "map_pdf": "匹配PDF史料", "evidence": "核验史料", "export_mapping": "生成映射PDF"}
-                message = labels.get(progress.phase, progress.phase)
-                if progress.target_objects:
-                    message += f" · 已识别{progress.recognized_objects}/{progress.target_objects}个物件"
-                if progress.phase == "export_mapping":
-                    message += " · 正在排版导出"
+                if job.status == "running":
+                    message = labels.get(progress.phase, message)
+                    if progress.phase in ("recognizing_photos", "photo_selection_complete"):
+                        message += (
+                            f" · 已处理 {progress.completed_calls} 批"
+                            f" · 已识别 {progress.recognized_objects} 个物件"
+                        )
+                elif progress.phase == "photo_inventory_incomplete":
+                    message = (
+                        f"照片识别第 {progress.completed_calls + 1} 批覆盖不足，"
+                        f"此前已处理 {progress.completed_calls} 批。"
+                        "已保留模型回执。"
+                    )
             except (OSError, ValueError):
                 logger.warning("Organizer progress unavailable")
         if job.status == "running" and job.input_kind == "uploads":
@@ -637,6 +645,12 @@ class OrganizerService:
                 ("mapping_pdf", "matched_vr"),
                 ("environment.scene3d", "story", "gameplay", "presentation", "assembly"),
                 ("已登记热点", "共享审核记录", "导航"),
+            ),
+            "idml3d": (
+                ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"),
+                ("scene_splat", "scene_mesh"),
+                ("idml_source_import", "local_scene_import", "evidence.idml_mapping", "environment.idml_mount", "input_handoff", "story", "gameplay", "presentation", "assembly"),
+                ("IDML原文与图片链接", "跨页图文候选", "文物介绍与精确原文", "3D定位", "不调用Marble"),
             ),
             "raw3d": (
                 ("original_pdf", "photos", "scene_splat", "scene_mesh"),

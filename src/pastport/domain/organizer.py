@@ -77,7 +77,7 @@ class OrganizerJob(Contract):
         "story_ready",
     ]
     input_kind: Literal["registered", "uploads"] = "registered"
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"] | None = None
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"] | None = None
     completed_stages: tuple[str, ...] = ()
     message: Text
     new_model_calls: int | None = None
@@ -85,6 +85,7 @@ class OrganizerJob(Contract):
     request_key: Identifier
     payload_sha256: Sha256
     result_ready: bool = False
+    mounted_preview_ready: bool = False
     prepared_source_id: Identifier | None = None
     cache_directory: Path | None = None
     game_directory: Path | None = None
@@ -100,7 +101,7 @@ class OrganizerRecovery(Contract):
 
 class OrganizerFile(Contract):
     file_id: Identifier
-    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh"]
+    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh", "original_idml", "historical_links"]
     filename: Text
     sha256: Sha256
     size_bytes: int = Field(gt=0, le=4 * 1024**3)
@@ -109,17 +110,17 @@ class OrganizerFile(Contract):
 class OrganizerMaterials(Contract):
     project_id: Identifier
     owner_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
     files: tuple[OrganizerFile, ...] = ()
 
 
 class OrganizerProjectCreate(Contract):
     project_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
 
 
 class OrganizerPlan(Contract):
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
     missing_roles: tuple[str, ...]
     reused: tuple[str, ...]
     stages: tuple[str, ...]

@@ -24,6 +24,7 @@ class ExecutionInput(DomainModel):
     kind: Literal[
         "evidence_association",
         "pdf_matching",
+        "idml_mapping",
         "photo_inspection",
     ]
     prompt_version: str

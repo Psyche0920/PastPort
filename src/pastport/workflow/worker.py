@@ -70,7 +70,10 @@ class EditorialWorker:
         except BaseException as error:
             self.failure = error
             self.ready.set()
-            logger.error("worker_stopped", extra={"error_type": type(error).__name__})
+            diagnostic = {"error_type": type(error).__name__}
+            if isinstance(error, ServiceError):
+                diagnostic["error_code"] = error.code
+            logger.error("worker_stopped", extra=diagnostic)
             raise
 
     def _run_locked(self) -> None:

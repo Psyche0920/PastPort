@@ -19,7 +19,12 @@ class NativeSDKProcessRunner:
         self._closed = False
 
     def run(self, module: str, arguments: tuple[str, ...], timeout_seconds: float) -> None:
-        if module not in ("pastport_evidence.cli", "pastport_matched_environment.cli"):
+        if module not in (
+            "pastport_evidence.cli",
+            "pastport_evidence.idml_cli",
+            "pastport_matched_environment.cli",
+            "pastport_matched_environment.idml_cli",
+        ):
             raise ValueError("Native module is not registered")
         with self._mutex:
             if self._closed:
@@ -46,8 +51,18 @@ class NativeSDKProcessRunner:
                 reason = self._failure_reason(arguments)
                 if reason is not None:
                     raise ServiceError(*reason, 409)
+                stage = {
+                    "raw-scene-import": "导入3D场景",
+                    "environment-build": "环境定位",
+                    "scene3d-attach": "3D挂载",
+                    "pastport_evidence.cli": "照片与PDF史料处理",
+                    "pastport_evidence.idml_cli": "照片与IDML史料处理",
+                    "pastport_matched_environment.idml_cli": "IDML环境定位",
+                }.get(arguments[0] if arguments and not arguments[0].startswith("-") else module)
                 raise ServiceError(
-                    "NATIVE_STAGE_STOPPED", "原生SDK步骤未完成，原始结果和用量记录已保留。", 409
+                    "NATIVE_STAGE_STOPPED",
+                    f"{stage or '原生SDK步骤'}未完成，原始结果和用量记录已保留。",
+                    409,
                 )
         finally:
             self._terminate(process)

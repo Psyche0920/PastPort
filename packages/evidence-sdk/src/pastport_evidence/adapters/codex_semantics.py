@@ -97,6 +97,19 @@ class CodexSemanticGateway:
         result = PhotoInspection.model_validate_json(
             json.dumps({**payload.model_dump(mode="json"), "receipt_ref": receipt})
         )
+        if request.phase == "recheck":
+            object_ids = {entity.object_id for entity in request.catalog}
+            photo_ids = {photo.photo_id for photo in request.photos}
+            accepted = tuple(
+                sighting for sighting in result.sightings
+                if sighting.target_ref in object_ids and sighting.photo_id in photo_ids
+            )
+            rejected_count = len(result.sightings) - len(accepted)
+            if rejected_count:
+                result = result.model_copy(update={
+                    "sightings": accepted,
+                    "gaps": (*result.gaps, f"photo_recheck_review_required:{receipt}:{rejected_count}"),
+                })
         PhotoRecognitionService.validate(request, result)
         return result
 

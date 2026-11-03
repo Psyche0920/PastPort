@@ -42,6 +42,8 @@ cd /Users/hanweijia/PastPort
   --port 18840
 ```
 
+After starting Organizer and signing in, go to **Production Progress and Delivery**. Open **3D Review Preview** on the `3d-test777` 3D review history entry. Organizer starts and manages the local preview, which contains 30 candidate positions. To prepare Story from the same version, select **Continue This Project** on that card and proceed to Story preparation. The scene and Story inputs use private data stored in the local job directory.
+
 This uses existing private configuration and the administrator account on this computer; it creates no new account. Sign in with the existing username/password, without a token. Manually choose Chinese / English in the upper-right corner; the preference survives refresh. Service restart requires login again. Keep the terminal open; Ctrl+C stops it. If the port is occupied, check whether the service is already running rather than terminating unknown processes.
 
 The `disabled` options disable older editorial demo channels, not explicitly authorized Organizer SDK generation. Current player assets remain registered in the local materials directory shown above. They are private input dependencies, not another application repository, and are absent from a Git clone. On another machine, supply private configuration/materials/player resources and replace the paths. Do not copy or publish account configuration, API keys or private materials.

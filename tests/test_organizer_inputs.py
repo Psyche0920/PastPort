@@ -71,12 +71,12 @@ def upload(client: TestClient, level: str, roles: tuple[str, ...]) -> None:
         == 201
     )
     for role in roles:
-        suffix = ".pdf" if role.endswith("pdf") else ".zip"
+        suffix = ".idml" if role == "original_idml" else ".pdf" if role.endswith("pdf") else ".zip"
         response = client.post(
             "/organizer/api/materials/fixture-project/files",
             headers=headers(),
             params={"role": role, "filename": role + suffix},
-            content=b"%PDF-native-fixture" if suffix == ".pdf" else b"fixture",
+            content=b"%PDF-native-fixture" if suffix == ".pdf" else b"PK-fixture" if role in ("original_idml","historical_links") else b"fixture",
         )
         assert response.status_code == 201, response.text
 
@@ -89,6 +89,7 @@ def upload(client: TestClient, level: str, roles: tuple[str, ...]) -> None:
         ("vr", ("original_pdf", "matched_vr")),
         ("3d", ("original_pdf", "mounted_3d")),
         ("raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh")),
+        ("idml3d", ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh")),
     ],
 )
 def test_all_http_branches_dispatch_exact_input_snapshot(tmp_path, level, roles):
@@ -185,6 +186,7 @@ def test_uploaded_program_not_executed_and_active_database_rejected(tmp_path):
         ("vr", ("scene3d-generate", "scene3d-generate")),
         ("3d", ()),
         ("raw3d", ("raw-scene-import", "evidence", "environment-build", "scene3d-attach")),
+        ("idml3d", ("raw-scene-import", "idml-evidence", "idml-environment", "scene3d-attach")),
     ],
 )
 def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatch(
@@ -203,6 +205,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
     entry = {
         "raw": ("original_pdf", "photos", "tour"),
         "raw3d": ("original_pdf", "photos", "scene_splat", "scene_mesh"),
+        "idml3d": ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"),
         "mapping": ("original_pdf", "mapping_pdf", "tour"),
         "vr": ("original_pdf", "matched_vr"),
         "3d": ("original_pdf", "mounted_3d"),
@@ -211,7 +214,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
     for index, role in enumerate(entry):
         path = tmp_path / f"asset-{index}"
         path.write_bytes(b"fixture")
-        suffix = ".pdf" if role.endswith("pdf") else ".png" if role == "photos" else ".spz" if role == "scene_splat" else ".ply" if role == "scene_mesh" else ".zip"
+        suffix = ".idml" if role == "original_idml" else ".pdf" if role.endswith("pdf") else ".png" if role == "photos" else ".spz" if role == "scene_splat" else ".ply" if role == "scene_mesh" else ".zip"
         if role == "original_pdf" and level == "raw3d":
             from pypdf import PdfWriter
 
@@ -251,7 +254,18 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
         def run(self, module, args, timeout):
             workspace = Path(args[args.index("--workspace") + 1])
             workspace.mkdir(parents=True, exist_ok=True)
-            if module == "pastport_evidence.cli":
+            if module == "pastport_evidence.idml_cli":
+                command = "idml-evidence"
+                handoff = workspace / "native-handoff"
+                handoff.mkdir()
+                (handoff / "source-units.json").write_text("{}")
+                (handoff / "idml-matches.json").write_text("{}")
+            elif module == "pastport_matched_environment.idml_cli":
+                command = "idml-environment"
+                result = workspace / "runs" / args[args.index("--run-id")+1] / "result"
+                result.mkdir(parents=True)
+                (result / "import-manifest.json").write_text("{}")
+            elif module == "pastport_evidence.cli":
                 command = "evidence"
                 pdf = workspace / "mapping.pdf"
                 pdf.write_bytes(b"%PDF-fixture")
@@ -306,7 +320,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
         '{"firstSceneId":"one","scenes":[{"id":"one"},{"id":"two"}]}'
     )
     monkeypatch.setenv("WORLDLABS_API_KEY", "synthetic-not-dispatched")
-    if level == "raw3d":
+    if level in ("raw3d", "idml3d"):
         monkeypatch.delenv("WORLDLABS_API_KEY", raising=False)
         tour = native._Tour.model_validate_json(
             '{"firstSceneId":"one","scenes":[{"id":"one"}]}'

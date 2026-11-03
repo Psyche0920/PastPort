@@ -6,7 +6,7 @@ import secrets
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Request
@@ -34,6 +34,9 @@ from pastport.domain.organizer import (
 from pastport.domain.organizer_inputs import NativePreparedInputs, UploadedProductionStart
 from pastport.domain.organizer_review import ReviewAcknowledgment, ReviewChange, NativeReviewWrite, NativeIntroductionWrite
 
+if TYPE_CHECKING:
+    from pastport_matched_environment.application.reference_preview import ReferencePreviewPool
+
 
 @dataclass(frozen=True, slots=True)
 class _Session:
@@ -54,6 +57,7 @@ class OrganizerRoutes:
         self.failed_logins: dict[str, list[float]] = {}
         self.sessions: dict[str, _Session] = {}
         self.previews = OrganizerPreviewPool()
+        self.mounted_previews: ReferencePreviewPool | None = None
 
     def actor(self, request: Request) -> Actor:
         if request.headers.get("authorization"):
@@ -344,7 +348,7 @@ class OrganizerRoutes:
             if gateway is None:
                 raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
             target = await asyncio.to_thread(gateway.media, self.service.bound_review_source(source, actor), self.service.request(source), asset_id)
-            if target.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp", ".pdf"):
+            if target.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp", ".pdf", ".idml"):
                 raise ServiceError("REVIEW_ASSET_INVALID", "此文件不能作为审核图片展示。", 422)
             return FileResponse(target, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "sandbox"})
 
@@ -402,6 +406,22 @@ class OrganizerRoutes:
             recovery = await read_body(request, OrganizerRecovery)
             value = await self.service.recover(job_id, self.actor(request), recovery)
             return JSONResponse(value.model_dump(mode="json"), status_code=202)
+
+        @router.get("/api/jobs/{job_id}/open-mounted")
+        async def open_mounted(job_id: str, request: Request) -> RedirectResponse:
+            job = self.service.job(job_id, self.actor(request))
+            root = self.service.directory(job.job_id) / "mounted-review" / "scene"
+            if not job.mounted_preview_ready or not (root / "scene3d/attachment.json").is_file():
+                raise ServiceError("ORGANIZER_RESULT_UNAVAILABLE", "3D 审核预览尚未就绪。", 404)
+            from pastport_matched_environment.application.reference_preview import ReferencePreviewPool
+
+            if self.mounted_previews is None:
+                self.mounted_previews = ReferencePreviewPool()
+            port = await self.mounted_previews.ensure(root)
+            return RedirectResponse(
+                f"http://127.0.0.1:{port}/scene3d/index.html",
+                headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"},
+            )
 
         @router.get("/api/jobs/{job_id}/open")
         async def open_preview(job_id: str, request: Request) -> RedirectResponse:
@@ -504,7 +524,7 @@ class OrganizerRoutes:
             project_id: str,
             request: Request,
             role: Literal[
-                "original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh"
+                "original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh", "original_idml", "historical_links"
             ],
             filename: str,
         ) -> JSONResponse:
@@ -522,6 +542,7 @@ class OrganizerRoutes:
                     "mapping": {"original_pdf", "mapping_pdf", "tour"},
                     "vr": {"original_pdf", "matched_vr"},
                     "3d": {"original_pdf", "mounted_3d"},
+                    "idml3d": {"original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"},
                     "raw3d": {"original_pdf", "photos", "scene_splat", "scene_mesh"},
                 }[material.entry_level]
                 if role not in allowed:
@@ -536,8 +557,8 @@ class OrganizerRoutes:
                     raise ServiceError("ORGANIZER_FILE_LIMIT", "项目文件数量超过限制。", 413)
                 total = sum(item.size_bytes for item in material.files)
                 maximum = min(
-                    4 * 1024**3 - total,
-                    (512 if role in ("original_pdf", "mapping_pdf") else 2048) * 1024**2,
+                    (6 if material.entry_level == "idml3d" else 4) * 1024**3 - total,
+                    (32 if role == "original_idml" else 3072 if role == "historical_links" else 512 if role in ("original_pdf", "mapping_pdf") else 2048) * 1024**2,
                 )
                 file_id = uuid4().hex
                 directory = (
@@ -563,6 +584,10 @@ class OrganizerRoutes:
                         role in ("original_pdf", "mapping_pdf") and b"%PDF-" not in header
                     ):
                         raise ServiceError("ORGANIZER_UPLOAD_INVALID", "文件为空或不是 PDF。", 422)
+                    if role == "original_idml" and (not filename.lower().endswith(".idml") or not header.startswith(b"PK")):
+                        raise ServiceError("IDML_UPLOAD_INVALID", "请上传有效IDML压缩结构文件。", 422)
+                    if role == "historical_links" and (not filename.lower().endswith(".zip") or not header.startswith(b"PK")):
+                        raise ServiceError("IDML_LINKS_INVALID", "历史配图请上传Links ZIP。", 422)
                     file = OrganizerFile(
                         file_id=file_id,
                         role=role,

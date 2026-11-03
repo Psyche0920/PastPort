@@ -21,6 +21,31 @@ def records(stream: io.StringIO) -> list[dict[str, object]]:
     return [json.loads(line) for line in stream.getvalue().splitlines()]
 
 
+def test_busy_worker_reports_safe_error_code_without_private_paths(tmp_path: Path) -> None:
+    import fcntl
+    from typing import cast
+
+    from pastport.application.models import ServiceError
+    from pastport.workflow.stages import StageRunner
+    from pastport.workflow.worker import EditorialWorker
+
+    stream = io.StringIO()
+    worker = EditorialWorker(cast(StageRunner, object()), tmp_path / "checkpoints.sqlite3")
+    with (tmp_path / "instance.lock").open("a") as owner, LoggingConfiguration(stream=stream):
+        fcntl.flock(owner, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            with pytest.raises(ServiceError) as failure:
+                worker.run()
+            assert failure.value.code == "INSTANCE_BUSY"
+        finally:
+            fcntl.flock(owner, fcntl.LOCK_UN)
+    diagnostic = next(row for row in records(stream) if row["event"] == "worker_stopped")
+    assert diagnostic["error_code"] == "INSTANCE_BUSY"
+    assert diagnostic["error_type"] == "ServiceError"
+    assert str(tmp_path) not in stream.getvalue()
+    assert worker.ready.is_set() and worker.failure is failure.value
+
+
 def test_formatter_excludes_raw_values_arguments_exceptions_and_unapproved_fields() -> None:
     stream = io.StringIO()
     with LoggingConfiguration(stream=stream):

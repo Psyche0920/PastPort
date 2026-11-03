@@ -24,7 +24,7 @@ class UploadedProductionStart(Contract):
 
 class UploadedAsset(Contract):
     file_id: Identifier
-    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh"]
+    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh", "original_idml", "historical_links"]
     path: Path
     filename: Text
     sha256: Sha256
@@ -34,7 +34,7 @@ class NativeInputRequest(Contract):
     project_id: Identifier
     owner_id: Identifier
     job_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
     files: tuple[UploadedAsset, ...]
     options: UploadedProductionStart
     shared_player_assets: Path

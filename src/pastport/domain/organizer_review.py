@@ -52,6 +52,7 @@ class OrganizerReviewObject(Contract):
     locations: tuple[SpatialObjectLocation, ...]
 
 class OrganizerReviewView(Contract):
+    source_format: Literal["pdf", "idml"] = "pdf"
     view_count: int = Field(default=2, ge=1, le=2)
     database_path: Path
     source_id: Identifier

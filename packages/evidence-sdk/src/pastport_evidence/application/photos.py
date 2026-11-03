@@ -98,12 +98,14 @@ class PhotoRegistrar:
 class PhotoRecognitionService:
     def __init__(
         self, repository: SceneRepository, inspector: PhotoInspector, assets: AssetStore,
-        *, batch_size: int = 4, entity_limit: int | None = None
+        *, batch_size: int = 4, entity_limit: int | None = None,
+        allow_partial_inventory: bool = False,
     ) -> None:
         if batch_size not in (2, 4):
             raise ValueError("Photo batch size must be 2 or 4")
         self.batch_size = batch_size
         self.entity_limit = entity_limit
+        self.allow_partial_inventory = allow_partial_inventory
         if entity_limit is not None and entity_limit != 20:
             raise ValueError("Supported selection target is 20")
         self.repository, self.inspector, self.assets = repository, inspector, assets
@@ -190,7 +192,12 @@ class PhotoRecognitionService:
                 progress("recognizing_photos")
                 result = self.inspector.inspect_photos(request)
                 self.validate(request, result)
-                if self.entity_limit is None and any(gap.startswith("inventory_incomplete") for gap in result.gaps):
+                if (
+                    self.entity_limit is None
+                    and not self.allow_partial_inventory
+                    and any(gap.startswith("inventory_incomplete") for gap in result.gaps)
+                ):
+                    progress("photo_inventory_incomplete")
                     raise PhotoInputError("Bounded photo inventory is incomplete; review required, no silent truncation")
                 calls += 1
                 receipts.append(result.receipt_ref)

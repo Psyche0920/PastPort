@@ -131,6 +131,9 @@ def export_scene(root: Path, archive: Path, *, include_assets: bool = True) -> N
             )
             row["candidate_state"] = "ray_projection_unverified"
             row["anchor_state"] = "human_confirmed" if row["anchor"] else "withheld_or_unconfirmed"
+        source_kind = "idml" if (root / "source.idml").is_file() else "pdf"
+        source_filename = "source.idml" if source_kind == "idml" else "source.pdf"
+        mapping_filename = "mapping-demo.idml" if source_kind == "idml" else "mapping-demo.pdf"
         data = {
             "schema_version": "pastport.scene3d/1.0",
             "scene_binding": attachment["binding"],
@@ -142,8 +145,9 @@ def export_scene(root: Path, archive: Path, *, include_assets: bool = True) -> N
             "alignment": alignment,
             "candidate_method": candidate_method,
             "source_viewpoint": attachment["source_scene_id"],
-            "source_pdf": "source.pdf",
-            "matched_pdf": "mapping-demo.pdf",
+            "source_pdf": source_filename,
+            "source_format": source_kind,
+            "matched_pdf": mapping_filename,
         }
         manifest = {
             "schema_version": "pastport.scene3d/1.0",
@@ -178,9 +182,14 @@ def export_scene(root: Path, archive: Path, *, include_assets: bool = True) -> N
             root / "scene3d" / render_name,
             root / "scene3d/collider.glb",
             root / "scene3d/panorama.jpg",
-            root / "source.pdf",
-            root / "mapping-demo.pdf",
+            root / source_filename,
+            root / mapping_filename,
         ]
+        if source_filename.endswith(".idml"):
+            for name in ("source-units.json", "idml-document.json", "idml-matches.json", "idml-review-inventory.json"):
+                source = root / name
+                if source.is_file():
+                    paths.append(source)
         if style is not None:
             manifest["appearance"] = json.loads(style.model_dump_json())
             paths.extend([root / "scene3d/style-variant.json", root / "scene3d" / style.panorama])

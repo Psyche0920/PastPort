@@ -85,10 +85,20 @@ class SDKGameMakingStages:
         from pastport_matched_environment.domain.scene3d import MarbleScene
         from pastport_stylization.domain.stylization3d import Style3DVariant
 
-        document = RegisteredPDF.model_validate_json(request.source_document.read_bytes())
-        pdf_hash = self._digest(request.original_pdf)
-        if pdf_hash != document.source.asset.sha256:
-            raise ServiceError("GAME_SOURCE_MISMATCH", "Registered PDF source changed")
+        source_bytes = request.source_document.read_bytes()
+        if request.original_pdf.suffix.lower() == ".idml":
+            from pastport_evidence.domain.idml import IDMLDocument
+
+            idml = IDMLDocument.model_validate_json(source_bytes)
+            expected_source_hash = idml.source_sha256
+            page_count = len(idml.pages)
+        else:
+            document = RegisteredPDF.model_validate_json(source_bytes)
+            expected_source_hash = document.source.asset.sha256
+            page_count = document.page_count
+        source_hash = self._digest(request.original_pdf)
+        if source_hash != expected_source_hash:
+            raise ServiceError("GAME_SOURCE_MISMATCH", "Registered source changed")
         worlds = _Worlds.model_validate_json(
             (request.museum_directory / "data/scene3d-input.json").read_bytes()
         )
@@ -119,8 +129,8 @@ class SDKGameMakingStages:
                 styled += 1
         receipt = _UpstreamReceipt(
             source_document_sha256=self._digest(request.source_document),
-            source_pdf_sha256=pdf_hash,
-            page_count=document.page_count,
+            source_pdf_sha256=source_hash,
+            page_count=page_count,
             world_count=len(worlds.worlds),
             style_variant_count=styled,
         )

@@ -5,6 +5,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -46,6 +47,22 @@ class _Document(_Upstream):
     pages: tuple[_Page, ...]
 
 
+class _SourceKind(_Upstream):
+    source_format: Literal["pdf", "idml"] = "pdf"
+
+
+class _IDMLStory(_Upstream):
+    story_id: str
+    member: str
+    text: str
+
+
+class _IDMLDocument(_Upstream):
+    source_format: Literal["idml"]
+    source_sha256: str
+    stories: tuple[_IDMLStory, ...]
+
+
 @dataclass(frozen=True, slots=True)
 class StoryMaterials:
     museum: EnvironmentSnapshot
@@ -70,9 +87,14 @@ class StoryMaterialReader:
         with pdf.open("rb") as stream:
             pdf_hash = hashlib.file_digest(stream, "sha256").hexdigest()
         raw = self.bounded(source, 8 * 1024**2)
-        document = _Document.model_validate_json(raw)
+        source_kind = _SourceKind.model_validate_json(raw).source_format
+        native_document = _IDMLDocument.model_validate_json(raw) if source_kind == "idml" else None
         raw_museum = self.bounded(environment, 8 * 1024**2)
         museum = EnvironmentSnapshot.model_validate_json(raw_museum)
+        document = (
+            _Document(source=_Source(project_id=museum.project_id,asset=_Asset(sha256=native_document.source_sha256)),page_count=0,pages=())
+            if native_document is not None else _Document.model_validate_json(raw)
+        )
         if (
             pdf_hash != document.source.asset.sha256
             or pdf_hash != museum.source_pdf_sha256
@@ -86,12 +108,12 @@ class StoryMaterialReader:
         ] != list(range(document.page_count)):
             raise ServiceError("STORY_PAGE_MISMATCH", "Source page coverage is inconsistent")
         registered = Source(
-            source_id="original-pdf",
+            source_id="original-idml" if source_kind == "idml" else "original-pdf",
             version="1",
             file_sha256=pdf_hash,
             origin="external",
             title=pdf.name,
-            uri="local://story/original.pdf",
+            uri="local://story/original.idml" if source_kind == "idml" else "local://story/original.pdf",
             acquisition_state="parsed",
             extraction_state="extracted",
         )
@@ -119,38 +141,65 @@ class StoryMaterialReader:
                         paragraph_or_region=page.original_text[start : start + 8000],
                     )
                 )
+        if native_document is not None:
+            for story in native_document.stories:
+                for start in range(0, len(story.text), 7500):
+                    fragments.append(SourceLocator(
+                        source_id=registered.source_id,source_version="1",file_sha256=pdf_hash,
+                        page_index=None,printed_page=None,
+                        paragraph_or_region=f"{story.member}#chars={start}:{min(len(story.text),start+7500)}\n"+story.text[start:start+7500],
+                    ))
         claims, assets = [], []
+        located_numbers = {position.object_number for position in museum.positions}
         for item in museum.objects:
+            if source_kind == "idml" and item.object_number not in located_numbers:
+                continue
             if item.proposal_state == "invalid_structural_relation" or item.quote is None:
                 continue
-            page_number = item.quote.pdf_page
-            if not 1 <= page_number <= document.page_count:
-                raise ServiceError("STORY_QUOTE_INVALID", "An object quote points outside the PDF")
-
-            def normalize(value: str) -> str:
-                return re.sub(r"\s+", "", value.replace("-\n", "")).casefold()
-
-            direct_match = normalize(item.quote.text) in normalize(
-                document.pages[page_number - 1].original_text
-            )
-            # Upstream identity and page references remain authoritative candidates.
-            # Bilingual extraction order is not a reason to redo or discard matching.
-            quote_reason = (
-                "Page text matches the upstream quote; independent approval is not inferred"
-                if direct_match
-                else (
-                    "Upstream page-located quote retained; linear extracted-text match "
-                    "is unconfirmed"
+            selector = item.quote.idml_selector
+            if native_document is not None:
+                if selector is None:
+                    raise ServiceError("STORY_QUOTE_INVALID", "IDML historical quote lacks a native selector")
+                selected_story = next((s for s in native_document.stories if s.story_id == selector.story_id and s.member == selector.member),None)
+                if selected_story is None or selected_story.text[selector.start:selector.end] != item.quote.text:
+                    raise ServiceError("STORY_QUOTE_INVALID", "IDML historical quote differs from original text")
+                locator = SourceLocator(
+                    source_id=registered.source_id,source_version="1",file_sha256=pdf_hash,
+                    page_index=None,printed_page=None,
+                    paragraph_or_region=f"{selector.member}#chars={selector.start}:{selector.end}\n"+item.quote.text,
                 )
-            )
-            locator = SourceLocator(
-                source_id=registered.source_id,
-                source_version="1",
-                file_sha256=pdf_hash,
-                page_index=page_number - 1,
-                printed_page=None,
-                paragraph_or_region=item.quote.text,
-            )
+                quote_reason = "Exact native IDML quote verified; independent historical approval is not inferred"
+            else:
+                page_number = item.quote.pdf_page
+                if page_number is None:
+                    raise ServiceError("STORY_SOURCE_FORMAT", "IDML quote requires the native IDML source reader")
+                if not 1 <= page_number <= document.page_count:
+                    raise ServiceError("STORY_QUOTE_INVALID", "An object quote points outside the PDF")
+
+                def normalize(value: str) -> str:
+                    return re.sub(r"\s+", "", value.replace("-\n", "")).casefold()
+
+                direct_match = normalize(item.quote.text) in normalize(
+                    document.pages[page_number - 1].original_text
+                )
+                # Upstream identity and page references remain authoritative candidates.
+                # Bilingual extraction order is not a reason to redo or discard matching.
+                quote_reason = (
+                    "Page text matches the upstream quote; independent approval is not inferred"
+                    if direct_match
+                    else (
+                        "Upstream page-located quote retained; linear extracted-text match "
+                        "is unconfirmed"
+                    )
+                )
+                locator = SourceLocator(
+                    source_id=registered.source_id,
+                    source_version="1",
+                    file_sha256=pdf_hash,
+                    page_index=page_number - 1,
+                    printed_page=None,
+                    paragraph_or_region=item.quote.text,
+                )
             claims.append(
                 Claim(
                     claim_id=f"claim-object-{item.object_number}",

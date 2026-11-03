@@ -667,3 +667,25 @@ A saved Story whose only failures are spatial intents or missing spawn source-in
 Browsable museum material and executable Story evidence are separate checks. A candidate without an aligned original-PDF locator may retain mapping-PDF images, page references and explicit limitations for browsing, without gaining Story evidence or task completion permission. Exports retain every candidate with source media and ensure visible marker identities have browsing entries. Optional source browsing does not relax required-task station or observation checks.
 
 Raw-3D automatic localization uses an overview, four horizontal headings and upward/downward detail views at 80 degrees; ordinary VR is unchanged. Localization and independent audit remain two budgeted requests without automatic retry. localization-report.json records per-object dispositions and reasons. Admin handoff reports candidate/located counts and missing numbers instead of implying complete mounting. Changed camera profiles use separate run identities and preserve previous results. Fresh localization requires authorization; local rendering makes no model call.
+
+### Technical diagnosis for original PDF to 3D delivery
+
+The Organizer entry takes an original PDF, site photos, an existing SPZ, and a triangular PLY of the same scene. The full path captures local scene views, recognizes objects, maps and verifies PDF citations, localizes mounting candidates, and then runs story, gameplay, and packaging.
+
+| Breakpoint | Current behavior and change |
+| --- | --- |
+| Submission ends at environment | The existing button explicitly stops there. The full-run button requests game packaging and creates an independent task for each submission. |
+| Recognition stops at 20 | The current large-PDF profile scans all photo batches. Incomplete observations are recorded as gaps, and collected observations proceed to verification. |
+| Calls and timeouts | The original-PDF 3D entry defaults to 100 evidence calls, adjustable at submission. Application authorization, provider quotas, timeouts, and receipt reconciliation still affect completion. |
+| Positions and historical evidence | Automatic localization yields candidates. Exact citations, identity deduplication, and saved positions on physical surfaces are checked separately. |
+| Delivery acceptance | Submit a new task with real PDF, photos, SPZ, and PLY. Check every stage receipt, the openable deliverable, and at least 15 distinct saved objects still visible after reopening. Real end-to-end acceptance remains outstanding. |
+
+### Native IDML input path
+
+The IDML path inspects every photo batch instead of stopping at 20 identities. Two calls are reserved for matching and independent audit; incomplete initial coverage blocks downstream work while preserving receipts. Old capped workspaces cannot count as full coverage. Object contact sheets contain at most 16 identities. Overlap exceptions require distinct-identity reviews bound to the current inventory; repeated historical names alone are not conflicts. Handoffs retain all dispositions and coverage counts. The 3D API separately reports eligible saved anchors in the current viewpoint; the 15-object threshold still requires reopen and visual surface acceptance.
+
+Organizer adds `idml3d`: original IDML, linked historical graphics ZIP, site photographs (or ZIP), SPZ and triangular PLY. Historical graphics and site photos are separate roles. The path uses existing authenticated uploads, project history, task polling, authorization ledgers and review/Story/gameplay/assembly interfaces. It does not call Marble or relabel converted IDML as an original PDF. Graphics stream from a ZIP with limits of 3 GiB compressed, 4 GiB expanded and 128 MiB per graphic; previews are generated on demand without extracting the entire original collection.
+
+Local ingestion retains Unicode text, frame threading, layout pages and graphic links. Shared groups/pages/spreads create association candidates, not semantic proof. A full threaded Story is not assigned to an invented composed page. Matching reports every recognized object, permitting supported visual/functional analogies and explicit narrative substitution. Introductions describe the historical target; proxy rationale and limitations remain separate. Code binds exact quotes to Story member, paragraph and character range. Independent review is not human historical approval. Internal source-unit integer keys are not PDF page numbers. The existing PDF path retains its original citation projection.
+
+Localization and structural checks reuse existing stages. Unlocated objects remain in review and are excluded from IDML player catalogs and task evidence. IDML popups show the historical introduction first, with source graphics and limitations folded away. External authoritative research is not integrated. Full local import of 62 pages and 93 graphics was verified; IDML semantic compilation, native environment handoff and HTTP dispatch have isolated deterministic regressions. Fresh full-material model acceptance is still pending and must not be reported as completed real generation.

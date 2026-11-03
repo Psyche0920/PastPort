@@ -57,6 +57,8 @@ class SourceLineageProjector:
     ) -> SourceLineageProjection:
         if tuple(page.page_index for page in original.pages) != tuple(range(len(original.pages))):
             raise ValueError("Original PDF page coverage must be complete and ordered")
+        if any(obj.quote and obj.quote.idml_selector is not None for obj in native.objects):
+            raise ValueError("IDML citations require native source projection, not PDF page search")
         same_source = native.source_pdf_sha256 == original.pdf_sha256
         pages = tuple(self.normalized(page.text) for page in original.pages)
         objects: list[EnvironmentObject] = []
@@ -74,6 +76,8 @@ class SourceLineageProjector:
                     )
                 )
                 continue
+            if quote.pdf_page is None:
+                raise ValueError("Native IDML selectors cannot use PDF page projection")
             normalized = self.normalized(quote.text)
             matches = tuple(
                 index + 1 for index, text in enumerate(pages) if normalized and normalized in text

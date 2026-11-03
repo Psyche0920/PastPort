@@ -36,9 +36,30 @@ class EnvironmentReadRequest(Contract):
         return self
 
 
+class IDMLTextSelector(Contract):
+    member: Text
+    story_id: Identifier
+    paragraph_index: Annotated[int, Field(ge=0)]
+    start: Annotated[int, Field(ge=0)]
+    end: Annotated[int, Field(ge=1)]
+
+    @model_validator(mode="after")
+    def ordered(self) -> Self:
+        if self.end <= self.start:
+            raise ValueError("IDML text selector is inverted")
+        return self
+
+
 class EnvironmentQuote(Contract):
     text: Text
-    pdf_page: Annotated[int, Field(ge=1)]
+    pdf_page: Annotated[int, Field(ge=1)] | None = Field(default=None, exclude_if=lambda value: value is None)
+    idml_selector: IDMLTextSelector | None = Field(default=None, exclude_if=lambda value: value is None)
+
+    @model_validator(mode="after")
+    def source_kind(self) -> Self:
+        if (self.pdf_page is None) == (self.idml_selector is None):
+            raise ValueError("A quote must use exactly one PDF page or native IDML selector")
+        return self
 
 
 HistoricalSourceId = Annotated[
@@ -290,6 +311,7 @@ class EnvironmentSnapshot(Contract):
     environment_id: Identifier
     import_manifest_sha256: Sha256
     source_pdf_sha256: Sha256
+    source_format: Literal["pdf", "idml"] = Field(default="pdf", exclude_if=lambda value: value == "pdf")
     content_revision: Sha256
     spatial_revision: Sha256
     entry_view_id: Identifier
