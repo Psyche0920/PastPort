@@ -10,7 +10,7 @@ const input=JSON.parse(await readFile(path.resolve(process.env.PASTPORT_SCENE3D_
 for(const world of input.worlds)world.root=path.resolve(localDemo,world.root);
 const previewToken=process.env.PASTPORT_PREVIEW_TOKEN??'';
 const previewCookie=process.env.PASTPORT_PREVIEW_COOKIE??'pastport_preview';
-const extension={'.html':'text/html; charset=utf-8','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml'};
+const extension={'.m4a':'audio/mp4','.html':'text/html; charset=utf-8','.mjs':'text/javascript','.js':'text/javascript','.css':'text/css','.json':'application/json','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml'};
 function respond(res,status,body,type='application/json'){res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store'});res.end(body);}
 async function file(res,base,name){const location=await realpath(path.resolve(base,name));if(!location.startsWith((await realpath(base))+path.sep))return respond(res,403,'Forbidden','text/plain');const info=await stat(location);res.writeHead(200,{'Content-Type':extension[path.extname(location)]??'application/octet-stream','Content-Length':info.size,'Cache-Control':'no-store'});const stream=createReadStream(location);stream.on('error',()=>res.destroy());res.on('close',()=>stream.destroy());stream.pipe(res);}
 const server=http.createServer(async(req,res)=>{

@@ -200,6 +200,26 @@ async function refreshJobs(){
   clearInterval(polling);if(jobs.some(j=>['queued','running','awaiting_external'].includes(j.status)))polling=setInterval(()=>refreshJobs().catch(e=>{clearInterval(polling);message(e.message);}),2500);
 }
 $('refresh').addEventListener('click',()=>refreshJobs().catch(e=>message(e.message)));
+$('import-delivery').addEventListener('click', async () => {
+  const input = $('delivery-file');
+  const button = $('import-delivery');
+  const file = input.files[0];
+  if (!file) { message('请先选择交付包。'); return; }
+  button.disabled = true;
+  try {
+    const query = new URLSearchParams({filename:file.name});
+    const job = await api('jobs/import-delivery?'+query, {
+      method:'POST', body:file, headers:{'Content-Type':'application/octet-stream'},
+    });
+    input.value = '';
+    await refreshJobs();
+    message('已导入 '+job.project_id+'。');
+  } catch (error) {
+    message(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 // Recover the server session after reload; never persist the raw bearer token in browser storage.
 api('access').then(state=>{adminSetup=state.setup_required;$('username').value='admin';$('login-title').textContent=adminSetup?'首次设置管理员密码':'管理员登录';$('confirmation-field').hidden=!adminSetup;$('password-confirmation').required=adminSetup;$('password').autocomplete=adminSetup?'new-password':'current-password';$('password').placeholder=adminSetup?'首次设置至少12个字符':'输入管理员密码';$('login-submit').textContent=adminSetup?'保存密码并进入':'登录';$('login-submit').disabled=false;}).catch(e=>message(e.message));
 api('jobs').then(async()=>{$('login').hidden=true;$('workspace').hidden=false;await restoreWorkspace();}).catch(error=>message(error.message));

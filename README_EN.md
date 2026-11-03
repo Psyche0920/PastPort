@@ -32,6 +32,8 @@ uv sync --extra authoring --extra game-making
 
 ### Organizer: organizer-facing entry
 
+To add a team delivery to Organizer, select its `.tar.gz` file under **Progress & delivery** and click **Import delivery**. The matching entry appears under your current account. Open its standalone player preview to play. Use packages published by your team.
+
 [Open local Organizer](http://127.0.0.1:18840/organizer/). If already running, open it rather than starting another instance. Otherwise use the existing CLI below, without relying on a temporary startup script:
 
 ```sh

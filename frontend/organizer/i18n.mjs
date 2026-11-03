@@ -1,5 +1,7 @@
 // UI-only catalog. Source documents, editable content and artifacts are never translated.
 export const messages = Object.freeze({
+  "团队交付包": "Team delivery package",
+  "导入交付包": "Import delivery",
   "IDML + Links历史配图 + 现场照片 + 已有 SPZ / PLY 场景": "IDML + linked historical images + site photos + existing SPZ / PLY scene",
   "原始史料 IDML": "Original historical source IDML",
   "IDML配套历史图片（Links ZIP，最多3GB）": "Linked historical images (Links ZIP, up to 3 GB)",
