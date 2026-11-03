@@ -121,9 +121,9 @@ Migration evidence includes matching installed/source resources, six packages in
 
 | Owner | Primary scope |
 |---|---|
-| wehan | main, shared contracts, execution/budget services, assembly and game runtime |
-| wcheung | Source/site matching, review data, environment and appearance; upstream packages |
-| maslan | Story, task design, gameplay preparation/presentation and complete content delivery |
+| wehan | main, shared contracts, execution/budget services, assembly and game runtime / Player product, accounts, city map and platform automation |
+| wcheung | 42 demo and Story-to-playable production improvements |
+| maslan | Featured playable heritage demo |
 
 Contract changes need fixed inputs/outputs and compatibility checks. Independent SDK maintenance does not require separate repositories or duplicate engines.
 
@@ -650,12 +650,12 @@ The user-requested root `handoff.md` records team ownership, change boundaries a
 <a id="next-steps"></a>
 ## 13. Next steps
 
-See root [handoff.md](../handoff.md) for detailed source locations, ownership, inputs/outputs and impact rules. This section retains stage goals only. These are plans, not implemented capabilities or authorization to call services/publish.
+See root [handoff.md](../handoff.md) for finals ownership, playable acceptance and delivery rules. This section retains stage goals only. These are plans, not implemented capabilities or authorization to call services/publish.
 
 | Priority | Scope and acceptance target |
 |---|---|
-| 3D model + PDF: wcheung | Raw-model import, coordinate/scale checks, object/evidence matching, numbered review, stations/navigation and existing environment contracts. Distinct from mounted native 3D archives. Test actual SpAItial Echo-3 exports before deciding API integration; arbitrary model support is not promised. |
-| Story/gameplay quality: maslan | Story, Gameplay and related main integration; improve goals, causality, evidence reasoning, minigame relevance and consequences using the same materials; accept through complete play, not schema checks alone. |
+| 3D model + PDF | Raw-model import, coordinate/scale checks, object/evidence matching, numbered review, stations/navigation and existing environment contracts. Distinct from mounted native 3D archives. Test actual SpAItial Echo-3 exports before deciding API integration; arbitrary model support is not promised. |
+| Story/gameplay quality · wcheung | Story, Gameplay and related main integration; improve goals, causality, evidence reasoning, minigame relevance and consequences using the same materials; accept through complete play, not schema checks alone. |
 | Integration/delivery: main maintainer | Compatible Organizer API/progress, pinned runtime/SDK combinations, multiple datasets/mobile performance, rebuilt candidate packages and rollback verification. |
 | Later stages | User improvements, player accounts/cross-device saves/analytics, new stylization actions in Organizer. |
 | As needed | Targeted revision, cited/bounded external research, verified plugins and eventual assembler SDK; do not default to more agents or regenerate every resource. |

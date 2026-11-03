@@ -6,7 +6,7 @@ Turn original historical sources, matched museum environments and spatial inform
 
 **Current status: five SDKs are integrated with local main. Saved-real-material replay, assembly and 3D completion have been verified. CLI replay makes no model calls; Organizer supports saved-result reuse and explicitly authorized generation separately. Source is managed in Git; private preview artifacts are not published with it.**
 
-[Development handoff: wcheung / maslan ownership, source locations, inputs/outputs and tasks](handoff.md)
+[Finals handoff: wcheung, maslan and wehan](handoff.md#en)
 
 ## Team playable handoff
 
@@ -587,7 +587,7 @@ PastPort/
 ├── <a href=".gitignore">.gitignore</a>  — Excludes local environments, private inputs, generated artifacts and caches from Git.
 ├── <a href=".python-version">.python-version</a>  — Pins the project Python version.
 ├── <a href="AGENTS.md">AGENTS.md</a>  — Architecture, implementation, verification and documentation rules for coding agents.
-├── <a href="handoff.md">handoff.md</a>  — Ownership, source locations, inputs/outputs, compatibility rules and next tasks for wcheung and maslan.
+├── <a href="handoff.md">handoff.md</a>  — Bilingual finals handoff.
 ├── <a href="LICENSE">LICENSE</a>  — Module license; retain in source/package distributions.
 ├── <a href="README.md">README.md</a>  — Project entry for installation, startup, replay and per-file navigation.
 ├── <a href="README_EN.md">README_EN.md</a> — English translation of the root README, including the complete linked file inventory.
