@@ -10,6 +10,14 @@ Turn original historical sources, matched museum environments and spatial inform
 
 ## Private local test materials
 
+### New package · 3D Review playable baseline
+
+wcheung and maslan (Mert) can [download the new package from the private Release](https://github.com/Psyche0920/PastPort/releases/tag/3d-review-playable-2026-11-03). The asset is `pastport-3d-review-playable.tar.gz`. It contains the latest playtested 3D scene, Story, and playable build. Use this version as the baseline for follow-up changes and visual comparisons.
+
+Extract the archive, enter `pastport-3d-review`, run `node game-3d/serve3d.mjs`, then [open the local game](http://127.0.0.1:18824/?scene=3d). Node.js is required. No model key or Admin account is needed. See `START.md` inside the package for startup and modification guidance. The Release also includes `SHA256SUMS`. Local Admin task history is separate.
+
+### Old package · Murat SDK replay and full materials
+
 maslan (Mert) and wcheung can download **`pastport-maslan-wcheung-murat-2026-11-02.tar.gz`** (about 714 MiB) from [this repository's private material Release](https://github.com/Psyche0920/PastPort/releases/tag/material-handoff-2026-11-02). It is the verified, complete same-source `murat-sdk-replay` set: original PDF, saved Story, mounted two-view 3D museum and existing playable game. It is not the raw-model import and requires no new generation.
 
 After extraction, enter `pastport-materials`, run `sh start_game.sh`, and open `http://127.0.0.1:18824/?scene=3d`. Node.js 22+ is required; no model key, Organizer account or Marble call is needed. Inputs, prepared assembly content and instructions are documented in the included `MANIFEST.md` / `RUN.md`. `ARCHIVE_SHA256SUMS` is a separate asset in the same Release; the archive also contains per-file `SHA256SUMS`.
