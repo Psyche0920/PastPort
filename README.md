@@ -8,21 +8,16 @@
 
 [开发交接：wcheung / maslan的修改范围、输入输出与任务](handoff.md)
 
-## 团队本机测试资料
+## 团队试玩交付
 
-### 新包 · 3D 审核版试玩与修改基线
+从[私有 GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03)下载：
 
-wcheung 和 maslan（Mert）可从[私有 Release 下载新包](https://github.com/Psyche0920/PastPort/releases/tag/3d-review-playable-2026-11-03)，文件名为 `pastport-3d-review-playable.tar.gz`。包内有本次试玩的 3D 场景、Story 和游戏成品，可作为后续修改与效果对比的基线。
+| 包 | 内容 |
+| --- | --- |
+| `wcheung.tar.gz` | 四二独立试玩《最后一段录音》，含 3D 场景、调查、线索回看和三个结局。交付记录原名 `42handover`。 |
+| `maslan.tar.gz` | Organizer 已完成任务 `3d-test777` 的独立玩家包。 |
 
-解压后进入 `pastport-3d-review`，运行 `node game-3d/serve3d.mjs`，再[打开本机游戏](http://127.0.0.1:18824/?scene=3d)。需要 Node.js，无需模型密钥或 Admin 账号。启动和修改说明见包内 `START.md`，校验文件 `SHA256SUMS` 在同一 Release。包内不含本机 Admin 任务历史。
-
-### 旧包 · Murat SDK 复跑与完整材料
-
-maslan（Mert）和wcheung可从[本仓库的私有材料Release](https://github.com/Psyche0920/PastPort/releases/tag/material-handoff-2026-11-02)下载 **`pastport-maslan-wcheung-murat-2026-11-02.tar.gz`**（约714 MiB）。这是已核对的同源 `murat-sdk-replay` 完整集：原始PDF、保存的Story、已挂载双点位3D环境及可玩成品；不是裸模型导入，也不需要重新生成。
-
-解压后进入 `pastport-materials`，执行 `sh start_game.sh`，浏览器打开 `http://127.0.0.1:18824/?scene=3d`；需要Node.js 22+，无需模型密钥、Organizer账号或Marble。完整输入、准备好的组包请求和操作说明在包内 `MANIFEST.md` / `RUN.md`。校验文件 `ARCHIVE_SHA256SUMS` 位于同一Release；包内还有逐文件 `SHA256SUMS`。
-
-材料作为Release附件单独下载，普通 `git clone` 和GitHub自动生成的“Source code”压缩包不包含它。仓库访问权限保持不变，仅供团队私有本机测试；不代表历史、内容质量或公开分发已获批准。
+解压后进入同名目录，按 `OPEN.txt` 启动，使用支持 WebGL 的浏览器打开其中的本机地址。需要 Node.js。交付包独立于 Organizer 的本机记录。
 
 ## 启动与使用
 
