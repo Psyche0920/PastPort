@@ -127,11 +127,12 @@ async function reviewProject(){
   const list=document.createElement('ul');for(const f of materials.files)list.append(text('li',labels[f.role]+' · '+f.filename+' · '+(f.size_bytes/1024/1024).toFixed(1)+' MB'));
   root.append(list,text('p','审核关注：'+plan.review_focus.join('、')),text('p','复用：'+(plan.reused.map(r=>labels[r]||r).join('、')||'无')),text('p','将执行：'+plan.stages.map(s=>stageLabels[s]||s).join(' → ')),text('p',plan.missing_roles.length?'待补材料：'+plan.missing_roles.map(r=>labels[r]).join('、'):'必需材料已上传；开始后会校验原生格式、来源和版本。'),text('p',plan.message));
   const needs3d=!['3d','raw3d','idml3d'].includes(materials.entry_level);
-  const options=generationOptions(root,needs3d,false,materials.entry_level==='raw3d'?100:8);
+  const canRunFull3D=['raw3d','idml3d'].includes(materials.entry_level);
+  const options=generationOptions(root,needs3d,false,canRunFull3D?100:8);
   const duration=document.createElement('input');duration.type='number';duration.min='3';duration.max='60';duration.value='10';const dl=text('label','体验目标时长（分钟）');dl.append(duration);root.append(dl);
   const b=text('button','准备资料与环境');b.dataset.environmentProject=materials.project_id;b.dataset.materialsBlocked=String(!plan.generation_connected||!!plan.missing_roles.length);b.disabled=true;let submitted=false;
   b.addEventListener('click',async()=>{if(b.disabled)return;submitted=false;b.dataset.submitting='true';b.disabled=true;b.textContent='提交中…';try{const body={...options(),stop_after:'environment',target_minutes:Number(duration.value)};const serialized=JSON.stringify(body);const job=await api('materials/'+encodeURIComponent(materials.project_id)+'/jobs',{method:'POST',headers:{'Idempotency-Key':crypto.randomUUID()},body:serialized});submitted=true;b.textContent='准备中…';resetEnvironment();environmentJob=job.job_id;sessionStorage.setItem('organizer-environment-job',environmentJob);page('make');await refreshJobs();message('环境准备已提交；完成后停在第二步，不会自动调用Story或组包。');}catch(e){message(e.message);}finally{delete b.dataset.submitting;if(!submitted){b.disabled=b.dataset.materialsBlocked==='true';b.textContent='准备资料与环境';}}});root.append(b);
-  if(materials.entry_level==='raw3d'){
+  if(canRunFull3D){
     const runAll=text('button','运行完整 3D 流程');
     runAll.dataset.environmentProject=materials.project_id;
     runAll.dataset.materialsBlocked=b.dataset.materialsBlocked;
