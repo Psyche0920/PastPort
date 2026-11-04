@@ -50,14 +50,14 @@ def test_mounted_preview_adapter_is_lazy_reuses_pool_and_closes_owned_resources(
     class Pool:
         def __init__(self) -> None:
             self.roots: list[Path] = []
-            self.closed = 0
+            self.closed: list[bool] = []
 
         async def ensure(self, root: Path) -> int:
             self.roots.append(root)
             return 18888
 
         async def close(self) -> None:
-            self.closed += 1
+            self.closed.append(True)
 
     pool = Pool()
     creations: list[bool] = []
@@ -74,6 +74,6 @@ def test_mounted_preview_adapter_is_lazy_reuses_pool_and_closes_owned_resources(
         assert await adapter.ensure(tmp_path) == 18888
         assert creations == [True] and pool.roots == [tmp_path, tmp_path]
         await adapter.close()
-        assert pool.closed == 1
+        assert pool.closed == [True]
 
     asyncio.run(check())
