@@ -8,6 +8,8 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Finals handoff: wcheung, maslan and wehan](handoff.md#en)
 
+[Initial proposal version (PDF)](references/PastPort_ROOT_CODE_Application.pdf) · [Proposal and competition direction](handoff.md#original-proposal-and-competition-direction)
+
 ## Team playable handoff
 
 Download from the [private GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03).

@@ -8,6 +8,8 @@
 
 [决赛交接：wcheung、maslan 和 wehan](handoff.md#zh)
 
+[初始申请书版本（PDF）](references/PastPort_ROOT_CODE_Application.pdf) · [申请书与比赛方向](handoff.md#初始申请书与比赛方向)
+
 ## 团队试玩交付
 
 从[私有 GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03)下载：

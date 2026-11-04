@@ -14,6 +14,14 @@
 | **maslan** | 打磨答辩主试玩，自主选择 2D、重新生成 3D 或沿用已有 3D 做映射。玩家能完成一段完整体验，并用现场物件或有出处的史料做一次有后果的决定。历史内容注明出处，虚构剧情明确标记。 |
 | **wehan** | 负责用户端、账号、城市地图与平台自动化。地图可打开至少两处不同的真实 vakıf 遗产，展示图文和出处并直达主试玩。现场通过 Organizer 新增或编辑内容，再回用户端确认变化。 |
 
+### 初始申请书与比赛方向
+
+团队参考保存在本机的[初始申请书版本](references/PastPort_ROOT_CODE_Application.pdf)。它提出从真实历史空间出发，让玩家选择角色、探索建筑和物件、使用线索并通过选择改变个人成长与后续机会。申请书中的安卡拉章节是机制示例，明确不是本届比赛已确认的合格试点。PDF 本身不包含提交回执，需以实际提交记录确认最终版本。
+
+本届以[参赛条款](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf)为准。面向真实 vakıf 遗产做可运行的端到端体验，让用户发现多处遗产并查看历史、图片与来源，支持新增和编辑内容，现场展示核心流程。史实注明来源，依据资料的重建与原创角色、对白和情节清楚区分。
+
+尽量在现实交付范围内靠近申请书方向：优先让玩家在一处真实遗址通过角色目标、物件线索和行动做出有后果的选择，再逐步扩展多角色、成长状态与重玩。申请书里的两个角色、五个节点、三个关键选择、任务适配和 5–8 次试玩是原先提出的 MVP 与测试目标，不代表现已完成，也不是条款中逐项规定的数量。现有地图接入、玩家成长与试玩验证按实际进度记录。
+
 ### 工作方式与交付
 
 先各自下载、启动和试玩现有游戏包，在游戏包的代码和资源上打磨 Demo，可以用 Codex 辅助修改。直接修改并启动现有包无需重新运行 Main 的生成流程。
@@ -59,6 +67,14 @@ Deliver a live, end-to-end experience. Users discover multiple real vakıf herit
 | **wcheung** | Polish the strongest playable demo using the existing 42 3D environment. Own the chain from Story Agent through task design, gameplay plugins, player presentation and packaging. Dialogue must be complete, objectives clear, and clues actionable with visible consequences. Where fixes are repeatable, incorporate them into generation rules, gameplay checks, exhibit bindings or package validation. Deliver the polished playable demo first, then validate reusable improvements with an automated run and record remaining manual work. |
 | **maslan** | Polish the featured game for the jury. Choose 2D, a newly generated 3D scene, or mapping into an existing 3D environment. Players should be able to complete an experience and use a site object or sourced historical clue to make a consequential choice. Cite historical sources and label fictional material. |
 | **wehan** | Own the player-facing product, accounts, city map and platform automation. The map opens at least two distinct real vakıf heritage sites with images, descriptions and sources, and links directly to the featured game. Demonstrate a content addition or edit in Organizer and verify it in the player-facing product. |
+
+### Original proposal and competition direction
+
+Use the locally preserved [initial proposal version](references/PastPort_ROOT_CODE_Application.pdf) as a reference. It describes character-driven exploration of real historical places, architectural and object clues, and choices that shape personal growth and later opportunities. Its Ankara chapter is an illustration of the mechanics and explicitly not a confirmed eligible pilot for this competition. The PDF does not contain a submission receipt, so the final submitted version requires independent confirmation.
+
+The [competition terms](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) govern the final delivery. Build a working end-to-end experience around real vakıf heritage, enabling users to discover multiple sites, view historical information, images and sources, and add and edit content. Demonstrate core flows live. Cite historical facts and distinguish evidence-based reconstructions from fictional characters, dialogue and events.
+
+Move toward the proposal within the deliverable scope: first let players pursue a character goal, investigate objects and make consequential choices at a real heritage site. Extend to multiple roles, progression and replay as feasible. The proposal's two roles, five exploration nodes, three key choices, adaptive task and 5–8 playtests are proposed MVP and testing targets, not claims of completion or item-by-item numeric requirements in the competition terms. Record actual progress for map integration, character progression and play-testing.
 
 ### Working and delivery workflow
 
