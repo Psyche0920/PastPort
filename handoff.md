@@ -26,7 +26,7 @@
 
 | 项目 | 内容 | 下载 |
 |---|---|---|
-| 比赛章程与参考资料 | 官方参赛条款、赛事说明、三份遗产参考 PDF 和候选站点清单 | [参考资料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-for-maslan.tar.gz) |
+| 比赛章程与赛事说明 | 主办方发布的两份 PDF | [参赛条款](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [赛事说明](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
 | 可试玩游戏包 | Maslan 的独立试玩版本，可导入 Organizer | [可试玩游戏包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [启动和导入说明](README_EN.md) |
 | 游戏原始材料与匹配结果 | 原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY、匹配结果 JSON 和 CSV | [Organizer 原始材料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
 | 穆拉迪遗址原始资料 | 原始 IDML、配套 `Links` 文件夹和章节 PDF | [Google Drive 穆拉迪文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
@@ -60,7 +60,7 @@ Sign in to GitHub with access to the PastPort repository. Extract the wcheung ar
 
 | Item | Contents | Download |
 |---|---|---|
-| Competition rules and references | Official terms, information notes, three heritage reference PDFs, and the candidate site list | [Reference archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-for-maslan.tar.gz) |
+| Competition rules and information note | Two official PDFs | [Terms and Conditions](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [Information Note](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
 | Playable game bundle | Maslan’s standalone playable build, ready for Organizer import | [Playable game bundle](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
 | Game sources and matching results | Original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching results | [Organizer source archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
 | Muradiye site source materials | Original IDML, its `Links` folder, and the chapter PDF | [Muradiye Google Drive folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
