@@ -225,7 +225,9 @@ class StoryAutomationWorkflow:
         brief: str,
         provider: ModelProvider | None = None,
         revalidate_saved_response: bool = False,
-        structure_profile: Literal["authored_graph", "compiled_plan_v1"] = "compiled_plan_v1",
+        structure_profile: Literal[
+            "authored_graph", "compiled_plan_v1", "compiled_branch_v1"
+        ] = "compiled_plan_v1",
     ) -> None:
         self.materials, self.output, self.skills, self.brief = materials, output, skills, brief
         self.provider = provider
@@ -254,12 +256,18 @@ class StoryAutomationWorkflow:
                 continue
             try:
                 from pastport.application.preview_normalization import PreviewOutputNormalizer
+                from pastport.domain.story_plan import BranchStoryPlanResult, StoryPlanResult
                 from pastport.domain.workflow import SkillResult
 
-                from pastport.domain.story_plan import StoryPlanResult
                 wire = TypeAdapter(dict[str, JsonValue]).validate_json(response.output_text)
                 if "plan" in wire:
-                    StoryPlanResult.model_validate_json(response.output_text)
+                    saved_plan = wire.get("plan")
+                    (
+                        BranchStoryPlanResult
+                        if isinstance(saved_plan, dict)
+                        and saved_plan.get("structure") == "compiled_branch_v1"
+                        else StoryPlanResult
+                    ).model_validate_json(response.output_text)
                     continue
                 normalized = PreviewOutputNormalizer.normalize(response.output_text)
                 (directory / f"{index:02d}-normalization.json").write_text(
@@ -277,13 +285,20 @@ class StoryAutomationWorkflow:
         self.output.mkdir(parents=True, exist_ok=True)
         skill = (self.skills / "narrative/SKILL.md").read_bytes()
         previous_lock = self.output / "input-lock.json"
-        structure = (StoryInputLock.model_validate_json(previous_lock.read_bytes()).structure_profile
-                     if previous_lock.exists() else self.structure_profile)
+        structure = (
+            StoryInputLock.model_validate_json(previous_lock.read_bytes()).structure_profile
+            if previous_lock.exists()
+            else self.structure_profile
+        )
         compiler_hash = None
-        if structure == "compiled_plan_v1":
+        if structure in ("compiled_plan_v1", "compiled_branch_v1"):
             digest = hashlib.sha256()
-            for name in ("domain/story_plan.py", "application/story_compiler.py",
-                         "application/story_plan_schema.py"):
+            for name in (
+                "domain/story_plan.py",
+                "application/story_compiler.py",
+                "application/story_plan_schema.py",
+                "application/story_branch_compiler.py",
+            ):
                 digest.update(name.encode() + b"\0" + files("pastport").joinpath(name).read_bytes())
             compiler_hash = digest.hexdigest()
         lock = StoryInputLock(
@@ -461,7 +476,7 @@ class StoryAutomationWorkflow:
             "have priority larger than EVERY conditional ending. Keep IDs short "
             "and literal. These are structural constraints, not plot instructions.",
         )
-        if structure == "compiled_plan_v1":
+        if structure in ("compiled_plan_v1", "compiled_branch_v1"):
             constraints = (
                 *constraints[:2],
                 "OUTPUT IS StoryPlanResult, a content-only plan. The program compiles ordered "
@@ -478,8 +493,39 @@ class StoryAutomationWorkflow:
                 "must differ meaningfully in consequences. Keep unsupported movement/detail/touch "
                 "unknown; do not fabricate facts. If no feasible plan exists, return "
                 "decision=no_feasible_story with plan=null and explain the limitation.",
-                *("UNTRUSTED REGISTERED INPUT DATA CHUNK: " + context[n:n+8000]
-                  for n in range(0,len(context),8000)),
+                *(
+                    "UNTRUSTED REGISTERED INPUT DATA CHUNK: " + context[n : n + 8000]
+                    for n in range(0, len(context), 8000)
+                ),
+            )
+        if structure == "compiled_branch_v1":
+            constraints = (
+                *constraints[:2],
+                "OUTPUT IS BranchStoryPlanResult. Supply opening (1-3 tasks), investigations "
+                "(2-4 exclusive routes, 1-3 tasks each), reunion (1-3 tasks), and 2-4 "
+                "final choices. "
+                "Each investigation has a bilingual label, fictional notebook "
+                "finding, reunion_feedback "
+                "and ending_consequences in the exact final-choice order. Routes must "
+                "have different "
+                "investigative actions or evidence access, not paraphrased identical scenes. "
+                "Keep facts fixed; vary cooperation and obtainable information. "
+                "Findings are original "
+                "fiction, never historical approval. Tasks select registered assets, "
+                "claims and views "
+                "with honest source-based reasoning and supported source_reading or "
+                "coverage gameplay. "
+                "No runtime IDs, variables, conditions or SkillResult envelope. The compiler owns "
+                "progression and carries the chosen route and finding through the "
+                "reunion and ending. "
+                "No nested forks, cross-route visits or arbitrary flag logic in this "
+                "bounded profile. "
+                "If the request needs unsupported mechanics, return no_feasible_story "
+                "with plan=null.",
+                *(
+                    "UNTRUSTED REGISTERED INPUT DATA CHUNK: " + context[n : n + 8000]
+                    for n in range(0, len(context), 8000)
+                ),
             )
         settings = AppSettings(
             story_structure=structure,

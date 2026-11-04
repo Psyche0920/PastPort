@@ -10,6 +10,7 @@ from pastport.adapters.story_materials import StoryMaterialReader
 from pastport.adapters.story_workflow import StoryAutomationWorkflow
 from pastport.application.execution_models import ModelProvider
 from pastport.domain.common import Contract, Text
+from pastport.domain.story_plan import StoryStructure
 
 
 class StoryRequest(Contract):
@@ -21,6 +22,7 @@ class StoryRequest(Contract):
     brief: Text
     skills_directory: Path | None = None
     revalidate_saved_response: bool = False
+    structure_profile: StoryStructure = "compiled_plan_v1"
 
 
 class StoryResult(Contract):
@@ -47,15 +49,21 @@ class StoryClient:
         with (request.output_directory / ".story.lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             materials = StoryMaterialReader().read(
-                request.original_pdf, request.source_document,
-                request.environment, request.media_directory,
+                request.original_pdf,
+                request.source_document,
+                request.environment,
+                request.media_directory,
             )
             with nullcontext(skill_root()) as bundled:
                 skill_directory = request.skills_directory or bundled
                 story = await StoryAutomationWorkflow(
-                    materials, request.output_directory, skill_directory,
-                    request.brief, self.provider,
+                    materials,
+                    request.output_directory,
+                    skill_directory,
+                    request.brief,
+                    self.provider,
                     revalidate_saved_response=request.revalidate_saved_response,
+                    structure_profile=request.structure_profile,
                 ).run()
         return StoryResult(
             readable_story=story,

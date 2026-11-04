@@ -37,3 +37,39 @@ for(const change of ['draft','wire','station','config','plugin','museum','duplic
     await assert.rejects(()=>preparedStoryInput(f.draft,f.plan,f.environment,f.museum,'code','wire-hash'));
   });
 }
+
+
+async function forkFixture(){
+  const f=await fixture(), original=f.draft.package.game.scenes[0];
+  const originalBinding=f.plan.bindings[0], originalIntent=f.draft.spatial_intents[0];
+  const ids=['opening','left','right','reunion'], views=['one','left-view','right-view','one'];
+  const edges=[['left','right'],['reunion'],['reunion'],[]];
+  const base=f.environment.metric_spatial.worlds[0];
+  const link=target_view_id=>({target_view_id,point:{x:0,y:0,z:0},arrival_yaw:0,arrival_pitch:0});
+  const worlds=['one','left-view','right-view'].map(view_id=>({...structuredClone(base),view_id,
+    navigation:(view_id==='one'?['left-view','right-view']:['one']).map(link)}));
+  f.environment.metric_spatial.worlds=worlds;f.museum.spatialContext.worlds=structuredClone(worlds);
+  f.draft.package.game.scenes=ids.map((id,i)=>({...structuredClone(original),scene_id:id,
+    tasks:[{...structuredClone(original.tasks[0]),task_id:'task-'+id}],next_scene_ids:edges[i]}));
+  f.draft.package.game.initial_state={current_scene_id:'opening'};
+  f.draft.spatial_intents=ids.map((id,i)=>({...originalIntent,task_id:'task-'+id,view_id:views[i]}));
+  f.draft.gameplay_intents=ids.map(id=>({...f.draft.gameplay_intents[0],task_id:'task-'+id}));
+  f.plan.bindings=ids.map((id,i)=>({...structuredClone(originalBinding),task_id:'task-'+id,scene_id:id,
+    selected_station:{...originalBinding.selected_station,view_id:views[i]}}));
+  f.plan.story_draft_sha256=await contentHash(f.draft);
+  f.plan.narrative_ref.sha256=await contentHash(f.draft.package);
+  return f;
+}
+
+test('checks each fork and reunion edge without inventing travel between exclusive routes',async()=>{
+  const f=await forkFixture();
+  const input=await preparedStoryInput(f.draft,f.plan,f.environment,f.museum,'code','wire-hash');
+  assert.equal(input.tasks.length,4);
+});
+
+test('rejects a missing navigation edge on an alternative route',async()=>{
+  const f=await forkFixture();
+  f.environment.metric_spatial.worlds[0].navigation.pop();
+  f.museum.spatialContext.worlds=structuredClone(f.environment.metric_spatial.worlds);
+  await assert.rejects(()=>preparedStoryInput(f.draft,f.plan,f.environment,f.museum,'code','wire-hash'),/registered transition/);
+});

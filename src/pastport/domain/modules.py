@@ -330,7 +330,9 @@ class DiscoverRequest(Contract):
 
 
 class DraftRequest(Contract):
-    structure_profile: Literal["authored_graph", "compiled_plan_v1"] = "authored_graph"
+    structure_profile: Literal["authored_graph", "compiled_plan_v1", "compiled_branch_v1"] = (
+        "authored_graph"
+    )
     authoring_mode: Literal["reviewed", "internal_preview"] = "reviewed"
     host_constraints: tuple[Text, ...] = ()
     evidence: ApprovedEvidenceView

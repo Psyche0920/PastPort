@@ -1,3 +1,4 @@
+import {isInvestigation,validateInvestigationConfig,validateInvestigationState,reduceInvestigation} from './investigation.mjs';
 import {gameplayCatalog} from './gameplay-catalog.mjs';
 import {solveCoverage} from './coverage.mjs';
 /** Deterministic local activities. No story state or storage access. */
@@ -7,8 +8,9 @@ const integer = n => Number.isSafeInteger(n) && n >= 0 && n < 10000;
 const copy = value => structuredClone(value);
 export class Activity {
   constructor(config) {
-    ensure(config && ['question','routing','dialogue','tiling','budget'].includes(config.kind), 'Unknown activity');
+    ensure(config && (['question','routing','dialogue','tiling','budget'].includes(config.kind)||isInvestigation(config.kind)), 'Unknown activity');
     this.config = copy(config);
+    if(isInvestigation(config.kind))validateInvestigationConfig(config);
     const entries=(items,label)=>{ensure(Array.isArray(items)&&items.length>0&&items.length<=128,`Invalid ${label}`);ensure(items.every(item=>item&&typeof item.id==='string'&&item.id.length>0)&&new Set(items.map(item=>item.id)).size===items.length,`Invalid ${label} identities`);};
     if(config.kind==='question'){entries(config.options,'question options');ensure(config.options.some(option=>option.correct===true),'Question has no accepted answer');}
     if(config.kind==='routing'){entries(config.cards,'routing cards');entries(config.bins,'routing bins');ensure(config.cards.every(card=>config.bins.some(bin=>bin.id===card.target)),'Routing target is missing');}
@@ -35,6 +37,7 @@ export class Activity {
     ensure(state.seen.every(x=>typeof x==='string') && new Set(state.seen).size === state.seen.length, 'Invalid dialogue state');
     const c=this.config;
     if(state.version===2){ensure([null,'failed','exited'].includes(state.termination),'Invalid terminal result');ensure(!state.done||state.termination===null,'Completed activity cannot also terminate');ensure(state.termination!=='failed'||c.kind==='tiling','Unsupported failure result');}
+    if(isInvestigation(c.kind))validateInvestigationState(c,state);
     if(c.kind==='routing') {ensure(state.cursor<=c.cards.length,'Invalid routing position');ensure(state.done===(state.cursor===c.cards.length),'Invalid routing result');}
     if(c.kind==='question') {ensure(state.selected===null||c.options.some(o=>o.id===state.selected),'Invalid answer');ensure(state.done===(c.options.find(o=>o.id===state.selected)?.correct===true),'Invalid question result');}
     if(c.kind==='dialogue') {ensure(state.seen.every(id=>c.items.some(i=>i.id===id)),'Unknown dialogue');ensure(state.done===(state.seen.length===c.items.length),'Incomplete dialogue result');}
@@ -62,7 +65,8 @@ export class Activity {
     if(command.kind==='exit'||c.kind==='tiling'&&command.kind==='give_up'){
       next.termination=command.kind==='give_up'?'failed':'exited';this.validateState(next);return {state:next,result:this.result(next),message:next.termination};
     }
-    if(c.kind==='question') {
+    if(isInvestigation(c.kind)){message=reduceInvestigation(c,next,command);}
+    else if(c.kind==='question') {
       ensure(command.kind==='answer','Expected answer');const option=c.options.find(o=>o.id===command.id);ensure(option,'Unknown answer');
       next.selected=option.id;next.done=option.correct===true;if(!next.done){next.attempts++;message=option.id;}
     } else if(c.kind==='routing') {
