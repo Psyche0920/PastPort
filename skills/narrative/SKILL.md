@@ -2,7 +2,7 @@
 name: narrative
 description: Discover, draft or revise evidence-grounded PastPort heritage games with playable tasks, character consequences and continuous spatial progression. Use for story candidates and narrative review; not for approving history, changing engine code or publishing packages.
 metadata:
-  version: "0.8.0"
+  version: "0.9.0"
   owner: Matt
 ---
 
@@ -20,6 +20,18 @@ Each task's feedback makes its consequence visible. Coverage requirements must
 remain grounded in the selected source and exactly match the capability catalog.
 If this profile cannot express the requested story, return `no_feasible_story`
 with a reason instead of inventing unsupported control flow.
+
+When the server explicitly pins `compiled_branch_v1`, return the supplied
+`BranchStoryPlanResult`: 1–3 opening tasks, 2–4 exclusive investigations of 1–3
+tasks each, then 1–3 reunion tasks and 2–4 final choices. Each investigation supplies
+a bilingual label, fictional notebook finding, reunion feedback and a consequence
+for every final choice in choice order. Design different investigations and visible
+carry-over, not renamed copies. The compiler owns route identities, exclusive
+unlocking, retained findings and conditional reunion/ending text. Source, spatial
+and gameplay checks still apply to every task and every possible graph edge.
+Nested branches, cross-route visits, arbitrary relationship writes and new puzzle
+mechanics are outside this profile; report infeasibility instead of inventing them.
+This profile is opt-in and does not replace v1 or grant generation approval.
 
 Legacy `authored_graph` runs retain their pinned NarrativeDraft contract; do not
 reinterpret old responses as plans or rewrite an old failed output to claim a
@@ -62,6 +74,45 @@ Treat the source candidate count, eligible museum count and story-used object co
 8. Check clue availability, state paths, time, fiction boundaries, route and locale keys. A local change may affect later knowledge, relationships and endings; identify that closure and preserve unaffected text and manual locks.
 
 For each task, preserve a trace from stable object/evidence identity and a reachable clue, through the player's inference/action and answer rule, to a declared state effect and a later visible consequence. A source-backed object can still be irrelevant to a task. Return a targeted evidence request or revise that task instead of attaching a disclaimer to an unrelated object reference.
+
+## Request-scoped story direction and localization
+
+Preserve the user's accepted premise, causal truth and consequential choices as a
+project brief supplied with the run. Separate reusable quality rules from that
+brief: a particular cast, genre, four-act structure or duration is not a template
+for every site. An accepted creative outline does not approve source claims,
+spatial bindings, executable gameplay or publication.
+
+When requested, use a mystery with a specific contradiction, competing motives,
+secrets that reframe earlier clues and a coherent reveal. Inspiration from a
+series concerns pacing and inference, not copied characters, cases or dialogue.
+Controversy must arise from credible conflicting interests and consequences;
+shock alone is not an engaging investigation. Keep established past events fixed
+across routes, and distinguish testimony, inference and demonstrated facts.
+
+For requested mid-story branching, design different playable investigations,
+evidence access and NPC responses. At reconvergence retain acquired knowledge,
+permissions and actions, with later visible reads; do not reset relationships or
+replace branches with alternate wording of the same scene. Specify prerequisites,
+trade-offs and recovery from mistaken deductions. Check the pinned schema and
+capability catalog before promising execution. If unsupported, preserve the full
+brief and report the capability gap through the active result contract; never
+silently flatten it into final-choice-only branching or invent runtime fields.
+
+Use stable character/evidence IDs with locale-specific display names when asked.
+Localize names consistently across dialogue, recordings and documents. English
+and Chinese must reveal the same premises, preserve uncertainty and dramatic
+turns, and drive the same choices and effects. Avoid name-based ciphers or wordplay
+that loses its solution in another locale unless an equivalent is designed and
+checked. A language switch must not alter progress or evidence meaning.
+
+Modern school objects remain modern objects. Fictional messages and incidents
+must be explicitly separate from source-backed descriptions. If a heritage-task
+contract cannot represent the requested contemporary fiction honestly, report the
+scope mismatch rather than inventing historical claims. Use readable linked
+panels for text when supported; new task semantics still require gameplay binding.
+For mystery/branching review, read the request-scoped cases in
+[design calibration](references/design-calibration.md#request-scoped-branching-mystery).
 
 ## Spatial task authoring
 
@@ -122,3 +173,9 @@ approach station and ordered route edges for movement continuity, and reuse decl
 picking up or reading an inscription in the world. Preserve task-specific detail and
 unregistered-touch reasons, and request refinement only for a task that needs those facts.
 Do not repeat upstream matching or reopen all object approvals to consume registered input.
+
+## Optional investigation interaction patterns
+
+When the brief requests visual differences, reconstructing an image/chat screenshot, arranging a timeline or searching scene objects, consult [the gameplay pattern reference](../gameplay-preparation/references/investigation-patterns.md). Specify the causal question, available information, supported inference, completion semantics and later consequence. Image comparison requires actual pictures and meaningful visual changes; a wording question is a different mechanic. Let Gameplay Preparation bind the approved task to the checked blueprint and registered plugin. Preserve private-passage consent and known/unknown times.
+
+Use the supplied schema/catalog as the execution boundary. These blueprint patterns do not by themselves expand an older typed Story intent union. If that output contract cannot express the requested mechanic, retain it in the approved task brief/blueprint or report the capability gap; do not invent fields, claim fresh automatic generation, or silently replace the requested image/scene action with reading. Do not force all four patterns into unrelated stories.

@@ -83,3 +83,9 @@ gameplay-sdk/
 └── pyproject.toml  # 本项目的包名、依赖、命令入口与构建配置。
 ```
 <!-- END FILE INVENTORY -->
+
+## Authored investigation blueprints
+
+The shared JS player host can bind image spot-the-difference, drag timelines, image reconstruction and scene search using `prepareInvestigationBlueprint` from `tools/game-package/investigation-blueprint.mjs`. Supply a prepared runtime-package Story input, the exact museum snapshot, a filled blueprint and a local asset root; retain the returned compiled input and lifecycle/hash receipt for normal assembly. See the repository [Gameplay Preparation Skill](../../skills/gameplay-preparation/SKILL.md) for reusable patterns and a template.
+
+This is an explicit authored preparation path. The typed Python preparation catalog still covers source reading and source-gated coverage; it does not automatically generate or accept these new intent kinds. Unsupported typed requests must remain capability gaps. Image comparison, collection and puzzle completion grant Story progress only through the shared host. Scene-source uncertainty and review authority are unchanged.

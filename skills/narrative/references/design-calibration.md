@@ -49,3 +49,26 @@ After workflow recovery works with fixtures, generate one short playable beat fr
 Evaluate N01–N07 using saved input/output/config snapshots. Then run a real player session without explaining the intended answer: observe whether the player can state why the clue matters and what their choice changed. No such model trial or player session has been completed merely by writing these cases.
 
 Use the canonical input/result protocol and the [quality pilot requirements](../../../docs/TECHNICAL_PRD.md#story-and-agents) for mode-specific fields, observable action/consequence evidence, A/B ordering and not_run/model/player status. Do not add a second scoring/approval workflow inside this reference.
+
+## Request-scoped branching mystery
+
+Apply these cases when the brief requests a localized mystery with consequential
+mid-story branches. They are proposed review cases, not completed model or player
+evaluations. Preserve the canonical report/schema rather than adding wire fields.
+
+| Case | Failure | Observable review target |
+|---|---|---|
+| N08: hook and reveal | A generic secret followed by an unrelated culprit reveal | A specific opening contradiction raises a question; reachable clues support the reveal and give an earlier detail a new meaning. List remaining proof gaps rather than inventing certainty. |
+| N09: consequential foldback | Three choices play the same investigation and reset at reunion | Compare routes: different actions or evidence access, NPC reactions and a retained effect read after reunion. Explain the cost of gaining another route's cooperation. |
+| N10: fixed truth and contested disclosure | The culprit or past facts change to reward the player's choice | Keep one truth ledger; change what can be demonstrated, who cooperates and what is disclosed. Evidence supporting manipulation does not automatically prove an unrelated death. |
+| N11: bilingual suspense | Literal translation obscures a clue, changes culpability or uses inconsistent names | Compare each clue's proposition, uncertainty, reveal timing and choice effect across locales. Display names may differ; stable IDs and solution conditions do not. |
+| N12: supported execution | An elaborate outline is labelled playable under an ordered-task profile | Check the supplied schema/capabilities. An unsupported middle branch produces an explicit gap, not fabricated state fields or an unannounced reduced story. |
+| N13: meaningful tasks and fair mistakes | An unrelated minigame gates a confession, or a hidden timer destroys essential evidence | The action tests a reachable inference and changes access, pressure or accountability; wrong deductions receive informative rebuttals and a supported recovery path. |
+
+For an approved four-act brief, review the opening question, divergent
+investigations, state-carrying reunion and consequential final action together.
+The act count and duration remain project requirements only. Evidence-bundle
+assembly can be proposed semantically, but must not be declared executable until
+the supplied gameplay capabilities and bindings support it. Concrete consequences
+can include consent, testimony, disclosure and self-accountability; avoid a vague
+morality score standing in for who did or learned what.
