@@ -25,6 +25,7 @@ class StoryInputLock(Contract):
     brief: Text
     model: Identifier = "gpt-6-luna"
     timeout_seconds: int = 120
+    reasoning_effort: Literal["medium", "high"] = "medium"
 
 
 class StoryAuthoringCheck(Contract):

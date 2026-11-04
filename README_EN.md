@@ -37,6 +37,8 @@ uv sync --extra authoring --extra game-making
 
 ### Organizer: organizer-facing entry
 
+To add a team delivery to Organizer, select its `.tar.gz` file under **Progress & delivery** and click **Import delivery**. The matching entry appears under your current account. Open its standalone player preview to play. Use packages published by your team.
+
 [Open local Organizer](http://127.0.0.1:18840/organizer/). If already running, open it rather than starting another instance. Otherwise use the existing CLI below, without relying on a temporary startup script:
 
 ```sh
@@ -66,7 +68,7 @@ New photo jobs use a compact policy: two photos per batch, at most 12 new entiti
 
 1. **Prepare materials and environment:** select an entry point from the table below. Check the grey box to reuse the complete default materials/environment with zero model/Marble calls. Unchecked uses uploads at the selected stage; separately authorize Marble when 3D generation is required. Complete native 3D inputs are not regenerated.
 2. **Materials and review:** automatically consume the previous output. Use the environment SDK's shared VR/3D workbench for photos, evidence, descriptions and review state, with panorama/3D links. Descriptions/review are shared; positions/navigation are saved separately. Saved changes automatically update current inputs, without project reselection or transfer confirmation.
-3. **Prepare Story:** first check saved-story provenance, tasks, gameplay and spatial compatibility. A pass permits reuse. Introduction-only changes needing review require human confirmation; invalid critical evidence/task conditions cannot be bypassed. A new saved revision with identical content needs no confirmation. Alternatively, explicitly authorize SOL 6.1 Medium for a new story, without automatic retry. Both paths stop at Story readiness.
+3. **Prepare Story:** first check saved-story provenance, tasks, gameplay and spatial compatibility. A pass permits reuse. Introduction-only changes needing review require human confirmation; invalid critical evidence/task conditions cannot be bypassed. A new saved revision with identical content needs no confirmation. Alternatively, explicitly authorize SOL 6.1 High for a new story, without automatic retry. Both paths stop at Story readiness.
 4. **Build game:** once Story is ready, click Build game to prepare gameplay, bind presentation, assemble and check resources. Open the player preview from Progress & delivery. The environment and Story are not regenerated.
 
 Switching interface language does not translate evidence/descriptions/stories, submit forms, call models or discard unsaved input. Target play time is a Story creative goal, not generation time or exact timed play.
@@ -77,6 +79,7 @@ Switching interface language does not translate evidence/descriptions/stories, s
 | Original PDF + mapping PDF + 360° tour | Environment matching → 3D | Mapping PDF |
 | Original PDF + native matched-VR archive | Validate/import → 3D | VR bindings, review and navigation |
 | Original PDF + native mounted two-view 3D archive | Validate/import | 3D, objects, review, positions/navigation; no Marble calls |
+| Two-column exhibit PDF + matching SPZ and triangular PLY | Read exhibit identifiers and reference photos → locate the same physical objects → 3D review and Story input | In Admin, select the exhibit PDF entry and prepare the environment. Open the preview or continue the project from its history record. |
 
 Defaults use a complete registered same-source PDF/photo/mapping/VR/3D set; Story is selected separately. Changed files, mixed PDFs, missing data or inconsistent provenance stop execution without cache substitution. Uploaded packages are data, not executable code. **An ordinary panorama is not matched VR; a raw model is not a mounted environment.** The new PDF + photos + SPZ/PLY upload path prepares a mounted, reviewable environment before Story; the raw model alone is still not a mounted environment.
 

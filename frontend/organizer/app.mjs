@@ -4,8 +4,8 @@ import {ReviewWorkbench,environmentActionState,restoredWorkflow} from './review.
 const $ = id => document.getElementById(id);
 let materialProjects = [], sources = [], polling = null, loadedProject = null, uploadBusy = false, adminSetup = false, environmentSource = null, storySource = null, environmentJob = null, storyJob = null;
 const labels = {original_idml:'原始史料 IDML',historical_links:'IDML配套历史图片（Links ZIP，最多3GB）',scene_splat:'已有 3D 场景（SPZ）',scene_mesh:'同场景碰撞网格（PLY）',original_pdf:'原始史料 PDF',photos:'现场物件照片（可多选）',mapping_pdf:'映射 PDF',tour:'360° 导览 ZIP 或自包含 HTML',matched_vr:'已匹配 VR 完整项目包',mounted_3d:'已挂载 3D 完整项目包'};
-const fields = {idml3d:['original_idml','historical_links','photos','scene_splat','scene_mesh'],raw3d:['original_pdf','photos','scene_splat','scene_mesh'],raw:['original_pdf','photos','tour'],mapping:['original_pdf','mapping_pdf','tour'],vr:['original_pdf','matched_vr'],'3d':['original_pdf','mounted_3d']};
-const stageLabels = {'evidence.idml_mapping':'IDML史料与现场物件映射','environment.idml_mount':'IDML映射物件的3D定位',idml_source_import:'读取IDML与历史配图','evidence.photo_mapping':'照片与史料映射','environment.environment_build':'物件匹配与环境挂载','environment.scene3d':'准备3D场景',local_scene_import:'导入已有3D并渲染识别视图',story:'故事与任务',gameplay:'玩法准备',presentation:'呈现绑定',assembly:'组包检查',evidence:'照片与史料映射',matched_environment:'全景物件挂载',scene3d_1:'第一个3D视点',scene3d_2:'第二个3D视点',input_handoff:'环境与史料交接'};
+const fields = {catalog3d:['original_pdf','scene_splat','scene_mesh'],idml3d:['original_idml','historical_links','photos','scene_splat','scene_mesh'],raw3d:['original_pdf','photos','scene_splat','scene_mesh'],raw:['original_pdf','photos','tour'],mapping:['original_pdf','mapping_pdf','tour'],vr:['original_pdf','matched_vr'],'3d':['original_pdf','mounted_3d']};
+const stageLabels = {catalog_extraction:'读取展签与现场照片',catalog_localization:'按展签定位同一实物','evidence.idml_mapping':'IDML史料与现场物件映射','environment.idml_mount':'IDML映射物件的3D定位',idml_source_import:'读取IDML与历史配图','evidence.photo_mapping':'照片与史料映射','environment.environment_build':'物件匹配与环境挂载','environment.scene3d':'准备3D场景',local_scene_import:'导入已有3D并渲染识别视图',story:'故事与任务',gameplay:'玩法准备',presentation:'呈现绑定',assembly:'组包检查',evidence:'照片与史料映射',matched_environment:'全景物件挂载',scene3d_1:'第一个3D视点',scene3d_2:'第二个3D视点',input_handoff:'环境与史料交接'};
 const states = {queued:'等待执行',running:'正在制作',completed:'制作完成',failed:'制作停止',recovery_required:'需要先核对恢复摘要',awaiting_materials:'等待补充材料',awaiting_external:'等待3D服务返回',environment_ready:'环境已准备',story_ready:'故事已准备'};
 function message(text){$('message').textContent = text;}
 async function api(path, options={}){
@@ -30,12 +30,12 @@ function resetEnvironment(){environmentSource=null;environmentJob=null;sessionSt
 function drawFields(){loadedProject=null;const root=$('upload-fields');root.replaceChildren();for(const role of fields[$('entry').value]){const label=text('label',labels[role]);const input=document.createElement('input');input.type='file';input.dataset.role=role;if(role==='photos'){input.multiple=true;input.accept=['raw3d','idml3d'].includes($('entry').value)?'.jpg,.jpeg,.png,.webp,.zip':'.jpg,.jpeg,.png,.webp';}if(role==='original_idml')input.accept='.idml';if(role==='historical_links')input.accept='.zip';if(role==='scene_splat')input.accept='.spz';if(role==='scene_mesh')input.accept='.ply';if(role.endsWith('pdf'))input.accept='.pdf';if(role==='tour')input.accept='.zip,.html';input.addEventListener('change',resetEnvironment);label.append(input);root.append(label);}defaultChoice();}
 function defaultChoice(){
   const box=$('use-default');const available=sources.find(s=>s.is_default&&s.ready&&s.complete_bundle);
-  if($('entry').value==='idml3d')box.checked=false;
-  box.disabled=$('entry').value==='idml3d'||(!available&&!box.checked);
+  if(['idml3d','catalog3d'].includes($('entry').value))box.checked=false;
+  box.disabled=['idml3d','catalog3d'].includes($('entry').value)||(!available&&!box.checked);
   for(const input of document.querySelectorAll('#upload-fields input[type=file]'))input.disabled=box.checked;
   $('project').disabled=box.checked;$('upload').disabled=uploadBusy||(box.checked&&!available);
   $('upload').textContent=box.checked?'准备默认资料与环境':'保存材料并检查';
-  $('upload-note').textContent=box.checked?'仅准备资料和已有环境，不调用模型或Marble，不生成故事，也不制作游戏。':['raw3d','idml3d'].includes($('entry').value)?'使用已有SPZ和PLY，仅本地导入取景；匹配需要模型，不调用Marble。':'使用上传材料，从所选阶段真实生成；需要3D时调用Marble，不暗中改用默认缓存。完整3D输入不重复生成3D。';
+  $('upload-note').textContent=box.checked?'仅准备资料和已有环境，不调用模型或Marble，不生成故事，也不制作游戏。':['raw3d','idml3d','catalog3d'].includes($('entry').value)?'使用已有SPZ和PLY，仅本地导入取景；匹配需要模型，不调用Marble。':'使用上传材料，从所选阶段真实生成；需要3D时调用Marble，不暗中改用默认缓存。完整3D输入不重复生成3D。';
   $('default-detail').textContent=available?'勾选：复用已跑通的配套资料与环境，无需上传。故事在第二步单独选择。':'默认资料尚未通过检查，请上传自己的材料。';
 }
 function storyChoice(){
@@ -126,7 +126,7 @@ async function reviewProject(){
   const {materials,plan}=await api('materials/'+encodeURIComponent(loadedProject));const root=$('review-content');root.replaceChildren(text('h2','项目：'+materials.project_id));
   const list=document.createElement('ul');for(const f of materials.files)list.append(text('li',labels[f.role]+' · '+f.filename+' · '+(f.size_bytes/1024/1024).toFixed(1)+' MB'));
   root.append(list,text('p','审核关注：'+plan.review_focus.join('、')),text('p','复用：'+(plan.reused.map(r=>labels[r]||r).join('、')||'无')),text('p','将执行：'+plan.stages.map(s=>stageLabels[s]||s).join(' → ')),text('p',plan.missing_roles.length?'待补材料：'+plan.missing_roles.map(r=>labels[r]).join('、'):'必需材料已上传；开始后会校验原生格式、来源和版本。'),text('p',plan.message));
-  const needs3d=!['3d','raw3d','idml3d'].includes(materials.entry_level);
+  const needs3d=!['3d','raw3d','idml3d','catalog3d'].includes(materials.entry_level);
   const canRunFull3D=['raw3d','idml3d'].includes(materials.entry_level);
   const options=generationOptions(root,needs3d,false,canRunFull3D?100:8);
   const duration=document.createElement('input');duration.type='number';duration.min='3';duration.max='60';duration.value='10';const dl=text('label','体验目标时长（分钟）');dl.append(duration);root.append(dl);
@@ -191,7 +191,7 @@ async function refreshJobs(){
     if(['failed','recovery_required','awaiting_materials'].includes(job.status)){
       article.append(text('h3','恢复摘要'),text('p','已保存：'+(job.completed_stages.map(s=>stageLabels[s]||s).join('、')||'输入快照')+'。剩余步骤将在核对现有回执后继续，不会自动重发未知用量的模型调用。'));
       if(job.status==='awaiting_materials'){const link=text('a','下载已生成的映射 PDF');link.href='/organizer/api/jobs/'+job.job_id+'/mapping.pdf';article.append(link);const view=text('button','查看项目并补充360导览');view.addEventListener('click',async()=>{loadedProject=job.project_id;page('review');try{await reviewProject();}catch(e){message(e.message);}});article.append(view);}
-      const options=job.input_kind==='uploads'?generationOptions(article,!['raw3d','idml3d','3d'].includes(job.entry_level),true):()=>({});
+      const options=job.input_kind==='uploads'?generationOptions(article,!['raw3d','idml3d','3d','catalog3d'].includes(job.entry_level),true):()=>({});
       const b=text('button','已查看摘要，确认继续');b.addEventListener('click',async()=>{b.disabled=true;try{const extra=options();delete extra.authorize_model;delete extra.max_evidence_calls;delete extra.max_environment_calls;await api('jobs/'+job.job_id+'/continue',{method:'POST',body:JSON.stringify({confirm_continue:true,...extra})});await refreshJobs();await refreshSources();}catch(e){message(e.message);}finally{b.disabled=false;}});article.append(b);
     }
     root.append(article);
@@ -200,6 +200,26 @@ async function refreshJobs(){
   clearInterval(polling);if(jobs.some(j=>['queued','running','awaiting_external'].includes(j.status)))polling=setInterval(()=>refreshJobs().catch(e=>{clearInterval(polling);message(e.message);}),2500);
 }
 $('refresh').addEventListener('click',()=>refreshJobs().catch(e=>message(e.message)));
+$('import-delivery').addEventListener('click', async () => {
+  const input = $('delivery-file');
+  const button = $('import-delivery');
+  const file = input.files[0];
+  if (!file) { message('请先选择交付包。'); return; }
+  button.disabled = true;
+  try {
+    const query = new URLSearchParams({filename:file.name});
+    const job = await api('jobs/import-delivery?'+query, {
+      method:'POST', body:file, headers:{'Content-Type':'application/octet-stream'},
+    });
+    input.value = '';
+    await refreshJobs();
+    message('已导入 '+job.project_id+'。');
+  } catch (error) {
+    message(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 // Recover the server session after reload; never persist the raw bearer token in browser storage.
 api('access').then(state=>{adminSetup=state.setup_required;$('username').value='admin';$('login-title').textContent=adminSetup?'首次设置管理员密码':'管理员登录';$('confirmation-field').hidden=!adminSetup;$('password-confirmation').required=adminSetup;$('password').autocomplete=adminSetup?'new-password':'current-password';$('password').placeholder=adminSetup?'首次设置至少12个字符':'输入管理员密码';$('login-submit').textContent=adminSetup?'保存密码并进入':'登录';$('login-submit').disabled=false;}).catch(e=>message(e.message));
 api('jobs').then(async()=>{$('login').hidden=true;$('workspace').hidden=false;await restoreWorkspace();}).catch(error=>message(error.message));

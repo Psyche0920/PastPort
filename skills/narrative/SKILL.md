@@ -59,7 +59,9 @@ Treat the source candidate count, eligible museum count and story-used object co
 5. Specify the player's meaningful action, prerequisites, evidence-based reasoning, intended result and useful feedback. Do not select a concrete plugin or prescribe its code; gameplay preparation maps this semantic task to a supported mechanic. Do not hide a required premise in an unreachable scene or require external trivia.
 6. Make choices understandable trade-offs: beneficiary, loss, immediate response and later state read. Cosmetic ending text alone is inadequate. Responses must fit each NPC's knowledge and motives.
 7. Draft only the target scene/affected causal region. Dialogue should add information, pressure, relationship change or a decision; remove repeated summaries. Heritage knowledge should help the player act.
-8. Check clue availability, state paths, time, fiction boundaries, route and locale keys. A local change may affect later knowledge, relationships and endings; identify that closure and preserve unaffected text and manual locks.
+8. Review the draft before returning it. Check for a clear opening mystery, clues that change the player's understanding, a supported reveal, and short, complete exchanges with distinct character voices. Verify pivotal factual premises against the full PDF and keep exhibit fiction separate. Check clue availability, state paths, time, route, supported mechanics and locale keys. A local change may affect later knowledge, relationships and endings; identify that closure and preserve unaffected text and manual locks.
+
+Within one room, prefer the order in which clues make sense. Use verified reachability and interaction stations as constraints. Require walking or a particular route when it serves a task or a real transition.
 
 For each task, preserve a trace from stable object/evidence identity and a reachable clue, through the player's inference/action and answer rule, to a declared state effect and a later visible consequence. A source-backed object can still be irrelevant to a task. Return a targeted evidence request or revise that task instead of attaching a disclaimer to an unrelated object reference.
 

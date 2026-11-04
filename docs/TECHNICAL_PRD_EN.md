@@ -136,7 +136,7 @@ Contract changes need fixed inputs/outputs and compatibility checks. Independent
 | Existing service API | FastAPI, Uvicorn, HTTPX | Retain authentication, requests and lifecycle |
 | Workflow | LangGraph | Stages, conditional routing and checkpoints; nodes are not automatically agents |
 | Persistence | SQLite, SqliteSaver/AsyncSqliteSaver | Current single-machine state, execution and recovery |
-| Story model | Sol 6.1 Medium through the Codex login channel | Shared controlled execution; quota only with explicit generation authorization |
+| Story model | Sol 6.1 High through the Codex login channel | Shared controlled execution; quota only with explicit generation authorization |
 | Gameplay verification/presentation/assembly | Node.js and existing JS modules | Same rules as the browser runtime |
 | Scenes/UI | Existing HTML/CSS/JS and 360°/3D viewers | No new Unity, Unreal or frontend framework |
 | Upstream tools | Poppler; some workflows need ffmpeg and PDF/image libraries | SDK-declared requirements; installation is not generation authorization |
@@ -245,9 +245,11 @@ Builds live under a task's `builds/` by input/implementation fingerprint. Code u
 
 The page follows **materials/environment → review → Story → build**, with no duplicate existing-project/regenerate selector:
 
+Direct exhibit PDF matching uses numbered reference photos with boxes in the left column and the observation and usage sections in the right column. Use one unique PP identifier per physical object, grouping its angles in one primary entry. Numbered addenda extend the exhibit text. The environment SDK locates and checks candidate points without historical mapping or Marble. Uncertain objects retain their source entries without an anchor. Environment readiness registers a 3D preview and Story input. Story starts separately at the user's request.
+
 1. **Materials/environment:** a checked grey box reuses registered default materials/environment only, with no model/Marble, Story or assembly. Unchecked executes the selected upload path without fallback to default caches. Raw, mapping and matched-VR starts require Marble for 3D; a complete 3D upload is validated/handed off. External generation still needs explicit authorization and a finite budget.
 2. **Review:** embed the SDK's existing numbered-object UI and retain its layout/actions. Prepared projects/defaults need no reupload; merge entries for the same project. Photos, original text/images, descriptions and separate image/text verdicts use one authority. main proxies reads/saves with authentication; media is allowlisted. Uploaded HTML/scripts do not run. SDK revisions/history and current account identity govern saves. Previous-step outputs become inputs automatically, without reselecting/uploading or another transfer confirmation. Pending/unreviewed status remains intact.
-3. **Story:** use the environment identity returned by preparation. Check the grey box to revalidate that environment's story; leave it unchecked to generate through SOL 6.1 Medium. Never attach the default story to another environment. Disable reuse when no matching story exists. Both paths stop after Story validation; they do not prepare gameplay, presentation or assembly yet.
+3. **Story:** use the environment identity returned by preparation. Check the grey box to revalidate that environment's story; leave it unchecked to generate through SOL 6.1 High. Never attach the default story to another environment. Disable reuse when no matching story exists. Both paths stop after Story validation; they do not prepare gameplay, presentation or assembly yet.
 4. **Build:** enable only after Story readiness. Use step three's checked Story/environment for gameplay, presentation and assembly without regenerating Story or 3D.
 
 Review endpoints under `review/{source_id}` read materials; `objects/{number}` saves review/descriptions; `apply` exports new reviewed environment inputs locally. Embed via `workbench/`, read `workbench/data`, and save through `workbench/save-review` / `save-introduction`. Photos/evidence use strict manifest routes. The iframe runs only trusted installed SDK templates, retains edits, and notifies its parent after successful saves.

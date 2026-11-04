@@ -11,7 +11,7 @@ from pastport_matched_environment.adapters.tour import TourImporter
 from pastport_matched_environment.application.environment_agent import offline_input_limits
 from pastport_matched_environment.application.environment_build import EnvironmentRun
 from pastport_matched_environment.application.reference_environment import CandidateBuilder, digest, reference_assets
-from pastport_matched_environment.domain.environment import MatchedBatch, MatchedObject, PageCrop
+from pastport_matched_environment.domain.environment import MatchedBatch, MatchedObject, PageCrop, RelationInventory
 from pastport_matched_environment.domain.execution import SubscriptionGrant
 from pastport_matched_environment.ports.execution import SemanticTransport
 from pastport_matched_environment.workflow.graph import StageJournal, FixedWorkflow, FixedStage, StageCommand, StageOutput
@@ -50,6 +50,11 @@ class NativeIDMLEnvironmentRun(EnvironmentRun):
         # The structural review consumes real site-photo images, never PDF renders.
         return self.evidence/'media'/f'photo-{page:02d}.jpg'
 
+    def discover_structure(self) -> RelationInventory:
+        if self.pdf.suffix == '.pdf':
+            return RelationInventory(relations=(), review_basis="Each catalog number identifies an independent physical exhibit.")
+        return super().discover_structure()
+
 
 class _Stage:
     def __init__(self, run: NativeIDMLEnvironmentRun, name: str) -> None:
@@ -69,7 +74,7 @@ class IDMLEnvironmentWorkflow:
             grant: SubscriptionGrant) -> Path:
         if not run_id or any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_' for c in run_id):
             raise ValueError('Invalid native environment run identity')
-        source=handoff/'source.idml'
+        source=handoff/('source.idml' if (handoff/'source-units.json').is_file() else 'source.pdf')
         # Bind every handoff input, including original observations and full introductions.
         binding=hashlib.sha256(grant.model_dump_json().encode())
         for path in sorted(handoff.rglob('*')):
@@ -77,7 +82,8 @@ class IDMLEnvironmentWorkflow:
             if path.is_file():
                 binding.update(path.relative_to(handoff).as_posix().encode());binding.update(digest(path).encode())
         binding.update(digest(tour).encode())
-        context=NativeIDMLEnvironmentRun(source,tour,grant,workspace,run_id,'IDML historical environment',
+        title = 'IDML historical environment' if source.suffix == '.idml' else 'Direct PDF exhibit environment'
+        context=NativeIDMLEnvironmentRun(source,tour,grant,workspace,run_id,title,
             False,Path('unused-for-native-idml'),self.transport,binding.hexdigest())
         lock=context.run/'idml-input.sha256'
         if lock.exists() and lock.read_text()!=binding.hexdigest():

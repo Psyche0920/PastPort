@@ -298,6 +298,7 @@ class StoryAutomationWorkflow:
             brief=self.brief,
             model="test" if self.provider is not None else CodexStoryProvider.MODEL,
             timeout_seconds=240,
+            reasoning_effort="medium" if self.provider is not None else "high",
             source_index_sha256=CanonicalSerializer.digest(self.materials.index),
         )
         lock_path = self.output / "input-lock.json"
@@ -351,7 +352,7 @@ class StoryAutomationWorkflow:
             role="story",
             provider=provider_name,
             model="test" if provider_name == "fake" else CodexStoryProvider.MODEL,
-            price_version="private-story-quota-v1",
+            price_version=("private-story-quota-v1" if self.provider is not None else "private-story-quota-high-v2"),
             input_microusd_per_million=0,
             output_microusd_per_million=0,
             maximum_input_tokens=600000,
@@ -389,6 +390,22 @@ class StoryAutomationWorkflow:
                 "actual object/view opportunities. Do not reuse an earlier story. "
                 "Avoid treating modern proxies as ancient objects or mixing "
                 "historical periods."
+            ),
+            (
+                "Before drafting tasks, read the complete supplied PDF text and establish the "
+                "setting, central mystery, character stakes and causal arc. Distinguish documented "
+                "facts, catalog fiction and new fictional events. Ground every pivotal factual "
+                "inference in an identifiable PDF passage and the corresponding museum object. "
+                "Use the complete exhibit introduction for context, not a clipped citation as speech. "
+                "Open with a concrete question, let each important clue change the player's "
+                "interpretation, and make the resolution follow from clues already available. "
+                "Write concise, natural exchanges with distinct voices and motives. Each pivotal "
+                "exchange should reveal something, raise stakes or change a choice. Choose clue "
+                "order for dramatic causality within a shared room. Check reachability and valid "
+                "stations, and require travel only when the story or actual scene transition needs it. "
+                "Use only mechanics the supplied capability catalog supports. Before returning, "
+                "revise any clipped dialogue, unsupported inference, unearned reveal, unavailable "
+                "clue or action the runtime cannot execute."
             ),
             (
                 "Return SkillResult[NarrativeDraft]. Include spatial_intents with exactly "
@@ -463,7 +480,7 @@ class StoryAutomationWorkflow:
         )
         if structure == "compiled_plan_v1":
             constraints = (
-                *constraints[:2],
+                *constraints[:3],
                 "OUTPUT IS StoryPlanResult, a content-only plan. The program compiles ordered "
                 "one-task scenes followed by a final choice with two to four consequences. "
                 "Do not return package, game, rule IDs, state variables, conditions, locale keys "
@@ -474,6 +491,10 @@ class StoryAutomationWorkflow:
                 "and a source_requirement using actual target and contrast claims. Preserve "
                 "quantities consistently in text. Supply bilingual dialogue, objectives, feedback "
                 "and choice consequences; the compiler preserves them without rewriting. "
+                "Write each dialogue locale as a multi-turn exchange, one turn per line, "
+                "using 'Speaker: complete spoken sentence' with the actual speaker's name. "
+                "Keep both locales aligned in turn order. Give each exchange at least two "
+                "distinct speakers and use complete sentences rather than evidence excerpts. "
                 "Each task's feedback states its visible narrative consequence. Final choices "
                 "must differ meaningfully in consequences. Keep unsupported movement/detail/touch "
                 "unknown; do not fabricate facts. If no feasible plan exists, return "

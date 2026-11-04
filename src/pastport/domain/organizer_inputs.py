@@ -34,7 +34,7 @@ class NativeInputRequest(Contract):
     project_id: Identifier
     owner_id: Identifier
     job_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"]
     files: tuple[UploadedAsset, ...]
     options: UploadedProductionStart
     shared_player_assets: Path

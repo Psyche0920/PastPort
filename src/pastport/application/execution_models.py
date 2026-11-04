@@ -42,7 +42,7 @@ class ModelPolicy(Contract):
             or self.input_microusd_per_million != 0
             or self.output_microusd_per_million != 0
         ):
-            raise ValueError("Codex story generation permits only Sol 6.1 Medium")
+            raise ValueError("Codex story generation permits only Sol 6.1 High")
         return self
 
     def cost(self, input_tokens: int, output_tokens: int) -> int:

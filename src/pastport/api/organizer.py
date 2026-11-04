@@ -6,6 +6,8 @@ import secrets
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
 
@@ -14,6 +16,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from pydantic import ValidationError
 
 from pastport.adapters.organizer_previews import OrganizerPreviewPool
+from pastport.adapters.organizer_delivery import MAX_BYTES, delivery_name, import_delivery
 from pastport.adapters.runtime_resources import runtime_root
 from pastport.api.organizer_accounts import OrganizerAccounts
 from pastport.api.settings import Credential
@@ -383,6 +386,31 @@ class OrganizerRoutes:
                 headers={"Cache-Control": "no-store"},
             )
 
+        @router.post("/api/jobs/import-delivery", status_code=201)
+        async def delivery(request: Request, filename: str) -> JSONResponse:
+            actor = self.actor(request)
+            name = delivery_name(filename)
+            self.service.authorize(actor, name)
+            with TemporaryDirectory(prefix="pastport-delivery-") as temporary:
+                archive = Path(temporary) / "delivery.tar.gz"
+                size = 0
+                with archive.open("wb") as stream:
+                    async for chunk in request.stream():
+                        size += len(chunk)
+                        if size > MAX_BYTES:
+                            raise ServiceError("DELIVERY_TOO_LARGE", "交付包不能超过 2 GiB。", 413)
+                        stream.write(chunk)
+                async with self.service.submission:
+                    operation = asyncio.create_task(asyncio.to_thread(
+                        import_delivery, self.service.store, actor.actor_id, name, archive
+                    ))
+                    try:
+                        job = await asyncio.shield(operation)
+                    except asyncio.CancelledError:
+                        await operation
+                        raise
+            return JSONResponse(job.model_dump(mode="json"), status_code=201)
+
         @router.post("/api/jobs", status_code=202)
         async def start(request: Request) -> JSONResponse:
             job = await self.service.start(
@@ -410,7 +438,8 @@ class OrganizerRoutes:
         @router.get("/api/jobs/{job_id}/open-mounted")
         async def open_mounted(job_id: str, request: Request) -> RedirectResponse:
             job = self.service.job(job_id, self.actor(request))
-            root = self.service.directory(job.job_id) / "mounted-review" / "scene"
+            relative = "native/scene3d-1/result" if job.entry_level == "catalog3d" else "mounted-review/scene"
+            root = self.service.directory(job.job_id) / relative
             if not job.mounted_preview_ready or not (root / "scene3d/attachment.json").is_file():
                 raise ServiceError("ORGANIZER_RESULT_UNAVAILABLE", "3D 审核预览尚未就绪。", 404)
             from pastport_matched_environment.application.reference_preview import ReferencePreviewPool
@@ -543,6 +572,7 @@ class OrganizerRoutes:
                     "vr": {"original_pdf", "matched_vr"},
                     "3d": {"original_pdf", "mounted_3d"},
                     "idml3d": {"original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"},
+                    "catalog3d": {"original_pdf", "scene_splat", "scene_mesh"},
                     "raw3d": {"original_pdf", "photos", "scene_splat", "scene_mesh"},
                 }[material.entry_level]
                 if role not in allowed:

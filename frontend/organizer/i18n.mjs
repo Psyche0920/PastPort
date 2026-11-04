@@ -1,5 +1,10 @@
 // UI-only catalog. Source documents, editable content and artifacts are never translated.
 export const messages = Object.freeze({
+  "团队交付包": "Team delivery package",
+  "导入交付包": "Import delivery",
+  "展签 PDF + 已有 SPZ / PLY 场景": "Exhibit PDF + existing SPZ / PLY scene",
+  "读取展签与现场照片": "Read exhibit labels and reference photos",
+  "按展签定位同一实物": "Locate the same physical objects from the exhibit catalog",
   "IDML + Links历史配图 + 现场照片 + 已有 SPZ / PLY 场景": "IDML + linked historical images + site photos + existing SPZ / PLY scene",
   "原始史料 IDML": "Original historical source IDML",
   "IDML配套历史图片（Links ZIP，最多3GB）": "Linked historical images (Links ZIP, up to 3 GB)",
@@ -78,7 +83,7 @@ export const messages = Object.freeze({
   "我已核对，沿用旧故事": "I have reviewed the changes — reuse the story",
   "体验目标时长（分钟）": "Target play time (minutes)",
   "创作要求（留空沿用项目要求）": "Creative brief (leave blank to use the project brief)",
-  "本次允许调用 SOL 6.1 Medium 生成新故事；失败不自动重试": "Allow SOL 6.1 Medium to generate a new story for this run; no automatic retry on failure",
+  "本次允许调用 SOL 6.1 High 生成新故事；失败不自动重试": "Allow SOL 6.1 High to generate a new story for this run; no automatic retry on failure",
   "不勾灰框就重新生成故事，不会暗中使用旧故事。": "Leave the grey checkbox unchecked to generate a new story. An old story will not be substituted.",
   "生成新故事与任务": "Generate a new story and tasks",
   "请先准备环境。": "Prepare the environment first.",
