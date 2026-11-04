@@ -20,32 +20,19 @@
 
 ### 最终交付包
 
-使用有 PastPort 仓库访问权限的 GitHub 账号下载。解包后先打开 `MANIFEST.md`。
+用有 PastPort 仓库访问权限的 GitHub 账号下载。wcheung 的交付包可直接解包，打开包内的 `MANIFEST.md`。 [下载 wcheung 完整交付包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar)
 
-| 交付 | 下载 |
-|---|---|
-| **wcheung** | [完整包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
-| **maslan** | [第 1 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [第 2 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
+#### Maslan 交付清单
 
-| Maslan 下载分段 | 实际内容 |
-|---|---|
-| **第 1 段（`part-aa`）** | 完整的 `MANIFEST.md`、完整的比赛与遗产参考资料包，以及 Organizer 原始材料包的开头。 |
-| **第 2 段（`part-ab`）** | 同一个 Organizer 原始材料包的剩余字节。 |
+| 项目 | 内容 | 下载 |
+|---|---|---|
+| 比赛章程与参考资料 | 官方参赛条款、赛事说明、三份遗产参考 PDF 和候选站点清单 | [参考资料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-for-maslan.tar.gz) |
+| 可试玩游戏包 | Maslan 的独立试玩版本，可导入 Organizer | [可试玩游戏包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [启动和导入说明](README_EN.md) |
+| 游戏原始材料与匹配结果 | 原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY、匹配结果 JSON 和 CSV | [Organizer 原始材料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
+| 主办方 Vakıf 遗产资料库 | 其他遗产的原始 PDF 和配套资料 | [Google Drive 主入口](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1) |
+| 团队分工与答辩安排 | 本文中的负责人和答辩顺序 | [团队分工](#zh) |
 
-两段都要下载，按 `part-aa`、`part-ab` 的顺序合并，然后解包。解包后得到三个文件：
-
-- `MANIFEST.md`：交付清单，内含独立的可试玩游戏下载链接。
-- `pastport-for-maslan.tar.gz`：比赛章程、赛事说明、三份遗产参考 PDF 和候选站点清单。
-- `maslan-organizer-sources.tar.gz`：本版游戏用到的原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY，以及匹配结果 JSON 和 CSV。
-
-wcheung 下载后可直接解包。Maslan 把两段放在同一目录，在终端运行下面两条命令。
-
-```sh
-cat pastport-maslan-final-handoff.tar.part-aa pastport-maslan-final-handoff.tar.part-ab > pastport-maslan-final-handoff.tar
-tar -xf pastport-maslan-final-handoff.tar
-```
-
-交付包包含制作源文件和参考资料。按包内清单下载可试玩的 `wcheung.tar.gz` 或 `maslan.tar.gz`，再导入 Organizer。
+Maslan 打磨当前试玩时，只需要可试玩游戏包和对应的原始材料包。wehan 负责地图站点、配图、数据和试玩入口，等 Maslan 交付最终可玩版本后接入地图。
 
 系统设计与接口见[技术 PRD](docs/TECHNICAL_PRD.md)。
 
@@ -67,31 +54,18 @@ Upload each reviewable build to PastPort GitHub Releases as `wcheung.tar.gz` or 
 
 ### Final handoff packages
 
-Sign in to GitHub with access to the PastPort repository. Open `MANIFEST.md` after extraction.
+Sign in to GitHub with access to the PastPort repository. Extract the wcheung archive and open its `MANIFEST.md`. [Download the complete wcheung handoff](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar)
 
-| Handoff | Download |
-|---|---|
-| **wcheung** | [Full archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
-| **maslan** | [Part 1](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [Part 2](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
+#### Maslan handoff manifest
 
-| Maslan download part | Actual contents |
-|---|---|
-| **Part 1 (`part-aa`)** | The complete `MANIFEST.md`, the complete competition and heritage reference archive, and the beginning of the Organizer source archive. |
-| **Part 2 (`part-ab`)** | The remaining bytes of the same Organizer source archive. |
+| Item | Contents | Download |
+|---|---|---|
+| Competition rules and references | Official terms, information notes, three heritage reference PDFs, and the candidate site list | [Reference archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-for-maslan.tar.gz) |
+| Playable game bundle | Maslan’s standalone playable build, ready for Organizer import | [Playable game bundle](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
+| Game sources and matching results | Original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching results | [Organizer source archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
+| Official Vakıf heritage library | Original PDFs and supporting material for other sites | [Google Drive main folder](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1) |
+| Team roles and presentation plan | Ownership and presentation order in this document | [Team handoff](#en) |
 
-Download both parts, join `part-aa` followed by `part-ab`, then extract. Extraction produces three files:
-
-- `MANIFEST.md` lists the handoff items and links to the separate playable game download.
-- `pastport-for-maslan.tar.gz` contains the competition rules, information notes, three heritage reference PDFs, and the candidate site list.
-- `maslan-organizer-sources.tar.gz` contains the original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching outputs for this build.
-
-Extract the wcheung archive directly. For maslan, save both parts in the same directory and run the following commands.
-
-```sh
-cat pastport-maslan-final-handoff.tar.part-aa pastport-maslan-final-handoff.tar.part-ab > pastport-maslan-final-handoff.tar
-tar -xf pastport-maslan-final-handoff.tar
-```
-
-The handoff packages contain source materials and references. Use the manifest to download the playable `wcheung.tar.gz` or `maslan.tar.gz` for Organizer import.
+For work on the current demo, Maslan only needs the playable game and its source archive. wehan owns the map sites, images, data, and launch entry, and will connect the final playable build to the map once Maslan delivers it.
 
 See the [Technical PRD](docs/TECHNICAL_PRD_EN.md) for architecture and interfaces.
