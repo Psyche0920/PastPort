@@ -17,6 +17,8 @@ Download from the [private GitHub Release](https://github.com/Psyche0920/PastPor
 | `wcheung.tar.gz` | The 42 standalone demo *The Last Recording*, including the 3D scene, investigation, clue review and three endings. The delivery record was previously named `42handover`. |
 | `maslan.tar.gz` | The standalone player bundle from completed Organizer job `3d-test777`. |
 
+**Maslan: Muradiye source materials.** The folder contains the original IDML, its `Links` folder, and the chapter PDF. [Open the Muradiye source folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
+
 Extract the archive, enter the matching directory and follow `OPEN.txt`. Open the local address in a WebGL-capable browser. Node.js is required. The bundles are separate from local Organizer job records.
 
 ## Startup and use

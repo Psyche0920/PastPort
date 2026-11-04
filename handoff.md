@@ -29,7 +29,7 @@
 | 比赛章程与参考资料 | 官方参赛条款、赛事说明、三份遗产参考 PDF 和候选站点清单 | [参考资料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-for-maslan.tar.gz) |
 | 可试玩游戏包 | Maslan 的独立试玩版本，可导入 Organizer | [可试玩游戏包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [启动和导入说明](README_EN.md) |
 | 游戏原始材料与匹配结果 | 原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY、匹配结果 JSON 和 CSV | [Organizer 原始材料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
-| 主办方 Vakıf 遗产资料库 | 其他遗产的原始 PDF 和配套资料 | [Google Drive 主入口](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1) |
+| 穆拉迪遗址原始资料 | 原始 IDML、配套 `Links` 文件夹和章节 PDF | [Google Drive 穆拉迪文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
 | 团队分工与答辩安排 | 本文中的负责人和答辩顺序 | [团队分工](#zh) |
 
 Maslan 打磨当前试玩时，只需要可试玩游戏包和对应的原始材料包。wehan 负责地图站点、配图、数据和试玩入口，等 Maslan 交付最终可玩版本后接入地图。
@@ -63,7 +63,7 @@ Sign in to GitHub with access to the PastPort repository. Extract the wcheung ar
 | Competition rules and references | Official terms, information notes, three heritage reference PDFs, and the candidate site list | [Reference archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-for-maslan.tar.gz) |
 | Playable game bundle | Maslan’s standalone playable build, ready for Organizer import | [Playable game bundle](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
 | Game sources and matching results | Original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching results | [Organizer source archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
-| Official Vakıf heritage library | Original PDFs and supporting material for other sites | [Google Drive main folder](https://drive.google.com/drive/folders/1JKfRtUyYACkqpVLhLeMsWE0kA2mdSNQ1) |
+| Muradiye site source materials | Original IDML, its `Links` folder, and the chapter PDF | [Muradiye Google Drive folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
 | Team roles and presentation plan | Ownership and presentation order in this document | [Team handoff](#en) |
 
 For work on the current demo, Maslan only needs the playable game and its source archive. wehan owns the map sites, images, data, and launch entry, and will connect the final playable build to the map once Maslan delivers it.
