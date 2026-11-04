@@ -27,6 +27,8 @@
 | **wcheung** | [完整包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
 | **maslan** | [第 1 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [第 2 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
 
+**Maslan 第 1 段**包含清单 `MANIFEST.md`、比赛与遗产参考资料包，以及 Organizer 原始材料包的前半段。**第 2 段**接着存放同一个原始材料包的剩余部分。两段是按字节切开的，需要按顺序合并后再解包。
+
 wcheung 下载后可直接解包。Maslan 把两段放在同一目录，在终端运行下面两条命令。
 
 ```sh
@@ -62,6 +64,8 @@ Sign in to GitHub with access to the PastPort repository. Open `MANIFEST.md` aft
 |---|---|
 | **wcheung** | [Full archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
 | **maslan** | [Part 1](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [Part 2](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
+
+**Maslan Part 1** contains `MANIFEST.md`, the competition and heritage reference archive, and the beginning of the Organizer source archive. **Part 2** contains the rest of that same source archive. The split is by byte offset. Join the parts in order before extracting.
 
 Extract the wcheung archive directly. For maslan, save both parts in the same directory and run the following commands.
 
