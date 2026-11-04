@@ -21,6 +21,8 @@ Download from the [private GitHub Release](https://github.com/Psyche0920/PastPor
 
 Extract the archive, enter the matching directory and follow `OPEN.txt`. Open the local address in a WebGL-capable browser. Node.js is required. The bundles are separate from local Organizer job records.
 
+**Workflow.** Main and the SDKs aim to generate a playable, editable first version from source materials. The team can edit and play an existing bundle directly, then integrate reusable improvements into Main and the SDKs after acceptance. The city map and public publishing integration remain to be built and verified. See the [team handoff](handoff.md#en).
+
 ## Startup and use
 
 The application repository is `/Users/hanweijia/PastPort`; its local main source is the baseline. Requires Python 3.12, uv, Node.js and a WebGL-capable browser.

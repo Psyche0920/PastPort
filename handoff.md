@@ -10,9 +10,21 @@
 
 | 负责人 | 交付与验收 |
 |---|---|
-| **wcheung** | 基于现有四二 3D 环境打磨最佳 Demo，覆盖 Story Agent、任务设计、玩法插件、玩家端呈现和组包。对白完整，任务目标清楚，玩家能用线索操作并看到后果。将反复手改且可复用的改法加回生成规则、玩法校验、展品绑定或组包检查。用一次自动化复跑验证效果，记录仍需手调的部分。最佳可玩 Demo 是主要交付。 |
+| **wcheung** | 基于现有四二 3D 环境打磨最佳 Demo，覆盖 Story Agent、任务设计、玩法插件、玩家端呈现和组包。对白完整，任务目标清楚，玩家能用线索操作并看到后果。将反复手改且可复用的改法加回生成规则、玩法校验、展品绑定或组包检查。先交付最佳可玩 Demo，随后对可复用改进做自动化复跑验证并记录仍需手调的部分。 |
 | **maslan** | 打磨答辩主试玩，自主选择 2D、重新生成 3D 或沿用已有 3D 做映射。玩家能完成一段完整体验，并用现场物件或有出处的史料做一次有后果的决定。历史内容注明出处，虚构剧情明确标记。 |
 | **wehan** | 负责用户端、账号、城市地图与平台自动化。地图可打开至少两处不同的真实 vakıf 遗产，展示图文和出处并直达主试玩。现场通过 Organizer 新增或编辑内容，再回用户端确认变化。 |
+
+### 工作方式与交付
+
+先各自下载、启动和试玩现有游戏包，在游戏包的代码和资源上打磨 Demo，可以用 Codex 辅助修改。直接修改并启动现有包无需重新运行 Main 的生成流程。
+
+- **maslan** 负责最佳遗产试玩，重点打磨剧情、玩家行动、线索、互动反馈与结局。场景可选 2D、现有 3D 或新生成 3D。历史内容标明来源，虚构内容标明性质。
+- **wcheung** 负责四二最佳试玩，重点打磨故事、任务、玩法插件和玩家端呈现，让线索、玩家操作和结果形成完整可玩的流程。完成试玩后，将适合复用的改进整理到 Story Agent、玩法、绑定和组包校验，再验证自动生成结果。
+- **wehan** 负责用户端、账号、城市地图、自动化和后续平台接入。城市地图和游戏发布接入仍待建设和验证。
+
+Main 和 SDK 的目标是基于材料生成可试玩、可继续编辑的游戏初版。主办方审核后可直接使用，或与 Codex 一起打磨并再次试玩。团队先验收优化后的游戏包，再将可复用的经验落实到 Main 和 SDK，使后续生成也能受益。直接修改游戏包不会自动改变生成流程。
+
+用户平台建成后，将验收通过的游戏部署到可访问的位置，从地图对应遗产入口打开。地图进入游戏、资源加载和返回平台需要联调；账号或存档共享需另行对接。现有 Organizer 导入可登记并打开符合格式的试玩包；修改后仍需按实际打包规范验证导入与试玩，不代表公众平台发布功能已经完成。
 
 答辩顺序为 **wehan 城市地图 → maslan 主试玩 → wcheung 技术复用 → wehan 后台更新**。wcheung 用四二展示换一份图文 PDF 和场景后如何匹配实物并点击查看介绍。四二作为复用样例，两处真实遗产从地图展示。耗时的生成步骤用已完成的结果说明。
 
@@ -44,9 +56,21 @@ Deliver a live, end-to-end experience. Users discover multiple real vakıf herit
 
 | Owner | Delivery and acceptance |
 |---|---|
-| **wcheung** | Polish the strongest playable demo using the existing 42 3D environment. Own the chain from Story Agent through task design, gameplay plugins, player presentation and packaging. Dialogue must be complete, objectives clear, and clues actionable with visible consequences. Where fixes are repeatable, incorporate them into generation rules, gameplay checks, exhibit bindings or package validation. Run the automated chain once to check the improvements and record any remaining manual work. The polished playable demo is the primary deliverable. |
+| **wcheung** | Polish the strongest playable demo using the existing 42 3D environment. Own the chain from Story Agent through task design, gameplay plugins, player presentation and packaging. Dialogue must be complete, objectives clear, and clues actionable with visible consequences. Where fixes are repeatable, incorporate them into generation rules, gameplay checks, exhibit bindings or package validation. Deliver the polished playable demo first, then validate reusable improvements with an automated run and record remaining manual work. |
 | **maslan** | Polish the featured game for the jury. Choose 2D, a newly generated 3D scene, or mapping into an existing 3D environment. Players should be able to complete an experience and use a site object or sourced historical clue to make a consequential choice. Cite historical sources and label fictional material. |
 | **wehan** | Own the player-facing product, accounts, city map and platform automation. The map opens at least two distinct real vakıf heritage sites with images, descriptions and sources, and links directly to the featured game. Demonstrate a content addition or edit in Organizer and verify it in the player-facing product. |
+
+### Working and delivery workflow
+
+First, each owner downloads, starts and plays their existing game bundle. Polish the demo by editing the bundle’s code and assets, with Codex where useful. Editing and running an existing bundle does not require rerunning the Main generation pipeline.
+
+- **maslan** owns the best heritage demo, focusing on story, player actions, clues, feedback and endings. Choose 2D, an existing 3D environment or a newly generated one. Cite historical sources and label fiction.
+- **wcheung** owns the best 42 demo, polishing story, tasks, gameplay plugins and player presentation so clues lead to actions and consequences. After play-testing, integrate reusable improvements into Story Agent, gameplay, bindings and package checks, then validate the automated output.
+- **wehan** owns the player product, accounts, city map, automation and eventual platform integration. The city map and public game publishing integration still need implementation and validation.
+
+Main and the SDKs aim to generate a playable, editable first version from source materials. After review, an organizer may use it directly or polish and replay it with tools such as Codex. The team accepts the improved bundle first, then carries reusable lessons back into Main and the SDKs. Editing a game bundle does not automatically change subsequent generated output.
+
+Once the user platform exists, deploy an accepted game to an accessible location and open it from the corresponding map entry. Map-to-game navigation, asset loading and return navigation need integration testing. Shared accounts or saves require additional integration. The existing Organizer importer can register and open compatible playable bundles; validate the packaging format and preview after edits. Public platform publishing remains to be built and verified.
 
 Present in this order: **wehan (city map), maslan (featured game), wcheung (workflow reuse), wehan (Organizer update)**. Use the 42 demo to show how a different illustrated PDF and scene can be matched and how players open an object's description. The map provides the two real heritage sites. Use completed runs to explain generation steps that take longer than the live slot allows.
 

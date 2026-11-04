@@ -22,6 +22,8 @@ This document defines the responsibilities, technology, inputs, outputs, workflo
 - [Development, verification and delivery](#verification-and-delivery)
 - [Next steps](#next-steps)
 
+The team first polishes and play-tests existing bundles, then carries reusable story, gameplay, binding and packaging improvements back into Main and the SDKs after acceptance. The goal is an editable first game built from source materials. City map and public publishing integration remain to be built and validated. See the [handoff](../handoff.md#en) for ownership.
+
 <a id="product-and-status"></a>
 ## 1. Product goal and current status
 

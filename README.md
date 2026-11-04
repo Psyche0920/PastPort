@@ -21,6 +21,8 @@
 
 解压后进入同名目录，按 `OPEN.txt` 启动，使用支持 WebGL 的浏览器打开其中的本机地址。需要 Node.js。交付包独立于 Organizer 的本机记录。
 
+**工作流程。** Main 和 SDK 的目标是基于素材生成可试玩、可编辑的游戏初版。团队可直接修改并试玩现有游戏包，验收后再将可复用的改进接回 Main 和 SDK。城市地图和面向公众的发布接入仍待建设和验证。详见[团队交接](handoff.md#zh)。
+
 ## 启动与使用
 
 当前应用仓库是 `/Users/hanweijia/PastPort`，以这里的本地 main 源码为准。需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。
