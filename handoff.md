@@ -27,7 +27,16 @@
 | **wcheung** | [完整包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
 | **maslan** | [第 1 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [第 2 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
 
-**Maslan 第 1 段**包含清单 `MANIFEST.md`、比赛与遗产参考资料包，以及 Organizer 原始材料包的前半段。**第 2 段**接着存放同一个原始材料包的剩余部分。两段是按字节切开的，需要按顺序合并后再解包。
+| Maslan 下载分段 | 实际内容 |
+|---|---|
+| **第 1 段（`part-aa`）** | 完整的 `MANIFEST.md`、完整的比赛与遗产参考资料包，以及 Organizer 原始材料包的开头。 |
+| **第 2 段（`part-ab`）** | 同一个 Organizer 原始材料包的剩余字节。 |
+
+两段都要下载，按 `part-aa`、`part-ab` 的顺序合并，然后解包。解包后得到三个文件：
+
+- `MANIFEST.md`：交付清单，内含独立的可试玩游戏下载链接。
+- `pastport-for-maslan.tar.gz`：比赛章程、赛事说明、三份遗产参考 PDF 和候选站点清单。
+- `maslan-organizer-sources.tar.gz`：本版游戏用到的原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY，以及匹配结果 JSON 和 CSV。
 
 wcheung 下载后可直接解包。Maslan 把两段放在同一目录，在终端运行下面两条命令。
 
@@ -65,7 +74,16 @@ Sign in to GitHub with access to the PastPort repository. Open `MANIFEST.md` aft
 | **wcheung** | [Full archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
 | **maslan** | [Part 1](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [Part 2](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
 
-**Maslan Part 1** contains `MANIFEST.md`, the competition and heritage reference archive, and the beginning of the Organizer source archive. **Part 2** contains the rest of that same source archive. The split is by byte offset. Join the parts in order before extracting.
+| Maslan download part | Actual contents |
+|---|---|
+| **Part 1 (`part-aa`)** | The complete `MANIFEST.md`, the complete competition and heritage reference archive, and the beginning of the Organizer source archive. |
+| **Part 2 (`part-ab`)** | The remaining bytes of the same Organizer source archive. |
+
+Download both parts, join `part-aa` followed by `part-ab`, then extract. Extraction produces three files:
+
+- `MANIFEST.md` lists the handoff items and links to the separate playable game download.
+- `pastport-for-maslan.tar.gz` contains the competition rules, information notes, three heritage reference PDFs, and the candidate site list.
+- `maslan-organizer-sources.tar.gz` contains the original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching outputs for this build.
 
 Extract the wcheung archive directly. For maslan, save both parts in the same directory and run the following commands.
 
