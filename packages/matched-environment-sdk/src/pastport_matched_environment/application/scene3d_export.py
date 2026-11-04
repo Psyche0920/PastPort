@@ -187,9 +187,9 @@ def export_scene(root: Path, archive: Path, *, include_assets: bool = True) -> N
         ]
         if source_filename.endswith(".idml"):
             for name in ("source-units.json", "idml-document.json", "idml-matches.json", "idml-review-inventory.json"):
-                source = root / name
-                if source.is_file():
-                    paths.append(source)
+                source_file = root / name
+                if source_file.is_file():
+                    paths.append(source_file)
         if style is not None:
             manifest["appearance"] = json.loads(style.model_dump_json())
             paths.extend([root / "scene3d/style-variant.json", root / "scene3d" / style.panorama])

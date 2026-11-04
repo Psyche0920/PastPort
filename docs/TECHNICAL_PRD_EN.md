@@ -636,6 +636,8 @@ Local integration and a real-material playable pipeline have been verified. Qual
 git diff --check
 ```
 
+CI installs all five locked SDKs/extras for root tests and invokes `python -m pytest` with the repository module entry. Application/test mypy uses `MYPYPATH=src:tests` and `--explicit-package-bases`; all five SDKs receive separate strict type checks. Lint, formatting, types, schemas, builds and each native SDK regression report independently after successful tooling installation, even if an earlier check fails. The final `ci` gate still requires every job to succeed; existing errors and assertions are not bypassed.
+
 Use the corresponding `node --test` cases for JS plugins/bindings/space and inspect affected browser interaction. A CI configuration does not prove a particular GitHub run passed; verify remote state separately.
 
 ### 12.3 Evidence layers

@@ -8,7 +8,7 @@ async function files(directory) {
   for (const item of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, item.name);
     if (item.isDirectory()) results.push(...(await files(path)));
-    else if (item.name.endsWith(".mjs")) results.push(path);
+    else if (/\.(?:mjs|js)$/u.test(item.name)) results.push(path);
   }
   return results;
 }
