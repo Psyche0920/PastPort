@@ -18,6 +18,24 @@
 
 每次有新版，沿用 `wcheung.tar.gz` 和 `maslan.tar.gz`，上传到 PastPort GitHub Releases，用发布标签区分版本。发布说明写清变更和试玩起点，再更新 [中文 README](README.md) 和 [英文 README](README_EN.md) 里对应的下载链接并推送。wehan 下载后导入 Organizer，在「制作进度与交付」打开同名记录试玩验收。彩排确认地图能直达主试玩，以及后台更新能在用户端看到。
 
+### 最终交付包
+
+使用有 PastPort 仓库访问权限的 GitHub 账号下载。解包后先打开 `MANIFEST.md`。
+
+| 交付 | 下载 |
+|---|---|
+| **wcheung** | [完整包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
+| **maslan** | [第 1 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [第 2 段](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
+
+wcheung 下载后可直接解包。Maslan 把两段放在同一目录，在终端运行下面两条命令。
+
+```sh
+cat pastport-maslan-final-handoff.tar.part-aa pastport-maslan-final-handoff.tar.part-ab > pastport-maslan-final-handoff.tar
+tar -xf pastport-maslan-final-handoff.tar
+```
+
+交付包包含制作源文件和参考资料。按包内清单下载可试玩的 `wcheung.tar.gz` 或 `maslan.tar.gz`，再导入 Organizer。
+
 系统设计与接口见[技术 PRD](docs/TECHNICAL_PRD.md)。
 
 <a id="en"></a>
@@ -35,5 +53,23 @@ Deliver a live, end-to-end experience. Users discover multiple real vakıf herit
 Present in this order: **wehan (city map), maslan (featured game), wcheung (workflow reuse), wehan (Organizer update)**. Use the 42 demo to show how a different illustrated PDF and scene can be matched and how players open an object's description. The map provides the two real heritage sites. Use completed runs to explain generation steps that take longer than the live slot allows.
 
 Upload each reviewable build to PastPort GitHub Releases as `wcheung.tar.gz` or `maslan.tar.gz`, using release tags for versions. Describe the changes and where to start playing, then update the corresponding download links in both [Chinese README](README.md) and [English README](README_EN.md) and push the edits. wehan downloads each bundle, imports it into Organizer, and tests the matching entry under **Progress & delivery**. Rehearse the map-to-game transition and verify that an Organizer edit appears in the player-facing product.
+
+### Final handoff packages
+
+Sign in to GitHub with access to the PastPort repository. Open `MANIFEST.md` after extraction.
+
+| Handoff | Download |
+|---|---|
+| **wcheung** | [Full archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar) |
+| **maslan** | [Part 1](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-aa) · [Part 2](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-maslan-final-handoff.tar.part-ab) |
+
+Extract the wcheung archive directly. For maslan, save both parts in the same directory and run the following commands.
+
+```sh
+cat pastport-maslan-final-handoff.tar.part-aa pastport-maslan-final-handoff.tar.part-ab > pastport-maslan-final-handoff.tar
+tar -xf pastport-maslan-final-handoff.tar
+```
+
+The handoff packages contain source materials and references. Use the manifest to download the playable `wcheung.tar.gz` or `maslan.tar.gz` for Organizer import.
 
 See the [Technical PRD](docs/TECHNICAL_PRD_EN.md) for architecture and interfaces.
