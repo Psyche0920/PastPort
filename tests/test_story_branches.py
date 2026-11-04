@@ -4,9 +4,8 @@ import asyncio
 import copy
 import json
 import subprocess
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -24,7 +23,7 @@ def words(zh: str, en: str) -> dict[str, str]:
 
 
 def branch_fixture() -> dict[str, Any]:
-    original = cast(Callable[[], dict[str, Any]], plan_fixture)()["plan"]
+    original = plan_fixture()["plan"]
     task = original["tasks"][0]
     branches = []
     for title, finding in [

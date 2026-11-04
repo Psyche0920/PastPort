@@ -637,6 +637,8 @@ PASTPORT_PORT=18839 node var/runtime-layout-20261101/release-run/game-3d/serve3d
 git diff --check
 ```
 
+已挂载环境的审核预览由 API 通过 `MountedEnvironmentPreviews` Protocol 使用；`SDKMountedPreviewPool` 在 adapter 内首次打开时才加载可选 SDK，并保留同一 pool 的进程重用及关闭生命周期。API 模块不直接依赖 SDK 类型或实现。
+
 CI 为主测试安装锁定的五个 SDK 和 extras，并用 `python -m pytest` 保留仓库模块入口；应用/测试 mypy 使用 `MYPYPATH=src:tests` 与 `--explicit-package-bases`，五个 SDK 另做严格类型检查。Lint、格式、类型、Schema、构建和各 SDK 回归独立报告；工具安装成功后，前一检查失败不掩盖后续诊断。最终 `ci` gate 仍要求全部 job 成功；不跳过既有错误或放宽断言。
 
 JS 插件、绑定和空间检查使用各自的 `node --test` 用例；实际浏览器必须检查受影响交互。CI 配置存在不等于 GitHub 上该次 CI 已通过，远端状态应另行核实。

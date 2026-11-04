@@ -636,6 +636,8 @@ Local integration and a real-material playable pipeline have been verified. Qual
 git diff --check
 ```
 
+The API accesses mounted-review previews through the core `MountedEnvironmentPreviews` Protocol. `SDKMountedPreviewPool` loads the optional SDK inside the adapter on first use and preserves process reuse and shutdown ownership. The API module does not import SDK types or implementations.
+
 CI installs all five locked SDKs/extras for root tests and invokes `python -m pytest` with the repository module entry. Application/test mypy uses `MYPYPATH=src:tests` and `--explicit-package-bases`; all five SDKs receive separate strict type checks. Lint, formatting, types, schemas, builds and each native SDK regression report independently after successful tooling installation, even if an earlier check fails. The final `ci` gate still requires every job to succeed; existing errors and assertions are not bypassed.
 
 Use the corresponding `node --test` cases for JS plugins/bindings/space and inspect affected browser interaction. A CI configuration does not prove a particular GitHub run passed; verify remote state separately.

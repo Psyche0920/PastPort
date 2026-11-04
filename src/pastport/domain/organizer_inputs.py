@@ -8,6 +8,20 @@ from pydantic import Field
 from pastport.domain.common import Contract, Identifier, Sha256, Text
 from pastport.domain.game_making import GameMakingRequest
 
+UploadRole = Literal[
+    "original_pdf",
+    "photos",
+    "mapping_pdf",
+    "tour",
+    "matched_vr",
+    "mounted_3d",
+    "scene_splat",
+    "scene_mesh",
+    "original_idml",
+    "historical_links",
+]
+NativeEntryLevel = Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
+
 
 class UploadedProductionStart(Contract):
     stop_after: Literal["environment", "game"] = "game"
@@ -19,12 +33,16 @@ class UploadedProductionStart(Contract):
     max_environment_calls: int = Field(default=20, ge=1, le=40)
     max_recorded_tokens: int = Field(default=250000, ge=1000, le=1000000)
     target_minutes: int = Field(default=10, ge=3, le=60)
-    brief: Text = "Create an original concise heritage story with explicit tasks, spatial intents and supported gameplay intents from these registered inputs."
+    brief: Text = (
+        "Create an original concise heritage story with explicit task"
+        "s, spatial intents and supported gameplay intents from these"
+        " registered inputs."
+    )
 
 
 class UploadedAsset(Contract):
     file_id: Identifier
-    role: Literal["original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh", "original_idml", "historical_links"]
+    role: UploadRole
     path: Path
     filename: Text
     sha256: Sha256
@@ -34,7 +52,7 @@ class NativeInputRequest(Contract):
     project_id: Identifier
     owner_id: Identifier
     job_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
+    entry_level: NativeEntryLevel
     files: tuple[UploadedAsset, ...]
     options: UploadedProductionStart
     shared_player_assets: Path
