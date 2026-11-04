@@ -20,6 +20,11 @@ def main(*, default_skill_directory: Path | None = None) -> None:
     parser.add_argument("--skills", type=Path, default=default_skill_directory or Path("skills"))
     parser.add_argument("--brief", required=True)
     parser.add_argument("--revalidate-saved-response", action="store_true")
+    parser.add_argument(
+        "--structure-profile",
+        choices=("compiled_plan_v1", "compiled_branch_v1"),
+        default="compiled_plan_v1",
+    )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     with (args.output / ".story.lock").open("a") as lock:
@@ -35,6 +40,7 @@ def main(*, default_skill_directory: Path | None = None) -> None:
                     args.skills,
                     args.brief,
                     revalidate_saved_response=args.revalidate_saved_response,
+                    structure_profile=args.structure_profile,
                 ).run()
             )
         except ServiceError as error:

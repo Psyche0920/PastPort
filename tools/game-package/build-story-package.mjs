@@ -11,7 +11,7 @@ import {GameAssetPublisher} from './runtime-assets.mjs';
 const sourceRoot=path.dirname(fileURLToPath(import.meta.url));
 const json=value=>JSON.stringify(value,null,2)+'\n';
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-async function pluginHash(){const digest=createHash('sha256');for(const name of ['plugins.mjs','coverage.mjs','gameplay-catalog.mjs']){digest.update(name+'\0');digest.update(await readFile(path.resolve(sourceRoot,'../../gameplay/plugins',name)));digest.update('\0');}return digest.digest('hex');}
+async function pluginHash(){const digest=createHash('sha256');for(const name of ['plugins.mjs','investigation.mjs','coverage.mjs','gameplay-catalog.mjs']){digest.update(name+'\0');digest.update(await readFile(path.resolve(sourceRoot,'../../gameplay/plugins',name)));digest.update('\0');}return digest.digest('hex');}
 const requireValue=(value,message)=>{if(!value)throw new Error(message);};
 
 async function readJson(filename) {

@@ -1,8 +1,24 @@
 """Preview repairs preserve meaning-bearing data and leave ambiguous cases unresolved."""
 
 import json
+from typing import TypedDict
 
 from pastport.application.preview_normalization import PreviewOutputNormalizer
+
+
+class ChoiceGuard(TypedDict):
+    kind: str
+    decision_id: str
+    option_id: str
+
+
+class OptionRule(TypedDict):
+    rule_id: str
+    once_key: str
+    event: str
+    target_id: str
+    guard: ChoiceGuard
+    effects: list[object]
 
 
 def test_fallback_priority_repair_changes_only_the_fallback_order() -> None:
@@ -67,7 +83,7 @@ def test_ambiguous_fallbacks_are_not_guessed() -> None:
 
 
 def test_exclusive_option_rules_receive_unique_once_keys_without_changing_meaning() -> None:
-    rules = [
+    rules: list[OptionRule] = [
         {
             "rule_id": "r-" + option,
             "once_key": "shared",

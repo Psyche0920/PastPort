@@ -19,12 +19,21 @@ def test_model_schema_accepts_source_keys_and_rejects_native_uuid() -> None:
     evidence = EvidencePackage.model_validate_json((FIXTURES / "evidence.json").read_bytes())
     contract = StoryReferenceContract.from_evidence(evidence)
     schema = contract.constrain(SkillResult[NarrativeDraft].model_json_schema())
+    assert isinstance(schema, (dict, bool))
     module = json.loads((FIXTURES / "draft-result.json").read_text())
     payload = SkillResult[NarrativeDraft](
-        request_id="test-operation", skill="narrative", mode="draft", input_refs=(),
-        decision="complete", reason_code="TEST_COMPLETE", reason="Synthetic schema check",
-        payload=NarrativeDraft.model_validate_json(json.dumps(module["payload"])), issues=(),
-        changed_ids=(), evidence_requests=(), tool_request=None,
+        request_id="test-operation",
+        skill="narrative",
+        mode="draft",
+        input_refs=(),
+        decision="complete",
+        reason_code="TEST_COMPLETE",
+        reason="Synthetic schema check",
+        payload=NarrativeDraft.model_validate_json(json.dumps(module["payload"])),
+        issues=(),
+        changed_ids=(),
+        evidence_requests=(),
+        tool_request=None,
     ).model_dump(mode="json")
     assert not list(Draft202012Validator(schema).iter_errors(payload))
     payload["payload"]["authoring_report"][0]["heritage_refs"] = ["object:wrong-native-id"]

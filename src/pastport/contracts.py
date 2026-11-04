@@ -40,6 +40,12 @@ from pastport.domain.modules import (
     ReviseRequest,
 )
 from pastport.domain.packages import PackageBundle, RuntimePackage, ValidationReport
+from pastport.domain.story_plan import (
+    BranchStoryPlan,
+    BranchStoryPlanResult,
+    StoryPlan,
+    StoryPlanResult,
+)
 from pastport.domain.workflow import (
     BudgetPolicy,
     ExecutionMetadata,
@@ -49,9 +55,9 @@ from pastport.domain.workflow import (
     WorkflowState,
 )
 
-from pastport.domain.story_plan import StoryPlan, StoryPlanResult
-
 SCHEMAS: dict[str, type[Contract]] = {
+    "branch-story-plan": BranchStoryPlan,
+    "branch-story-plan-result": BranchStoryPlanResult,
     "story-plan": StoryPlan,
     "story-plan-result": StoryPlanResult,
     "artifact-ref": ArtifactRef,

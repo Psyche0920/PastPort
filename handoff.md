@@ -93,3 +93,22 @@ Sign in to GitHub with access to the PastPort repository. Extract the wcheung ar
 For work on the current demo, Maslan only needs the playable game and its source archive. wehan owns the map sites, images, data, and launch entry, and will connect the final playable build to the map once Maslan delivers it.
 
 See the [Technical PRD](docs/TECHNICAL_PRD_EN.md) for architecture and interfaces.
+
+
+## wcheung 本机开发的合入边界 / Local integration boundary
+
+当前分支包含共用 Story profile/schema/compiler、玩家呈现与封装，以及对应测试和双语规格的待审改动。它们属于 source-review 候选，不代表已经合入 main。按功能组审查、测试并通过 PR 集成；不要把本机制作目录直接复制到 main。
+
+`.runtime/`、原始照片/PDF/SPZ/mesh、grant、执行/审核数据库、备份 patch 和临时 probe 不进入 source commit。可编辑故事稿、编译后的试玩包与验证记录作为独立 release 内容交接。当前第四幕是人工创作的 runtime-package 扩展；已完成旧版存档通过精确旧包校验和共用引擎重播续接，不改历史审核状态。保存的 Spark LOD adapter 仍是特定 renderer 的准备步骤，尚未作为通用自动化验收。
+
+The working branch contains review candidates for shared Story profiles/schemas/compiler, player presentation/packaging, matching tests and bilingual specifications. Integrate reviewed functional groups through a PR; do not copy a local production directory directly into main. `.runtime/`, raw photos/PDF/SPZ/meshes, grants, execution/review databases, backup patches and temporary probes stay out of source commits. Editable story content, compiled playable output and verification records are separate release materials. Act IV is a human-authored runtime-package extension. Completed prior saves continue only after exact prior-package validation and replay through the shared engine; historical review authority is unchanged. The saved Spark LOD adapter remains renderer-specific preparation, not accepted general automation.
+
+
+四玩法试玩版 / Four-mechanic preview: image differences, drag timeline, scene-object search and chat-image reconstruction are registered JS activities with source-backed blueprint validation and reusable Skill templates. Native illustrations and authored case screenshots are original fiction, not field photographs. A new versioned local package preserves the earlier build/saves; reading-only completion is not migrated into puzzle completion. Functional traversal, browser UI review and real-device FPS remain distinct acceptance checks. The typed Story/Gameplay SDK still requires separate intent/catalog integration before a fresh automatic chain can claim these patterns.
+
+
+### 2026-11-04 零模型交付验收 / Zero-model delivery acceptance
+
+用户报告四玩法试玩无问题后，在独立 `.runtime/delivery-r4-20261104` 从保存的故事和显式 blueprint 复跑共用编译/组包器；runtime 与呈现内容和试玩版一致。新包通过包内引擎36组分支/结局检查、正式 Organizer importer 的隔离 store 导入/重复导入/持久化与全文件 checksum、正式 preview manager HTTP资源检查，以及 browser 自动LOD→人物介绍→3D调查。交付候选为本机 Desktop/PastPort-delivery-20261104/wcheung.tar.gz；没有发布或推送，也未修改现有 Organizer 数据库。首次 LOD 在测试 browser 中耗时数分钟，未重测FPS。
+
+Following user-reported acceptance, the saved story and explicit blueprint were replayed through shared compilation/assembly in an isolated workspace. Runtime and presentation matched the tested build. The candidate passed 36 packaged-engine route/ending combinations, production Organizer import/idempotency/persistence and all file checksums in an isolated store, production preview HTTP checks, and browser LOD preparation → character introduction → 3D investigation. No fresh model generation, publication, push, existing Organizer database changes or new FPS measurement was performed. The four-mechanic typed intent/catalog integration remains outside this zero-model acceptance.

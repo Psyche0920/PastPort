@@ -469,8 +469,12 @@ def test_neutral_task_rules_allow_four_strips_without_plugin_implementation_fiel
         "rules": {"width": 4, "height": 4, "pieces": [[1, 4]] * 4, "rotation_allowed": True},
     }
     task = TaskTilingIntent.model_validate_json(json.dumps(raw))
-    assert load_gameplay_catalog().profile(task.capability_id).accepts(task.rules)
-    raw["rules"]["kind"] = "tiling"
+    capability = load_gameplay_catalog().profile(task.capability_id)
+    assert capability is not None
+    assert capability.accepts(task.rules)
+    rules = raw["rules"]
+    assert isinstance(rules, dict)
+    rules["kind"] = "tiling"
     with pytest.raises(ValueError):
         TaskTilingIntent.model_validate_json(json.dumps(raw))
 

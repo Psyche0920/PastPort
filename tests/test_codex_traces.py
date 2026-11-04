@@ -39,7 +39,7 @@ def test_trace_is_saved_before_waiting_and_known_usage_survives_cleanup_timeout(
     class Handle:
         id = "turn-1"
 
-        async def run(self):
+        async def run(self) -> SimpleNamespace:
             saved = store.read(request().request_key)
             assert saved is not None and saved.turn_id == self.id and saved.state == "turn_started"
             if phase == "running":
@@ -54,25 +54,25 @@ def test_trace_is_saved_before_waiting_and_known_usage_survives_cleanup_timeout(
     class Thread:
         id = "thread-1"
 
-        async def turn(self, *args, **kwargs):
+        async def turn(self, *args: object, **kwargs: object) -> Handle:
             calls.append(1)
             return Handle()
 
     class Client:
-        def __init__(self, config):
+        def __init__(self, config: object) -> None:
             pass
 
-        async def __aenter__(self):
+        async def __aenter__(self) -> "Client":
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *args: object) -> None:
             if phase == "cleanup":
                 await asyncio.sleep(10)
 
-        async def account(self):
+        async def account(self) -> SimpleNamespace:
             return SimpleNamespace(account=SimpleNamespace(root=SimpleNamespace(type="chatgpt")))
 
-        async def thread_start(self, **kwargs):
+        async def thread_start(self, **kwargs: object) -> Thread:
             assert kwargs["ephemeral"] is True
             return Thread()
 

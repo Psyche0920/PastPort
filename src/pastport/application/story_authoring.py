@@ -13,7 +13,9 @@ from pastport.domain.story_inputs import EnvironmentSnapshot
 
 
 class StoryInputLock(Contract):
-    structure_profile: Literal["authored_graph", "compiled_plan_v1"] = "authored_graph"
+    structure_profile: Literal["authored_graph", "compiled_plan_v1", "compiled_branch_v1"] = (
+        "authored_graph"
+    )
     compiler_sha256: Sha256 | None = None
     project_id: Identifier
     original_pdf_sha256: Sha256
@@ -160,7 +162,10 @@ class StoryDraftInspector:
             unrelated = {
                 obj.stable_id
                 for obj in museum.objects
-                if (obj.stable_id in report.heritage_refs or f"object-{obj.object_number}" in report.heritage_refs)
+                if (
+                    obj.stable_id in report.heritage_refs
+                    or f"object-{obj.object_number}" in report.heritage_refs
+                )
                 and obj.stable_id not in related_objects
             }
             if unrelated:
@@ -272,7 +277,10 @@ class StoryDraftInspector:
                     "Opening task has no registered transition from the environment entry"
                 )
         for scene in scenes.values():
-            if len(scene.tasks) != 1 or len(scene.next_scene_ids) > 1:
+            if len(scene.tasks) != 1 or (
+                len(scene.next_scene_ids) > 1
+                and (scene.decision_id is None or len(scene.next_scene_ids) > 4)
+            ):
                 issues.append(f"Scene {scene.scene_id} exceeds the current executable task profile")
                 continue
             origin = intents.get(scene.tasks[0].task_id)

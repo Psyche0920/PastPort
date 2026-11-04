@@ -35,7 +35,7 @@ from pastport.domain.modules import (
     TaskSpatialIntent,
     TaskTilingIntent,
 )
-from pastport.domain.story_plan import StoryPlan, StoryText
+from pastport.domain.story_plan import BranchStoryPlan, StoryPlan, StoryPlanTask, StoryText
 
 
 class StoryPlanCompiler:
@@ -45,7 +45,82 @@ class StoryPlanCompiler:
     compile arbitrary branching graphs or infer missing gameplay semantics.
     """
 
-    def compile(self, plan: StoryPlan, request: DraftRequest) -> NarrativeDraft:
+    def compile(self, plan: StoryPlan | BranchStoryPlan, request: DraftRequest) -> NarrativeDraft:
+        if isinstance(plan, BranchStoryPlan):
+            from pastport.application.story_branch_compiler import BranchStoryPlanCompiler
+
+            return BranchStoryPlanCompiler().compile(plan, request)
+        return self.compile_ordered(plan, plan.tasks, request)
+
+    def compile_saved_revision(
+        self,
+        plan: StoryPlan | BranchStoryPlan,
+        previous: NarrativeDraft,
+    ) -> NarrativeDraft:
+        """Recompile a human-edited plan using only a saved draft's registered selections.
+
+        Preserves provenance and unresolved items; this is not new model generation
+        or an evidence/review approval. New object/claim/view bindings need upstream work.
+        """
+        if plan.capability_catalog_sha256 != previous.capability_catalog_sha256:
+            raise ValueError("Saved revision changed the pinned gameplay capability catalog")
+        tasks = (
+            plan.tasks
+            if isinstance(plan, StoryPlan)
+            else (
+                *plan.opening,
+                *(task for route in plan.investigations for task in route.tasks),
+                *plan.reunion,
+            )
+        )
+        intents = {item.task_id: item for item in previous.spatial_intents}
+        known = [
+            (task, intents[task.task_id], scene.site_id)
+            for scene in previous.package.game.scenes
+            for task in scene.tasks
+            if task.task_id in intents and isinstance(task, InspectTask)
+        ]
+        site = previous.package.game.scenes[0].site_id
+        for task in tasks:
+            if not any(
+                old.asset_id == task.asset_id
+                and intent.view_id == task.view_id
+                and intent.station_id == "spawn"
+                and intent.interaction == "inspect_linked_source"
+                and set(task.claim_ids) <= set(old.evidence_refs)
+                and old_site == site
+                for old, intent, old_site in known
+            ):
+                raise ValueError("Saved revision introduced an unregistered asset/claim/view/site")
+        if isinstance(plan, BranchStoryPlan):
+            from pastport.application.story_branch_compiler import BranchStoryPlanCompiler
+
+            draft = BranchStoryPlanCompiler().compile(plan, previous)
+        else:
+            draft = self.compile_ordered(plan, plan.tasks, previous)
+        from pastport.application.updates import updated
+
+        return updated(
+            draft,
+            unresolved_items=tuple(
+                dict.fromkeys(
+                    (
+                        *previous.unresolved_items,
+                        *draft.unresolved_items,
+                        "Human-edited saved-plan revision; "
+                        "not a fresh model generation or source approval.",
+                    )
+                )
+            ),
+        )
+
+    def compile_ordered(
+        self,
+        plan: StoryPlan | BranchStoryPlan,
+        tasks: tuple[StoryPlanTask, ...],
+        request: DraftRequest | NarrativeDraft,
+    ) -> NarrativeDraft:
+        """Shared content compilation; callers must validate their final graph."""
         translations: dict[str, StoryText] = {}
 
         def text(key: str, value: StoryText) -> str:
@@ -64,9 +139,13 @@ class StoryPlanCompiler:
         reports: list[AuthoringTaskReport] = []
         spatial: list[TaskSpatialIntent] = []
         gameplay: list[TaskGameplayIntent] = []
-        site = request.evidence.route.ordered_places[0].site_id
-        size = len(plan.tasks)
-        for number, task in enumerate(plan.tasks, 1):
+        site = (
+            request.evidence.route.ordered_places[0].site_id
+            if isinstance(request, DraftRequest)
+            else request.package.game.scenes[0].site_id
+        )
+        size = len(tasks)
+        for number, task in enumerate(tasks, 1):
             scene_id, task_id, rule_id = f"scene-{number}", f"task-{number}", f"task-rule-{number}"
             last = number == size
             next_scene = scene_id if last else f"scene-{number + 1}"
@@ -239,10 +318,26 @@ class StoryPlanCompiler:
         package = NarrativePackage(
             schema_version="0.1.0",
             content_version="compiled-plan-v1",
-            project_id=request.selected_candidate.project_id,
-            evidence_package_hash=request.evidence.evidence_ref.sha256,
-            candidate_id=request.selected_candidate.candidate_id,
-            routes=(request.evidence.approved_route_ref,),
+            project_id=(
+                request.selected_candidate.project_id
+                if isinstance(request, DraftRequest)
+                else request.package.project_id
+            ),
+            evidence_package_hash=(
+                request.evidence.evidence_ref.sha256
+                if isinstance(request, DraftRequest)
+                else request.package.evidence_package_hash
+            ),
+            candidate_id=(
+                request.selected_candidate.candidate_id
+                if isinstance(request, DraftRequest)
+                else request.package.candidate_id
+            ),
+            routes=(
+                (request.evidence.approved_route_ref,)
+                if isinstance(request, DraftRequest)
+                else request.package.routes
+            ),
             game=game,
             fiction_notice=plan.fiction_notice,
         )

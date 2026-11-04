@@ -1,19 +1,22 @@
+export function formatCaseFile(text){
+ return text.replace(/【遊戲虛構([^】]+)】/g,'$1\n\n').replace(/\[Fictional ([^\]]+)\]/g,(_,title)=>title.charAt(0).toUpperCase()+title.slice(1)+'\n\n').replace(/【通知 B】/g,'\n\n通知 B\n').replace(/\[Notice B\]/g,'\n\nNotice B\n').replace(/([。！？])\s*/g,'$1\n\n').replace(/\. +(?=[A-Z])/g,'.\n\n').trim();
+}
 /** Adapted from UI trial adventure.mjs speak/renderLine: one speaker, one line, Continue. */
 export class DialoguePlayer {
-  constructor({root,onSpeaker=()=>{},onError=()=>{}}){this.root=root;this.onSpeaker=onSpeaker;this.onError=onError;this.conversation=null;this.busy=false;}
+  constructor({root,onSpeaker=()=>{},onError=()=>{},getLocale=()=>'zh'}){this.root=root;this.onSpeaker=onSpeaker;this.onError=onError;this.getLocale=getLocale;this.conversation=null;this.busy=false;}
   get active(){return this.conversation!==null;}
-  open(lines,{acknowledge=async()=>{},done=()=>{}}={}){this.suspended=false;this.conversation={lines,index:0,acknowledge,done};this.renderLine();}
+  open(lines,{acknowledge=async()=>{},done=()=>{},startIndex=0}={}){this.suspended=false;this.conversation={lines,index:Math.max(0,Math.min(startIndex,lines.length-1)),acknowledge,done};this.renderLine();}
   suspend(){if(this.conversation){this.suspended=true;this.root.hidden=true;}}
   resume(){if(this.suspended){this.suspended=false;if(this.conversation)this.renderLine();}}
   close(){this.suspended=false;this.root.hidden=true;this.conversation=null;this.onSpeaker(null);}
   renderLine(){
     const c=this.conversation;if(!c)return;const line=c.lines[c.index];if(!line){const done=c.done;this.close();done();return;}
-    this.root.hidden=false;this.root.replaceChildren();this.onSpeaker(line.speaker,line.action??null);
+    this.root.hidden=false;this.root.classList.toggle('is-case-file',line.speaker==='archive');this.root.replaceChildren();this.onSpeaker(line.speaker,line.action??null);
     const portrait=document.createElement('div');portrait.className='portrait';portrait.style.setProperty('--portrait-x',line.row===0?'-46px':'-34px');const sprite=document.createElement('div');sprite.className='sprite';sprite.style.backgroundPosition=`${line.frame*100/3}% ${line.row}%`;portrait.append(sprite);
-    const speaker=document.createElement('div');speaker.className='speaker';speaker.textContent=line.speaker;const body=document.createElement('div');body.className='dialogue-text';body.textContent=line.text;
-    const actions=document.createElement('div');actions.className='dialogue-actions';const previous=document.createElement('button');previous.textContent='← 回退';previous.disabled=c.index===0||this.busy;previous.onclick=()=>{if(this.busy)return;c.index--;this.renderLine();};
-    const next=document.createElement('button');next.textContent=line.commit?'确认并继续 ▾':'继续 ▾';next.disabled=this.busy;next.onclick=async()=>{if(this.busy)return;this.busy=true;next.disabled=true;try{await c.acknowledge(line);if(this.conversation===c){c.index++;this.busy=false;this.renderLine();}}catch(error){this.onError(error);this.busy=false;this.renderLine();}};
-    const close=document.createElement('button');close.textContent='收起';close.onclick=()=>{if(!this.busy)this.close();};actions.append(previous,next,close);this.root.append(portrait,speaker,body,actions);
+    const speaker=document.createElement('div');speaker.className='speaker';speaker.textContent=line.speakerLabel??line.speaker;const body=document.createElement('div');body.className='dialogue-text';body.textContent=line.speaker==='archive'?formatCaseFile(line.text):line.text;
+    const actions=document.createElement('div');actions.className='dialogue-actions';const previous=document.createElement('button');previous.textContent=this.getLocale()==='en'?'← Previous line':'← 上一句';previous.disabled=c.index===0||this.busy;previous.onclick=()=>{if(this.busy)return;c.index--;this.renderLine();};
+    const next=document.createElement('button');next.textContent=this.getLocale()==='en'?(line.commit?'Confirm & continue →':'Continue →'):(line.commit?'確認並繼續 →':'繼續 →');next.disabled=this.busy;next.onclick=async()=>{if(this.busy)return;this.busy=true;next.disabled=true;try{await c.acknowledge(line);if(this.conversation===c){c.index++;this.busy=false;this.renderLine();}}catch(error){this.onError(error);this.busy=false;this.renderLine();}};
+    const close=document.createElement('button');close.className='dialogue-close';close.textContent=this.getLocale()==='en'?'Close & explore':'收起，探索房間';close.onclick=()=>{if(!this.busy)this.close();};if(c.index>0)actions.append(previous);actions.append(next);this.root.append(portrait,speaker,body,close,actions);
   }
 }
 export const openingLines={

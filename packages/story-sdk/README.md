@@ -74,6 +74,37 @@ JS runtime's task-to-ending execution. No fresh paid generation has been perform
 for this change. Existing wheel archives predate this change and need rebuilding
 before independent-install acceptance can be claimed.
 
+## Opt-in investigation branches
+
+Select `--structure-profile compiled_branch_v1` on `pastport-story`, or set
+`StoryRequest.structure_profile="compiled_branch_v1"`. The default remains
+`compiled_plan_v1`; existing input locks retain their profile. Use a new output
+directory for a different profile, brief or compiler identity.
+
+The bounded `BranchStoryPlanResult` contains 1–3 opening tasks, 2–4 exclusive
+investigations of 1–3 tasks each, 1–3 shared reunion tasks and 2–4 final choices.
+Each investigation includes its label, fictional notebook finding, reunion response
+and one ending consequence per final choice. The shared compiler creates every ID,
+route/completion variable, finding grant and conditional response. Only the chosen
+route unlocks; its completed tasks, finding and choice survive reunion and saves.
+This supports one fork and foldback, not nested branching, arbitrary relationship
+logic or new evidence-matching minigames. Existing source-reading/coverage task
+requirements, evidence references and per-edge spatial checks remain mandatory.
+
+Player presentation displays conditional reunion responses and chooses the sole
+unlocked outgoing route. The shared rule engine and save format are unchanged.
+Offline synthetic-provider and player-host checks are separate from real model
+quality, real-site spatial acceptance and human playtesting. No fresh paid
+Story generation, new wheel release or published demo is implied by this feature.
+
+For a human-edited saved draft, the shared compiler also exposes
+`StoryPlanCompiler.compile_saved_revision(plan, previous_draft)`. This reuses only
+asset/claim/view selections already present at the prior draft's site, preserves
+source/route identities and unresolved items, and rejects newly invented bindings.
+It does not call a provider, reconstruct approval records or establish that a
+revision is historically approved. Independent preparation, package checks and
+playtesting remain necessary; record manual fiction/presentation additions separately.
+
 ## Implementation location
 
 The public SDK remains in this package. Story generation and validation are implemented

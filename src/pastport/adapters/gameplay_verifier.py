@@ -35,7 +35,7 @@ class DemoGameplayVerifier:
 
     def _plugin_hash(self) -> str:
         digest = hashlib.sha256()
-        for name in ("plugins.mjs", "coverage.mjs", "gameplay-catalog.mjs"):
+        for name in ("plugins.mjs", "investigation.mjs", "coverage.mjs", "gameplay-catalog.mjs"):
             path = self.plugin.parent / name
             digest.update(name.encode() + b"\0")
             digest.update(path.read_bytes())

@@ -13,7 +13,8 @@ export class GameSession {
     const context=await PlayerContext.create(pkg,reference,presentation.releaseId??'murat-local-demo-1');
     const gameplayPlan=await prepareGameplayPlan(pkg,presentation);
     requireValue(gameplayPlan.status==='ready','当前任务缺少已验证玩法插件，不能开始游戏。');
-    const identity=await contentHash({packageHash:reference.sha256,presentation:JSON.stringify(presentation),gameplayPlan});
+    const identityPresentation={...presentation};delete identityPresentation.characterProfiles;delete identityPresentation.startupPreparation;
+    const identity=await contentHash({packageHash:reference.sha256,presentation:JSON.stringify(identityPresentation),gameplayPlan});
     return new GameSession(context,presentation,gameplayPlan,identity,storage);
   }
   constructor(context,presentation,gameplayPlan,identity,storage) {
@@ -36,7 +37,8 @@ export class GameSession {
   async dispatch(command){
     requireValue(!this.paused,'游戏已暂停');requireValue(!this.state.ending_id,'本局已结束');const scene=this.current;
     const entry=structuredClone(this.entry());requireValue(scene.requiredSources.every(n=>entry.sources.includes(n)),'先查看资料，并选择“加入本次观察”。');
-    const step=new Activity(this.config()).reduce(entry.activity,command);entry.activity=step.state;let next=this.state;
+    const config=this.config();if(config.kind==='scene-search')command={...command,verified_numbers:[...entry.sources]};
+    const step=new Activity(config).reduce(entry.activity,command);entry.activity=step.state;let next=this.state;
     if(step.result.status==='completed'){
       next=await this.apply(next,'observe',this.taskId(scene),{spot_id:'result'});
       if(scene.automaticDecision)next=await this.apply(next,'choose',scene.automaticDecision,{option_id:step.result.outcome});
@@ -50,7 +52,7 @@ export class GameSession {
   }
   recordBrowse(number){requireValue(this.presentation.objects.some(o=>o.number===number),'Unknown source');if(!this.notebook.includes(number)){this.notebook.push(number);this.persist();}}
   async choose(id){requireValue(!this.paused,'游戏已暂停');const scene=this.current;requireValue(scene.decision&&scene.options.some(o=>o.id===id),'本阶段没有这个选择');this.state=await this.apply(this.state,'choose',scene.decision,{option_id:id});this.persist();}
-  async advance(){requireValue(!this.paused,'游戏已暂停');const scene=this.context.scene(this.state.current_scene_id);requireValue(scene.next_scene_ids.length===1,'当前没有下一阶段');this.state=await this.apply(this.state,'advance',scene.next_scene_ids[0]);this.persist();}
+  async advance(){requireValue(!this.paused,'游戏已暂停');const scene=this.context.scene(this.state.current_scene_id);const targets=scene.next_scene_ids.filter(id=>this.state.unlocked_scene_ids.includes(id));requireValue(targets.length===1,'当前没有唯一可进入的下一阶段');this.state=await this.apply(this.state,'advance',targets[0]);this.persist();}
   rememberPosition(id,point){requireValue(this.presentation.chapters.some(c=>c.id===id)&&Array.isArray(point)&&point.length===2&&point.every(n=>Number.isFinite(n)&&n>=0&&n<=100),'Invalid position');this.positions[id]=[...point];this.persist();}
   rememberShot(view){this.validateShot(view);this.shotState=structuredClone(view);this.persist();}
   validateShot(view){if(view===null)return;const shot=this.presentation.shots?.find(s=>s.number===view?.number&&s.available);requireValue(shot&&['walking','task'].includes(view.phase)&&Array.isArray(view.position)&&view.position.length===2&&view.position.every(Number.isFinite)&&new WalkMesh(shot.boundary,shot.obstacles).allows(view.position),'Invalid fixed-shot save');if(view.beforeView!==null){const b=view.beforeView;requireValue(b&&this.presentation.scenes.some(s=>s.id===b.scene)&&[b.yaw,b.pitch,b.hfov].every(Number.isFinite)&&b.pitch>=-90&&b.pitch<=90&&b.hfov>=35&&b.hfov<=125,'Invalid saved camera');}}

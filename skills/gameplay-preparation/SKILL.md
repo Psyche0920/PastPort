@@ -2,7 +2,7 @@
 name: gameplay-preparation
 description: Map approved story tasks to compatible gameplay plugins, request bounded implementation for genuine mechanic gaps, and bind validated plugin configurations to tasks. Does not write story content, presentation code or game-host rules.
 metadata:
-  version: "0.1.2"
+  version: "0.1.3"
   owner: maslan
 ---
 
@@ -48,3 +48,7 @@ does not rule out another route. A `clear_to_anchor` ray does not establish targ
 glass transparency, full-object visibility or readable detail. Read the geometry input and
 algorithm hashes, calibration/placement basis and explicit unknowns. Use the computed
 ordered route edges for task continuity; absent edges are unresolved, not implicit travel.
+
+## Reusable investigation patterns
+
+For requested **image** spot-the-difference, drag timelines, scene-object search or image/screenshot reconstruction, read [investigation-patterns.md](references/investigation-patterns.md) and use [the blueprint template](assets/investigation-blueprint.template.json). Choose patterns for their inference and consequence, not as mandatory filler. The registered JS host and deterministic blueprint binder support these activities; the typed Narrative/Gameplay catalog boundary remains as stated in that reference. Keep image comparison distinct from text questions and image fragments distinct from sentence sorting.

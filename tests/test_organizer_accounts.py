@@ -4,6 +4,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from test_organizer import headers, setup
 
@@ -16,7 +17,7 @@ PASSWORD = "Synthetic-staff-password-123"
 EDIT = {"X-PastPort-Edit": "1"}
 
 
-def password_app(root: Path, *, reload_file: bool = False):
+def password_app(root: Path, *, reload_file: bool = False) -> tuple[FastAPI, Path, Credential]:
     settings, production = setup(root)
     original = settings.accounts[0]
     account = Credential.model_validate(
@@ -39,7 +40,7 @@ def password_app(root: Path, *, reload_file: bool = False):
     )
 
 
-def test_password_login_reuses_actor_and_never_returns_credentials(tmp_path):
+def test_password_login_reuses_actor_and_never_returns_credentials(tmp_path: Path) -> None:
     app, file, original = password_app(tmp_path)
     with TestClient(app) as client:
         response = client.post(
@@ -64,7 +65,7 @@ def test_password_login_reuses_actor_and_never_returns_credentials(tmp_path):
         assert client.get("/organizer/api/jobs", headers=headers()).status_code == 200
 
 
-def test_invalid_login_is_generic_and_rate_limited(tmp_path):
+def test_invalid_login_is_generic_and_rate_limited(tmp_path: Path) -> None:
     app, _, _ = password_app(tmp_path)
     with TestClient(app) as client:
         for username in ("staff", "unknown", "staff", "unknown", "staff"):
@@ -94,7 +95,7 @@ def test_invalid_login_is_generic_and_rate_limited(tmp_path):
         )
 
 
-def test_local_password_change_reloads_and_invalidates_old_session(tmp_path):
+def test_local_password_change_reloads_and_invalidates_old_session(tmp_path: Path) -> None:
     app, file, original = password_app(tmp_path, reload_file=True)
     with TestClient(app) as client:
         assert (
@@ -131,7 +132,7 @@ def test_local_password_change_reloads_and_invalidates_old_session(tmp_path):
         )
 
 
-def test_salted_hashes_and_invalid_request_do_not_expose_password(tmp_path):
+def test_salted_hashes_and_invalid_request_do_not_expose_password(tmp_path: Path) -> None:
     hasher = PasswordHasher()
     first = hasher.hash(PASSWORD)
     second = hasher.hash(PASSWORD)
@@ -148,7 +149,7 @@ def test_salted_hashes_and_invalid_request_do_not_expose_password(tmp_path):
         assert secret not in response.text
 
 
-def test_single_admin_can_initialize_once_on_local_website(tmp_path):
+def test_single_admin_can_initialize_once_on_local_website(tmp_path: Path) -> None:
     settings, production = setup(tmp_path)
     account = settings.accounts[0]
     file = tmp_path / "single-admin.json"
@@ -194,7 +195,7 @@ def test_single_admin_can_initialize_once_on_local_website(tmp_path):
         )
 
 
-def test_single_admin_setup_cannot_be_used_remotely(tmp_path):
+def test_single_admin_setup_cannot_be_used_remotely(tmp_path: Path) -> None:
     settings, production = setup(tmp_path)
     file = tmp_path / "single-admin.json"
     file.write_text(Accounts(accounts=(settings.accounts[0],)).model_dump_json())

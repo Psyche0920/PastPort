@@ -2,6 +2,9 @@
 
 import asyncio
 import json
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 import pytest
 from test_story_automation import ROOT, material_fixture
@@ -12,6 +15,7 @@ from pastport.adapters.story_workflow import StoryAutomationWorkflow
 from pastport.application.models import ServiceError
 from pastport.domain.common import CanonicalSerializer
 from pastport.domain.game_making import GameMakingRequest
+from pastport.domain.organizer import OrganizerStart
 from pastport.domain.story_inputs import (
     EnvironmentContentRevision,
     EnvironmentSnapshot,
@@ -19,9 +23,11 @@ from pastport.domain.story_inputs import (
 )
 from pastport.domain.story_reuse import StoryReuseReport
 
+AuthoredReuse = tuple[GameMakingRequest, GameMakingRequest, Path, PlanProvider]
+
 
 @pytest.fixture
-def authored(tmp_path):
+def authored(tmp_path: Path) -> AuthoredReuse:
     materials = material_fixture(tmp_path / "old")
     provider = PlanProvider()
     story = tmp_path / "story"
@@ -31,7 +37,7 @@ def authored(tmp_path):
         ).run()
     )
 
-    def request(base, saved, output):
+    def request(base: Path, saved: Path, output: Path) -> GameMakingRequest:
         return GameMakingRequest(
             original_pdf=base / "original.pdf",
             source_document=base / "document.json",
@@ -54,7 +60,7 @@ def authored(tmp_path):
     return old, current, out, provider
 
 
-def update_environment(path, change):
+def update_environment(path: Path, change: Callable[[dict[str, Any]], None]) -> None:
     from pastport.domain.story_inputs import MetricSpatialContent, SpatialWorld
 
     document = json.loads(path.read_text())
@@ -92,7 +98,7 @@ def update_environment(path, change):
     path.write_text(json.dumps(document))
 
 
-def test_position_edit_reuses_text_and_rebinds_without_model(authored):
+def test_position_edit_reuses_text_and_rebinds_without_model(authored: AuthoredReuse) -> None:
     old, current, out, provider = authored
     original = (old.saved_story_run / "narrative-draft.json").read_bytes()
     update_environment(current.environment, lambda d: d["positions"][0].update(yaw=1.0, version=1))
@@ -112,7 +118,7 @@ def test_position_edit_reuses_text_and_rebinds_without_model(authored):
         StoryReuseAdapter().verify(prepared)
 
 
-def test_changed_task_evidence_is_blocked_with_task_identity(authored):
+def test_changed_task_evidence_is_blocked_with_task_identity(authored: AuthoredReuse) -> None:
     old, current, out, provider = authored
     update_environment(
         current.environment,
@@ -126,7 +132,7 @@ def test_changed_task_evidence_is_blocked_with_task_identity(authored):
     assert provider.calls == 1
 
 
-def test_changed_task_introduction_requires_review(authored):
+def test_changed_task_introduction_requires_review(authored: AuthoredReuse) -> None:
     old, current, out, _ = authored
     update_environment(
         current.environment,
@@ -138,7 +144,9 @@ def test_changed_task_introduction_requires_review(authored):
     assert any("task-1" in issue and "介绍" in issue for issue in proof.issues)
 
 
-def test_changed_review_verdict_does_not_force_rewrite_when_task_still_valid(authored):
+def test_changed_review_verdict_does_not_force_rewrite_when_task_still_valid(
+    authored: AuthoredReuse,
+) -> None:
     old, current, out, provider = authored
     update_environment(
         current.environment,
@@ -153,7 +161,9 @@ def test_changed_review_verdict_does_not_force_rewrite_when_task_still_valid(aut
     assert provider.calls == 1
 
 
-def test_organizer_automatically_checks_latest_story_in_its_lineage(authored, tmp_path):
+def test_organizer_automatically_checks_latest_story_in_its_lineage(
+    authored: AuthoredReuse, tmp_path: Path
+) -> None:
     from fastapi.testclient import TestClient
     from test_organizer import Production, await_job, headers, setup
 
@@ -201,7 +211,14 @@ def test_organizer_automatically_checks_latest_story_in_its_lineage(authored, tm
     )
 
     class ReuseProduction(Production):
-        async def run(self, request, start, output, *, resume=False):
+        async def run(
+            self,
+            request: GameMakingRequest,
+            start: OrganizerStart,
+            output: Path,
+            *,
+            resume: bool = False,
+        ) -> None:
             StoryReuseAdapter().verify(request)
             self.calls.append((start.mode, resume))
             (output / "organizer-production-request.json").write_text(
@@ -247,7 +264,7 @@ def test_organizer_automatically_checks_latest_story_in_its_lineage(authored, tm
         assert provider.calls == 1
 
 
-def test_unused_object_edits_do_not_block_existing_tasks(authored):
+def test_unused_object_edits_do_not_block_existing_tasks(authored: AuthoredReuse) -> None:
     old, current, out, provider = authored
     import shutil
 
@@ -255,7 +272,7 @@ def test_unused_object_edits_do_not_block_existing_tasks(authored):
         current.media_directory / "history-01.png", current.media_directory / "history-02.png"
     )
 
-    def add_unused(document):
+    def add_unused(document: dict[str, Any]) -> None:
         obj = dict(document["objects"][0])
         obj.update(
             object_number=2,
@@ -273,7 +290,9 @@ def test_unused_object_edits_do_not_block_existing_tasks(authored):
     assert provider.calls == 1
 
 
-def test_introduction_confirmation_is_bound_and_does_not_bypass_critical_changes(authored):
+def test_introduction_confirmation_is_bound_and_does_not_bypass_critical_changes(
+    authored: AuthoredReuse,
+) -> None:
     from datetime import UTC, datetime
 
     from pastport.domain.story_reuse import StoryReuseDecision
@@ -285,6 +304,8 @@ def test_introduction_confirmation_is_bound_and_does_not_bypass_critical_changes
     StoryReuseAdapter().prepare(old, current, out)
     pending = StoryReuseReport.model_validate_json((out / "story-compatibility.json").read_bytes())
     assert pending.status == "needs_confirmation"
+    assert pending.environment_sha256 is not None
+    assert pending.parent_draft_sha256 is not None
     decision = StoryReuseDecision(
         actor_id="owner",
         decided_at=datetime.now(UTC),
@@ -295,6 +316,7 @@ def test_introduction_confirmation_is_bound_and_does_not_bypass_critical_changes
     )
     prepared = StoryReuseAdapter().prepare(old, current, out, decision=decision)
     ready = StoryReuseReport.model_validate_json((out / "story-compatibility.json").read_bytes())
+    assert ready.confirmation is not None
     assert ready.status == "compatible" and ready.confirmation.actor_id == "owner"
     assert ready.confirmation.report_sha256 == CanonicalSerializer.digest(pending)
     assert (prepared.saved_story_run / "narrative-draft.json").read_bytes() == (
@@ -320,7 +342,9 @@ def test_introduction_confirmation_is_bound_and_does_not_bypass_critical_changes
     assert not (saved / "narrative-draft.json").exists()
 
 
-def test_http_confirmation_requires_current_report_and_authorized_actor(authored, tmp_path):
+def test_http_confirmation_requires_current_report_and_authorized_actor(
+    authored: AuthoredReuse, tmp_path: Path
+) -> None:
     from fastapi.testclient import TestClient
     from test_organizer import headers, setup
 
