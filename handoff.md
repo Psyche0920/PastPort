@@ -134,3 +134,8 @@ Following user-reported acceptance, the saved story and explicit blueprint were 
 
 
 共享交付 / Shared delivery：同一平台使用一次导入和站点发布，不需要每名玩家上传游戏包。独立电脑的 Organizer 历史不通过 Git 自动同步；团队继续采用 Release → 下载 → 导入 → 验收。共享云部署与回环游戏地址改造由 wehan 负责，尚未实施。Within one deployment, import/publish once for all players. Git does not synchronize independent local Organizer histories. Team handoff remains Release → download → import → acceptance. wehan owns the still-pending shared deployment and replacement of loopback game URLs.
+
+
+下一执行任务 / Next execution task：由 Claude 按 [统一在线平台 PRD 第14节](docs/TECHNICAL_PRD.md#shared-online-platform) / [shared online platform §14](docs/TECHNICAL_PRD_EN.md#shared-online-platform) 分 P0–P5 实施，并用 A1–A16 验收。目标为同管理账号跨设备历史、发布游戏统一可玩、逐玩家实时存档及共享排名；现有本机证据不算统一部署验收。本次交接只编写规格，未实施或部署。This handoff specifies work only; it does not implement or deploy it.
+
+Temporary remote sharing: use the foreground remote.mjs entry in the host terminal; see [Chinese README](README.md) / [English README](README_EN.md). Existing data and authentication are retained with separate temporary origins. This does not provide permanent hosting, remote private previews, legacy UI Trial cloud saves or full physical-device acceptance.

@@ -10,6 +10,8 @@
 
 [初始申请书版本（PDF）](references/PastPort_ROOT_CODE_Application.pdf) · [申请书与比赛方向](handoff.md#初始申请书与比赛方向)
 
+[统一在线平台：Claude 执行 PRD](docs/TECHNICAL_PRD.md#shared-online-platform)
+
 ## 团队试玩交付
 
 - [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-04-r4/wcheung.tar.gz)
@@ -38,6 +40,25 @@ uv run python -m pastport organizer
 ```
 
 打开 [Organizer 后台](http://127.0.0.1:18840/organizer/)，使用管理员账号登录。服务在当前终端前台运行，保持终端打开，按 Ctrl+C 停止。端口占用时检查已有服务；也可以用 `uv run python -m pastport organizer --port 18841`，并打开相应端口。
+
+
+### 不同 Wi-Fi：临时共享本机服务
+
+先按上文在自己的终端启动 Organizer，并至少启动过一次玩家平台（建立玩家数据目录）。本机需装好 [cloudflared](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)；macOS 可用 `brew install cloudflared`。然后在仓库根目录另开终端：
+
+```sh
+node frontend/player/remote.mjs --share-organizer
+```
+
+终端打印两个临时 HTTPS 入口：**PLAYER** 发给玩家，**STAFF** 只发给队友，用原 Organizer 账号登录。所有人访问这台主机的同一份历史、发布和玩家数据库；队友不用在自己的电脑重新启动另一套服务或导入已发布的包。原本的本机服务继续运行，远程玩家服务使用本机 18852 端口；占用时加 `--port 18853`，Organizer 改端口时加 `--organizer-port 18841`。只分享玩家平台可去掉 `--share-organizer`。
+
+`ORGANIZER_DATA` 和 `PLAYER_DATA` 如有自定义，运行共享命令时仍须指向原来的数据目录。共享命令要求已有玩家数据库和 Organizer 目录，不自动创建空的替代库。它只启动本命令拥有的远程服务和隧道，Ctrl+C 会关闭这些子进程，不关闭原有本机 Organizer/玩家服务，不删除数据。
+
+每个已发布游戏按需使用独立的临时 HTTPS 隧道，保留原包的绝对资源路径，人物对话、3D、音视频与账号存档消息连接到正确的平台 Origin。游戏与后台账号位于不同 Origin。HTTPS 玩家会话 cookie 启用 Secure；后台入口只转发 `/organizer/`，保留登录/修改来源校验，并禁止远程管理员初始化。**远程私有预览地址尚未适配**；在主机导入后发布，再从 PLAYER 地图打开验证。大文件远程上传可能受隧道服务限制，先在主机本地导入。
+
+这是临时联调入口：主机需保持联网和唤醒、终端需保持打开；重启共享命令会换地址，但原数据保留。地址不是账号密码保护的替代物，STAFF 不应公开转发。旧 UI Trial 仍只有独立的浏览器存档，临时共享不自动补上其云存档适配。正式长期服务、固定域名和完整双设备验收仍按技术 PRD 第14节执行。
+
+若出现域名无法解析，先检查访问设备的网络/DNS，不要用关闭来源校验或修改游戏指向本机来绕过。Quick Tunnels 的临时地址、无可用性保证、200 个在途请求限制及不支持 SSE 见 [Cloudflare 官方说明](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)。
 
 ### Organizer：主办方入口
 

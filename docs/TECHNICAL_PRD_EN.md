@@ -750,3 +750,161 @@ Within one deployment the flow is: **game bundle → Organizer import/production
 `git push/pull` synchronizes source and documentation, not game files, Organizer history, uploaded sources, player databases or passwords. GitHub Releases distribute team deliverables and support moves between computers; players on an existing deployment do not repeatedly download Releases.
 
 The current system is local development, not an already deployed shared cloud backend. `PLAYER_DATA` persists player accounts, saves and stamps separately from Organizer staff accounts/production history. Serving multiple real devices requires a unified deployment and client-reachable game-resource routes instead of the current loopback game URLs. Copying the webpage or exposing a `127.0.0.1` port alone does not provide cross-device access. No public deployment was performed in this task.
+
+
+<a id="shared-online-platform"></a>
+## 14. Shared online platform technical PRD (Claude execution handoff)
+
+Status: implementation specification; shared deployment is not implemented. Owner: wehan. Executor: Claude. Use current main as the baseline. Local validation is not cross-device acceptance. This section defines the target; earlier local/deployment limitations describe current behavior.
+
+### 14.1 Product outcomes and scope
+
+1. A game imported/generated on device A appears, with its history and version, when device B signs into the same central Organizer account. No second import is needed. The same management account shares its history; different staff accounts retain owner/project restrictions.
+2. Publishing a version to a selected site makes it playable for all platform players, without access to the administrator’s computer, individual downloads, or Organizer login.
+3. Each player’s story, observations, choices, minigames and scene state persist centrally. The same player resumes automatically on another device; other players cannot inherit/overwrite it. “Real-time” means automatic checkpoint sync with server acknowledgment, not a guarantee for unacknowledged writes during disconnection/forced shutdown.
+4. Players share a leaderboard ranked by distinct-site medals, with tied ranks and no duplicate medal for repeated completion of one site.
+
+Out of scope: rewriting stories, regenerating recognition/matching/environments, paid model calls, committing private databases, merging identities merely by equal usernames, or public deployment to an unspecified server.
+
+### 14.2 Existing code and gaps
+
+| Location | Existing behavior | Required change |
+|---|---|---|
+| `organizer_cli.py`, `__main__.py` | Portable initialization/start, existing accounts retained | Configured central bind/public addresses, keeping safe local defaults; opening a port alone is insufficient |
+| `organizer_store.py`, `application/organizer.py` | SQLite history and ownership | Central persistent data shared by devices; preserve actor/project/review identities |
+| `organizer_delivery.py`, `organizer_map.py` | Import hashes and per-site publication | Stable release access, atomic switching, rollback and package capability diagnostics |
+| `organizer_previews.py`, `serve3d.mjs` | Private preview and trusted 2D/3D launcher | Remote-reachable resource gateway; keep internal ports/loopback URLs out of client responses |
+| `frontend/player/server.mjs` | Accounts, runs, saves, stamps, rankings | Central data, configurable origins, stable game URLs and session recovery |
+| `cloud-saves.mjs`, `save-sync.mjs`, `game-save-bridge.mjs` | Modern snapshots, revision locks, retry, hydration | Multi-device/offline tests, continuation policy and legacy format adapters |
+| `player-completion.mjs` | Pinned legacy ending bridge and local account namespaces | Backend saves for legacy UI Trial; stamping is not cloud-save acceptance |
+| `frontend/player/app.mjs` | Bilingual map/passport/leaderboard | Remote launch, visible syncing/synced/failed/conflict states, continue/latest choice |
+
+Equal GameSession class names do not imply equal schemas. Modern version-2 snapshots contain identity/sequence/engine/local/notebook/positions/shotState. Legacy UI Trial stores world/chapter versions, chapter ID, started, events and positions, replayed by its original engine. Never bypass validation or force both into one fake format.
+
+### 14.3 Architecture and deployment configuration
+
+Use one central deployment/data authority and multiple browsers. Retain Python Organizer and the Node player service; do not duplicate rules or build a second business platform.
+
+```mermaid
+flowchart LR
+    A[Staff devices A/B] --> P[Central reverse proxy / platform]
+    U[Player devices A/B] --> P
+    P --> O[Organizer auth/history/import/publication]
+    P --> V[Player accounts/saves/passport/leaderboard]
+    O --> S[Persistent game assets and publication directory]
+    V --> S
+    V --> D[Central player database]
+    U --> G[Separate game origin / resource gateway]
+    G --> S
+```
+
+Read and validate configuration centrally at startup. Names below are proposed contracts; adjustments must be documented consistently.
+
+| Configuration | Contract |
+|---|---|
+| `PLATFORM_PUBLIC_ORIGIN` | Browser-reachable platform origin; HTTPS in production, explicit origin allowlist |
+| `GAME_PUBLIC_ORIGIN` | Separate game origin; game scripts cannot access staff sessions or write staff APIs |
+| `BIND_HOST` | Loopback by default; explicitly configure LAN/production, never silently expose publicly |
+| `ORGANIZER_DATA` | Same persistent `server/organizer` directory for Python and player services |
+| `PLAYER_DATA` | Central player data; reuse after restart/container replacement |
+| Trusted proxy settings | Trust only configured proxies/forwarded hosts, never arbitrary Host headers |
+
+Keep single-instance SQLite/WAL on local persistent disk initially. Cross-device use does not require PostgreSQL. Do not simulate multi-instance storage by putting SQLite on a shared network drive. Use separate game/platform origins and host-only session cookies; public routes cannot enumerate staff history or unpublished previews.
+
+Prefer stable game-origin `/games/{release_id}/...` routes. Bind release identity to imported content hashes. Serve only published or privately authorized previews, never a client-supplied filesystem path. Keep transient process ports internal and stable routes valid after restart. Adapt relative/absolute asset URLs, `/world/...`, scene/navigation APIs, modules/workers, audio/video and SPZ/PLY through shared launchers/adapters; do not hardcode sites. A reachable HTML page alone is not remote-resource acceptance.
+
+Claude may deliver LAN two-device validation before production configuration. Without a server/domain, complete code and isolated deployment scripts, leave real addresses as wehan-supplied settings, and do not purchase hosting, expose data or claim deployment.
+
+### 14.4 Identity, history, publication and persistence
+
+- One central staff account configuration preserves actor IDs across devices. Browser sessions differ, ownership does not. Keep owner/project filters.
+- Player data and staff production/review data are separate. Players see published games, not raw uploaded materials, review databases or job directories.
+- Import once centrally; retain idempotency. New bundles create immutable versions rather than overwriting active directories.
+- Publication atomically changes a site pointer. Failure preserves the previous version. Active runs stay pinned; rollback never deletes saves/stamps.
+- Back up consistently and rehearse restoration before migrating local data. Preserve staff/actor/job/project/review identities. Do not replace data with an empty account database or merge independent players by matching usernames.
+
+### 14.5 APIs and game bridge
+
+Retain existing Organizer/player routes and use backward-compatible field migrations. These are target contracts, not claims of current completeness. Python boundaries use typed Contract/Pydantic models.
+
+| API | Target behavior |
+|---|---|
+| `GET /organizer/api/jobs` | Central history authorized for the staff actor |
+| `POST /organizer/api/jobs/import-delivery` | Existing ownership/hash/safe extraction; return release and completion/save capability diagnostics |
+| `POST /organizer/api/jobs/{job_id}/publish-to-map` | Check ownership, entry, assets, site/capabilities; atomically publish |
+| `GET /api/publications` | Public site/version/capability data without server paths |
+| `POST /api/launch` | site_id plus resume_mode continue/latest; derive ownership from login and return stable URL, run, pinned version, save adapter/schema and revision |
+| `POST /api/save` | Expected revision, idempotent operation and snapshot; infer owner/site/version from session/run, never trust player_id supplied by the client |
+| `POST /api/stamp` | Bind player/run/site; reject invalid, foreign or expired runs; repeat receipts remain idempotent |
+| `GET /api/profile`, `GET /api/leaderboard` | Central data; actual persisted medals only |
+
+Save reads may remain in launch responses; do not add synonymous APIs unnecessarily. Validate exact message Origin, current iframe source, run and pinned version. The platform host forwards saves; games never possess staff credentials. Configure the target platform origin and remove production loopback constants. New bundles declare completion/save capabilities; known legacy bundles use adapters. Unknown formats produce diagnostics, not silent loss or fabricated completion.
+
+The first version remains a client completion-receipt system, not cheat-resistant server adjudication. Reject foreign message sources, cross-account runs and duplicate receipts. Trusted action verification is a separate requirement before real prizes/strong competition claims.
+
+### 14.6 Saves and legacy compatibility
+
+1. Scope by player_id, site_id, release_id and adapter/schema version. Database revision differs from game sequence.
+2. Reuse ordered/coalesced writes and retries; approximately 250ms batching is reasonable. Wait for acknowledgment before map return/logout. Preserve bounded snapshot sizes and readable errors.
+3. Display synced only after server acknowledgment. Keep pending data on failure, support explicit retry/export, handle expired sessions visibly. Unacknowledged forced-close data is not guaranteed.
+4. Concurrent devices use expected revisions. Reject stale writes with409; offer export/reload rather than last-writer-wins loss.
+5. Continue defaults to the account’s unfinished pinned release even after a site publishes a newer one. Offer explicit latest/new-release play with a separate save. With no previous progress, launch the current release. If the old release is unavailable, report it rather than silently restarting.
+6. Add a legacy UI Trial adapter preserving full events/positions and original version/replay checks. Do not force modern and legacy formats together, execute unaudited imported scripts on the server, or copy per-site rule implementations.
+7. Never automatically claim unbound old browser saves. Optional one-time import requires account/release selection and preserves originals; it is not a prerequisite for new cross-device saves.
+8. Validate account saving/recovery individually for `wcheung`, `maslan` and `muradiye-ui-trial`. One game or a visible stamp does not prove all-package coverage.
+
+### 14.7 Rankings and accounts
+
+Reuse central player/session/game_save/stamp records. Keep `(player, site)` stamp uniqueness across versions/endings/refreshes. Rank by medal count descending with DENSE_RANK ties; display names/stable IDs only stabilize ordering. Zero-medal players are unranked. Production must not show fictional sample rankings; any demo mode is separately isolated/labeled. Refresh on entering rankings, after a stamp or explicit user refresh; WebSocket is unnecessary initially. Shared deployment never means distributing passwords/session tokens.
+
+### 14.8 Implementation phases and exit criteria
+
+| Phase | Work | Required evidence |
+|---|---|---|
+| P0 Configuration/data baseline | Inspect identities/paths/releases, read-only backup, public-address and persistent-data configuration | Restart retains real accounts/history/player data; no private files in Git |
+| P1 Cross-device transport | Origin configuration, separate game gateway, private preview authorization, proxy/resource routing | Second physical device opens staff and2D/3D games; all resources reachable without production loopback URLs |
+| P2 Central history/publication | Ownership/idempotent import, atomic pointers and immutable versions | A imports→B same staff sees→A publishes→B player opens; failed publication preserves old game |
+| P3 All-package saves | Adapter contract, legacy event saves, conflicts/failures, continue/latest | All three packages save onA and resume onB; other players start independently; stale writes cannot overwrite |
+| P4 Stamps/rankings | Completion receipts, unique medals and actual rankings | Two players finish independently; map/passport/rankings agree; repeats do not add points |
+| P5 Deployment/handoff | LAN/production examples, startup/backup/restore/rollback commands, documentation/regressions | Physical-device evidence; distinguish code/LAN validation from actual public deployment |
+
+Complete reviewable authorized work without repeated approval requests. Record genuine missing server/domain/migration decisions for wehan. Do not call paid models, alter stories, clear history or leave duplicate services. User-operated services remain started in the user’s own terminal.
+
+### 14.9 Mandatory acceptance matrix
+
+Use isolated data and two physical devices/independent browser sessions connected to one central deployment. Same-machine tabs, changed ports or copied localStorage are supplementary evidence, not a substitute.
+
+| ID | Action | Required result |
+|---|---|---|
+| A1 | A imports; B refreshes same staff history | Same job/release appears without another upload |
+| A2 | Anonymous/unauthorized staff history or publication | Reject without private paths/materials |
+| A3 | A publishes; B uses player login only | Published2D/3D game and every required asset open without staff login |
+| A4 | New release while another player is mid-game | Active run stays old; subsequent launch honors explicit continue/latest choice |
+| A5 | Save partial observations/choices/minigame in each package and closeA after acknowledgment | B resumes exact state instead of restarting |
+| A6 | Different player launches the same game | No inherited progress/evidence/stamps |
+| A7 | Two devices write from one revision | One succeeds, stale write409; export/reload is available |
+| A8 | Disconnect/save500/expired session, then recover | Visible pending failure; idempotent retry; no false saved indicator |
+| A9 | Restart service/container and change transient game port | Stable public URL and persistent history/publications/accounts/saves/stamps |
+| A10 | Read/incomplete task/foreign completion message | No automatic stamp; reject foreign account/origin |
+| A11 | Two players independently finish | Separate passport/map stamps; actual shared ranking |
+| A12 | Refresh ending/reopen completed game/finish another release | One medal per player/site |
+| A13 | Failed publication or pointer rollback | Previous game remains reachable; saves/stamps retained |
+| A14 | Unsafe archive/symlink/unpublished or escaping path | Existing extraction and preview authorization checks remain effective |
+| A15 | Missing persistent directory/unwritable database | Explicit startup/write failure, not an empty replacement pretending to migrate successfully |
+| A16 | Restore backup into isolated deployment | Matching account, asset, release and save identities; shareable report excludes secrets |
+
+### 14.10 Claude deliverables
+
+- Implementation, configuration examples and a simple startup entry; no conflicting parallel specification.
+- Update both READMEs/technical PRDs and `handoff.md`, distinguishing development/LAN/production evidence.
+- Run relevant deterministic tests, Ruff, strict mypy, JS syntax, repository/handoff checks and `git diff --check`. Installation resources include new adapters/public frontends and exclude private game/player data.
+- Save input versions, sanitized configuration, resource checks, A1–A16 outcomes, physical-device evidence and remaining gaps under ignored artifacts. Mark unexecuted/failed items honestly, never replace them with simulated acceptance.
+- Separate source commit/push, Release assets and deployment. No database upload/public exposure/cloud purchases without explicit authorization; request only genuinely missing deployment details from wehan.
+
+### 14.11 Temporary sharing from the host computer (this implementation)
+
+This change adds `frontend/player/remote.mjs`, `network.mjs` and `organizer-gateway.mjs`. The existing player server accepts explicit `PLAYER_PUBLIC_ORIGIN` and `PLAYER_GAME_TUNNELS=quick`. The foreground sharing command starts a separate loopback player listener on 18852 with the specified existing persistent directories; Organizer stays in the user's own terminal. Cloudflare tunnels target loopback services, with separate temporary origins for platform, staff and each game. Launch returns HTTPS, writes retain exact Origin checks, public access checks Host, and HTTPS cookies use Secure. Trusted game navigation resources use relative URLs; imported server scripts remain unexecuted.
+
+The staff gateway forwards only the existing authenticated `/organizer/` surface. It strips untrusted forwarding identity headers, sets the explicit Host/HTTPS scheme and denies remote initialization and unrelated APIs. Tunnels use isolated temporary configuration, without account tokens. Startup failure, unexpected exit and Ctrl+C clean up owned tunnels/children while preserving existing services and databases. Distribute the new network module and launchers with source/install resources.
+
+Limits: this covers part of P1, not completion of P0–P5. Remote private previews, permanent game URLs, running-session recovery across restarts, legacy UI Trial cloud saves and default continuation of old releases remain unimplemented. Temporary links change on restart; data stays on the host. Import large bundles locally, then view history/publish remotely. Quick Tunnels depend on device DNS and third-party networking; see README's official testing/development limitations. Neither loopback HTTP regression nor a connected tunnel is full public-game or physical-two-device acceptance. Keep run evidence under ignored artifacts and execute A1–A16 separately.

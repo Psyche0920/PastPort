@@ -15,6 +15,7 @@ const errors = {
   '存档格式不符合此游戏要求':'This game snapshot could not be accepted.',
   '此地点尚未发布试玩。':'This place does not have a published game yet.',
   '来源不符':'Request origin does not match.',
+  '远程游戏入口尚未连通，请检查网络或 DNS 后重试。':'Remote game access could not connect. Check network/DNS and retry.',
   '账号用 3–32 位字母、数字、下划线或连字符。密码至少 8 位。':'Use 3–32 letters, digits, underscores or hyphens for the username. Use at least 8 characters for the password.',
   '账号已存在':'That username is already taken.',
   '请输入 1–40 字的昵称':'Enter a display name between 1 and 40 characters.',
@@ -53,6 +54,7 @@ async function api(route, data) {
 let current = null;
 let active = null;
 let pendingLaunch = null;
+let launchRequest=0;
 let claiming = false;
 const modal = $('#profile-dialog');
 const frame = $('#game iframe');
@@ -252,10 +254,24 @@ function showProfile(mode='login') {
   if (!modal.open) modal.showModal();
 }
 async function launch(site) {
+  const request=++launchRequest;
   selectedSite=site;
   if (!current) {pendingLaunch=site;showProfile();return;}
   try {
-    active=await api('launch',{site_id:site.id});
+    $('#game strong').textContent=site.name;
+    $('#game-status').textContent=t('正在连接远程游戏入口…','Connecting the remote game…');
+    frame.src='about:blank';$('#game').hidden=false;
+    let launch;
+    for(let attempt=0;attempt<240;attempt++){
+      launch=await api('launch',{site_id:site.id});
+      if(request!==launchRequest)return;
+      if(!launch.pending)break;
+      await new Promise(resolve=>setTimeout(resolve,1000));
+      if(request!==launchRequest || $('#game').hidden)return;
+    }
+    if(launch.pending)throw new Error(t('远程入口尚未就绪，请稍后重试','Remote access is not ready. Please retry shortly.'));
+    if(request!==launchRequest || $('#game').hidden)return;
+    active=launch;
     const launched=active;
     saveSync=active.save ? new SaveSynchronizer({revision:active.save.revision,
       persist:batch=>api('save',{run:launched.run,...batch}),status:saveStatus}) : null;
@@ -270,6 +286,8 @@ async function launch(site) {
     $('#game').hidden=false;
     $('#back').focus();
   } catch (error) {
+    if(request!==launchRequest)return;
+    $('#game').hidden=true;
     showProfile();
     $('#notice').textContent=error.message;
   }
@@ -289,6 +307,7 @@ $('#back').onclick=async()=>{
   try {
     try {await saveSync?.flush();}
     catch {if(!confirm(t('进度尚未同步。建议先下载未同步存档。仍然返回地图并放弃本次未同步进度？','Progress is not synced. Export your unsynced save first. Return to the map and discard these unsynced changes?')))return;}
+    ++launchRequest;
     $('#game').hidden=true;
     frame.src='about:blank';
     active=null;saveSync=null;

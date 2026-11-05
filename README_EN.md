@@ -10,6 +10,8 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Initial proposal version (PDF)](references/PastPort_ROOT_CODE_Application.pdf) · [Proposal and competition direction](handoff.md#original-proposal-and-competition-direction)
 
+[Shared online platform: Claude execution PRD](docs/TECHNICAL_PRD_EN.md#shared-online-platform)
+
 ## Team playable handoff
 
 - [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-04-r4/wcheung.tar.gz)
@@ -38,6 +40,25 @@ uv run python -m pastport organizer
 ```
 
 Open [Organizer](http://127.0.0.1:18840/organizer/) and sign in. The service runs in your terminal; keep it open and stop with Ctrl+C. If the port is occupied, check the existing service or run `uv run python -m pastport organizer --port 18841` and open that port.
+
+
+### Different Wi-Fi networks: temporarily share this computer
+
+Start Organizer in your own terminal as above, and run the player platform at least once to create its data directory. Install [cloudflared](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) first; on macOS use `brew install cloudflared`. Open another terminal at the repository root:
+
+```sh
+node frontend/player/remote.mjs --share-organizer
+```
+
+The command prints two temporary HTTPS links: share **PLAYER** with players and **STAFF** only with teammates, who sign in with the existing Organizer account. Everyone connects to this host's history, publications and player database; teammates do not start another independent service or reimport published games. Existing local services stay running. The remote player listener uses loopback port 18852; use `--port 18853` if occupied, or `--organizer-port 18841` for another Organizer port. Omit `--share-organizer` to share only the player platform.
+
+When using custom `ORGANIZER_DATA` or `PLAYER_DATA`, pass the same original directories to the sharing command. Sharing requires the existing player database and Organizer directory and does not silently initialize replacement data. Ctrl+C stops only the processes owned by this command, preserving existing local services and all stored data.
+
+Each published game receives a separate on-demand HTTPS tunnel, preserving absolute resource paths and the correct platform Origin for dialogue, 3D, media and account-save messages. Games and staff accounts use separate origins. HTTPS player cookies use Secure; the staff gateway forwards only `/organizer/`, retains authentication/origin checks and blocks remote admin initialization. **Remote private preview URLs are not adapted yet**: import on the host, publish, and verify through the PLAYER map. Large remote uploads may hit provider limits; import them locally on the host first.
+
+This is a temporary integration setup. Keep the host awake, online and its terminal open. Restarting the sharing command changes the links without deleting data. A private URL is not a substitute for authentication; do not publish the STAFF link. Legacy UI Trial still has browser-local saves; temporary sharing does not add its missing account-save adapter. Permanent hosting, stable domains and full physical-device acceptance remain in technical PRD §14.
+
+If a temporary hostname does not resolve, check that device's network/DNS; do not disable origin checks or redirect games to the visitor's loopback address. See [Cloudflare's official limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/): temporary hostnames, no uptime guarantee, 200 in-flight requests and no SSE.
 
 ### Organizer: organizer-facing entry
 

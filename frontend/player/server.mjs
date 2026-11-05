@@ -1,3 +1,4 @@
+import {browserOrigin,QuickTunnel,stopProcess} from './network.mjs';
 import {PlayerSaveRepository, SaveConflict, InvalidSave} from './cloud-saves.mjs';
 import {createServer} from 'node:http';
 import {createHash, randomBytes, scryptSync, timingSafeEqual} from 'node:crypto';
@@ -10,7 +11,11 @@ import {join, relative} from 'node:path';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const platformPort = Number(process.env.PLAYER_PORT ?? 18851);
-const origin = `http://127.0.0.1:${platformPort}`;
+const origin = browserOrigin(process.env.PLAYER_PUBLIC_ORIGIN ?? `http://127.0.0.1:${platformPort}`);
+const lifecycle=new AbortController();
+const remoteGames=process.env.PLAYER_GAME_TUNNELS==='quick';
+if(process.env.PLAYER_GAME_TUNNELS && !remoteGames)throw new Error('Unsupported game tunnel mode.');
+const secureCookie=origin.startsWith('https:') ? '; Secure' : '';
 const cookieName = `pastport_player_${platformPort}`;
 const data = process.env.PLAYER_DATA ?? join(root, '.local');
 await mkdir(data, {recursive:true,mode:0o700});
@@ -53,7 +58,7 @@ const endingMessage = `
 `;
 async function startPublishedGame(publication) {
   const game = await realpath(await mkdtemp(join(tmpdir(),'pastport-map-game-')));
-  let child;
+  let child,tunnel;
   try {
     await cp(publication.directory,game,{recursive:true});
     let staticPlayer=null;
@@ -109,6 +114,7 @@ window.parent.postMessage({type:'pastport:save-error',run:new URL(location.href)
       env:{PATH:process.env.PATH,PASTPORT_PORT:'0',PASTPORT_HOST_ROOT:game,PASTPORT_LOCAL_DEMO:game,PASTPORT_PLAYER_ORIGIN:origin},
     });
     child.once('exit',()=>{
+      void tunnel?.close();
       void rm(game,{recursive:true,force:true});
     });
     const url = await new Promise((resolve,reject)=>{
@@ -122,9 +128,15 @@ window.parent.postMessage({type:'pastport:save-error',run:new URL(location.href)
       child.once('error',error=>{clearTimeout(timer);reject(error);});
       child.once('exit',()=>{clearTimeout(timer);reject(new Error('Published game stopped'));});
     });
-    return {url,child,saveKeys};
+    if(remoteGames){
+      tunnel=await QuickTunnel.open(url,{onExit:()=>child.kill(),signal:lifecycle.signal});
+      await tunnel.waitReady({signal:lifecycle.signal});
+      if(child.exitCode!==null || child.signalCode!==null)throw new Error('Game stopped before remote access was ready.');
+    }
+    return {url:tunnel?.url??url,child,saveKeys,close:async()=>{await tunnel?.close();await stopProcess(child);}};
   } catch (error) {
-    child?.kill();
+    await tunnel?.close();
+    await stopProcess(child);
     await rm(game,{recursive:true,force:true});
     throw error;
   }
@@ -135,10 +147,11 @@ function publishedGame(publication) {
     if (publications.size >= 16) throw new Error('Too many open games. Restart the player service after closing games.');
     const pending=startPublishedGame(publication);
     publications.set(key,pending);
-    void pending.then(({child})=>child.once('exit',()=>{
+    void pending.then(game=>{pending.game=game;game.child.once('exit',()=>{
       if (publications.get(key)===pending) publications.delete(key);
-    }),()=>{
-      if (publications.get(key)===pending) publications.delete(key);
+    });},error=>{
+      pending.failure=error;
+      if (!remoteGames && publications.get(key)===pending) publications.delete(key);
     });
   }
   return publications.get(key);
@@ -181,7 +194,9 @@ const leaderboard = db.prepare(`
 `);
 const server = createServer(async (req,res) => {
   try {
+    if(process.env.PLAYER_PUBLIC_ORIGIN && req.headers.host!==new URL(origin).host)return send(res,403,{error:'来源不符'});
     const route = new URL(req.url, origin).pathname;
+    if(req.method==='GET' && route==='/__pastport_ready') {res.writeHead(200,{'Cache-Control':'no-store'});res.end('pastport-remote-ready');return;}
     if (req.method === 'GET' && route === '/sites.json') return send(res,200,mapSites);
     if (req.method === 'GET' && assets.has(route)) {
       const file = assets.get(route);
@@ -220,18 +235,27 @@ const server = createServer(async (req,res) => {
       if (token) db.prepare('DELETE FROM session WHERE token=?').run(token);
       const next = opaque();
       db.prepare('INSERT INTO session VALUES (?,?,?)').run(next,player.id,ends());
-      return send(res,200,profile(player),{'Set-Cookie':`${cookieName}=${next}; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600`});
+      return send(res,200,profile(player),{'Set-Cookie':`${cookieName}=${next}; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600${secureCookie}`});
     }
     if (!account) return send(res,401,{error:'请先登录，才能领取护照印章'});
     if (route === '/api/logout') {
       db.prepare('DELETE FROM session WHERE token=?').run(token);
       for (const [id,entry] of runs) if(entry.token===token)runs.delete(id);
-      return send(res,200,null,{'Set-Cookie':`${cookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`});
+      return send(res,200,null,{'Set-Cookie':`${cookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureCookie}`});
     }
     if (route === '/api/launch') {
       const publication=await readPublication(input.site_id);
       if (!publication) return send(res,409,{error:'此地点尚未发布试玩。'});
-      const {url,saveKeys} = await publishedGame(publication);
+      const pending=publishedGame(publication);
+      if(remoteGames){
+        if(pending.failure){
+          publications.delete(publication.job_id+':'+publication.version);
+          console.error(pending.failure.message);
+          return send(res,503,{error:'远程游戏入口尚未连通，请检查网络或 DNS 后重试。'});
+        }
+        if(!pending.game)return send(res,202,{pending:true});
+      }
+      const {url,saveKeys} = await pending;
       const run = opaque();
       for (const [key, entry] of runs) if (entry.expires < Date.now()) runs.delete(key);
       runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,expires:ends()});
@@ -267,6 +291,8 @@ const server = createServer(async (req,res) => {
 });
 server.listen(platformPort,'127.0.0.1',()=>console.log(`PastPort player: ${origin}`));
 for (const signal of ['SIGINT','SIGTERM']) process.on(signal,()=>{
+  lifecycle.abort();
   server.close();
-  for (const pending of publications.values()) void pending.then(({child})=>child.kill(),()=>{});
+  for (const pending of publications.values()) void pending.then(game=>game.close(),()=>{});
+  server.closeAllConnections();
 });
