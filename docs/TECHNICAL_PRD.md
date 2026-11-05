@@ -729,3 +729,9 @@ IDML先本地读取原文、文本框前后连接、版面页和图片链接，�
 小地圖採用簡單房間平面示意及資料驅動 `mapSymbols`（已登記物件編號、符號與雙語名稱），不顯示掃描截面、視線扇形或移動軌跡。圖形僅屬示意，非量度平面圖；不改動空間審核。頂部並排提供人物關係、故事背景、調查筆記。
 
 可選 `stationRecords` 將已登記實物編號連到本次遊戲工作站名稱、雙語用途及本機參考PDF；僅屬呈現，不改動來源、claim或空間審核。原始資料與虛構工作站內容分開顯示。參考PDF只允許 assets/reference/ 下的固定本機檔名，不接受外部或跳出目錄路徑。
+
+新的 compiled plan 可選 `opening_context`，包含雙語標題、時地、開場狀況、玩家立場、中央問題、已知人物介紹及每個已用 asset 的用途。Python 校驗與已選任務物件完全對應，compiler 寫入帶 opening-context/1 標記的 presentation locale keys，保持 NarrativeDraft／引擎 wire 結構不變。自動 present 投影為 briefing、人物及工作站卡，缺翻譯／物件不符明確失敗，不從隱藏角色目標生成介紹，不自動加入原始PDF下載。舊稿無標記時保留原行為。零模型契約復跑與新模型內容品質分開驗收。
+
+Gameplay SDK 新增 `investigate`：消费既有 Story 桥接输入、固定 museum、明确批准的四类调查 blueprint 与图片根目录，完成验证、独立游戏组包及生命周期/hash receipt。NarrativeDraft 先经标准 schema/compiler 验证再转换；场景搜索要求明确的同视图绑定。图片冲突、hash 变化或输出已存在均失败。此命令不调用模型，不代表新生成质量、视觉验收或 Organizer 导入完成；基础 task-intent catalog 扩展与新模型生成验收仍属后续工作。
+
+Compiled Story plan 新增可选 typed `activity_design`，表达四类有界玩法插段。Compiler 负责新 ID 并输出版本化 preparation metadata；Gameplay 消费一次，旧稿与基础 task-intent union 保持兼容。模型选择任务锚点与登记物件，不编写图规则或授予审核权限；图片实际文件和 hash 仍须提供。保存的模型响应复跑、本机真实 demo 重组，均不等于新模型生成质量或人工视觉验收。

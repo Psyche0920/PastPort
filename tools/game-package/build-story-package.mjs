@@ -5,7 +5,9 @@ import {fileURLToPath} from 'node:url';
 import {StoryPackageCompiler,museumSnapshotHash} from './story-package.mjs';
 import {openingLines} from '../../frontend/game/dialogue.mjs';
 import {generatedStoryInput} from './generated-story.mjs';
+import {contentHash} from '../../src/pastport/player/validation.mjs';
 import {preparedStoryInput} from '../../gameplay/prepared-game.mjs';
+import {prepareInvestigationBlueprint,embeddedInvestigationBlueprint} from './investigation-blueprint.mjs';
 import {GameAssetPublisher} from './runtime-assets.mjs';
 
 const sourceRoot=path.dirname(fileURLToPath(import.meta.url));
@@ -75,15 +77,23 @@ async function fileManifest(directory,prefix='') {
   return files.sort((left,right)=>left.path.localeCompare(right.path));
 }
 
-async function build(inputFile,museumDirectory,output,preparationFile=null,environmentFile=null) {
+async function build(inputFile,museumDirectory,output,preparationFile=null,environmentFile=null,blueprintFile=null,assetRoot=null) {
   try {await access(output);throw new Error('Output exists; choose a new directory to preserve existing games');}
   catch(error) {if(error.code!=='ENOENT')throw error;}
   const generation=await readJson(inputFile);
   const preparation=preparationFile?await readJson(preparationFile):null;
   const museum=await loadMuseum(museumDirectory);
-  const input=environmentFile?await preparedStoryInput(generation,preparation,await readJson(environmentFile),museum,await pluginHash(),hash(await readFile(environmentFile))):preparation?await generatedStoryInput(generation,preparation):generation;
+  let input=environmentFile?await preparedStoryInput(generation,preparation,await readJson(environmentFile),museum,await pluginHash(),hash(await readFile(environmentFile))):preparation?await generatedStoryInput(generation,preparation):generation;
   const narrativeSchema=await readJson(path.resolve(sourceRoot,'../../schemas/draft-result.schema.json'));
-  const compiled=await new StoryPackageCompiler().compile(input,museum,{narrativeSchema});
+  let compiled=await new StoryPackageCompiler().compile(input,museum,{narrativeSchema});
+  let investigation=null;
+  const embedded=embeddedInvestigationBlueprint(input),explicit=blueprintFile?await readJson(blueprintFile):null;
+  requireValue(!embedded||!explicit||await contentHash(embedded)===await contentHash(explicit),'Explicit blueprint differs from the Story design');
+  const blueprint=embedded??explicit;
+  if(blueprint){
+    investigation=await prepareInvestigationBlueprint(input,museum,blueprint,{assetRoot,narrativeSchema});
+    input=investigation.input;compiled=investigation.compiled;
+  }
   const worlds=await readJson(path.join(museumDirectory,'data/scene3d-input.json'));
   requireValue(Array.isArray(worlds.worlds)&&[1,2].includes(worlds.worlds.length),'Current 3D adapter requires one or two prepared worlds');
   await mkdir(path.dirname(output),{recursive:true});
@@ -91,6 +101,14 @@ async function build(inputFile,museumDirectory,output,preparationFile=null,envir
   try {
     await new GameAssetPublisher().publish(staging);
     await copyTree(path.join(museumDirectory,'assets'),path.join(staging,'assets'));
+    if(investigation)for(const asset of investigation.receipt.assets){
+      const source=await childFile(assetRoot,asset.path),bytes=await readFile(source);
+      requireValue(hash(bytes)===asset.sha256,'Investigation asset changed before packaging');
+      const destination=path.join(staging,asset.path);
+      try {const previous=await readFile(destination);requireValue(hash(previous)===asset.sha256,'Investigation asset would overwrite museum content');continue;}
+      catch(error){if(error.code!=='ENOENT')throw error;}
+      await mkdir(path.dirname(destination),{recursive:true});await writeFile(destination,bytes,{flag:'wx'});
+    }
     for(const object of museum.objects) {
       const source=await childFile(museumDirectory,object.media_path),bytes=await readFile(source);
       requireValue(hash(bytes)===object.media_sha256,`Museum object ${object.number} media hash changed`);
@@ -111,6 +129,10 @@ async function build(inputFile,museumDirectory,output,preparationFile=null,envir
     }
     await mkdir(path.join(staging,'data'));
     for(const [filename,value] of Object.entries({'runtime.json':compiled.runtime,'reference.json':compiled.reference,'presentation.json':compiled.presentation,'gameplay-plan.json':compiled.gameplayPlan,'story-input.json':input,'story-build-report.json':compiled.report,'scene3d-input.json':worlds}))await writeFile(path.join(staging,'data',filename),json(value));
+    if(investigation){
+      await writeFile(path.join(staging,'data/investigation-receipt.json'),json(investigation.receipt));
+      await writeFile(path.join(staging,'data/investigation-blueprint.json'),json(blueprint));
+    }
     if(preparation){await writeFile(path.join(staging,'data/generation-result.json'),json(generation));await writeFile(path.join(staging,'data/preparation-result.json'),json(preparation));}
     await writeFile(path.join(staging,'OPEN.txt'),'Run: node serve3d.mjs\nThen open http://127.0.0.1:18824/?scene=3d\nOptional: PASTPORT_PORT=18826 node serve3d.mjs\nAll scene resources are local. Model generation is not required to play.\n');
     const files=await fileManifest(staging);
@@ -122,6 +144,7 @@ async function build(inputFile,museumDirectory,output,preparationFile=null,envir
 
 const [command,...arguments_]=process.argv.slice(2),options=new Map();
 for(let index=0;index<arguments_.length;index+=2){requireValue(arguments_[index].startsWith('--')&&arguments_[index+1],'Expected --option value');options.set(arguments_[index],path.resolve(arguments_[index+1]));}
-requireValue(['export-existing','build','from-generated','from-gameplay'].includes(command)&&options.has('--museum')&&options.has('--output'),'Use export-existing, build, or from-generated with --museum DIRECTORY --output NEW_PATH');
+requireValue(['export-existing','build','from-generated','from-gameplay','from-investigation'].includes(command)&&options.has('--museum')&&options.has('--output'),'Use export-existing, build, or from-generated with --museum DIRECTORY --output NEW_PATH');
+if(command==='from-investigation')requireValue(options.has('--blueprint')||embeddedInvestigationBlueprint(await readJson(options.get('--input'))),'Missing embedded Story design or --blueprint');
 if(command==='export-existing')await exportExisting(options.get('--museum'),options.get('--output'));
-else {requireValue(options.has('--input'),'Missing --input');if(['from-generated','from-gameplay'].includes(command))requireValue(options.has('--preparation'),'Missing independent gameplay/presentation preparation output');if(command==='from-gameplay')requireValue(options.has('--environment'),'Missing pinned environment');await build(options.get('--input'),options.get('--museum'),options.get('--output'),['from-generated','from-gameplay'].includes(command)?options.get('--preparation'):null,command==='from-gameplay'?options.get('--environment'):null);}
+else {requireValue(options.has('--input'),'Missing --input');if(['from-generated','from-gameplay'].includes(command))requireValue(options.has('--preparation'),'Missing independent gameplay/presentation preparation output');if(command==='from-gameplay')requireValue(options.has('--environment'),'Missing pinned environment');await build(options.get('--input'),options.get('--museum'),options.get('--output'),['from-generated','from-gameplay'].includes(command)?options.get('--preparation'):null,command==='from-gameplay'?options.get('--environment'):null,command==='from-investigation'?options.get('--blueprint'):null,options.get('--activity-assets')??null);}

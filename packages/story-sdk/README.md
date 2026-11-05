@@ -249,3 +249,18 @@ story-sdk/
 ### Byte-bound environment snapshots
 
 Story preserves the exact registered environment JSON bytes because `input-lock.json` binds their file hash. It does not serialize the DTO again before handing it to Gameplay. Revalidation can reconcile a prior formatting-only snapshot only after checking semantic equality, preserving its previous bytes and a zero-call reconciliation receipt. Changed semantic content remains an error. Narrative Skill rules do not replace this file-integrity contract.
+
+New compiled plans may provide optional `opening_context`: bilingual title, setting, situation, player role, central question, opening-known people and one purpose for each story-selected asset. Validators reject duplicate people/stations and incomplete asset coverage. The compiler stores this in versioned `presentation.*` locale keys; NarrativeDraft and engine wire shapes are unchanged. Legacy plans without this field emit no marker and keep their prior behavior. Public introductions must not reveal hidden goals or the solution.
+
+A `present` NarrativeDraft bridge can now feed `pastport-gameplay investigate` with an explicit approved four-pattern blueprint. The Gameplay SDK validates and packages its checked assets without altering the typed Story intent catalog or calling a model. This is deterministic post-generation assembly, not automatic mechanic selection.
+
+`compiled_plan_v1` and `compiled_branch_v1` accept optional `activity_design`: checked
+image manifests and bounded typed spot-difference, timeline, image-puzzle or scene-search
+interludes. The model selects one-based task anchors, source objects and localized
+content; it cannot author graph IDs or effects. Decision/final anchors, unknown objects,
+invalid permutations and incomplete image manifests fail validation. The compiler
+emits versioned preparation metadata without changing NarrativeDraft's wire fields.
+`pastport-gameplay investigate` consumes it directly, validates actual files and emits
+a new game/blueprint/receipt. This is a separate typed post-generation design path;
+base reading/coverage intents are unchanged. Supply actual images and hashes in the
+brief; the design cannot create missing images. Existing plans need no edits.

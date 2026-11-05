@@ -1,6 +1,8 @@
 """Compile an explicitly bounded story plan into the existing executable contract."""
 
-from pastport.domain.common import Locale
+import json
+
+from pastport.domain.common import CanonicalSerializer, Locale
 from pastport.domain.game import (
     All,
     Character,
@@ -284,6 +286,61 @@ class StoryPlanCompiler:
                     ),
                 )
             )
+        # Store display-only copy in compiler-owned locale keys. The NarrativeDraft
+        # wire shape and old plans without opening_context stay unchanged.
+        opening = plan.opening_context
+        if opening is not None:
+            text(
+                "presentation.opening_v1", StoryText(en="opening-context/1", zh="opening-context/1")
+            )
+            for key, value in (
+                ("title", opening.title),
+                ("setting", opening.setting),
+                ("situation", opening.situation),
+                ("player_role", opening.player_role),
+                ("question", opening.central_question),
+            ):
+                text("presentation." + key, value)
+            for index, person in enumerate(opening.people, 1):
+                prefix = f"presentation.person.{index}."
+                text(prefix + "name", person.name)
+                text(prefix + "introduction", person.introduction)
+            for station in opening.stations:
+                prefix = f"presentation.station.{station.asset_id}."
+                text(prefix + "title", station.title)
+                text(prefix + "purpose", station.purpose)
+
+        design = plan.activity_design
+        if design is not None:
+            blueprint = design.model_dump(mode="json", exclude_none=True)
+            blueprint["schema_version"] = "investigation-blueprint/1"
+            blueprint["package_id"] = (
+                "story-investigation-" + CanonicalSerializer.digest(design)[:16]
+            )
+            anchors: dict[int, str] = {}
+            for index, row in enumerate(blueprint["interludes"], 1):
+                anchor = row.pop("after_task")
+                row["after_scene_id"] = anchors.get(anchor, f"scene-{anchor}")
+                row["scene_id"] = f"investigation-scene-{index}"
+                row["task_id"] = f"investigation-task-{index}"
+                anchors[anchor] = row["scene_id"]
+                if "reward" in row:
+                    row["reward"] = {"id": f"investigation-reward-{index}", "text": row["reward"]}
+            encoded = json.dumps(
+                blueprint, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+            )
+            chunks = [encoded[start : start + 8000] for start in range(0, len(encoded), 8000)]
+            text(
+                "preparation.investigation_v1",
+                StoryText(en="investigation-blueprint/1", zh="investigation-blueprint/1"),
+            )
+            text(
+                "preparation.investigation_parts",
+                StoryText(en=str(len(chunks)), zh=str(len(chunks))),
+            )
+            for index, chunk in enumerate(chunks, 1):
+                text(f"preparation.investigation_part.{index}", StoryText(en=chunk, zh=chunk))
+
         locales: tuple[Locale, ...] = ("en", "zh")
         game = GameContent(
             chapter_id="chapter-1",

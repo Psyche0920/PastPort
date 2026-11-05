@@ -34,8 +34,21 @@ class PresentationResult(Contract):
     story_input: Path
 
 
+class InvestigationRequest(Contract):
+    story_input: Path
+    museum_directory: Path
+    output_directory: Path
+    blueprint_file: Path | None = None
+    asset_directory: Path | None = None
+
+
+class InvestigationResult(Contract):
+    game_directory: Path
+    receipt_file: Path
+
+
 class GameplayClient:
-    """Compile existing Story requirements; never call models or assemble games."""
+    """Compile existing Story requirements; never call models."""
 
     @staticmethod
     def _run(command: list[str], timeout: int) -> None:
@@ -83,3 +96,24 @@ class GameplayClient:
             str(request.museum_directory.resolve()), str(output),
         ], 30)
         return PresentationResult(story_input=output)
+
+    def investigate(self, request: InvestigationRequest) -> InvestigationResult:
+        """Validate an explicit blueprint and assemble a new local game, without models."""
+        node = shutil.which("node")
+        if node is None:
+            raise ServiceError("GAMEPLAY_NODE_MISSING", "Investigation requires Node.js")
+        output = request.output_directory.resolve()
+        command = [
+            node, str(runtime_root() / "tools/game-package/build-story-package.mjs"),
+            "from-investigation", "--input", str(request.story_input.resolve()),
+            "--museum", str(request.museum_directory.resolve()),
+            "--output", str(output),
+        ]
+        if request.blueprint_file is not None:
+            command.extend(["--blueprint", str(request.blueprint_file.resolve())])
+        if request.asset_directory is not None:
+            command.extend(["--activity-assets", str(request.asset_directory.resolve())])
+        self._run(command, 180)
+        return InvestigationResult(
+            game_directory=output, receipt_file=output / "data/investigation-receipt.json",
+        )

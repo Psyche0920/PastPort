@@ -79,10 +79,92 @@ def plan_fixture() -> dict[str, Any]:
     }
 
 
+def opening_fixture() -> dict[str, Any]:
+    return {
+        "title": words("The unfinished label", "未完成的标签"),
+        "setting": words("Tonight at the museum kitchen", "今晚，馆内厨房"),
+        "situation": words(
+            "The new label needs checking before the visit.", "参观前要核对新标签。"
+        ),
+        "player_role": words(
+            "You are the visiting guide, not an all-knowing witness.", "你是讲解员，并非全知证人。"
+        ),
+        "central_question": words(
+            "What does this hatch actually establish?", "这个窗口实际证明什么？"
+        ),
+        "people": [
+            {
+                "name": words("Emma Reed", "叶晴"),
+                "introduction": words(
+                    "The source researcher you will meet.", "你将见到的来源研究员。"
+                ),
+            }
+        ],
+        "stations": [
+            {
+                "asset_id": "object-1",
+                "title": words("Label-checking station", "标签核对位置"),
+                "purpose": words(
+                    "Compare the label with the hatch source.", "比较标签和窗口原始资料。"
+                ),
+            }
+        ],
+    }
+
+
+def activity_fixture() -> dict[str, Any]:
+    return {
+        "asset_manifest": [],
+        "interludes": [
+            {
+                "after_task": 1,
+                "source_object": 1,
+                "required_sources": [1],
+                "title": words("Rebuild the inspection", "重組檢查次序"),
+                "body": words(
+                    "Compare the recorded order, not an invented time.",
+                    "比較記錄次序，不捏造時間。",
+                ),
+                "objective": words("Arrange both inspection records.", "排列兩份檢查記錄。"),
+                "opening_lines": [],
+                "plugin": {
+                    "kind": "timeline",
+                    "content_kind": "original_fiction",
+                    "prompt": words("Which record comes first?", "哪份記錄在先？"),
+                    "success": words(
+                        "The source was inspected before its label.", "先檢查來源，再檢查標籤。"
+                    ),
+                    "cards": [
+                        {
+                            "id": "label",
+                            "text": words("Check label", "檢查標籤"),
+                            "target_slot": "second",
+                        },
+                        {
+                            "id": "source",
+                            "text": words("Check source", "檢查來源"),
+                            "target_slot": "first",
+                        },
+                    ],
+                    "slots": [
+                        {"id": "first", "label": words("First", "先")},
+                        {"id": "second", "label": words("Second", "後")},
+                    ],
+                },
+                "reward": words("Verified inspection order", "已核對的檢查次序"),
+            }
+        ],
+    }
+
+
 class PlanProvider:
-    def __init__(self, invalid: bool = False) -> None:
+    def __init__(
+        self, invalid: bool = False, with_opening: bool = False, with_activity: bool = False
+    ) -> None:
         self.calls = 0
         self.invalid = invalid
+        self.with_opening = with_opening
+        self.with_activity = with_activity
         self.schema: dict[str, Any] | None = None
 
     async def respond(self, request: ProviderRequest, timeout_seconds: float) -> ProviderResponse:
@@ -97,6 +179,10 @@ class PlanProvider:
         assert "object-1" in selectable["asset_id"]["enum"]
         assert "claim-object-1" in selectable["claim_ids"]["items"]["enum"]
         output = plan_fixture()
+        if self.with_opening:
+            output["plan"]["opening_context"] = opening_fixture()
+        if self.with_activity:
+            output["plan"]["activity_design"] = activity_fixture()
         if self.invalid:
             output["plan"]["rules"] = [{"target_id": "unused"}]
         return ProviderResponse(
@@ -109,8 +195,13 @@ class PlanProvider:
         )
 
 
-def test_content_plan_generates_and_resumes_without_a_second_call(tmp_path: Path) -> None:
-    provider = PlanProvider()
+@pytest.mark.parametrize(
+    "with_opening,with_activity", [(False, False), (True, False), (True, True)]
+)
+def test_content_plan_generates_and_resumes_without_a_second_call(
+    tmp_path: Path, with_opening: bool, with_activity: bool
+) -> None:
+    provider = PlanProvider(with_opening=with_opening, with_activity=with_activity)
     runner = StoryAutomationWorkflow(
         material_fixture(tmp_path / "inputs"),
         tmp_path / "out",
@@ -153,6 +244,25 @@ import {PlayerContext} from './src/pastport/player/context.mjs';
 import {PlayerRuntime} from './src/pastport/player/runtime.mjs';
 import {contentHash} from './src/pastport/player/validation.mjs';
 const pkg=JSON.parse(readFileSync(0,'utf8'));
+const {storyPresentation}=await import('./gameplay/story-presentation.mjs');
+const {embeddedInvestigationBlueprint}=
+ await import('./tools/game-package/investigation-blueprint.mjs');
+const design=embeddedInvestigationBlueprint({story:{kind:'runtime-package',payload:pkg}});
+if(design){
+ const row=design.interludes[0];
+ if(row.after_scene_id!=='scene-1'||row.scene_id!=='investigation-scene-1'||
+    row.plugin.kind!=='timeline'||row.reward.id!=='investigation-reward-1')
+   throw Error('Compiler activity selection did not reach preparation');
+}
+
+const hasOpening=pkg.game.locales[0].entries.some(e=>e.key==='presentation.title');
+const shown=storyPresentation({package:pkg},[{asset_object_number:1}],{legacy:true});
+if(hasOpening){
+ if(shown.briefing.sections.length!==4||shown.stationRecords[0].number!==1||
+    shown.characterProfiles.length!==2)throw Error('Opening metadata did not reach the player');
+ if(shown.stationRecords[0].reference_path)throw Error('Raw source download invented');
+}
+else if(!shown.legacy||shown.briefing)throw Error('Legacy output changed');
 const ref={artifact_id:'compiled-test',project_id:pkg.project_id,kind:'runtime',
  schema_version:pkg.schema_version,content_version:pkg.content_version,
  sha256:await contentHash(pkg)};
@@ -216,3 +326,124 @@ def test_fixed_plan_requires_explicit_gameplay_and_preserves_infeasibility() -> 
         )
     )
     assert result.plan is None
+
+
+def test_opening_requires_exact_selected_objects_and_public_localized_names() -> None:
+    output = plan_fixture()
+    output["plan"]["opening_context"] = opening_fixture()
+    result = StoryPlanResult.model_validate_json(json.dumps(output))
+    assert result.plan is not None and result.plan.opening_context is not None
+    output["plan"]["opening_context"]["stations"][0]["asset_id"] = "object-99"
+    with pytest.raises(ValidationError, match="exactly"):
+        StoryPlanResult.model_validate_json(json.dumps(output))
+    output["plan"]["opening_context"] = opening_fixture()
+    output["plan"]["opening_context"]["people"].append(
+        output["plan"]["opening_context"]["people"][0]
+    )
+    with pytest.raises(ValidationError, match="distinct"):
+        StoryPlanResult.model_validate_json(json.dumps(output))
+
+
+@pytest.mark.parametrize(
+    "mutation", ["foreign_object", "final_anchor", "duplicate_slot", "missing_picture"]
+)
+def test_activity_design_rejects_unbound_or_impossible_requests(mutation: str) -> None:
+    data = plan_fixture()
+    design = activity_fixture()
+    data["plan"]["activity_design"] = design
+    row = design["interludes"][0]
+    if mutation == "foreign_object":
+        row["source_object"] = 99
+    elif mutation == "final_anchor":
+        row["after_task"] = 2
+    elif mutation == "duplicate_slot":
+        row["plugin"]["cards"][0]["target_slot"] = "first"
+    else:
+        row["plugin"] = {
+            "kind": "spot-difference",
+            "content_kind": "original_fiction",
+            "prompt": words("Compare", "比較"),
+            "success": words("Found", "找到"),
+            "left_image": "assets/missing.svg",
+            "right_image": "assets/other.svg",
+            "differences": [
+                {
+                    "id": "mark",
+                    "left": [0, 0, 1000, 1000],
+                    "right": [0, 0, 1000, 1000],
+                    "label": words("Mark", "標記"),
+                }
+            ],
+        }
+    with pytest.raises(ValidationError):
+        StoryPlanResult.model_validate_json(json.dumps(data))
+
+
+def test_all_four_typed_patterns_share_registered_sources_and_checked_image_manifest() -> None:
+    data = plan_fixture()
+    data["plan"]["tasks"][1] = json.loads(json.dumps(data["plan"]["tasks"][1]))
+    data["plan"]["tasks"][1]["asset_id"] = "object-2"
+    data["plan"]["tasks"][1]["claim_ids"] = ["claim-object-2"]
+    design = activity_fixture()
+    paths = ["assets/left.svg", "assets/right.svg", "assets/chat-zh.svg", "assets/chat-en.svg"]
+    design["asset_manifest"] = [
+        {
+            "path": path,
+            "sha256": "a" * 64,
+            "content_kind": "original_fiction",
+            "source_claim_ids": [],
+        }
+        for path in paths
+    ]
+    common = {
+        "prompt": words("Inspect", "檢查"),
+        "success": words("Checked", "已核對"),
+        "content_kind": "original_fiction",
+    }
+    plugins = [
+        {
+            **common,
+            "kind": "spot-difference",
+            "left_image": paths[0],
+            "right_image": paths[1],
+            "differences": [
+                {
+                    "id": "mark",
+                    "left": [1000, 1000, 1000, 1000],
+                    "right": [1000, 1000, 1000, 1000],
+                    "label": words("Mark", "標記"),
+                }
+            ],
+        },
+        {
+            **common,
+            "kind": "image-puzzle",
+            "image": {"zh": paths[2], "en": paths[3]},
+            "columns": 2,
+            "rows": 2,
+            "pieces": [
+                {"id": f"piece-{i}", "target_slot": slot} for i, slot in enumerate((2, 0, 3, 1))
+            ],
+        },
+        {
+            **common,
+            "kind": "scene-search",
+            "targets": [
+                {"number": 1, "clue": words("First object", "第一件物件")},
+                {"number": 2, "clue": words("Second object", "第二件物件")},
+            ],
+        },
+    ]
+    for plugin in plugins:
+        row = {**design["interludes"][0], "plugin": plugin}
+        if plugin["kind"] == "scene-search":
+            row["required_sources"] = [1, 2]
+        design["interludes"].append(row)
+    data["plan"]["activity_design"] = design
+    result = StoryPlanResult.model_validate_json(json.dumps(data)).plan
+    assert result is not None and result.activity_design is not None
+    assert len(result.activity_design.interludes) == 4
+    # A real file check still belongs to preparation, not model JSON validation.
+    design["asset_manifest"][0]["path"] = "assets/../private.svg"
+    with pytest.raises(ValidationError):
+        StoryPlanResult.model_validate_json(json.dumps(data))

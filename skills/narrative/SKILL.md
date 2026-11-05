@@ -2,7 +2,7 @@
 name: narrative
 description: Discover, draft or revise evidence-grounded PastPort heritage games with playable tasks, character consequences and continuous spatial progression. Use for story candidates and narrative review; not for approving history, changing engine code or publishing packages.
 metadata:
-  version: "0.9.0"
+  version: "0.11.0"
   owner: Matt
 ---
 
@@ -32,6 +32,29 @@ and gameplay checks still apply to every task and every possible graph edge.
 Nested branches, cross-route visits, arbitrary relationship writes and new puzzle
 mechanics are outside this profile; report infeasibility instead of inventing them.
 This profile is opt-in and does not replace v1 or grant generation approval.
+
+## Opening context and investigation focus
+
+When the supplied compiled-plan schema includes `opening_context`, provide it for
+new drafts: bilingual title, time/place, opening situation, player role, one central
+question, public character introductions, and a purpose for every story-used
+object. Select each station's `asset_id` from the same registered assets used by
+tasks; cover those assets exactly once. Describe what the player checks or does
+there, not merely "click to obtain a clue". Preserve the physical object's identity.
+Public introductions contain only opening-known relationships; never copy secret
+motives, the solution or ending revelations into them. Localize names naturally in
+each language; keep inference and puzzle solutions independent of name spelling.
+The compiler assigns display identities; do not invent runtime IDs or source URLs.
+
+For mysteries, choose one answerable player question and establish its causal
+answer in the existing task reasoning and consequences before writing dialogue.
+Plant records or observations before the reveal and distinguish plans, actions,
+interpretations and unknowns. Do not solve the central question solely with an
+unprepared last-minute message. A person's success, silence or absence alone does
+not prove harm or motive. Use historical sources for what they support and clearly
+separate fictional incidents. Different investigation routes should obtain distinct
+material that changes reunion or ending responses. Treat this as a reusable design
+pattern, not a requirement to reproduce a particular mystery or cast.
 
 Legacy `authored_graph` runs retain their pinned NarrativeDraft contract; do not
 reinterpret old responses as plans or rewrite an old failed output to claim a
@@ -178,4 +201,4 @@ Do not repeat upstream matching or reopen all object approvals to consume regist
 
 When the brief requests visual differences, reconstructing an image/chat screenshot, arranging a timeline or searching scene objects, consult [the gameplay pattern reference](../gameplay-preparation/references/investigation-patterns.md). Specify the causal question, available information, supported inference, completion semantics and later consequence. Image comparison requires actual pictures and meaningful visual changes; a wording question is a different mechanic. Let Gameplay Preparation bind the approved task to the checked blueprint and registered plugin. Preserve private-passage consent and known/unknown times.
 
-Use the supplied schema/catalog as the execution boundary. These blueprint patterns do not by themselves expand an older typed Story intent union. If that output contract cannot express the requested mechanic, retain it in the approved task brief/blueprint or report the capability gap; do not invent fields, claim fresh automatic generation, or silently replace the requested image/scene action with reading. Do not force all four patterns into unrelated stories.
+Use the supplied schema/catalog as the execution boundary. Compiled plans that expose `activity_design` can request bounded investigation interludes directly: select one-based `after_task` positions (opening, then exclusive routes, then reunion for a branch plan), registered source objects and bilingual causal copy. Do not select a decision/final task as an insertion edge. The compiler owns new scene/task/reward IDs and produces the blueprint; do not author runtime rules or new `gameplay_intents.kind` values. Use only supplied checked image paths/hashes and provenance, with the exact visual regions or piece permutation; missing pictures are a dependency gap, not permission to invent their bytes or hashes. Timeline/search need no new images. Search uses registered targets in the anchor view. Preserve explicit unknown times and private-passage consent. The Gameplay SDK consumes this design and verifies assets, lifecycle and scene bindings before packaging. On older schemas retain the requested design in the approved brief or report the gap. Do not silently replace an image/scene action with reading, claim fresh generation from saved replay, or force all four patterns into unrelated stories.

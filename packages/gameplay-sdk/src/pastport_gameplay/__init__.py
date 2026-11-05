@@ -2,6 +2,8 @@
 
 from pastport_gameplay.client import (
     GameplayClient,
+    InvestigationRequest,
+    InvestigationResult,
     PreparationRequest,
     PreparationResult,
     PresentationRequest,
@@ -9,6 +11,7 @@ from pastport_gameplay.client import (
 )
 
 __all__ = [
+    "InvestigationRequest", "InvestigationResult",
     "GameplayClient", "PreparationRequest", "PreparationResult",
     "PresentationRequest", "PresentationResult",
 ]

@@ -99,6 +99,491 @@
       "title": "CoverageProblem",
       "type": "object"
     },
+    "DifferenceDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "content_kind": {
+          "enum": [
+            "original_fiction",
+            "source_attributed"
+          ],
+          "title": "Content Kind",
+          "type": "string"
+        },
+        "differences": {
+          "items": {
+            "$ref": "#/$defs/ImageDifference"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Differences",
+          "type": "array"
+        },
+        "kind": {
+          "const": "spot-difference",
+          "title": "Kind",
+          "type": "string"
+        },
+        "left_image": {
+          "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+          "title": "Left Image",
+          "type": "string"
+        },
+        "prompt": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "right_image": {
+          "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+          "title": "Right Image",
+          "type": "string"
+        },
+        "success": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "prompt",
+        "success",
+        "content_kind",
+        "kind",
+        "left_image",
+        "right_image",
+        "differences"
+      ],
+      "title": "DifferenceDesign",
+      "type": "object"
+    },
+    "ImageDifference": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9-]{1,64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "left": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          ],
+          "title": "Left",
+          "type": "array"
+        },
+        "right": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          ],
+          "title": "Right",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "left",
+        "right",
+        "label"
+      ],
+      "title": "ImageDifference",
+      "type": "object"
+    },
+    "ImagePuzzleDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "columns": {
+          "maximum": 4,
+          "minimum": 2,
+          "title": "Columns",
+          "type": "integer"
+        },
+        "content_kind": {
+          "enum": [
+            "original_fiction",
+            "source_attributed"
+          ],
+          "title": "Content Kind",
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/$defs/PuzzleImages"
+        },
+        "kind": {
+          "const": "image-puzzle",
+          "title": "Kind",
+          "type": "string"
+        },
+        "pieces": {
+          "items": {
+            "$ref": "#/$defs/PuzzlePiece"
+          },
+          "maxItems": 12,
+          "minItems": 4,
+          "title": "Pieces",
+          "type": "array"
+        },
+        "prompt": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "rows": {
+          "maximum": 3,
+          "minimum": 2,
+          "title": "Rows",
+          "type": "integer"
+        },
+        "success": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "prompt",
+        "success",
+        "content_kind",
+        "kind",
+        "image",
+        "columns",
+        "rows",
+        "pieces"
+      ],
+      "title": "ImagePuzzleDesign",
+      "type": "object"
+    },
+    "InvestigationDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_manifest": {
+          "items": {
+            "$ref": "#/$defs/InvestigationImage"
+          },
+          "maxItems": 16,
+          "title": "Asset Manifest",
+          "type": "array"
+        },
+        "interludes": {
+          "items": {
+            "$ref": "#/$defs/InvestigationInterlude"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Interludes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "asset_manifest",
+        "interludes"
+      ],
+      "title": "InvestigationDesign",
+      "type": "object"
+    },
+    "InvestigationImage": {
+      "additionalProperties": false,
+      "properties": {
+        "content_kind": {
+          "enum": [
+            "original_fiction",
+            "source_attributed"
+          ],
+          "title": "Content Kind",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "source_claim_ids": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Source Claim Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "content_kind",
+        "source_claim_ids"
+      ],
+      "title": "InvestigationImage",
+      "type": "object"
+    },
+    "InvestigationInterlude": {
+      "additionalProperties": false,
+      "properties": {
+        "after_task": {
+          "maximum": 18,
+          "minimum": 1,
+          "title": "After Task",
+          "type": "integer"
+        },
+        "body": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "objective": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "opening_lines": {
+          "items": {
+            "$ref": "#/$defs/InvestigationLine"
+          },
+          "maxItems": 12,
+          "title": "Opening Lines",
+          "type": "array"
+        },
+        "plugin": {
+          "discriminator": {
+            "mapping": {
+              "image-puzzle": "#/$defs/ImagePuzzleDesign",
+              "scene-search": "#/$defs/SceneSearchDesign",
+              "spot-difference": "#/$defs/DifferenceDesign",
+              "timeline": "#/$defs/TimelineDesign"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/DifferenceDesign"
+            },
+            {
+              "$ref": "#/$defs/TimelineDesign"
+            },
+            {
+              "$ref": "#/$defs/ImagePuzzleDesign"
+            },
+            {
+              "$ref": "#/$defs/SceneSearchDesign"
+            }
+          ],
+          "title": "Plugin"
+        },
+        "required_sources": {
+          "items": {
+            "maximum": 10000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Required Sources",
+          "type": "array"
+        },
+        "reward": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LocalizedCopy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_object": {
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Source Object",
+          "type": "integer"
+        },
+        "title": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "after_task",
+        "source_object",
+        "required_sources",
+        "title",
+        "body",
+        "objective",
+        "opening_lines",
+        "plugin"
+      ],
+      "title": "InvestigationInterlude",
+      "type": "object"
+    },
+    "InvestigationLine": {
+      "additionalProperties": false,
+      "properties": {
+        "speaker": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Speaker",
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "speaker",
+        "text"
+      ],
+      "title": "InvestigationLine",
+      "type": "object"
+    },
+    "LocalizedCopy": {
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "En",
+          "type": "string"
+        },
+        "zh": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Zh",
+          "type": "string"
+        }
+      },
+      "required": [
+        "zh",
+        "en"
+      ],
+      "title": "LocalizedCopy",
+      "type": "object"
+    },
+    "OpeningPerson": {
+      "additionalProperties": false,
+      "description": "Public opening introduction; runtime character identities are not model-authored.",
+      "properties": {
+        "introduction": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "name": {
+          "$ref": "#/$defs/StoryText"
+        }
+      },
+      "required": [
+        "name",
+        "introduction"
+      ],
+      "title": "OpeningPerson",
+      "type": "object"
+    },
+    "OpeningStation": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "pattern": "^object-[1-9][0-9]*$",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "purpose": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "title": {
+          "$ref": "#/$defs/StoryText"
+        }
+      },
+      "required": [
+        "asset_id",
+        "title",
+        "purpose"
+      ],
+      "title": "OpeningStation",
+      "type": "object"
+    },
+    "PuzzleImages": {
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+          "title": "En",
+          "type": "string"
+        },
+        "zh": {
+          "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+          "title": "Zh",
+          "type": "string"
+        }
+      },
+      "required": [
+        "zh",
+        "en"
+      ],
+      "title": "PuzzleImages",
+      "type": "object"
+    },
+    "PuzzlePiece": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9-]{1,64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "target_slot": {
+          "maximum": 11,
+          "minimum": 0,
+          "title": "Target Slot",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "target_slot"
+      ],
+      "title": "PuzzlePiece",
+      "type": "object"
+    },
     "ReadingPlan": {
       "additionalProperties": false,
       "properties": {
@@ -112,6 +597,68 @@
         "kind"
       ],
       "title": "ReadingPlan",
+      "type": "object"
+    },
+    "SceneSearchDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "content_kind": {
+          "enum": [
+            "original_fiction",
+            "source_attributed"
+          ],
+          "title": "Content Kind",
+          "type": "string"
+        },
+        "kind": {
+          "const": "scene-search",
+          "title": "Kind",
+          "type": "string"
+        },
+        "prompt": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "success": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "targets": {
+          "items": {
+            "$ref": "#/$defs/SearchTarget"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "prompt",
+        "success",
+        "content_kind",
+        "kind",
+        "targets"
+      ],
+      "title": "SceneSearchDesign",
+      "type": "object"
+    },
+    "SearchTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "clue": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "number": {
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Number",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "number",
+        "clue"
+      ],
+      "title": "SearchTarget",
       "type": "object"
     },
     "SourceChoiceRequirement": {
@@ -144,9 +691,69 @@
       "title": "SourceChoiceRequirement",
       "type": "object"
     },
+    "StoryOpening": {
+      "additionalProperties": false,
+      "description": "Only information available before investigation, not the hidden solution.",
+      "properties": {
+        "central_question": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "people": {
+          "items": {
+            "$ref": "#/$defs/OpeningPerson"
+          },
+          "maxItems": 10,
+          "title": "People",
+          "type": "array"
+        },
+        "player_role": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "setting": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "situation": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "stations": {
+          "items": {
+            "$ref": "#/$defs/OpeningStation"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "title": "Stations",
+          "type": "array"
+        },
+        "title": {
+          "$ref": "#/$defs/StoryText"
+        }
+      },
+      "required": [
+        "title",
+        "setting",
+        "situation",
+        "player_role",
+        "central_question",
+        "people",
+        "stations"
+      ],
+      "title": "StoryOpening",
+      "type": "object"
+    },
     "StoryPlan": {
       "additionalProperties": false,
       "properties": {
+        "activity_design": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InvestigationDesign"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "capability_catalog_sha256": {
           "pattern": "^[0-9a-f]{64}$",
           "title": "Capability Catalog Sha256",
@@ -167,6 +774,17 @@
           "pattern": "\\S",
           "title": "Fiction Notice",
           "type": "string"
+        },
+        "opening_context": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StoryOpening"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "protagonist_goal": {
           "$ref": "#/$defs/StoryText"
@@ -416,6 +1034,102 @@
         "counterexample"
       ],
       "title": "TaskReasoning",
+      "type": "object"
+    },
+    "TimelineCard": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9-]{1,64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "target_slot": {
+          "pattern": "^[a-z0-9-]{1,64}$",
+          "title": "Target Slot",
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "target_slot"
+      ],
+      "title": "TimelineCard",
+      "type": "object"
+    },
+    "TimelineDesign": {
+      "additionalProperties": false,
+      "properties": {
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/TimelineCard"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Cards",
+          "type": "array"
+        },
+        "content_kind": {
+          "enum": [
+            "original_fiction",
+            "source_attributed"
+          ],
+          "title": "Content Kind",
+          "type": "string"
+        },
+        "kind": {
+          "const": "timeline",
+          "title": "Kind",
+          "type": "string"
+        },
+        "prompt": {
+          "$ref": "#/$defs/LocalizedCopy"
+        },
+        "slots": {
+          "items": {
+            "$ref": "#/$defs/TimelineSlot"
+          },
+          "maxItems": 12,
+          "minItems": 1,
+          "title": "Slots",
+          "type": "array"
+        },
+        "success": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "prompt",
+        "success",
+        "content_kind",
+        "kind",
+        "cards",
+        "slots"
+      ],
+      "title": "TimelineDesign",
+      "type": "object"
+    },
+    "TimelineSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9-]{1,64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/$defs/LocalizedCopy"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "TimelineSlot",
       "type": "object"
     }
   },

@@ -1,3 +1,6 @@
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+import {rm} from 'node:fs/promises';
 import {prepareInvestigationBlueprint} from '../../tools/game-package/investigation-blueprint.mjs';
 import {mkdtemp,mkdir,writeFile,unlink,rmdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -40,6 +43,9 @@ async function play(compiled,route) {
     if(plugin.kind==='routing')for(const card of plugin.cards)await session.dispatch({kind:'route',bin:card.target});
     if(plugin.kind==='dialogue')for(const item of plugin.items)await session.dispatch({kind:'read',id:item.id});
     if(plugin.kind==='tiling')for(const [id,[x,y,rotated]] of solution.entries())await session.dispatch({kind:'place',id,x,y,rotated});
+    if(plugin.kind==='spot-difference')for(const d of plugin.differences){const[x,y,w,h]=d.left;await session.dispatch({kind:'find-difference',panel:'left',x:Math.floor(x+w/2),y:Math.floor(y+h/2)});}
+    if(['timeline','image-puzzle'].includes(plugin.kind)){for(const item of plugin.kind==='timeline'?plugin.cards:plugin.pieces)await session.dispatch({kind:'place-piece',id:item.id,slot:item.target_slot});await session.dispatch({kind:'check-arrangement'});}
+    if(plugin.kind==='scene-search')await session.dispatch({kind:'complete-search',verified_numbers:[]});
     if(plugin.kind==='budget'){await session.dispatch({kind:'select',id:route});await session.dispatch({kind:'confirm'});}
     if(chapter.decision)await session.choose(chapter.options[0].id);
     const resumed=await GameSession.create(compiled.runtime,compiled.reference,compiled.presentation);
@@ -274,6 +280,13 @@ test('blueprint checks actual asset hashes and inserts a solvable activity on an
   const {input,museum}=await fixture();const source=input.tasks[0],L={zh:'合成測試',en:'Synthetic test'};
   const blueprint={schema_version:'investigation-blueprint/1',package_id:'blueprint-fixture',asset_manifest:assets,interludes:[{after_scene_id:source.scene_id,scene_id:'blueprint-scene',task_id:'blueprint-task',source_object:source.asset_object_number,required_sources:[source.asset_object_number],title:L,body:L,objective:L,opening_lines:[],plugin:{kind:'spot-difference',content_kind:'original_fiction',prompt:L,success:L,left_image:assets[0].path,right_image:assets[1].path,differences:[{id:'color',left:[0,0,10000,10000],right:[0,0,10000,10000],label:L}]}}]};
   const result=await prepareInvestigationBlueprint(input,museum,blueprint,{assetRoot:root});assert.equal(result.compiled.presentation.chapters.length,9);assert.deepEqual(result.compiled.runtime.game.scenes[0].next_scene_ids,['blueprint-scene']);assert.ok(result.receipt.bindings[0].lifecycle.checks.includes('completion'));assert.equal(result.receipt.assets.length,2);
+  input.story.payload.game.props.push({prop_id:'existing-reward',text_key:'existing-reward.text',content_kind:'original_fiction'});
+  for(const table of input.story.payload.game.locales)table.entries.push({key:'existing-reward.text',text:L[table.locale]});
+  const reuse=structuredClone(blueprint);reuse.interludes[0].reward={id:'existing-reward',text:L};
+  const reused=await prepareInvestigationBlueprint(input,museum,reuse,{assetRoot:root});
+  assert.equal(reused.compiled.runtime.game.props.filter(p=>p.prop_id==='existing-reward').length,1);
+  reuse.interludes[0].reward.text={zh:'改寫',en:'Changed'};
+  await assert.rejects(()=>prepareInvestigationBlueprint(input,museum,reuse,{assetRoot:root}),/existing reward copy differs/);
   const bad=structuredClone(blueprint);bad.asset_manifest[0].sha256='0'.repeat(64);await assert.rejects(()=>prepareInvestigationBlueprint(input,museum,bad,{assetRoot:root}),/asset changed/);
   const missing=structuredClone(blueprint);missing.interludes[0].source_object=999999;await assert.rejects(()=>prepareInvestigationBlueprint(input,museum,missing,{assetRoot:root}),/source object missing/);
  }finally{await unlink(path.join(root,'assets','left.svg'));await unlink(path.join(root,'assets','right.svg'));await rmdir(path.join(root,'assets'));await rmdir(root);}
@@ -292,4 +305,77 @@ test('station cards preserve museum identity and reject unknown objects or escap
  const result=await compiler.compile(input,museum);assert.deepEqual(result.runtime,original.runtime);assert.equal(result.presentation.stationRecords[0].number,number);
  input.presentation.stationRecords[0].reference_path='assets/reference/../../private.pdf';await assert.rejects(compiler.compile(input,museum),/station records/);
  input.presentation.stationRecords[0].reference_path='assets/reference/catalogue.pdf';input.presentation.stationRecords[0].number=-99;await assert.rejects(compiler.compile(input,museum),/station records/);
+});
+
+
+for(const inputKind of ['runtime-package','narrative-draft','embedded-design'])test(inputKind+' investigation command packages all four activities and their checked images, preserving the playable ending',async()=>{
+ const root=await mkdtemp(path.join(tmpdir(),'pastport-investigation-command-'));
+ const run=promisify(execFile),tool=path.resolve('tools/game-package/build-story-package.mjs');
+ const execute=args=>process.env.PASTPORT_GAMEPLAY_PYTHON?run(process.env.PASTPORT_GAMEPLAY_PYTHON,['-m','pastport_gameplay','investigate',...args.slice(1)]):run(process.execPath,[tool,...args]);
+ try{
+  const {input,museum}=await fixture();const L={zh:'合成測試',en:'Synthetic test'};
+  const museumDir=path.join(root,'museum'),assetRoot=path.join(root,'activity');
+  await mkdir(path.join(museumDir,'data'),{recursive:true});await mkdir(path.join(museumDir,'assets'));
+  await mkdir(path.join(museumDir,'media'));await mkdir(path.join(museumDir,'scene3d'));
+  await writeFile(path.join(museumDir,'scene3d','index.html'),'<html>synthetic geometry fixture</html>');
+  const media=Buffer.from('synthetic media'),mediaHash=createHash('sha256').update(media).digest('hex');
+  for(const object of museum.objects){object.media_sha256=mediaHash;await writeFile(path.join(museumDir,object.media_path),media);}
+  for(const asset of input.story.payload.media_manifest)asset.sha256=mediaHash;
+  input.museum.snapshot_sha256=await museumSnapshotHash(museum);
+  await writeFile(path.join(museumDir,'data/presentation.json'),JSON.stringify(museum));
+  await writeFile(path.join(museumDir,'data/runtime.json'),JSON.stringify(input.story.payload));
+  await writeFile(path.join(museumDir,'data/scene3d-input.json'),JSON.stringify({worlds:[{root:'.'}]}));
+  await mkdir(path.join(assetRoot,'assets','investigation'),{recursive:true});
+  const assets=[];
+  for(const name of ['left.svg','right.svg','chat-zh.svg','chat-en.svg']){
+   const bytes='<svg xmlns="http://www.w3.org/2000/svg"><text>'+name+'</text></svg>',relative='assets/investigation/'+name;
+   await writeFile(path.join(assetRoot,relative),bytes);assets.push({path:relative,sha256:createHash('sha256').update(bytes).digest('hex'),content_kind:'original_fiction',source_claim_ids:[]});
+  }
+  const numbers=[...new Set(input.tasks.map(t=>t.asset_object_number))].slice(0,2);
+  const configs=[
+   {kind:'spot-difference',left_image:assets[0].path,right_image:assets[1].path,differences:[{id:'change',left:[0,0,5000,5000],right:[0,0,5000,5000],label:L}]},
+   {kind:'timeline',cards:[{id:'later',text:L,target_slot:'second'},{id:'earlier',text:L,target_slot:'first'}],slots:[{id:'first',label:L},{id:'second',label:L}]},
+   {kind:'image-puzzle',image:{zh:assets[2].path,en:assets[3].path},columns:2,rows:2,pieces:[2,0,3,1].map((target_slot,i)=>({id:'piece-'+i,target_slot}))},
+   {kind:'scene-search',targets:numbers.map(number=>({number,clue:L}))},
+  ];
+  const anchors=input.story.payload.game.scenes.filter(s=>s.decision_id===null&&s.next_scene_ids.length===1);
+  assert.ok(anchors.length>=1);
+  for(const task of input.tasks)task.access={view_id:"physical-scene",station_id:"spawn",interaction:"inspect"};
+  const blueprint={schema_version:'investigation-blueprint/1',package_id:'automatic-investigation-fixture',asset_manifest:assets,interludes:configs.map((config,index)=>{
+   const source=input.tasks.find(t=>t.scene_id===anchors[0].scene_id);
+   return {after_scene_id:index===0?source.scene_id:'activity-scene-'+(index-1),scene_id:'activity-scene-'+index,task_id:'activity-task-'+index,source_object:source.asset_object_number,required_sources:config.kind==='scene-search'?numbers:[source.asset_object_number],title:L,body:L,objective:L,opening_lines:[],plugin:{...config,prompt:L,success:L,content_kind:'original_fiction'}};
+  })};
+  if(inputKind!=='runtime-package'){
+   const source=input.story.payload;
+   const referenceDraft=JSON.parse(await readFile(new URL('../fixtures/reference/draft-result.json',import.meta.url)));
+   input.story={kind:'narrative-draft',package_id:'synthetic-investigation',payload:{package:{project_id:source.project_id,schema_version:source.schema_version,content_version:source.content_version,evidence_package_hash:source.evidence_package_hash,candidate_id:'synthetic-candidate',routes:[{artifact_id:'synthetic-route',project_id:source.project_id,kind:'route',schema_version:'0.1.0',content_version:'1',sha256:'c'.repeat(64)}],game:source.game,fiction_notice:'Synthetic fiction notice.'},authoring_report:[referenceDraft.payload.authoring_report[0]],unresolved_items:[]}};
+  }
+  if(inputKind==='embedded-design'){
+   const encoded=JSON.stringify(blueprint),chunks=encoded.match(/[\s\S]{1,8000}/g);
+   for(const table of input.story.payload.package.game.locales){
+    table.entries.push({key:'preparation.investigation_v1',text:'investigation-blueprint/1'},{key:'preparation.investigation_parts',text:String(chunks.length)});
+    chunks.forEach((text,index)=>table.entries.push({key:'preparation.investigation_part.'+(index+1),text}));
+   }
+  }
+  const inputFile=path.join(root,'input.json'),blueprintFile=path.join(root,'blueprint.json'),output=path.join(root,'game');
+  await writeFile(inputFile,JSON.stringify(input));await writeFile(blueprintFile,JSON.stringify(blueprint));
+  const args=['from-investigation','--input',inputFile,'--museum',museumDir,...(inputKind==='embedded-design'?[]:['--blueprint',blueprintFile]),'--activity-assets',assetRoot,'--output',output];
+  await execute(args);
+  const load=async name=>JSON.parse(await readFile(path.join(output,'data',name+'.json'),'utf8'));
+  const receipt=await load('investigation-receipt');assert.equal(receipt.model_calls,0);assert.equal(receipt.assets.length,4);assert.equal(receipt.bindings.length,4);
+  for(const asset of assets)assert.equal(createHash('sha256').update(await readFile(path.join(output,asset.path))).digest('hex'),asset.sha256);
+  const compiled={runtime:await load('runtime'),reference:await load('reference'),presentation:await load('presentation')};
+  assert.equal((await play(compiled,'family')).state.ending_id,'E01');
+  if(inputKind!=='runtime-package')assert.ok(compiled.presentation.intro.en.includes('Synthetic fiction notice.'));
+  assert.ok(!compiled.runtime.game.locales[0].entries.some(e=>e.key==='preparation.investigation_v1'));
+  await assert.rejects(execute(args),/Output exists/);
+  await mkdir(path.join(museumDir,'assets','investigation'));
+  await writeFile(path.join(museumDir,assets[0].path),'museum content');
+  await assert.rejects(execute([...args.slice(0,-1),path.join(root,'collision-game')]),/overwrite museum content/);
+  await assert.rejects(readFile(path.join(root,'collision-game','manifest.json')));
+  await unlink(path.join(museumDir,assets[0].path));
+  await writeFile(path.join(assetRoot,assets[0].path),'changed');
+  await assert.rejects(execute([...args.slice(0,-1),path.join(root,'bad-game')]),/asset changed/);
+  await assert.rejects(readFile(path.join(root,'bad-game','manifest.json')));
+ }finally{await rm(root,{recursive:true,force:true});}
 });
