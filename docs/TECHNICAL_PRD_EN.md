@@ -405,7 +405,6 @@ A package may provide opening-known `characterProfiles` linked by stable IDs to 
 
 **Optional player scene preparation**
 
-`startupPreparation=lod` is an explicit presentation option, separate from narrative and existing save identity. Only a player start loads the scene; preparation must complete through a same-origin, current-frame, request-bound protocol before character introductions and story entry. Progress is not success. Failure or timeout preserves progress and offers explicit retry, without silently admitting an unprepared renderer. The current school copy uses an adapter for its saved Spark renderer; missing adapters fail explicitly rather than implying universal support. Players see Low/Standard quality switching without scene reload or rebuilding an existing LOD; diagnostics are not player controls. Locale reaches scene hints, and a single registered view has no redundant switcher. Previous line reviews current conversation text without undoing choices or state; it is absent on the first line.
 
 - **Inputs:** original PDF/Evidence, reviewed objects, matched space/navigation, capabilities, brief, scope and budget.
 - **Outputs:** readable script, `NarrativeDraft`, per-task gameplay/spatial intents, author report, locks, checks and model/usage receipts.
@@ -720,3 +719,10 @@ The JS player host additionally registers bounded `spot-difference`, `timeline`,
 Search completion uses host-recorded observations; the player must first select scene objects. A checklist or notebook cannot collect them. The three desktop activities use DOM/SVG with drag/drop and select/place alternatives. Renderers exposing the hook suspend background drawing while a centered activity is open, then resume without rebuilding LOD; search remains live. Functional tests, image readability, spatial validation and device FPS are recorded separately.
 
 Reusable guidance and the template live in the Gameplay Preparation Skill investigation-patterns reference and investigation-blueprint.template.json; Narrative specifies the inference, premises and consequences. This blueprint path does not expand the Python typed Narrative/Gameplay source-reading/coverage intent union or establish a fresh Story Agent end-to-end run.
+
+The start screen independently enables or disables Auto LOD. A device preference overrides package `startupPreparation` (`lod` or `none`). Off skips optimization but still waits for scene readiness, then presents a spoiler-free `briefing`, character introductions and gameplay. Cast and graphics controls do not depend on LOD. The display-only briefing contains a bilingual title, 1–10 heading/body sections and closing text. A collapsible SVG minimap uses same-origin collider bounds, registered object positions and camera direction, with pose updates at most five times per second. It provides orientation only, grants no observations, collects no clues and claims no metre calibration. It hides during dialogue and modal tasks.
+
+
+The minimap is a simple room-plan schematic with data-driven `mapSymbols` (registered object number, symbol and localized label), without scan cross-sections, view cones or trails. It is not a measured floor plan and changes no spatial review authority. People, Story background and Case notebook remain adjacent in the header.
+
+Optional `stationRecords` attach a localized fictional station title/purpose and local reference PDF to registered object numbers. This is presentation-only and changes no sources, claims or spatial approval. Original evidence and fictional station content remain distinct. PDF links accept only fixed local filenames under assets/reference/, not external or traversal paths.

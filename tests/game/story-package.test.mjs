@@ -278,3 +278,18 @@ test('blueprint checks actual asset hashes and inserts a solvable activity on an
   const missing=structuredClone(blueprint);missing.interludes[0].source_object=999999;await assert.rejects(()=>prepareInvestigationBlueprint(input,museum,missing,{assetRoot:root}),/source object missing/);
  }finally{await unlink(path.join(root,'assets','left.svg'));await unlink(path.join(root,'assets','right.svg'));await rmdir(path.join(root,'assets'));await rmdir(root);}
 });
+
+test('opening briefing survives compilation without changing gameplay and rejects incomplete copy',async()=>{
+ const {input,museum}=await fixture();const compiler=new StoryPackageCompiler();const original=await compiler.compile(input,museum);
+ input.presentation.startupPreparation='none';input.presentation.briefing={title:{zh:'今晚',en:'Tonight'},sections:[{heading:{zh:'你',en:'You'},body:{zh:'舊組員',en:'Former teammate'}}],closing:{zh:'開始',en:'Begin'}};
+ const result=await compiler.compile(input,museum);assert.deepEqual(result.runtime,original.runtime);assert.deepEqual(result.presentation.briefing,input.presentation.briefing);
+ input.presentation.briefing.sections[0].body={en:'Missing Chinese'};await assert.rejects(compiler.compile(input,museum),/briefing/);
+});
+
+test('station cards preserve museum identity and reject unknown objects or escaping references',async()=>{
+ const {input,museum}=await fixture();const compiler=new StoryPackageCompiler(),original=await compiler.compile(input,museum);const number=museum.objects[0].number;
+ input.presentation.stationRecords=[{number,title:{zh:'來源站',en:'Source station'},body:{zh:'遊戲工作站，與原始資料分開。',en:'A fictional station, separate from the original source.'},reference_path:'assets/reference/catalogue.pdf'}];
+ const result=await compiler.compile(input,museum);assert.deepEqual(result.runtime,original.runtime);assert.equal(result.presentation.stationRecords[0].number,number);
+ input.presentation.stationRecords[0].reference_path='assets/reference/../../private.pdf';await assert.rejects(compiler.compile(input,museum),/station records/);
+ input.presentation.stationRecords[0].reference_path='assets/reference/catalogue.pdf';input.presentation.stationRecords[0].number=-99;await assert.rejects(compiler.compile(input,museum),/station records/);
+});

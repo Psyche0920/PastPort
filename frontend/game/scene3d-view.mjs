@@ -1,22 +1,26 @@
 import {ObjectGesture} from './interaction.mjs';
+import {RoomMinimap} from './room-minimap.mjs';
 import {ScenePreparation} from './scene-preparation.mjs';
 /** Browser adapter for the isolated 3D host, retaining the existing story UI. */
 export class Scene3DView {
   constructor({session,inspect,openTask,notify,refresh,closeDialogue,guide,getLocale=()=>'zh'}) {
     Object.assign(this,{session,inspect,openTask,notify,refresh,closeDialogue,guide,getLocale});
     this.frame=document.getElementById('museum');this.ready=false;this.active=false;this.token=0;this.world=1;this.arrivedSources=new Set();this.readOnlySources=new Set();this.renderMode=new URLSearchParams(location.search).get('render')==='original'?'original':'stylized';
-    this.locale=getLocale();this.deferred=session.presentation.startupPreparation==='lod';this.preparation=new ScenePreparation();this.preparationMessage=null;this.qualityName='low';
+    this.locale=getLocale();this.deferred=true;this.preparation=new ScenePreparation();this.preparationMessage=null;this.qualityName='low';
     this.scenePickedSources=new Set();this.accessSequence=0;this.pendingInspection=null;
     this.gesture=new ObjectGesture({inspect:n=>this.inspectWithAccess(n),approach:n=>this.approach(n)});
     document.body.classList.add('scene3d-mode');
     document.querySelector('.brand').href='/?scene=3d';
     const tools=document.querySelector('.topbar nav'),menu=document.createElement('details'),summary=document.createElement('summary');
     menu.className='scene-tools';this.menuSummary=summary;summary.textContent=this.t('選單','Menu');menu.append(summary);tools.before(menu);menu.append(tools);
+    this.minimap=new RoomMinimap({parent:document.getElementById('stage'),allowedNumbers:new Set(session.presentation.objects.map(o=>o.number)),mapSymbols:session.presentation.mapSymbols??[],getLocale});
     this.frame.src=this.deferred?'about:blank':'/world/1/scene3d/index.html?render='+this.renderMode;
     this.listener=event=>{
       if(event.origin!==location.origin||event.source!==this.frame.contentWindow)return;
       const msg=event.data;
-      if(msg?.type==='story3d:ready'){this.ready=true;this.setLocale(this.getLocale(),true);this.post({type:'story3d:views',count:this.session.presentation.scenes.length});if(this.preparationMessage)this.post({...this.preparationMessage,locale:this.locale});this.refresh();if(!this.deferred)this.startGuide();}
+      if(msg?.type==='story3d:map')this.minimap.setLayout(msg);
+      if(msg?.type==='story3d:pose')this.minimap.updatePose(msg);
+      if(msg?.type==='story3d:ready'){this.qualitySupported=msg.qualityControl===true;this.ready=true;this.setLocale(this.getLocale(),true);this.post({type:'story3d:views',count:this.session.presentation.scenes.length});if(this.preparationMessage)this.post({...this.preparationMessage,locale:this.locale});this.refresh();if(!this.deferred)this.startGuide();}
       if(this.preparation.accept(msg))return;
       if(msg?.type==='story3d:quality-changed'&&['low','standard'].includes(msg.value)){this.qualityName=msg.value;this.updateQualityLabel();}
       if(msg?.type==='story3d:render-mode'&&['original','stylized'].includes(msg.mode)){this.renderMode=msg.mode;const url=new URL(location.href);url.searchParams.set('render',msg.mode);history.replaceState(null,'',url);}
@@ -49,7 +53,7 @@ export class Scene3DView {
     addEventListener('message',this.listener);
     this.frame.addEventListener('load',()=>this.post({type:'story3d:ping'}));
     this.blocked=()=>this.session.paused||Boolean(document.querySelector('dialog:modal'))||!document.getElementById('dialogue').hidden;
-    this.observer=new MutationObserver(()=>{this.post({type:'story3d:pause',paused:this.blocked()});this.post({type:'story3d:activity',active:['spot-difference','timeline','image-puzzle'].includes(this.session.current.plugin?.kind)&&Boolean(document.getElementById('story-panel').matches(':modal'))});});
+    this.observer=new MutationObserver(()=>{this.updateMinimap();this.post({type:'story3d:pause',paused:this.blocked()});this.post({type:'story3d:activity',active:['spot-difference','timeline','image-puzzle'].includes(this.session.current.plugin?.kind)&&Boolean(document.getElementById('story-panel').matches(':modal'))});});
     this.observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['open','hidden']});
     const nav=document.createElement('nav');nav.className='world-select';this.worldButtons=new Map();
     for(const [index]of this.session.presentation.scenes.entries()){const i=index+1;const b=document.createElement('button');b.textContent=this.t(`場景 ${i}`,`View ${i}`);b.disabled=i===this.world;b.setAttribute('aria-pressed',String(i===this.world));b.onclick=()=>this.post({type:'story3d:navigate',world:i});this.worldButtons.set(i,b);nav.append(b);}
@@ -57,11 +61,11 @@ export class Scene3DView {
     if(this.deferred){this.qualityButton=document.createElement('button');this.qualityButton.id='quality-button';this.qualityButton.hidden=true;this.qualityButton.onclick=()=>this.post({type:'story3d:quality',value:this.qualityName==='low'?'standard':'low'});menu.before(this.qualityButton);this.updateQualityLabel();}
   }
   t(zh,en){return this.getLocale()==='en'?en:zh;}
-  setLocale(locale,force=false){if(this.locale===locale&&!force)return;this.locale=locale;this.menuSummary.textContent=this.t('選單','Menu');for(const[i,b]of this.worldButtons??[])b.textContent=this.t(`場景 ${i}`,`View ${i}`);this.updateQualityLabel();this.post({type:'story3d:locale',locale});}
-  updateQualityLabel(){if(!this.qualityButton)return;this.qualityButton.textContent=this.t('畫面品質：','Graphics quality: ')+this.t(this.qualityName==='low'?'低':'標準',this.qualityName==='low'?'Low':'Standard');this.qualityButton.title=this.t('按一下切換低／標準畫面品質；保留已建立嘅 LOD','Switch Low / Standard graphics quality without rebuilding LOD');}
-  prepare(onProgress){
+  setLocale(locale,force=false){if(this.locale===locale&&!force)return;this.locale=locale;this.menuSummary.textContent=this.t('選單','Menu');for(const[i,b]of this.worldButtons??[])b.textContent=this.t(`場景 ${i}`,`View ${i}`);this.updateQualityLabel();this.minimap.setLocale();this.post({type:'story3d:locale',locale});}
+  updateQualityLabel(){if(!this.qualityButton)return;this.qualityButton.textContent=this.t('畫面品質：','Graphics quality: ')+this.t(this.qualityName==='low'?'低':'標準',this.qualityName==='low'?'Low':'Standard');this.qualityButton.title=this.t('切換低／標準畫面品質，唔會改變你揀嘅 LOD 設定','Switch Low / Standard graphics quality without changing your LOD choice');}
+  prepare(onProgress,{buildLod=true}={}){
     this.preparation.onProgress=onProgress;
-    return this.preparation.start(message=>{this.preparationMessage=message;if(this.ready)this.post({...message,locale:this.getLocale()});else this.frame.src=`/world/${this.world}/scene3d/index.html?render=${this.renderMode}&player=1`;}).then(()=>{this.preparationMessage=null;if(this.qualityButton)this.qualityButton.hidden=false;});
+    return this.preparation.start(message=>{this.preparationMessage=message;if(this.ready)this.post({...message,locale:this.getLocale()});else this.frame.src=`/world/${this.world}/scene3d/index.html?render=${this.renderMode}&player=1`;},{buildLod}).then(()=>{this.preparationMessage=null;if(this.qualityButton){this.qualityButton.hidden=false;this.qualityButton.disabled=!this.qualitySupported;}});
   }
   post(message){this.frame.contentWindow?.postMessage(message,location.origin);}
   switchWorld(world,arrival=null){
@@ -127,10 +131,13 @@ export class Scene3DView {
   closeTask(){this.post({type:'story3d:pause',paused:this.blocked()});}
   setSpeaker(){}
   highlightSpeaker(){}
+  updateMinimap(){this.minimap.setVisible(document.body.dataset.playerStartup==='playing'&&!this.blocked());}
   renderActors(){
+    this.updateMinimap();
     this.post({type:'story3d:activity',active:['spot-difference','timeline','image-puzzle'].includes(this.session.current.plugin?.kind)&&Boolean(document.getElementById('story-panel').matches(':modal'))});
     this.post({type:'story3d:pause',paused:this.blocked()});
     const search=this.session.current.plugin?.kind==='scene-search'&&!this.session.taskDone();const number=search?null:this.session.nextSource();
+    this.minimap.setTarget(number);
     const object=this.session.presentation.objects.find(o=>o.number===number);
     this.post({type:'story3d:objective',number,stage:this.session.current.id,token:this.token,mode:search?'search':'inspect',title:search?this.t('搜尋房間物件','Find the room objects'):object?.historical_title??'',paused:this.blocked()});
   }
