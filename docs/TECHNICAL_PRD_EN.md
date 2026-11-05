@@ -50,7 +50,7 @@ UI, structure, execution and content quality are separate acceptance layers. Old
 
 | Item | Current location |
 |---|---|
-| Application source | `/Users/hanweijia/PastPort`, local main |
+| Application source | Any PastPort clone, local main; commands run from the repository root |
 | Organizer | `http://127.0.0.1:18840/organizer/` |
 | Default materials/account configuration | `var/organizer-integration/catalog.json` and `staff-accounts.json`; private configuration |
 | Organizer records | `var/organizer-integration/server/organizer/organizer.sqlite3` |
@@ -542,7 +542,6 @@ The shared `build-story-package.mjs` tool performs assembly. There is no standal
 ### 10.2 Local workspace
 
 ```sh
-cd /Users/hanweijia/PastPort
 uv sync --extra authoring --extra game-making
 .venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
@@ -563,22 +562,18 @@ Manifests specify inputs/outputs; do not hardcode old Demo workspaces. Existing 
 
 ### 10.4 Organizer service
 
-For this computer's configuration, install dependencies as in §10.2, then run the command below. If the service is already running, open it instead of starting another instance.
+Install dependencies as in §10.2. If the service is already running, open it instead of starting another instance. On each computer, first run `organizer-init`: it creates the single administrator in the Git-ignored `var/organizer-integration/staff-accounts.json` (username always `admin`, matching the sign-in page; roles editor/evidence/narrative/publisher/operator; directory 0700, file 0600; password hash only). The password is typed twice in the terminal, never shown, and needs at least 12 characters; an existing file is never overwritten. If the account file is missing, the start error names it and `organizer-init`.
 
 ```sh
-cd /Users/hanweijia/PastPort
-.venv/bin/python -m pastport \
-  --accounts var/organizer-integration/staff-accounts.json \
-  --data-directory var/organizer-integration/server \
-  --organizer-catalog var/organizer-integration/catalog.json \
-  --organizer-player-assets "/Users/hanweijia/Documents/ChatGPT/PastPort/work/main-integration/var/sdk-real-material-20261031-01/story-authoring/game-3d-open-roof-v3/assets" \
-  --evidence-mode disabled --narrative-mode disabled --resources-mode disabled \
-  --port 18840
+.venv/bin/python -m pastport organizer-init   # once per computer
+.venv/bin/python -m pastport --accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server --evidence-mode disabled --narrative-mode disabled --resources-mode disabled --port 18840
 ```
 
-Open `http://127.0.0.1:18840/organizer/` and use the existing administrator username/password. Initial setup is complete on this computer; this command does not initialize/reset it. Restart invalidates in-memory sessions, requiring another login. Maintainers configure accounts; organizers do not enter Bearer tokens or run terminal initialization. The CLI binds loopback with one worker; this is not a public deployment recipe.
+Only on a computer holding the team's private default materials, add `--organizer-catalog var/organizer-integration/catalog.json` and `--organizer-player-assets <local player assets directory>`; without them Organizer runs normally and imports team delivery packages.
 
-The disabled options affect old editorial demo channels, not Organizer's bounded SDK chain. Player assets are registered private environment materials, not source; another machine must supply files and update configuration. The repository and generated materials are not an unrestricted distributable dataset. Accounts/credentials do not enter static web resources, game bundles or Git.
+Open `http://127.0.0.1:18840/organizer/` and sign in with `admin` and this computer's password. The start command never initializes or resets it; change it with `account-password`. Restart invalidates in-memory sessions, requiring another login. Organizers do not enter Bearer tokens. The CLI binds loopback with one worker; this is not a public deployment recipe.
+
+The disabled options affect old editorial demo channels, not Organizer's bounded SDK chain. Default materials and player assets are private environment materials, not source, prepared only on computers that need them. The repository and generated materials are not an unrestricted distributable dataset. Accounts/credentials do not enter static web resources, game bundles or Git.
 
 ### 10.5 Independent game preview
 

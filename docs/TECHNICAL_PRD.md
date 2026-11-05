@@ -50,7 +50,7 @@ PastPort 把真实遗址材料、物件及空间转换为可浏览、可阅读�
 
 | 项目 | 当前位置 |
 |---|---|
-| 应用源码 | `/Users/hanweijia/PastPort`，本地main |
+| 应用源码 | 任意位置的 PastPort clone，本地main；命令均在仓库根目录运行 |
 | Organizer入口 | `http://127.0.0.1:18840/organizer/` |
 | 默认资料与账户配置 | `var/organizer-integration/catalog.json`、`staff-accounts.json`；均为私有配置 |
 | Organizer记录库 | `var/organizer-integration/server/organizer/organizer.sqlite3` |
@@ -543,7 +543,6 @@ Story 不读取整个模型重新做识别，不重复确认所有已挂载物�
 ### 10.2 本地工作区
 
 ```sh
-cd /Users/hanweijia/PastPort
 uv sync --extra authoring --extra game-making
 .venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
@@ -564,22 +563,18 @@ python3.12 -m venv .venv
 
 ### 10.4 Organizer服务
 
-当前本机配置的可执行启动命令如下；依赖安装见10.2，已有服务时直接打开入口，不重复启动：
+依赖安装见10.2；已有服务时直接打开入口，不重复启动。每台电脑首次使用先运行 `organizer-init`：它在已被 Git 忽略的 `var/organizer-integration/staff-accounts.json` 创建唯一管理员（账号固定 `admin`，与登录页一致；权限 editor/evidence/narrative/publisher/operator；目录0700、文件0600；只存密码哈希），密码在终端输入两次且不显示，至少12个字符；文件已存在时拒绝覆盖。账户文件缺失时，启动错误会指出该文件和 `organizer-init`。
 
 ```sh
-cd /Users/hanweijia/PastPort
-.venv/bin/python -m pastport \
-  --accounts var/organizer-integration/staff-accounts.json \
-  --data-directory var/organizer-integration/server \
-  --organizer-catalog var/organizer-integration/catalog.json \
-  --organizer-player-assets "/Users/hanweijia/Documents/ChatGPT/PastPort/work/main-integration/var/sdk-real-material-20261031-01/story-authoring/game-3d-open-roof-v3/assets" \
-  --evidence-mode disabled --narrative-mode disabled --resources-mode disabled \
-  --port 18840
+.venv/bin/python -m pastport organizer-init   # once per computer
+.venv/bin/python -m pastport --accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server --evidence-mode disabled --narrative-mode disabled --resources-mode disabled --port 18840
 ```
 
-打开 `http://127.0.0.1:18840/organizer/`，使用已有单管理员账号密码。当前配置已完成首次设置；命令不初始化或重置密码。重启会使内存会话失效，需要重新登录。维护者配置账户，主办方不填写Bearer令牌或运行终端初始化步骤。CLI只监听回环地址、单worker；不把此命令当公网部署方案。
+仅在存有团队私有默认材料的电脑上追加 `--organizer-catalog var/organizer-integration/catalog.json` 与 `--organizer-player-assets <本机播放器资源目录>`；不追加时 Organizer 照常运行并可导入团队交付包。
 
-这里关闭旧editorial演示通道，Organizer仍通过自己的受控SDK制作链执行。播放器assets路径来自本机已登记的私有环境材料，不是源码目录；换机器时必须准备相应文件并更新配置。源码仓库和当前生成文件不是一套可无条件分发的数据集。账户、凭据不进入网页静态资源、游戏包或Git。
+打开 `http://127.0.0.1:18840/organizer/`，用 `admin` 和本机密码登录。启动命令不初始化或重置密码；改密码用 `account-password`。重启会使内存会话失效，需要重新登录。主办方不填写Bearer令牌。CLI只监听回环地址、单worker；不把此命令当公网部署方案。
+
+这里关闭旧editorial演示通道，Organizer仍通过自己的受控SDK制作链执行。默认材料与播放器assets是私有环境材料，不是源码目录，只在需要它们的电脑上单独准备。源码仓库和当前生成文件不是一套可无条件分发的数据集。账户、凭据不进入网页静态资源、游戏包或Git。
 
 ### 10.5 独立游戏预览
 
