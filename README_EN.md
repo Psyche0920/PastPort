@@ -27,40 +27,36 @@ Extract the archive, enter the matching directory and follow `OPEN.txt`. Open th
 
 ## Startup and use
 
-Run every command below from the root of your PastPort checkout, wherever you cloned it; its local main source is the baseline. Requires Python 3.12, uv, Node.js and a WebGL-capable browser.
+You need Python 3.12, uv, Node.js and a WebGL browser. Run every command in your PastPort folder.
 
-For initial installation or dependency changes; skip if already installed:
+### Organizer
 
-```sh
-uv sync --extra authoring --extra game-making
-```
+1. **Install** (first time, or after dependencies change):
+   ```sh
+   uv sync --extra authoring --extra game-making
+   ```
+2. **Create this computer's admin** (once). Choose a password of at least 12 characters; it is not shown while you type.
+   ```sh
+   .venv/bin/python -m pastport organizer-init
+   ```
+3. **Start Organizer** and keep the terminal open (Ctrl+C stops it):
+   ```sh
+   .venv/bin/python -m pastport organizer
+   ```
+4. **Open** http://127.0.0.1:18840/organizer/ and sign in as `admin`.
 
-### Organizer: organizer-facing entry
+**Play a team package:** Progress & delivery → choose the `.tar.gz` → Import delivery → Open standalone player preview.
 
-To add a team delivery to Organizer, select its `.tar.gz` file under **Progress & delivery** and click **Import delivery**. The matching entry appears under your current account. Open its standalone player preview to play. Use packages published by your team.
+<details>
+<summary>More options</summary>
 
-[Open local Organizer](http://127.0.0.1:18840/organizer/). If already running, open it rather than starting another instance.
+- **Change the password:** `.venv/bin/python -m pastport account-password --accounts var/organizer-integration/staff-accounts.json --actor organizer-admin`
+- **Already running?** Just open the address; don't start a second copy. If port 18840 is busy, check for a running Organizer before stopping anything.
+- **Team default materials** (only on a computer that has them): add `--organizer-catalog var/organizer-integration/catalog.json --organizer-player-assets <player assets folder>` to the start command. Then **3D Review Preview** on the `3d-test777` history entry opens its 30 candidate positions, and **Continue This Project** leads to Story preparation.
+- The account file and `var/` stay on this computer and out of Git. Never share account files, API keys or private materials.
+- Language: switch 中文 / English at the top right. A restart requires signing in again. The start command keeps the older editorial demo channels off; Organizer's own SDK generation still asks for explicit consent.
 
-**First time on each computer:** create this computer's administrator. The username is always `admin` (the sign-in page uses the same fixed name); the password needs at least 12 characters, is not shown while typing, and is stored only as a hash in the Git-ignored `var/organizer-integration/staff-accounts.json`. The command never overwrites an existing file; to change the password use `.venv/bin/python -m pastport account-password --accounts var/organizer-integration/staff-accounts.json --actor organizer-admin`.
-
-```sh
-.venv/bin/python -m pastport organizer-init
-```
-
-**Start:**
-
-```sh
-.venv/bin/python -m pastport --accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server --evidence-mode disabled --narrative-mode disabled --resources-mode disabled --port 18840
-```
-
-Only on a computer that holds the team's private default materials, also add `--organizer-catalog var/organizer-integration/catalog.json` and `--organizer-player-assets <local player assets directory>`. Without them Organizer runs normally and imports team delivery packages.
-
-On a computer that holds the team's private materials, after starting Organizer and signing in, go to **Production Progress and Delivery**. Open **3D Review Preview** on the `3d-test777` 3D review history entry. Organizer starts and manages the local preview, which contains 30 candidate positions. To prepare Story from the same version, select **Continue This Project** on that card and proceed to Story preparation. The scene and Story inputs use private data stored in the local job directory.
-
-Sign in with `admin` and this computer's password, without a token. Manually choose Chinese / English in the upper-right corner; the preference survives refresh. Service restart requires login again. Keep the terminal open; Ctrl+C stops it. If the port is occupied, check whether the service is already running rather than terminating unknown processes.
-
-The `disabled` options disable older editorial demo channels, not explicitly authorized Organizer SDK generation. Default materials and player assets are private input dependencies and are absent from a Git clone; a maintainer prepares them separately on a computer that needs them and supplies those paths. Do not copy or publish account configuration, API keys or private materials.
-
+</details>
 
 Existing-3D uploads: select “Original PDF + photos + existing SPZ / PLY scene”, leave defaults unchecked, enter a new project ID and upload all four inputs. Save, review the finite call budgets, then prepare the environment. Continue through review → Story → game build. Recognition/Story calls require explicit consent; Marble calls are zero. Photos accept images or ZIP; PLY must be a binary little-endian triangle mesh. Local Chrome and Node.js are required for capture. An insufficient Evidence budget stops before dispatch: 44 photos and 62 PDF pages require at least 43 first-pass calls, plus per-object verification. The old eight-call default is not a full-set budget. Wiring/simulated execution and a real single-object handoff have been checked; a fresh full-set model run remains upload-test acceptance.
 

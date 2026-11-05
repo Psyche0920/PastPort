@@ -27,40 +27,36 @@
 
 ## 启动与使用
 
-以下命令都在本机 PastPort 仓库根目录（clone 到任意位置均可）运行，以本地 main 源码为准。需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。
+需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。所有命令都在 PastPort 文件夹里运行。
 
-首次安装或依赖变化后执行；已安装时跳过：
+### Organizer
 
-```sh
-uv sync --extra authoring --extra game-making
-```
+1. **安装**（首次，或依赖变化后）：
+   ```sh
+   uv sync --extra authoring --extra game-making
+   ```
+2. **创建本机管理员**（只需一次）。设置至少12个字符的密码，输入时不显示。
+   ```sh
+   .venv/bin/python -m pastport organizer-init
+   ```
+3. **启动 Organizer**，保持终端打开（Ctrl+C 停止）：
+   ```sh
+   .venv/bin/python -m pastport organizer
+   ```
+4. **打开** http://127.0.0.1:18840/organizer/ ，用 `admin` 登录。
 
-### Organizer：主办方入口
+**试玩团队交付包：** 制作进度与交付 → 选择 `.tar.gz` → 导入交付包 → 打开独立玩家预览。
 
-下载团队交付包后，可在「制作进度与交付」选择 `.tar.gz` 文件并点击「导入交付包」。同名交付记录会出现在当前账号下，点「打开独立玩家预览」即可试玩。请使用团队发布的包。
+<details>
+<summary>更多选项</summary>
 
-[打开本机 Organizer](http://127.0.0.1:18840/organizer/)。服务已运行时直接打开，不重复启动。
+- **修改密码：** `.venv/bin/python -m pastport account-password --accounts var/organizer-integration/staff-accounts.json --actor organizer-admin`
+- **已经在运行？** 直接打开网址，不要再启动一份。端口 18840 被占用时，先确认是否已有 Organizer 在运行，不要结束未知进程。
+- **团队默认材料**（仅限存有这些材料的电脑）：启动命令后加 `--organizer-catalog var/organizer-integration/catalog.json --organizer-player-assets <播放器资源目录>`。之后可在 `3d-test777` 的历史记录中打开「3D 审核预览」（30 个候选落点），用「继续此项目」进入准备故事。
+- 账户文件和 `var/` 只留在本机，不进 Git。不要分享账户文件、API 密钥或私有材料。
+- 右上角切换中文 / English。服务重启后需要重新登录。启动命令会关闭旧的 editorial 演示通道；Organizer 自己的 SDK 生成仍需明确授权。
 
-**每台电脑第一次使用：** 创建本机管理员。账号固定为 `admin`（登录页同样固定），密码至少12个字符，输入时不显示，只以哈希保存在已被 Git 忽略的 `var/organizer-integration/staff-accounts.json`。已有该文件时命令不会覆盖；改密码用 `.venv/bin/python -m pastport account-password --accounts var/organizer-integration/staff-accounts.json --actor organizer-admin`。
-
-```sh
-.venv/bin/python -m pastport organizer-init
-```
-
-**启动：**
-
-```sh
-.venv/bin/python -m pastport --accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server --evidence-mode disabled --narrative-mode disabled --resources-mode disabled --port 18840
-```
-
-只有存有团队私有默认材料的电脑，才再加 `--organizer-catalog var/organizer-integration/catalog.json` 和 `--organizer-player-assets <本机播放器资源目录>`；其他电脑不加，Organizer 照常运行并可导入团队交付包。
-
-用 `admin` 和本机设置的密码登录，不需要填写令牌；右上角可手动选择中文 / English，刷新后保留选择。服务重启后需要重新登录。保持终端打开，Ctrl+C 停止；端口被占用时先确认是否已有服务，不结束未知进程。
-
-`disabled` 参数关闭旧 editorial 演示通道，不关闭 Organizer 经 SDK 执行的明确授权生成路径。默认材料目录和播放器 assets 是私有输入依赖，不随 Git clone 提供；需要时由维护者在该电脑上单独准备，并替换参数中的路径。不要复制或公开账号配置、API密钥与材料。
-
-在存有团队私有材料的电脑上，启动 Organizer 并登录后，进入「制作进度与交付」，在 `3d-test777` 的「3D 审核版」历史记录中点击「打开 3D 审核预览」。Organizer 会自动启动并管理本机预览。该版本包含 30 个候选落点。要从同一版本准备 Story，点同一张卡片的「继续此项目」，再到「准备故事」。场景和 Story 输入使用本机任务目录中的私有资料。
-
+</details>
 
 已有3D上传：选择“原始 PDF + 照片 + 已有 SPZ / PLY 场景”，不勾默认资料，填写新项目编号并上传四类文件。保存后核对调用预算，再点“准备资料与环境”；后续按审核 → 故事 → 制作游戏继续。只在你明确授权后调用识别/故事模型，Marble为0。照片支持多张图片或ZIP；PLY须为二进制小端三角网格，需本机Chrome和Node.js进行取景。证据预算不足会在调用前停止；44张照片和62页PDF的首轮下限为43次，另需逐物件核验，不能用旧8次上限当整套预算。新路径的接线/模拟执行与单物件真实资料已检查，整套新材料的真实模型运行由上传测试验收。
 

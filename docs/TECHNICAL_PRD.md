@@ -567,8 +567,10 @@ python3.12 -m venv .venv
 
 ```sh
 .venv/bin/python -m pastport organizer-init   # once per computer
-.venv/bin/python -m pastport --accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server --evidence-mode disabled --narrative-mode disabled --resources-mode disabled --port 18840
+.venv/bin/python -m pastport organizer          # start
 ```
+
+`organizer` 等同于 `--accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server`、三个 `--*-mode disabled` 与 `--port 18840`；其后追加的参数会覆盖这些默认值。
 
 仅在存有团队私有默认材料的电脑上追加 `--organizer-catalog var/organizer-integration/catalog.json` 与 `--organizer-player-assets <本机播放器资源目录>`；不追加时 Organizer 照常运行并可导入团队交付包。
 

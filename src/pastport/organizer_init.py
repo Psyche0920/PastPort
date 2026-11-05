@@ -55,17 +55,29 @@ class OrganizerAdminInitializer:
         return credential
 
 
+def organizer_arguments(extra: list[str]) -> list[str]:
+    """Expand `pastport organizer` into the standard local options; later options override."""
+    return [
+        "--accounts",
+        str(DEFAULT_ACCOUNTS),
+        "--data-directory",
+        "var/organizer-integration/server",
+        "--evidence-mode",
+        "disabled",
+        "--narrative-mode",
+        "disabled",
+        "--resources-mode",
+        "disabled",
+        "--port",
+        "18840",
+        *extra,
+    ]
+
+
 def start_command(path: Path) -> str:
-    """The portable start command for this account file, relative to the repository root."""
-    return " ".join(
-        (
-            ".venv/bin/python -m pastport",
-            f"--accounts {json.dumps(str(path))}",
-            "--data-directory var/organizer-integration/server",
-            "--evidence-mode disabled --narrative-mode disabled --resources-mode disabled",
-            "--port 18840",
-        )
-    )
+    """The start command for this account file, relative to the repository root."""
+    command = ".venv/bin/python -m pastport organizer"
+    return command if path == DEFAULT_ACCOUNTS else f"{command} --accounts {json.dumps(str(path))}"
 
 
 def main() -> None:

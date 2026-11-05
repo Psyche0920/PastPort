@@ -48,7 +48,7 @@ def test_command_prompts_twice_and_prints_the_portable_start_command(
     monkeypatch.setattr(sys, "argv", ["organizer-init", "--accounts", str(path)])
     main()
     output = capsys.readouterr().out
-    assert "--port 18840" in output and "/Users/" not in output.replace(str(tmp_path), "")
+    assert "pastport organizer" in output and "/Users/" not in output.replace(str(tmp_path), "")
     assert path.is_file()
     mismatched = iter((PASSWORD, PASSWORD + "x"))
     monkeypatch.setattr("getpass.getpass", lambda prompt="": next(mismatched))
@@ -67,3 +67,11 @@ def test_missing_account_file_names_the_setup_command(tmp_path: Path) -> None:
     )
     assert result.returncode == 2
     assert "missing.json" in result.stderr and "organizer-init" in result.stderr
+
+
+def test_short_organizer_command_expands_to_standard_options_and_allows_overrides() -> None:
+    from pastport.organizer_init import organizer_arguments
+
+    expanded = organizer_arguments(["--port", "18850"])
+    assert expanded[:2] == ["--accounts", "var/organizer-integration/staff-accounts.json"]
+    assert expanded.count("disabled") == 3 and expanded[-2:] == ["--port", "18850"]

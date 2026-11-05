@@ -3,7 +3,7 @@
 ## 2026-11-05
 
 - Released the featured game *The Last Two Sacks / 最后两袋* as `maslan.tar.gz` (maslan-demo-2026-11-05-r1), built on the team-handover `maslan.tar.gz` room with the shared compiler and investigation blueprint, zero model and zero Marble calls. Updated the README and handoff download links.
-- Organizer setup works on any computer: `python -m pastport organizer-init` creates the private `admin` account (password typed twice, hash only, 0600, never overwrites), the start command no longer needs one person's private paths, and a missing account file now names itself and the setup command. READMEs and technical PRDs use repository-relative commands.
+- Organizer setup works on any computer: `python -m pastport organizer-init` creates the private `admin` account (password typed twice, hash only, 0600, never overwrites), the start command no longer needs one person's private paths, and a missing account file now names itself and the setup command. `python -m pastport organizer` starts it with the standard local options, and the README setup is now four numbered steps. READMEs and technical PRDs use repository-relative commands.
 - Routing tasks may set their own prompt, instruction and wrong-bin copy; investigation activity hints no longer mention one specific story.
 - Verified: 12 engine choice combinations with 12 distinct ending texts; Chrome playthroughs in English, Chinese and at 390×844 with mid-game reload; isolated Organizer import, re-import and checksum match. Not verified: human playtest, Turkish, screen readers, historical review.
 

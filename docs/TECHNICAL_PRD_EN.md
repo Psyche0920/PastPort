@@ -566,8 +566,10 @@ Install dependencies as in §10.2. If the service is already running, open it in
 
 ```sh
 .venv/bin/python -m pastport organizer-init   # once per computer
-.venv/bin/python -m pastport --accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server --evidence-mode disabled --narrative-mode disabled --resources-mode disabled --port 18840
+.venv/bin/python -m pastport organizer          # start
 ```
+
+`organizer` expands to `--accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server`, the three `--*-mode disabled` options and `--port 18840`; options added after it override these defaults.
 
 Only on a computer holding the team's private default materials, add `--organizer-catalog var/organizer-integration/catalog.json` and `--organizer-player-assets <local player assets directory>`; without them Organizer runs normally and imports team delivery packages.
 

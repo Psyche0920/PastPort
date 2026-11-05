@@ -30,6 +30,11 @@ def main() -> None:
         sys.argv.pop(1)
         organizer_init_main()
         return
+    if len(sys.argv) > 1 and sys.argv[1] == "organizer":
+        from pastport.organizer_init import organizer_arguments
+
+        # Standard local Organizer options; anything given after them still wins.
+        sys.argv[1:] = organizer_arguments(sys.argv[2:])
     if len(sys.argv) > 1 and sys.argv[1] == "gameplay-prepare":
         from pastport.gameplay_cli import main as gameplay_main
 
