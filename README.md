@@ -12,18 +12,9 @@
 
 ## 团队试玩交付
 
-从[私有 GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03)下载：
-
-| 包 | 内容 |
-| --- | --- |
-| `wcheung.tar.gz` | 四二独立试玩《最后一段录音》，含 3D 场景、调查、线索回看和三个结局。交付记录原名 `42handover`。 |
-| `maslan.tar.gz` | 主试玩《最后两袋》：沿用 `3d-test777` 的3D房间与30条穆拉迪耶资料，研究员复原虚构的1430年代账页案件；五个资料节点、四种调查玩法、三个关键选择、12种结局文本。[下载新版（maslan-demo-2026-11-05-r1）](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)；旧版独立玩家包仍在上方 Release。 |
-
-**Maslan：穆拉迪遗址原始资料。** 文件夹内有原始 IDML、配套 `Links` 文件夹和章节 PDF。 [打开穆拉迪遗址资料文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
-
-解压后进入同名目录，按 `OPEN.txt` 启动，使用支持 WebGL 的浏览器打开其中的本机地址。需要 Node.js。交付包独立于 Organizer 的本机记录。
-
-**工作流程。** Main 和 SDK 的目标是基于素材生成可试玩、可编辑的游戏初版。团队可直接修改并试玩现有游戏包，验收后再将可复用的改进接回 Main 和 SDK。本机地图、游戏发布、账号、印章和排行榜已接通；跨设备公网部署仍待实施。详见[团队交接](handoff.md#zh)。
+- [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-04-r4/wcheung.tar.gz)
+- [maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)
+- [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz)
 
 ## 启动与使用
 

@@ -12,18 +12,9 @@ Turn original historical sources, matched museum environments and spatial inform
 
 ## Team playable handoff
 
-Download from the [private GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03).
-
-| Package | Contents |
-| --- | --- |
-| `wcheung.tar.gz` | The 42 standalone demo *The Last Recording*, including the 3D scene, investigation, clue review and three endings. The delivery record was previously named `42handover`. |
-| `maslan.tar.gz` | Featured game *The Last Two Sacks*: the `3d-test777` 3D room and its 30 Muradiye records, where a researcher reconstructs a fictional 1430s ledger case; five record nodes, four investigation activities, three key choices and 12 distinct ending texts. [Download the new build (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz); the earlier standalone player bundle remains in the release above. |
-
-**Maslan: Muradiye source materials.** The folder contains the original IDML, its `Links` folder, and the chapter PDF. [Open the Muradiye source folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
-
-Extract the archive, enter the matching directory and follow `OPEN.txt`. Open the local address in a WebGL-capable browser. Node.js is required. The bundles are separate from local Organizer job records.
-
-**Workflow.** Main and the SDKs aim to generate a playable, editable first version from source materials. The team can edit and play an existing bundle directly, then integrate reusable improvements into Main and the SDKs after acceptance. The local map, game publication, accounts, stamps and leaderboard are integrated; public cross-device deployment remains pending. See the [team handoff](handoff.md#en).
+- [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-04-r4/wcheung.tar.gz)
+- [maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)
+- [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz)
 
 ## Startup and use
 
