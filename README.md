@@ -27,43 +27,34 @@
 
 ## 启动与使用
 
-当前应用仓库是 `/Users/hanweijia/PastPort`，以这里的本地 main 源码为准。需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。
+需要 Git、uv、Node.js 22+ 和支持 WebGL 的浏览器。以下命令适用于 macOS、Linux 和 Windows PowerShell。在仓库根目录运行；仓库可以放在任意目录。
 
-首次安装或依赖变化后执行；已安装时跳过：
+首次使用这台电脑：
 
 ```sh
-cd /Users/hanweijia/PastPort
+git clone https://github.com/Psyche0920/PastPort.git
+cd PastPort
 uv sync --extra authoring --extra game-making
+uv run python -m pastport organizer-init
 ```
+
+私有仓库需要先取得 GitHub 访问权限。初始化会让你在终端输入并确认管理员密码，用户名为 `admin`。已有账号配置会被保留。首次安装需要联网下载依赖。
+
+以后每次启动，在仓库根目录执行：
+
+```sh
+uv run python -m pastport organizer
+```
+
+打开 [Organizer 后台](http://127.0.0.1:18840/organizer/)，使用管理员账号登录。服务在当前终端前台运行，保持终端打开，按 Ctrl+C 停止。端口占用时检查已有服务；也可以用 `uv run python -m pastport organizer --port 18841`，并打开相应端口。
 
 ### Organizer：主办方入口
 
-下载团队交付包后，可在「制作进度与交付」选择 `.tar.gz` 文件并点击「导入交付包」。同名交付记录会出现在当前账号下，点「打开独立玩家预览」即可试玩。请使用团队发布的包。
+下载团队交付包，在「制作进度与交付」选择 `.tar.gz` 并点击「导入交付包」，再打开独立玩家预览。新电脑的历史记录从导入开始。已完成且可预览的交付卡片均可选择地图站点发布。
 
-[打开本机 Organizer](http://127.0.0.1:18840/organizer/)。服务已运行时直接打开，不重复启动；关闭后用下面的现有 CLI 启动，不依赖临时启动脚本：
+账号、上传、缓存和交付记录保存在当前仓库的 `var/organizer-integration/`。关闭服务后数据仍保留。换电脑时导入团队交付包或上传原始材料。账号配置和数据库包含私有数据，应单独备份。
 
-```sh
-cd /Users/hanweijia/PastPort
-.venv/bin/python -m pastport \
-  --accounts var/organizer-integration/staff-accounts.json \
-  --data-directory var/organizer-integration/server \
-  --organizer-catalog var/organizer-integration/catalog.json \
-  --organizer-player-assets "/Users/hanweijia/Documents/ChatGPT/PastPort/work/main-integration/var/sdk-real-material-20261031-01/story-authoring/game-3d-open-roof-v3/assets" \
-  --evidence-mode disabled --narrative-mode disabled --resources-mode disabled \
-  --port 18840
-```
-
-这条命令使用当前电脑已有的私有配置和已设置的管理员账号，不创建新账号。用原管理员账号密码登录，不需要填写令牌；右上角可手动选择中文 / English，刷新后保留选择。服务重启后需要重新登录。保持终端打开，Ctrl+C 停止；端口被占用时先确认是否已有服务，不结束未知进程。
-
-`disabled` 参数关闭旧 editorial 演示通道，不关闭 Organizer 经 SDK 执行的明确授权生成路径。当前播放器 assets 仍登记在上面显示的本机材料目录中；它是私有输入依赖，不是另一个应用仓库，也不随 Git clone 提供。换机器时准备自己的私有配置、材料与播放器资源，并替换参数中的路径。不要复制或公开账号配置、API密钥与材料。
-
-启动 Organizer 并登录后，进入「制作进度与交付」，在 `3d-test777` 的「3D 审核版」历史记录中点击「打开 3D 审核预览」。Organizer 会自动启动并管理本机预览。该版本包含 30 个候选落点。要从同一版本准备 Story，点同一张卡片的「继续此项目」，再到「准备故事」。场景和 Story 输入使用本机任务目录中的私有资料。
-
-
-已有3D上传：选择“原始 PDF + 照片 + 已有 SPZ / PLY 场景”，不勾默认资料，填写新项目编号并上传四类文件。保存后核对调用预算，再点“准备资料与环境”；后续按审核 → 故事 → 制作游戏继续。只在你明确授权后调用识别/故事模型，Marble为0。照片支持多张图片或ZIP；PLY须为二进制小端三角网格，需本机Chrome和Node.js进行取景。证据预算不足会在调用前停止；44张照片和62页PDF的首轮下限为43次，另需逐物件核验，不能用旧8次上限当整套预算。新路径的接线/模拟执行与单物件真实资料已检查，整套新材料的真实模型运行由上传测试验收。
-
-
-新照片任务采用紧凑策略：每批2张，最多12个新物件、24条观察；名称、特征及解释按Schema限制长度，单批最多120秒或授权的更短时限。发现超过本批容量时报告不完整并停止，不把缺失当成功。旧策略与已付费回执保持原样，失败不自动重试；此限制已通过离线回归，尚未完成真实模型速度验收。
+可用 `--directory` 指定另一份本地配置目录；初始化与启动应使用同一路径。若存在 `catalog.json`，启动时自动读取；新电脑可以直接导入游戏包。需要从原始材料制作游戏时，按页面提供资料和模型授权。共享玩家资源可显式指定 `--player-assets /path/to/assets`。历史项目中登记的材料路径也需要在当前电脑可用。
 
 ### 制作流程
 
@@ -123,7 +114,7 @@ PASTPORT_PORT=18839 node var/runtime-layout-20261101/release-run/game-3d/serve3d
 
 Organizer支持单管理员登录、四种材料起点、整套默认复用、审核自动衔接、旧故事兼容检查、新故事生成、真实进度与成品入口。中英文手动切换已验证。缓存到游戏的零模型链路及已有环境的新故事有实际运行记录；逐种新材料完整调用Evidence/Marble的外部生成验收仍未全部完成。
 
-Story新生成采用固定内容计划，由代码编译编号、状态、规则和引用；格式通过不代表故事好玩或历史内容获批。风格转绘SDK存在，但Organizer还没有新转绘操作，只能复用已有结果。User仍是现有游戏前端，本轮没有新增玩家账号或跨设备后台存档。源码是当前基线，既有wheel不自动包含后续源码修复，需要重新构建才能交付更新。
+Story新生成采用固定内容计划，由代码编译编号、状态、规则和引用；格式通过不代表故事好玩或历史内容获批。风格转绘SDK存在，但Organizer还没有新转绘操作，只能复用已有结果。玩家地图现已使用独立账号与 SQLite 存档；共享后端的设备可恢复同账号、站点及发布版本的游戏进度，具体启动及边界见文末。源码是当前基线，既有wheel不自动包含后续源码修复，需要重新构建才能交付更新。
 
 ## 架构与模块
 
@@ -215,6 +206,17 @@ PastPort/
 │   │   ├── <a href="frontend/game/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
 │   │   ├── <a href="frontend/game/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
 │   │   └── <a href="frontend/game/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+│   ├── <a href="frontend/player/">player/</a>  — 玩家地图、账号、印章及账号进度同步
+│   │   ├── <a href="frontend/player/app.mjs">app.mjs</a>  — 地图、账户、发布试玩及存档同步界面。
+│   │   ├── <a href="frontend/player/server.mjs">server.mjs</a>  — 玩家 HTTP 服务、SQLite 账号与游戏加载。
+│   │   ├── <a href="frontend/player/cloud-saves.mjs">cloud-saves.mjs</a>  — 按玩家、站点和版本隔离的 SQLite 存档仓储。
+│   │   ├── <a href="frontend/player/save-sync.mjs">save-sync.mjs</a>  — 合并写入、顺序保存、冲突与显式重试。
+│   │   ├── <a href="frontend/player/game-save-bridge.mjs">game-save-bridge.mjs</a>  — 游戏启动前恢复存档并桥接原有保存点。
+│   │   ├── <a href="frontend/player/index.html">index.html</a>  — 玩家平台 HTML 入口。
+│   │   ├── <a href="frontend/player/style.css">style.css</a>  — 玩家地图和护照样式。
+│   │   ├── <a href="frontend/player/sites.json">sites.json</a>  — 与 Organizer 发布选择共享的地图站点目录。
+│   │   ├── <a href="frontend/player/sites.mjs">sites.mjs</a>  — 读取地图站点。
+│   │   └── <a href="frontend/player/illustrations.mjs">illustrations.mjs</a>  — 地图节点与奖章插画。
 │   └── <a href="frontend/organizer/">organizer/</a>  — Organizer制作前端：认证、真实上传、登记材料复用/重新生成、执行进度与交付
 │       ├── <a href="frontend/organizer/index.html">index.html</a>  — 由 main 的 /organizer/ 提供的真实制作页；需 HTTP 服务与登录。
 │       ├── <a href="frontend/organizer/app.mjs">app.mjs</a>  — 按资料与环境→原审核后台→故事→最终玩法与组包编排；分别控制复用/新生成。
@@ -584,6 +586,7 @@ PastPort/
 │   │   ├── <a href="tools/game-package/build-story-package.mjs">build-story-package.mjs</a>  — 独立游戏构建入口：读取故事及绑定计划，检查资源并组装可运行包。
 │   │   ├── <a href="tools/game-package/generated-story.mjs">generated-story.mjs</a>  — 将生成的 Story 输入校验并转换成宿主可用的剧情与任务。
 │   │   ├── <a href="tools/game-package/runtime-assets.mjs">runtime-assets.mjs</a>  — 显式游戏资源清单与发布器：从各模块收集源码，重定位浏览器导入并保持生成包布局。
+│   │   ├── <a href="tools/game-package/player-completion.mjs">player-completion.mjs</a>  — 通用通关回执桥接、已知旧运行时适配与账号缓存隔离。
 │   │   ├── <a href="tools/game-package/serve3d.mjs">serve3d.mjs</a>  — 本地 3D 试玩 HTTP 服务，提供生成包及隔离场景资源。
 │   │   └── <a href="tools/game-package/story-package.mjs">story-package.mjs</a>  — 故事包编译器，校验博物馆快照与契约并生成宿主输入。
 │   ├── <a href="tools/check_contracts.py">check_contracts.py</a>  — Export deterministic schemas or check committed schemas and complete wire samples.
@@ -614,3 +617,31 @@ PastPort/
 Admin制作流程已按用户授权取消累计token用量停机阈值，照片/史料与环境匹配均继续记录真实用量，不再因默认25万或旧100万阈值停止。已授权调用次数、超时、输入与史料校验、未知用量恢复保护仍保留。当前任务恢复采用新输出修订，复用成功回执，保留旧PDF及原始授权记录；独立SDK调用默认仍遵守其显式grant。
 
 [变更记录](CHANGELOG.md)
+
+玩家地图在另一终端从仓库根目录运行 `node frontend/player/server.mjs`（Node.js 22.13+），打开 http://127.0.0.1:18851/ 。默认读取本仓库 Organizer 的数据目录；自定义部署需通过 `ORGANIZER_DATA` 指向相同的 `server/organizer` 目录。所有已完成且能打开独立玩家预览的交付卡片，均可选择站点并「发布到玩家地图」。发布后刷新地图，对应站点点亮；同一站点再次发布会切到新版本，其他站点保持原有版本。玩家登录独立于工作人员登录。通关奖章需要游戏已有结局回执或支持的结局桥接，打开游戏本身不会发章。
+
+
+玩家账号、登录、印章与游戏进度保存在 `frontend/player/.local/players.sqlite`；用 `PLAYER_DATA` 指定固定数据目录，服务重启时继续使用同一路径。备份时应包含 SQLite 的完整一致性备份，不能只复制运行中的主数据库而遗漏 WAL。不要提交数据库或账号文件。
+
+从地图登录后进入游戏，会自动恢复此账号、站点及已发布版本的存档；调查、选择、小游戏和游戏原有保存点会自动同步，返回地图前等待保存完成。状态栏显示保存/失败；失败可重试并下载未同步存档。另一页面或设备已更新时拒绝旧版本覆盖，需要返回地图重新打开；重开游戏会同步清除本版本进度。新发布版本从新存档开始，旧版存档保留，不自动强行迁移。未绑定账号的旧浏览器存档保留在原处，不自动认领。
+
+当前支持已有 `GameSession` 格式的游戏及其续幕存档，仍由同一个游戏引擎校验恢复内容；不兼容的自定义包明确显示仅本机存档。后端接收经过格式校验的客户端快照，并非防作弊的服务端动作裁定。通关印章与进度是独立记录。跨设备必须访问同一后端与同一数据目录；默认 loopback 启动是本机开发模式，并未部署互联网云服务。关闭/刷新时会尝试同步并提示未保存；强制关闭、断网时只有已确认保存的进度保证能从服务器恢复。
+
+
+Organizer 交付导入和地图发布同时支持现有 3D 包及静态二维包。二维包在根目录提供 `index.html` 与 `pastport-player.json`（`format: pastport-static-v1`、`entrypoint: 包内相对 HTML 路径`）；入口必须存在且不能越出包目录。预览沿用可信启动器、独立端口及后台登录校验，不运行导入包里的服务端脚本。`muradiye-ui-trial` 来自 `demo-muradiye-ui-trial` 的原版《最后两袋》，保留二维人物动画、玩法与素材，可在交付卡片选择地图站点发布。该旧版使用自己的浏览器本地存档，尚未接入新 `GameSession` 账号存档格式；平台已自动适配这份原版的结局显示：实际出现结局后发送当前玩家运行回执，护照发章并计入排行榜；普通阅读不会发章，同一站点重复完成不重复计分。已知旧版按运行时文件摘要识别，不修改原始剧情；新静态游戏通过 `pastport:completed` 事件提供非空 `endingId`。未知运行时不能仅凭“能打开”冒充已通关。旧版本机存档现在按玩家/站点/发布版本分开，仍不等于跨设备后台存档。
+
+
+### 游戏包、后台历史与玩家平台如何共享
+
+同一部署中的链路为：**游戏包 → Organizer 导入/生成历史 → 选择站点发布 → 玩家地图打开该发布版本 → 玩家账号保存进度、印章和排名**。Organizer 与玩家平台通过 `ORGANIZER_DATA` 指向同一份 `server/organizer` 数据，读取对应的发布记录与游戏文件；玩家端不需要登录 Organizer，也不需要每人下载、上传或导入游戏包。后台历史仍按工作人员权限和项目归属过滤，公众玩家只能访问已发布内容。
+
+| 场景 | 是否需要单独交付游戏包 |
+|---|---|
+| 同一平台后台已有该包，新增玩家游玩 | 不需要。后台导入一次并发布，玩家统一从地图打开。 |
+| 同一平台更新游戏版本 | 管理员导入或生成新版，再发布到所选站点；玩家进入该站点时读取新发布版本。不同版本存档不强行混用。 |
+| 队友在自己的电脑独立运行 Organizer | 需要从 GitHub Release 下载游戏包并导入；各自的本机历史和数据库不会自动合并。 |
+| 把本机平台迁到新的部署环境 | 将所需游戏包导入新后台，或单独迁移完整持久数据及资产；玩家数据库另行安全备份/迁移。 |
+
+`git push/pull` 只同步源码和说明，不同步游戏文件、Organizer 历史、上传资料、玩家数据库或密码。GitHub Release 用于团队交付与换电脑；同一平台内已导入游戏的玩家访问不依赖反复下载 Release。
+
+当前仍是本机开发模式，并非已经部署好的共享云后台。`PLAYER_DATA` 持久保存玩家账号、存档及印章，与 Organizer 工作人员账号/制作历史分开。要让多台真实设备共用同一平台，需要完成统一服务部署，并将目前返回的回环游戏地址改为客户端可访问的资源路由；仅复制网页或把 `127.0.0.1` 端口开放出去不会自动实现跨设备访问。当前任务没有执行公开部署。

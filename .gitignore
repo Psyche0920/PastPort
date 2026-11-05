@@ -22,3 +22,6 @@ packages/*/dist/
 
 # Private local execution grant.
 /my-grant.json
+
+# Private player accounts, sessions, progress and consistent backups.
+/frontend/player/.local/

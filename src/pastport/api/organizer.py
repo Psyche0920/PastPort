@@ -16,6 +16,12 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from pydantic import ValidationError
 
 from pastport.adapters.organizer_delivery import MAX_BYTES, delivery_name, import_delivery
+from pastport.adapters.organizer_map import (
+    MapPublication,
+    MapSite,
+    MapTarget,
+    OrganizerMapPublisher,
+)
 from pastport.adapters.organizer_previews import OrganizerPreviewPool
 from pastport.adapters.organizer_review_environment import SDKMountedPreviewPool
 from pastport.adapters.runtime_resources import runtime_root
@@ -64,6 +70,7 @@ class OrganizerRoutes:
         self.failed_logins: dict[str, list[float]] = {}
         self.sessions: dict[str, _Session] = {}
         self.previews = OrganizerPreviewPool()
+        self.map_publisher = OrganizerMapPublisher(service.store.directory)
         self.mounted_previews: MountedEnvironmentPreviews | None = None
 
     def actor(self, request: Request) -> Actor:
@@ -597,6 +604,21 @@ class OrganizerRoutes:
             return RedirectResponse(
                 f"http://127.0.0.1:{port}/scene3d/index.html",
                 headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"},
+            )
+
+        @router.get("/api/map-sites")
+        async def map_sites(request: Request) -> tuple[MapSite, ...]:
+            self.actor(request)
+            return self.map_publisher.sites()
+
+        @router.post("/api/jobs/{job_id}/publish-to-map")
+        async def publish_to_map(job_id: str, request: Request) -> MapPublication:
+            actor = self.actor(request)
+            job = self.service.job(job_id, actor)
+            target = await read_body(request, MapTarget)
+            directory = self.service.game_directory(job)
+            return await asyncio.to_thread(
+                self.map_publisher.publish, actor, job, directory, target.site_id
             )
 
         @router.get("/api/jobs/{job_id}/open")

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PastPort · Bursa 遗址地图</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.mjs"></script></head>
+<body>
+<header><details class="site-menu"><summary><span aria-hidden="true">☰</span><span data-en="Menu">菜单</span></summary><nav>
+<a href="#" data-en="Home">首页</a><a href="#map" data-en="Discover">探索</a><a href="#leaderboard" data-en="Leaderboard">排行榜</a>
+</nav></details><a href="/" class="wordmark">Past<span>Port</span></a><span class="tag" data-en="Heritage Travel Journal">文化遗产旅行手记</span><div class="header-actions"><button id="language" type="button">English</button><button id="passport" data-en="My Passport">我的通关文书</button></div></header>
+<main>
+<section id="home" class="home">
+  <div>
+    <p class="eyebrow" data-en="A HERITAGE TRAVEL JOURNAL">文化遗产旅行手记</p>
+    <h1>PastPort</h1>
+    <p class="home-lead" data-en="Follow the trail. Collect a stamp for every adventure you complete.">沿着旅路探索，每完成一段旅程，就为你的通关文书添一枚印章。</p>
+    <div class="home-actions">
+      <a class="primary-link" href="#map" data-en="Start Passporting">开启护照之旅</a>
+      <a class="outline-link" href="#leaderboard" data-en="Leaderboard">排行榜</a>
+    </div>
+  </div>
+  <svg class="passport-art" viewBox="0 0 340 270" role="img" aria-label="护照与印章" data-en-label="A passport and travel stamp">
+    <path d="M25 235c56-30 134-38 277-15M22 63c82-43 179-44 284-12" fill="none" stroke="#c99858" stroke-dasharray="3 8" opacity=".55"/>
+    <g class="cover-float"><g transform="rotate(-11 138 133)">
+      <rect x="64" y="35" width="156" height="204" rx="12" fill="#dec18a"/>
+      <rect x="58" y="29" width="157" height="203" rx="11" fill="#721e34" stroke="#e1bb6b" stroke-width="2"/>
+      <rect x="68" y="40" width="137" height="181" rx="7" fill="none" stroke="#bd985b"/>
+      <text x="136" y="76" text-anchor="middle" fill="#f1d79c" font-size="20" letter-spacing="3">TÜRKİYE</text>
+      <path d="M150 112a25 25 0 1 0 0 38a21 21 0 1 1 0-38Z" fill="#f0ca7e"/>
+      <path d="m153 119 3 8 9 1-7 5 2 9-7-5-7 5 2-9-7-5 9-1Z" fill="#f0ca7e"/>
+      <text x="136" y="187" text-anchor="middle" fill="#f1d79c" font-size="13" letter-spacing="2">PASTPORT</text>
+      <path d="M115 200h42" stroke="#d9ad66"/>
+    </g></g>
+    <g class="stamp-float"><g transform="rotate(13 254 171)" fill="none" stroke="#9f4639">
+      <circle cx="254" cy="171" r="42" fill="#e5c78d" stroke-width="2"/>
+      <circle cx="254" cy="171" r="35" stroke-dasharray="2 2"/>
+      <path d="M233 179h42m-37 0v-13h32v13m-27-13q11-21 22 0m-27 0v-12m32 12v-12" stroke-width="2"/>
+      <text x="254" y="191" text-anchor="middle" fill="#913c33" stroke="none" font-size="10" letter-spacing="2">BURSA</text>
+    </g></g>
+  </svg>
+</section>
+<section id="leaderboard" class="board" hidden>
+  <a href="#" data-en="← Home">← 首页</a>
+  <h1 data-en="Leaderboard">排行榜</h1>
+  <p data-en="Travelers ranked by the stamps they earned by completing games.">按旅人完成游戏获得的印章数排名。</p>
+  <div id="rankings" aria-live="polite"></div>
+</section>
+<div id="map" hidden>
+<a href="#" data-en="← Home">← 首页</a>
+<section class="intro"><p class="eyebrow">TÜRKİYE / BURSA / OSMANGAZİ</p><h1 data-en="Silk Road · Bursa">丝路 · 布尔萨</h1><p data-en="Explore the old city and leave your mark in your passport.">沿着古城的旅路探索，在通关文书留下你的印记。</p></section>
+<section class="atlas" aria-label="Osmangazi 遗址与独立试玩节点" data-en-label="Osmangazi heritage sites and standalone games">
+<div class="map-scroll"><div class="map-sheet">
+<svg class="landscape" viewBox="0 0 1200 690" preserveAspectRatio="none" aria-hidden="true">
+<defs>
+<linearGradient id="paper" x2=".65" y2="1"><stop stop-color="#f4dda1"/><stop offset=".55" stop-color="#d8ae77"/><stop offset="1" stop-color="#bc7e55"/></linearGradient>
+<linearGradient id="jade" x2=".2" y2="1"><stop stop-color="#668a6d"/><stop offset="1" stop-color="#304f47"/></linearGradient>
+<pattern id="grain" width="11" height="13" patternUnits="userSpaceOnUse"><path d="M1 3h2m3 6h1m3 3h1" stroke="#68452d" opacity=".18"/></pattern>
+</defs>
+<rect width="1200" height="690" fill="url(#paper)"/>
+<circle cx="1036" cy="106" r="67" fill="#cb694e" opacity=".68"/>
+<path d="M0 203Q76 92 142 165L244 79Q312 51 381 145L445 109 540 188 680 135 777 210 880 151 982 180 1100 113 1200 176V0H0Z" fill="#a68769" opacity=".46"/>
+<path d="M0 190 105 104 174 148 251 57 285 92 319 74 393 173 449 137 507 186 597 153 650 213Q469 158 333 223T0 257Z" fill="url(#jade)" opacity=".9"/>
+<path d="M0 190 105 104 174 148 251 57 285 92 319 74 393 173 M66 205l78-62 31 19 80-87 36 40m-45-13-42 68m110-67 50 62" fill="none" stroke="#ebc683" stroke-opacity=".55" stroke-width="2"/>
+<path d="M0 555Q111 455 236 546T457 546Q522 519 661 584T924 566Q1082 499 1200 532V690H0Z" fill="#788668" opacity=".65"/>
+<path d="M0 613Q123 546 241 620T438 630Q574 568 704 635T936 611Q1066 569 1200 616V690H0Z" fill="url(#jade)"/>
+<path d="M1230 256C961 212 925 319 799 330S669 311 598 348 515 407 416 414 145 370-30 507" fill="none" stroke="#507e73" stroke-width="22" opacity=".57"/>
+<path class="water" d="M1230 253C961 209 925 316 799 327S669 308 598 345 515 404 416 411 145 367-30 504" fill="none" stroke="#f5deb0" stroke-width="3" stroke-dasharray="9 23" opacity=".8"/>
+
+<rect width="1200" height="690" fill="url(#grain)"/>
+<g class="clouds" fill="none" stroke="#fbefc2" opacity=".74" stroke-width="3"><path d="M32 68h134q40-18-15-22 0-31-51-17-28-13-49 9H20m760 72h130q38-14-10-20-8-32-51-16-35-11-50 9h-42m224 465h145q30-13-18-18-8-25-51-14-27-12-46 10h-54"/></g>
+</svg>
+<div class="map-label">OSMANGAZİ <span>•</span> BURSA</div>
+<div id="markers"></div>
+</div></div>
+</section>
+</div></main>
+<dialog id="place-dialog"><form method="dialog"><button class="close" aria-label="关闭" data-en-label="Close">×</button></form><div id="place-content"></div></dialog>
+<dialog id="profile-dialog"><form method="dialog"><button class="close" aria-label="关闭" data-en-label="Close">×</button></form><div id="profile-content"></div><p id="notice" role="status"></p></dialog>
+<section id="game" hidden><div><button id="back" data-en="← Back to map">← 返回地图</button><strong>Forty Two Heilbronn</strong><span id="game-status" role="status"></span></div><iframe title="42 Heilbronn 试玩" data-en-label="Forty Two Heilbronn game"></iframe></section>
+</body></html>

@@ -1,0 +1,130 @@
+[
+  {
+    "name": "Eğitim Yapıları",
+    "x": 10,
+    "y": 26,
+    "art": "school",
+    "game": "education",
+    "id": "education"
+  },
+  {
+    "name": "Hamzabey Külliyesi",
+    "x": 24,
+    "y": 26,
+    "art": "court",
+    "game": "hamzabey",
+    "id": "hamzabey"
+  },
+  {
+    "name": "I. Murat Hüdavendigar Külliyesi",
+    "x": 38,
+    "y": 26,
+    "art": "terrace",
+    "game": "hudavendigar",
+    "id": "hudavendigar"
+  },
+  {
+    "name": "II. Murat Külliyesi",
+    "x": 52,
+    "y": 26,
+    "art": "tomb",
+    "game": "muradiye",
+    "id": "muradiye"
+  },
+  {
+    "name": "Orhan Bey Külliyesi",
+    "x": 66,
+    "y": 29,
+    "art": "orhan",
+    "game": "orhan-bey",
+    "id": "orhan-bey"
+  },
+  {
+    "name": "Osmangazi Camiler ve Hazireler 1",
+    "x": 83,
+    "y": 24,
+    "art": "mosque",
+    "game": "mosques-1",
+    "id": "mosques-1"
+  },
+  {
+    "name": "Osmangazi Camiler ve Hazireler 2",
+    "x": 90,
+    "y": 49,
+    "art": "courtyard",
+    "game": "mosques-2",
+    "id": "mosques-2"
+  },
+  {
+    "name": "Osmangazi Camiler ve Hazireler 3",
+    "x": 76,
+    "y": 48,
+    "art": "spire",
+    "game": "mosques-3",
+    "id": "mosques-3"
+  },
+  {
+    "name": "Sivil Mimari",
+    "x": 62,
+    "y": 54,
+    "art": "house",
+    "game": "civil-architecture",
+    "id": "civil-architecture"
+  },
+  {
+    "name": "Su Yapıları",
+    "x": 48,
+    "y": 52,
+    "art": "fountain",
+    "game": "waterworks",
+    "id": "waterworks"
+  },
+  {
+    "name": "Tekke ve Zaviyeler",
+    "x": 34,
+    "y": 51,
+    "art": "lodge",
+    "game": "lodges",
+    "id": "lodges"
+  },
+  {
+    "name": "Ticari Yapılar",
+    "x": 19,
+    "y": 45,
+    "art": "market",
+    "game": "commercial",
+    "id": "commercial"
+  },
+  {
+    "name": "Timurtaş Paşa Külliyesi",
+    "x": 10,
+    "y": 73,
+    "art": "gate",
+    "game": "timurtas-pasa",
+    "id": "timurtas-pasa"
+  },
+  {
+    "name": "Türbeler",
+    "x": 29,
+    "y": 74,
+    "art": "mausoleum",
+    "game": "tombs",
+    "id": "tombs"
+  },
+  {
+    "name": "Ulucamii",
+    "x": 49,
+    "y": 72,
+    "art": "ulucami",
+    "game": "ulucami",
+    "id": "ulucami"
+  },
+  {
+    "name": "Forty Two Heilbronn",
+    "x": 81,
+    "y": 79,
+    "art": "heilbronn",
+    "game": "42heilbronn",
+    "id": "42heilbronn"
+  }
+]

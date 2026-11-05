@@ -15,6 +15,7 @@ export const runtimeAssets = Object.freeze([
   ...plugins.map(name => ({source:`gameplay/plugins/${name}`,destination:name})),
   {source:'gameplay/gameplay.mjs',destination:'gameplay.mjs'},
   {source:'tools/game-package/serve3d.mjs',destination:'serve3d.mjs'},
+  {source:'tools/game-package/player-completion.mjs',destination:'player-completion.mjs'},
   ...engine.map(name => ({source:`src/pastport/player/${name}`,destination:`engine/${name}`})),
 ].map(asset => Object.freeze(asset)));
 

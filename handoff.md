@@ -28,11 +28,11 @@
 
 - **maslan** 负责最佳遗产试玩，重点打磨剧情、玩家行动、线索、互动反馈与结局。场景可选 2D、现有 3D 或新生成 3D。历史内容标明来源，虚构内容标明性质。
 - **wcheung** 负责四二最佳试玩，重点打磨故事、任务、玩法插件和玩家端呈现，让线索、玩家操作和结果形成完整可玩的流程。完成试玩后，将适合复用的改进整理到 Story Agent、玩法、绑定和组包校验，再验证自动生成结果。
-- **wehan** 负责用户端、账号、城市地图、自动化和后续平台接入。城市地图和游戏发布接入仍待建设和验证。
+- **wehan** 负责用户端、账号、城市地图、自动化和后续平台接入。本机地图、交付卡片选站点发布、玩家账号/印章/排行榜已接通；共享云部署仍待实施。
 
 Main 和 SDK 的目标是基于材料生成可试玩、可继续编辑的游戏初版。主办方审核后可直接使用，或与 Codex 一起打磨并再次试玩。团队先验收优化后的游戏包，再将可复用的经验落实到 Main 和 SDK，使后续生成也能受益。直接修改游戏包不会自动改变生成流程。
 
-用户平台建成后，将验收通过的游戏部署到可访问的位置，从地图对应遗产入口打开。地图进入游戏、资源加载和返回平台需要联调；账号或存档共享需另行对接。现有 Organizer 导入可登记并打开符合格式的试玩包；修改后仍需按实际打包规范验证导入与试玩，不代表公众平台发布功能已经完成。
+现有 Organizer 的已完成交付卡片可选择地图站点并发布，玩家地图读取同一后台已发布的版本。默认是本机运行；跨设备公网部署尚未完成。同一部署只需导入一次，各玩家不必单独拿包。队友若独立运行本机 Organizer，仍通过 Release 下载并导入；拉取 main 不同步本机历史和游戏文件。修改游戏包后仍须验证入口、资源、通关回执及存档兼容。
 
 答辩顺序为 **wehan 城市地图 → maslan 主试玩 → wcheung 技术复用 → wehan 后台更新**。wcheung 用四二展示换一份图文 PDF 和场景后如何匹配实物并点击查看介绍。四二作为复用样例，两处真实遗产从地图展示。耗时的生成步骤用已完成的结果说明。
 
@@ -82,11 +82,11 @@ First, each owner downloads, starts and plays their existing game bundle. Polish
 
 - **maslan** owns the best heritage demo, focusing on story, player actions, clues, feedback and endings. Choose 2D, an existing 3D environment or a newly generated one. Cite historical sources and label fiction.
 - **wcheung** owns the best 42 demo, polishing story, tasks, gameplay plugins and player presentation so clues lead to actions and consequences. After play-testing, integrate reusable improvements into Story Agent, gameplay, bindings and package checks, then validate the automated output.
-- **wehan** owns the player product, accounts, city map, automation and eventual platform integration. The city map and public game publishing integration still need implementation and validation.
+- **wehan** owns the player product, accounts, city map, automation and eventual platform integration. The local map, delivery-card site publication, player accounts/stamps and leaderboard are integrated; shared public deployment remains to be implemented.
 
 Main and the SDKs aim to generate a playable, editable first version from source materials. After review, an organizer may use it directly or polish and replay it with tools such as Codex. The team accepts the improved bundle first, then carries reusable lessons back into Main and the SDKs. Editing a game bundle does not automatically change subsequent generated output.
 
-Once the user platform exists, deploy an accepted game to an accessible location and open it from the corresponding map entry. Map-to-game navigation, asset loading and return navigation need integration testing. Shared accounts or saves require additional integration. The existing Organizer importer can register and open compatible playable bundles; validate the packaging format and preview after edits. Public platform publishing remains to be built and verified.
+Completed Organizer deliveries can select a map site and publish; the player map reads that backend’s published release. The default remains local, with public cross-device deployment unfinished. One deployment imports a game once for all its players. Teammates using independent local Organizers still download Releases and import them; pulling main does not transfer local history or game files. After editing a bundle, validate its entry, assets, completion receipt and save compatibility.
 
 Present in this order: **wehan (city map), maslan (featured game), wcheung (workflow reuse), wehan (Organizer update)**. Use the 42 demo to show how a different illustrated PDF and scene can be matched and how players open an object's description. The map provides the two real heritage sites. Use completed runs to explain generation steps that take longer than the live slot allows.
 
@@ -128,3 +128,9 @@ The working branch contains review candidates for shared Story profiles/schemas/
 用户报告四玩法试玩无问题后，在独立 `.runtime/delivery-r4-20261104` 从保存的故事和显式 blueprint 复跑共用编译/组包器；runtime 与呈现内容和试玩版一致。新包通过包内引擎36组分支/结局检查、正式 Organizer importer 的隔离 store 导入/重复导入/持久化与全文件 checksum、正式 preview manager HTTP资源检查，以及 browser 自动LOD→人物介绍→3D调查。交付候选为本机 Desktop/PastPort-delivery-20261104/wcheung.tar.gz；没有发布或推送，也未修改现有 Organizer 数据库。首次 LOD 在测试 browser 中耗时数分钟，未重测FPS。
 
 Following user-reported acceptance, the saved story and explicit blueprint were replayed through shared compilation/assembly in an isolated workspace. Runtime and presentation matched the tested build. The candidate passed 36 packaged-engine route/ending combinations, production Organizer import/idempotency/persistence and all file checksums in an isolated store, production preview HTTP checks, and browser LOD preparation → character introduction → 3D investigation. No fresh model generation, publication, push, existing Organizer database changes or new FPS measurement was performed. The four-mechanic typed intent/catalog integration remains outside this zero-model acceptance.
+
+
+玩家存档 / Player saves：玩家地图的账号进度已接 SQLite，复用游戏原有 `GameSession` 保存点；同账号、站点、发布版本可恢复。自定义游戏需接同一存档契约；仅改成品包不自动增加账号存档支持。跨设备访问需共享同一个平台后端，默认本机启动尚未公开部署。启动、数据目录、备份和验证边界见 [中文 README](README.md) / [English README](README_EN.md) 及 [技术 PRD](docs/TECHNICAL_PRD.md)。Account saves now persist existing GameSession checkpoints in SQLite. Accounts/sites/releases are isolated; custom games must adopt the save contract. Cross-device access requires the same backend; default local startup is not a public deployment. See the linked README and specification for startup, data, backup and validation boundaries.
+
+
+共享交付 / Shared delivery：同一平台使用一次导入和站点发布，不需要每名玩家上传游戏包。独立电脑的 Organizer 历史不通过 Git 自动同步；团队继续采用 Release → 下载 → 导入 → 验收。共享云部署与回环游戏地址改造由 wehan 负责，尚未实施。Within one deployment, import/publish once for all players. Git does not synchronize independent local Organizer histories. Team handoff remains Release → download → import → acceptance. wehan owns the still-pending shared deployment and replacement of loopback game URLs.

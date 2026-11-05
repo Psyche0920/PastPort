@@ -162,7 +162,7 @@ async function reviewProject(){
 }
 function updateEnvironmentButtons(jobs){for(const button of document.querySelectorAll('[data-environment-project]')){if(button.dataset.submitting==='true')continue;const state=environmentActionState(jobs,button.dataset.environmentProject);button.disabled=state.disabled||button.dataset.materialsBlocked==='true';button.textContent=state.disabled?state.label:(button.dataset.actionLabel||state.label);}}
 async function refreshJobs(){
-  const jobs=await api('jobs');updateEnvironmentButtons(jobs);const root=$('job-list');root.replaceChildren();
+  const [jobs,mapSites]=await Promise.all([api('jobs'),api('map-sites')]);updateEnvironmentButtons(jobs);const root=$('job-list');root.replaceChildren();
   environmentSource=environmentSource||sessionStorage.getItem('organizer-environment-source');
   environmentJob=environmentJob||sessionStorage.getItem('organizer-environment-job');storyJob=storyJob||sessionStorage.getItem('organizer-story-job');
   const env=jobs.find(j=>j.job_id===environmentJob);const story=jobs.find(j=>j.job_id===storyJob);
@@ -183,6 +183,24 @@ async function refreshJobs(){
     if(job.game_directory){const label=text('p','游戏包保存位置：');const path=text('code',job.game_directory);path.className='storage-path';article.append(label,path);}
     if(job.issues?.length){const issues=document.createElement('ul');for(const issue of job.issues)issues.append(text('li',issue));article.append(text('p','校验未通过：'),issues);}
     if(job.result_ready){const link=text('a','打开独立玩家预览 ↗');link.href='/organizer/api/jobs/'+job.job_id+'/open';link.target='_blank';link.rel='noopener';article.append(link);}
+    if(job.status==='completed'&&job.result_ready){
+      const target=document.createElement('select');
+      target.setAttribute('aria-label','发布站点');
+      const placeholder=text('option','选择地图站点');placeholder.value='';target.append(placeholder);
+      for(const site of mapSites){const option=text('option',site.name);option.value=site.id;target.append(option);}
+      const publish=text('button','发布到玩家地图');
+      publish.disabled=true;
+      target.onchange=()=>{publish.disabled=!target.value;};
+      publish.onclick=async()=>{
+        publish.disabled=true;
+        try{
+          await api('jobs/'+encodeURIComponent(job.job_id)+'/publish-to-map',{method:'POST',body:JSON.stringify({site_id:target.value})});
+          message('已发布到玩家地图：'+target.selectedOptions[0].textContent);
+        }catch(error){message(error.message);}
+        finally{publish.disabled=false;}
+      };
+      article.append(target,publish);
+    }
     if(job.mounted_preview_ready){
       const link=text('a','打开 3D 审核预览 ↗');
       link.href='/organizer/api/jobs/'+job.job_id+'/open-mounted';

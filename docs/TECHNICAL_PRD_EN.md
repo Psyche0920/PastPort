@@ -42,11 +42,13 @@ The current experience includes 360° presentation and generated 3D scenes. Regi
 | Gameplay and assembly | Reading, source judgment plus rectangular coverage, presentation bindings, shared assembly and browser execution | Completion, failure/retry and recovery evidence exists; this is not a general minigame library |
 | SDKs/runtime | Five SDKs depend on one shared core; external-checkout installation/integration has been tested | Source continues to change; old wheels do not necessarily include current fixes |
 | Stylization | Independent SDK and reuse of existing results | Organizer has no new-stylization action yet |
-| User/saves | Existing game frontend and browser-local recovery | New player accounts and cross-device backend saves are not implemented |
+| User/saves | Separate map-player accounts, durable SQLite progress and browser cache/recovery | Cross-device use requires the same backend; saves are isolated by account, site and published release |
 
 UI, structure, execution and content quality are separate acceptance layers. Old full-suite counts must not imply those checks were rerun for every update. Current interface evidence is in `var/organizer-integration/interface-language-acceptance.json`; other run records are in the same directory. They do not authorize additional paid calls. Original PDF OCR, source mapping, calibration and evidence-applicability limitations remain in force.
 
 ### 1.2 Current locations and entry points
+
+Portable startup uses `uv run python -m pastport organizer-init` for first setup and `uv run python -m pastport organizer` for foreground serving. Data defaults to `var/organizer-integration` relative to the checkout root. Options include `--directory`, `--port` and `--player-assets`; existing accounts and history are retained. New machines import deliveries to establish history and supply source materials and model authorization separately.
 
 | Item | Current location |
 |---|---|
@@ -218,7 +220,7 @@ New photo jobs use a compact policy: two photos per batch, at most 12 new entiti
 
 The upper-right manual Chinese/English selector defaults to Chinese and stores a browser-local preference; it does not follow the browser locale. `frontend/organizer/i18n.mjs` localizes login, production, review wrapper and progress, including existing labels in the shared embedded review UI. It changes text in place without reload, form reconstruction/submission, model/Marble calls or review saves. PDF text, object names, descriptions, story, paths and input values retain their language; uncatalogued diagnostics retain original text. The module is bundled and included in resource fingerprints to avoid stale mixed scripts.
 
-main serves `frontend/organizer/` at `/organizer/`, retaining roles/project scope. The static Sites sketch is not connected to this service. User UI/player databases are unchanged.
+main serves `frontend/organizer/` at `/organizer/`, retaining roles/project scope. The static Sites sketch is not connected to this service. The player map has its own account/save database, separate from Organizer staff and review data.
 
 | Input/path | Execution | Boundary |
 |---|---|---|
@@ -677,7 +679,7 @@ See root [handoff.md](../handoff.md) for finals ownership, playable acceptance a
 | 3D model + PDF | Raw-model import, coordinate/scale checks, object/evidence matching, numbered review, stations/navigation and existing environment contracts. Distinct from mounted native 3D archives. Test actual SpAItial Echo-3 exports before deciding API integration; arbitrary model support is not promised. |
 | Story/gameplay quality · wcheung | Story, Gameplay and related main integration; improve goals, causality, evidence reasoning, minigame relevance and consequences using the same materials; accept through complete play, not schema checks alone. |
 | Integration/delivery: main maintainer | Compatible Organizer API/progress, pinned runtime/SDK combinations, multiple datasets/mobile performance, rebuilt candidate packages and rollback verification. |
-| Later stages | User improvements, player accounts/cross-device saves/analytics, new stylization actions in Organizer. |
+| Later stages | User improvements, public deployment/play analytics, new stylization actions in Organizer. |
 | As needed | Targeted revision, cited/bounded external research, verified plugins and eventual assembler SDK; do not default to more agents or regenerate every resource. |
 
 The Admin production workflow disables cumulative recorded-token stop thresholds under explicit user authorization for both Evidence and environment matching. Actual usage remains recorded. Authorized call counts, timeouts, source validation and unknown-usage recovery checks remain enforced. Continuation creates a new output revision and reuses successful receipts, preserving old PDFs and original grants. Standalone SDK execution still honors its explicit grant by default.
@@ -723,3 +725,31 @@ The JS player host additionally registers bounded `spot-difference`, `timeline`,
 Search completion uses host-recorded observations; the player must first select scene objects. A checklist or notebook cannot collect them. The three desktop activities use DOM/SVG with drag/drop and select/place alternatives. Renderers exposing the hook suspend background drawing while a centered activity is open, then resume without rebuilding LOD; search remains live. Functional tests, image readability, spatial validation and device FPS are recorded separately.
 
 Reusable guidance and the template live in the Gameplay Preparation Skill investigation-patterns reference and investigation-blueprint.template.json; Narrative specifies the inference, premises and consequences. This blueprint path does not expand the Python typed Narrative/Gameplay source-reading/coverage intent union or establish a fresh Story Agent end-to-end run.
+
+Player-map publishing authorizes completed deliveries, validates against `frontend/player/sites.json`, and atomically stores one `player-map-<site_id>.json` per site. Version identity includes actual delivery-file hashes. Player launches resolve the requested site's publication; sessions and stamps remain scoped to the player and site. Existing Forty Two publication files remain readable. A game without a recognized ending bridge can still open; completion-stamp compatibility requires separate validation.
+
+
+Player accounts, sessions, stamps and progress persist in `frontend/player/.local/players.sqlite`. Set `PLAYER_DATA` to a stable data directory and reuse it after service restarts. Use a consistent SQLite backup; copying only a live main database without its WAL can lose data. Never commit databases or account files.
+
+Signing in and launching from the map automatically restores this account/site/published-release save. Investigations, choices, minigames and existing game save points sync automatically; returning to the map waits for saving. The status bar reports saving/failure, with retry and unsynced-save export. Stale writes from another page/device are rejected; reopen from the map to load the newer save. Restarting the game synchronizes a reset for this release. Newly published releases start separate saves and retain old ones without forced migration. Unbound old browser saves remain untouched and are not automatically claimed.
+
+Existing `GameSession` snapshots and continuation saves are supported; the same game engine validates recovery. Incompatible custom bundles explicitly report local-only saves. The backend accepts structurally validated client snapshots, rather than providing cheat-resistant server-side action adjudication. Stamps and progress are separate records. Cross-device use requires the same backend/data directory; the default loopback launcher is local development, not an internet cloud deployment. Closing/reloading attempts synchronization and warns about pending writes; after forced closure or disconnection, only acknowledged saves are guaranteed to restore from the server.
+
+
+Organizer delivery import and map publication support both existing 3D bundles and static 2D bundles. A 2D bundle provides root `index.html` and `pastport-player.json` (`format: pastport-static-v1`, `entrypoint: a relative HTML path within the bundle`); the entry must exist and stay within the package. Previews reuse the trusted launcher, separate port and Organizer login gate without executing an imported server script. `muradiye-ui-trial` packages the original The Last Two Sacks from `demo-muradiye-ui-trial`, retaining 2D character animation, gameplay and assets; its delivery card can publish to a selected map site. This legacy version retains its own browser-local saves and does not yet use the new GameSession account-save format. The platform now automatically adapts this pinned legacy runtime: its actual ending display sends the current player-run receipt, awards a passport stamp and updates the leaderboard. Ordinary reading awards nothing; repeating a site does not add another medal. Legacy detection uses runtime-file hashes without changing authored gameplay. New static games emit `pastport:completed` with a nonempty `endingId`; an unknown runtime cannot claim completion merely because it opens. Legacy local saves are now scoped by account/site/release, but remain distinct from cross-device backend saves.
+
+
+### Sharing game bundles, Organizer history and the player platform
+
+Within one deployment the flow is: **game bundle → Organizer import/production history → publish to a chosen site → player map opens that release → player accounts retain progress, stamps and rankings**. Organizer and the player platform share the same `server/organizer` data through `ORGANIZER_DATA`, including publications and their game files. Players do not sign into Organizer or download/upload/import the bundle individually. Staff history remains subject to owner/project authorization; public players access published content only.
+
+| Situation | Is a separate game-bundle handoff needed? |
+|---|---|
+| Another player joins a platform where the bundle is already imported | No. Import once, publish once and let players launch from the map. |
+| A game is updated within the same platform | An administrator imports or generates the new build and publishes it to the chosen site. Subsequent launches use that release without forcing incompatible saves together. |
+| A teammate runs an independent Organizer on their computer | Yes. Download the game from GitHub Releases and import it. Independent local histories/databases do not merge automatically. |
+| Moving the local platform to another deployment | Import the needed bundles or migrate the complete persistent data/assets separately. Back up/migrate the private player database securely. |
+
+`git push/pull` synchronizes source and documentation, not game files, Organizer history, uploaded sources, player databases or passwords. GitHub Releases distribute team deliverables and support moves between computers; players on an existing deployment do not repeatedly download Releases.
+
+The current system is local development, not an already deployed shared cloud backend. `PLAYER_DATA` persists player accounts, saves and stamps separately from Organizer staff accounts/production history. Serving multiple real devices requires a unified deployment and client-reachable game-resource routes instead of the current loopback game URLs. Copying the webpage or exposing a `127.0.0.1` port alone does not provide cross-device access. No public deployment was performed in this task.

@@ -33,3 +33,27 @@
 - The rebuilt game passed resource checks; number 12 was rendered and clicked to open its source popup. Existing PDF and Story were not regenerated.
 - IDML import, external historical research and the newly discussed player-facing exclusion policy are not implemented by this baseline.
 - Private source materials, credentials, accounts, execution databases and generated game packages are excluded from Git.
+
+
+## 2026-11-05 — 玩家账号持久存档（本地实现）
+
+- 玩家地图以账号、站点和发布版本持久保存 `GameSession` 快照，含调查、选择、小游戏、位置及续幕键；启动先恢复再运行，旧浏览器无主存档不自动认领。
+- 保存合并排队，使用乐观版本锁和幂等操作标识；失败可重试或导出，旧设备不能覆盖更新存档。返回地图和退出账号先等待保存。
+- 私有玩家库及其备份加入 Git 忽略规则；测试端口隔离登录 cookie。
+- 隔离测试：26 项存档/玩家引擎测试通过；真实四二游戏保存电脑阅读进度，重启更换游戏端口后恢复，并继续完成选择题。仓库/文档/JS 检查及相关 Python strict mypy 通过。未部署云服务，未在两台实体设备上实测，未重新验收完整剧情或所有自定义包。
+
+
+## 2026-11-05 — Muradiye UI Trial 二维交付
+
+- 从 `demo-muradiye-ui-trial` 保存原版《最后两袋》为 `muradiye-ui-trial` 交付包，32 个原版游戏/素材文件内容保持一致，新增包入口与来源清单，不包含数据库或凭据。
+- 交付导入、可信预览启动器及站点发布支持带显式入口清单的静态二维包，保留既有 3D 路径和权限检查。
+- 已登记本机 Organizer；地图发布操作只在隔离环境验证，未替换当前正式站点。原分支 25 项游戏测试通过；完整剧情通关和旧版云存档不属于本轮完成范围。
+
+
+## 2026-11-05 — 导入旧版游戏自动连接通关回执
+
+- 可信游戏宿主按运行时摘要识别旧版 UI Trial，并在实际结局显示后发出统一通关事件；新静态游戏可使用 `pastport:completed` 标准事件。未结束的阅读或调查不触发完成。
+- 旧版本机保存键按玩家、站点和发布版本隔离，保留未绑定的历史浏览器存档。该适配不声称旧版已有跨设备存档。
+- 复用现有印章主键和排行榜；重复通关不重复计分。通关桥接模块同时加入显式游戏包及 Python 安装资源清单。
+
+- 隔离浏览器实玩五幕、三次照片配对、分账和证据桌，完成 `signed-truth` 结局；护照与地图自动盖章，刷新排行榜出现对应玩家和奖章。重开已完成存档后仍只有一枚奖章。证据保存在忽略目录的 `COMPLETION_ACCEPTANCE.json`，旧验收记录保留。
