@@ -27,36 +27,34 @@ Extract the archive, enter the matching directory and follow `OPEN.txt`. Open th
 
 ## Startup and use
 
-You need Python 3.12, uv, Node.js and a WebGL browser. Run every command in your PastPort folder.
+Requires Git, uv, Node.js 22+ and a WebGL browser. Run these commands from the repository root on macOS or Linux; on Windows use an Ubuntu terminal in WSL2. The checkout can live in any directory.
 
-### Organizer
+First setup on this computer:
 
-1. **Install** (first time, or after dependencies change):
-   ```sh
-   uv sync --extra authoring --extra game-making
-   ```
-2. **Create this computer's admin** (once). Choose a password of at least 12 characters; it is not shown while you type.
-   ```sh
-   .venv/bin/python -m pastport organizer-init
-   ```
-3. **Start Organizer** and keep the terminal open (Ctrl+C stops it):
-   ```sh
-   .venv/bin/python -m pastport organizer
-   ```
-4. **Open** http://127.0.0.1:18840/organizer/ and sign in as `admin`.
+```sh
+git clone https://github.com/Psyche0920/PastPort.git
+cd PastPort
+uv sync --extra authoring --extra game-making
+uv run python -m pastport organizer-init
+```
 
-**Play a team package:** Progress & delivery → choose the `.tar.gz` → Import delivery → Open standalone player preview.
+Private repository access requires GitHub permission. Initialization prompts for and confirms an administrator password in the terminal; the username is `admin`. Existing accounts are retained. Initial dependency installation requires internet access.
 
-<details>
-<summary>More options</summary>
+For each subsequent start, run from the repository root:
 
-- **Change the password:** `.venv/bin/python -m pastport account-password --accounts var/organizer-integration/staff-accounts.json --actor organizer-admin`
-- **Already running?** Just open the address; don't start a second copy. If port 18840 is busy, check for a running Organizer before stopping anything.
-- **Team default materials** (only on a computer that has them): add `--organizer-catalog var/organizer-integration/catalog.json --organizer-player-assets <player assets folder>` to the start command. Then **3D Review Preview** on the `3d-test777` history entry opens its 30 candidate positions, and **Continue This Project** leads to Story preparation.
-- The account file and `var/` stay on this computer and out of Git. Never share account files, API keys or private materials.
-- Language: switch 中文 / English at the top right. A restart requires signing in again. The start command keeps the older editorial demo channels off; Organizer's own SDK generation still asks for explicit consent.
+```sh
+uv run python -m pastport organizer
+```
 
-</details>
+Open [Organizer](http://127.0.0.1:18840/organizer/) and sign in. The service runs in your terminal; keep it open and stop with Ctrl+C. If the port is occupied, check the existing service or run `uv run python -m pastport organizer --port 18841` and open that port.
+
+### Organizer: organizer-facing entry
+
+Download a team delivery, select its `.tar.gz` under Progress & delivery, and import it. Open its standalone preview. A new computer builds its history through imports.
+
+Accounts, uploads, cache and delivery history persist under `var/organizer-integration/` in this checkout after shutdown. Import team packages or upload original materials on another computer. Account configuration and databases contain private data and need a separate backup.
+
+Use `--directory` for another local configuration directory, with the same path for initialization and startup. An existing `catalog.json` is read automatically. A new machine can import game packages directly. Creating games from source materials requires supplying those materials and authorizing models through the interface. Shared player assets can be passed explicitly with `--player-assets /path/to/assets`. Material paths stored in historical projects must also exist on the current computer.
 
 Existing-3D uploads: select “Original PDF + photos + existing SPZ / PLY scene”, leave defaults unchecked, enter a new project ID and upload all four inputs. Save, review the finite call budgets, then prepare the environment. Continue through review → Story → game build. Recognition/Story calls require explicit consent; Marble calls are zero. Photos accept images or ZIP; PLY must be a binary little-endian triangle mesh. Local Chrome and Node.js are required for capture. An insufficient Evidence budget stops before dispatch: 44 photos and 62 PDF pages require at least 43 first-pass calls, plus per-object verification. The old eight-call default is not a full-set budget. Wiring/simulated execution and a real single-object handoff have been checked; a fresh full-set model run remains upload-test acceptance.
 

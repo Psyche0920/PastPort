@@ -48,6 +48,8 @@ UI, structure, execution and content quality are separate acceptance layers. Old
 
 ### 1.2 Current locations and entry points
 
+Portable startup uses `uv run python -m pastport organizer-init` to initialize local accounts and `uv run python -m pastport organizer` to serve in the current terminal. Private data defaults to `var/organizer-integration` in the checkout; options include `--directory`, `--port` and `--player-assets`. Existing accounts are retained; new computers import deliveries to establish history. Windows uses WSL2.
+
 | Item | Current location |
 |---|---|
 | Application source | Any PastPort clone, local main; commands run from the repository root |

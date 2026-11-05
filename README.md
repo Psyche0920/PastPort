@@ -27,36 +27,34 @@
 
 ## 启动与使用
 
-需要 Python 3.12、uv、Node.js 和支持 WebGL 的浏览器。所有命令都在 PastPort 文件夹里运行。
+需要 Git、uv、Node.js 22+ 和支持 WebGL 的浏览器。以下命令用于 macOS、Linux；Windows 请使用 WSL2 的 Ubuntu 终端。在仓库根目录运行；仓库可以放在任意目录。
 
-### Organizer
+首次使用这台电脑：
 
-1. **安装**（首次，或依赖变化后）：
-   ```sh
-   uv sync --extra authoring --extra game-making
-   ```
-2. **创建本机管理员**（只需一次）。设置至少12个字符的密码，输入时不显示。
-   ```sh
-   .venv/bin/python -m pastport organizer-init
-   ```
-3. **启动 Organizer**，保持终端打开（Ctrl+C 停止）：
-   ```sh
-   .venv/bin/python -m pastport organizer
-   ```
-4. **打开** http://127.0.0.1:18840/organizer/ ，用 `admin` 登录。
+```sh
+git clone https://github.com/Psyche0920/PastPort.git
+cd PastPort
+uv sync --extra authoring --extra game-making
+uv run python -m pastport organizer-init
+```
 
-**试玩团队交付包：** 制作进度与交付 → 选择 `.tar.gz` → 导入交付包 → 打开独立玩家预览。
+私有仓库需要先取得 GitHub 访问权限。初始化会让你在终端输入并确认管理员密码，用户名为 `admin`。已有账号配置会被保留。首次安装需要联网下载依赖。
 
-<details>
-<summary>更多选项</summary>
+以后每次启动，在仓库根目录执行：
 
-- **修改密码：** `.venv/bin/python -m pastport account-password --accounts var/organizer-integration/staff-accounts.json --actor organizer-admin`
-- **已经在运行？** 直接打开网址，不要再启动一份。端口 18840 被占用时，先确认是否已有 Organizer 在运行，不要结束未知进程。
-- **团队默认材料**（仅限存有这些材料的电脑）：启动命令后加 `--organizer-catalog var/organizer-integration/catalog.json --organizer-player-assets <播放器资源目录>`。之后可在 `3d-test777` 的历史记录中打开「3D 审核预览」（30 个候选落点），用「继续此项目」进入准备故事。
-- 账户文件和 `var/` 只留在本机，不进 Git。不要分享账户文件、API 密钥或私有材料。
-- 右上角切换中文 / English。服务重启后需要重新登录。启动命令会关闭旧的 editorial 演示通道；Organizer 自己的 SDK 生成仍需明确授权。
+```sh
+uv run python -m pastport organizer
+```
 
-</details>
+打开 [Organizer 后台](http://127.0.0.1:18840/organizer/)，使用管理员账号登录。服务在当前终端前台运行，保持终端打开，按 Ctrl+C 停止。端口占用时检查已有服务；也可以用 `uv run python -m pastport organizer --port 18841`，并打开相应端口。
+
+### Organizer：主办方入口
+
+下载团队交付包，在「制作进度与交付」选择 `.tar.gz` 并点击「导入交付包」，再打开独立玩家预览。新电脑的历史记录从导入开始。
+
+账号、上传、缓存和交付记录保存在当前仓库的 `var/organizer-integration/`。关闭服务后数据仍保留。换电脑时导入团队交付包或上传原始材料。账号配置和数据库包含私有数据，应单独备份。
+
+可用 `--directory` 指定另一份本地配置目录；初始化与启动应使用同一路径。若存在 `catalog.json`，启动时自动读取；新电脑可以直接导入游戏包。需要从原始材料制作游戏时，按页面提供资料和模型授权。共享玩家资源可显式指定 `--player-assets /path/to/assets`。历史项目中登记的材料路径也需要在当前电脑可用。
 
 已有3D上传：选择“原始 PDF + 照片 + 已有 SPZ / PLY 场景”，不勾默认资料，填写新项目编号并上传四类文件。保存后核对调用预算，再点“准备资料与环境”；后续按审核 → 故事 → 制作游戏继续。只在你明确授权后调用识别/故事模型，Marble为0。照片支持多张图片或ZIP；PLY须为二进制小端三角网格，需本机Chrome和Node.js进行取景。证据预算不足会在调用前停止；44张照片和62页PDF的首轮下限为43次，另需逐物件核验，不能用旧8次上限当整套预算。新路径的接线/模拟执行与单物件真实资料已检查，整套新材料的真实模型运行由上传测试验收。
 

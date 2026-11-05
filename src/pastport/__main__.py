@@ -24,17 +24,12 @@ def main() -> None:
         sys.argv.pop(1)
         account_main()
         return
-    if len(sys.argv) > 1 and sys.argv[1] == "organizer-init":
-        from pastport.organizer_init import main as organizer_init_main
+    if len(sys.argv) > 1 and sys.argv[1] in ("organizer-init", "organizer"):
+        from pastport.organizer_cli import main as organizer_main
 
-        sys.argv.pop(1)
-        organizer_init_main()
+        initialize = sys.argv.pop(1) == "organizer-init"
+        organizer_main(initialize=initialize)
         return
-    if len(sys.argv) > 1 and sys.argv[1] == "organizer":
-        from pastport.organizer_init import organizer_arguments
-
-        # Standard local Organizer options; anything given after them still wins.
-        sys.argv[1:] = organizer_arguments(sys.argv[2:])
     if len(sys.argv) > 1 and sys.argv[1] == "gameplay-prepare":
         from pastport.gameplay_cli import main as gameplay_main
 

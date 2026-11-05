@@ -48,6 +48,8 @@ PastPort 把真实遗址材料、物件及空间转换为可浏览、可阅读�
 
 ### 1.2 当前目录与入口
 
+便携启动使用 `uv run python -m pastport organizer-init` 初始化本机账号，`uv run python -m pastport organizer` 在当前终端运行。默认私有目录为仓库下的 `var/organizer-integration`；支持 `--directory`、`--port`、`--player-assets`。已有账号保留；新电脑导入交付包建立历史。Windows 使用 WSL2。
+
 | 项目 | 当前位置 |
 |---|---|
 | 应用源码 | 任意位置的 PastPort clone，本地main；命令均在仓库根目录运行 |
