@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05
+
+- Released the featured game *The Last Two Sacks / 最后两袋* as `maslan.tar.gz` (maslan-demo-2026-11-05-r1), built on the team-handover `maslan.tar.gz` room with the shared compiler and investigation blueprint, zero model and zero Marble calls. Updated the README and handoff download links.
+- Routing tasks may set their own prompt, instruction and wrong-bin copy; investigation activity hints no longer mention one specific story.
+- Verified: 12 engine choice combinations with 12 distinct ending texts; Chrome playthroughs in English, Chinese and at 390×844 with mid-game reload; isolated Organizer import, re-import and checksum match. Not verified: human playtest, Turkish, screen readers, historical review.
+
 ## 2026-11-03 — Finals handoff
 
 - Updated the bilingual root handoff, READMEs and technical PRDs with the responsibilities of wcheung, maslan and wehan, the live demonstration order, and the Release-to-Organizer acceptance process.

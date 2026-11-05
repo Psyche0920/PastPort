@@ -17,7 +17,7 @@ Download from the [private GitHub Release](https://github.com/Psyche0920/PastPor
 | Package | Contents |
 | --- | --- |
 | `wcheung.tar.gz` | The 42 standalone demo *The Last Recording*, including the 3D scene, investigation, clue review and three endings. The delivery record was previously named `42handover`. |
-| `maslan.tar.gz` | The standalone player bundle from completed Organizer job `3d-test777`. |
+| `maslan.tar.gz` | Featured game *The Last Two Sacks*: the `3d-test777` 3D room and its 30 Muradiye records, where a researcher reconstructs a fictional 1430s ledger case; five record nodes, four investigation activities, three key choices and 12 distinct ending texts. [Download the new build (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz); the earlier standalone player bundle remains in the release above. |
 
 **Maslan: Muradiye source materials.** The folder contains the original IDML, its `Links` folder, and the chapter PDF. [Open the Muradiye source folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
 

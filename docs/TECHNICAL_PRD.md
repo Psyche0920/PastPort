@@ -719,7 +719,7 @@ IDML先本地读取原文、文本框前后连接、版面页和图片链接，�
 
 案件文件使用独立纸张呈现及分行，人物对话保留底部展示，收起操作固定右上。完成试玩段落的续接必须验证精确旧包/旧存档、旧场景/规则/玩法/文本和来源身份，再通过单一共用引擎重播已有行为；禁止直接注入完成状态或迁移未完成任务。未完成旧局保留原包继续，完成后才解锁下一幕；新旧存档键独立保留。此人工 runtime-package 扩展不扩大自动 compiled_branch_v1 的生成边界。
 
-玩家 JS host 另注册 `spot-difference`、`timeline`、`image-puzzle`、`scene-search` 四种有界活动。`tools/game-package/investigation-blueprint.mjs` 对已准备 runtime-package/museum 和本机 assetRoot 应用显式 blueprint：核对素材 bytes/hash/预算、双语配置、确定性解、保存/退出生命周期、已有物件和同一视点，再用 StoryPackageCompiler 封装。它只在无歧义的非决策边插入任务，保留既有剧情选择；不以文字选择冒充图片差异或图像拼图。
+玩家 JS host 另注册 `spot-difference`、`timeline`、`image-puzzle`、`scene-search` 四种有界活动。`tools/game-package/investigation-blueprint.mjs` 对已准备 runtime-package/museum 和本机 assetRoot 应用显式 blueprint：核对素材 bytes/hash/预算、双语配置、确定性解、保存/退出生命周期、已有物件和同一视点，再用 StoryPackageCompiler 封装。它只在无歧义的非决策边插入任务，保留既有剧情选择；不以文字选择冒充图片差异或图像拼图。 归类（routing）任务可选提供 `prompt`、`instruction`、`wrong` 双语文案，未提供时沿用默认说明；四种活动的界面提示不再引用特定故事内容。
 
 场景搜索的完成依据来自 host 已记录观察，玩家端必须先实际点选场景物件；清单和资料册不能代收集。三种桌面活动用 DOM/SVG 和拖放／先选再放两套输入；有支持 hook 的 renderer 在居中活动打开时暂停背景绘制，关闭后恢复且不重建LOD，搜索时不暂停。功能测试、图片可读性、空间核验和实机FPS分别记录。
 
