@@ -8,37 +8,41 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import ValidationError
 
-from pastport.adapters.organizer_previews import OrganizerPreviewPool
 from pastport.adapters.organizer_delivery import MAX_BYTES, delivery_name, import_delivery
+from pastport.adapters.organizer_previews import OrganizerPreviewPool
+from pastport.adapters.organizer_review_environment import SDKMountedPreviewPool
 from pastport.adapters.runtime_resources import runtime_root
 from pastport.api.organizer_accounts import OrganizerAccounts
 from pastport.api.settings import Credential
 from pastport.api.transport import read_body
 from pastport.application.models import Actor, ServiceError
 from pastport.application.organizer import OrganizerService
-from pastport.domain.story_reuse import StoryReuseConfirmation
 from pastport.domain.organizer import (
     OrganizerAdminSetup,
     OrganizerFile,
     OrganizerPasswordLogin,
     OrganizerProjectCreate,
     OrganizerRecovery,
-    OrganizerStart,
     OrganizerSelection,
+    OrganizerStart,
     OrganizerStorageView,
 )
 from pastport.domain.organizer_inputs import NativePreparedInputs, UploadedProductionStart
-from pastport.domain.organizer_review import ReviewAcknowledgment, ReviewChange, NativeReviewWrite, NativeIntroductionWrite
-
-if TYPE_CHECKING:
-    from pastport_matched_environment.application.reference_preview import ReferencePreviewPool
+from pastport.domain.organizer_review import (
+    NativeIntroductionWrite,
+    NativeReviewWrite,
+    ReviewAcknowledgment,
+    ReviewChange,
+)
+from pastport.domain.story_reuse import StoryReuseConfirmation
+from pastport.ports.organizer import MountedEnvironmentPreviews
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,7 +64,7 @@ class OrganizerRoutes:
         self.failed_logins: dict[str, list[float]] = {}
         self.sessions: dict[str, _Session] = {}
         self.previews = OrganizerPreviewPool()
-        self.mounted_previews: ReferencePreviewPool | None = None
+        self.mounted_previews: MountedEnvironmentPreviews | None = None
 
     def actor(self, request: Request) -> Actor:
         if request.headers.get("authorization"):
@@ -108,18 +112,26 @@ class OrganizerRoutes:
 
         @router.get("/")
         async def index() -> HTMLResponse:
-            root=runtime_root()/"frontend/organizer"
-            revision=hashlib.sha256(b"".join((root/name).read_bytes() for name in ("app.mjs","review.mjs","i18n.mjs","app.css"))).hexdigest()[:20]
-            html=(root/"index.html").read_text()
-            html=html.replace('src="assets/app.mjs"',f'src="assets/app.mjs?v={revision}"')
-            html=html.replace('href="assets/app.css"',f'href="assets/app.css?v={revision}"')
+            root = runtime_root() / "frontend/organizer"
+            revision = hashlib.sha256(
+                b"".join(
+                    (root / name).read_bytes()
+                    for name in ("app.mjs", "review.mjs", "i18n.mjs", "app.css")
+                )
+            ).hexdigest()[:20]
+            html = (root / "index.html").read_text()
+            html = html.replace('src="assets/app.mjs"', f'src="assets/app.mjs?v={revision}"')
+            html = html.replace('href="assets/app.css"', f'href="assets/app.css?v={revision}"')
             return HTMLResponse(
                 html,
                 headers={
                     "Cache-Control": "no-store",
                     "X-Content-Type-Options": "nosniff",
-                    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; "
-                    "connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'none'",
+                    "Content-Security-Policy": (
+                        "default-src 'self'; script-src 'self'; style-src 'self'; con"
+                        "nect-src 'self'; img-src 'self' data:; frame-ancestors 'none"
+                        "'; object-src 'none'; base-uri 'none'"
+                    ),
                 },
             )
 
@@ -127,15 +139,21 @@ class OrganizerRoutes:
         async def asset(name: str) -> Response:
             if name not in ("app.mjs", "app.css", "review.mjs", "i18n.mjs"):
                 raise ServiceError("ORGANIZER_NOT_FOUND", "找不到此资源。", 404)
-            root=runtime_root()/"frontend/organizer"
-            headers={"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"}
+            root = runtime_root() / "frontend/organizer"
+            headers = {"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"}
             if name in ("app.mjs", "review.mjs"):
-                version=hashlib.sha256((root/"review.mjs").read_bytes()).hexdigest()[:20]
-                script=(root/name).read_text().replace("from './review.mjs'",f"from './review.mjs?v={version}'")
-                language_version=hashlib.sha256((root/"i18n.mjs").read_bytes()).hexdigest()[:20]
-                script=script.replace("from './i18n.mjs'",f"from './i18n.mjs?v={language_version}'")
-                return Response(script,media_type="text/javascript",headers=headers)
-            return FileResponse(root/name,headers=headers)
+                version = hashlib.sha256((root / "review.mjs").read_bytes()).hexdigest()[:20]
+                script = (
+                    (root / name)
+                    .read_text()
+                    .replace("from './review.mjs'", f"from './review.mjs?v={version}'")
+                )
+                language_version = hashlib.sha256((root / "i18n.mjs").read_bytes()).hexdigest()[:20]
+                script = script.replace(
+                    "from './i18n.mjs'", f"from './i18n.mjs?v={language_version}'"
+                )
+                return Response(script, media_type="text/javascript", headers=headers)
+            return FileResponse(root / name, headers=headers)
 
         @router.post("/api/session")
         async def login(request: Request) -> JSONResponse:
@@ -229,15 +247,21 @@ class OrganizerRoutes:
         @router.get("/api/workspace")
         async def workspace(request: Request) -> JSONResponse:
             value = await asyncio.to_thread(self.service.workspace, self.actor(request))
-            return JSONResponse(value.model_dump(mode="json") if value else None,
-                                headers={"Cache-Control": "no-store"})
+            return JSONResponse(
+                value.model_dump(mode="json") if value else None,
+                headers={"Cache-Control": "no-store"},
+            )
 
         @router.post("/api/workspace")
         async def select_workspace(request: Request) -> JSONResponse:
             actor = self.actor(request)
             selection = await read_body(request, OrganizerSelection)
-            value = await asyncio.to_thread(self.service.select_workspace, selection.source_id, actor)
-            return JSONResponse(value.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+            value = await asyncio.to_thread(
+                self.service.select_workspace, selection.source_id, actor
+            )
+            return JSONResponse(
+                value.model_dump(mode="json"), headers={"Cache-Control": "no-store"}
+            )
 
         @router.get("/api/storage")
         async def storage(request: Request) -> JSONResponse:
@@ -250,10 +274,16 @@ class OrganizerRoutes:
                 uploads_directory=root / "uploads",
                 jobs_directory=root / "jobs",
             )
-            return JSONResponse(value.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+            return JSONResponse(
+                value.model_dump(mode="json"), headers={"Cache-Control": "no-store"}
+            )
 
-        @router.api_route("/api/review/{source_id}/environment/{view}/{relative:path}", methods=["GET", "POST"])
-        async def review_environment(source_id: str, view: int, relative: str, request: Request) -> Response:
+        @router.api_route(
+            "/api/review/{source_id}/environment/{view}/{relative:path}", methods=["GET", "POST"]
+        )
+        async def review_environment(
+            source_id: str, view: int, relative: str, request: Request
+        ) -> Response:
             actor = self.actor(request)
             source = self.service.source(source_id, actor)
             gateway = self.service.reviews
@@ -271,17 +301,52 @@ class OrganizerRoutes:
             production = self.service.request(source)
             if body is not None:
                 async with self.service.submission:
-                    if any(job.status in ("queued", "running", "awaiting_external") for job in self.service.jobs(actor)):
-                        raise ServiceError("ORGANIZER_BUSY", "请等待制作完成，再调整环境输入。", 409)
-                    value = await asyncio.to_thread(gateway.environment, bound, production, view, relative, request.url.query, body, actor.actor_id, str(request.base_url))
+                    if any(
+                        job.status in ("queued", "running", "awaiting_external")
+                        for job in self.service.jobs(actor)
+                    ):
+                        raise ServiceError(
+                            "ORGANIZER_BUSY", "请等待制作完成，再调整环境输入。", 409
+                        )
+                    value = await asyncio.to_thread(
+                        gateway.environment,
+                        bound,
+                        production,
+                        view,
+                        relative,
+                        request.url.query,
+                        body,
+                        actor.actor_id,
+                        str(request.base_url),
+                    )
             else:
-                value = await asyncio.to_thread(gateway.environment, bound, production, view, relative, request.url.query, body, actor.actor_id, str(request.base_url))
-            headers = {"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"}
+                value = await asyncio.to_thread(
+                    gateway.environment,
+                    bound,
+                    production,
+                    view,
+                    relative,
+                    request.url.query,
+                    body,
+                    actor.actor_id,
+                    str(request.base_url),
+                )
+            headers = {"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"}
             if value.media_type == "text/html":
-                headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
+                headers["Content-Security-Policy"] = (
+                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-"
+                    "unsafe-eval'; worker-src 'self' blob:; style-src 'unsafe-inl"
+                    "ine'; img-src 'self' data: blob:; connect-src 'self' blob:; "
+                    "object-src 'none'; base-uri 'none'; frame-ancestors 'self'"
+                )
             if value.path is not None:
                 return FileResponse(value.path, headers=headers)
-            return Response(value.body or b"", status_code=value.status, media_type=value.media_type, headers=headers)
+            return Response(
+                value.body or b"",
+                status_code=value.status,
+                media_type=value.media_type,
+                headers=headers,
+            )
 
         @router.get("/api/review/{source_id}/workbench/")
         async def native_review_page(source_id: str, request: Request) -> HTMLResponse:
@@ -290,8 +355,25 @@ class OrganizerRoutes:
             gateway = self.service.reviews
             if gateway is None:
                 raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
-            value = await asyncio.to_thread(gateway.workbench, self.service.bound_review_source(source, actor), self.service.request(source), actor.actor_id, f"/organizer/api/review/{source_id}/workbench")
-            return HTMLResponse(value, headers={"Cache-Control": "no-store", "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'"})
+            value = await asyncio.to_thread(
+                gateway.workbench,
+                self.service.bound_review_source(source, actor),
+                self.service.request(source),
+                actor.actor_id,
+                f"/organizer/api/review/{source_id}/workbench",
+            )
+            return HTMLResponse(
+                value,
+                headers={
+                    "Cache-Control": "no-store",
+                    "Content-Security-Policy": (
+                        "default-src 'self'; script-src 'self' 'unsafe-inline'; style"
+                        "-src 'unsafe-inline'; img-src 'self' data:; connect-src 'sel"
+                        "f'; object-src 'none'; base-uri 'none'; frame-ancestors 'sel"
+                        "f'"
+                    ),
+                },
+            )
 
         @router.get("/api/review/{source_id}/workbench/data")
         async def native_review_data(source_id: str, request: Request) -> Response:
@@ -300,47 +382,85 @@ class OrganizerRoutes:
             gateway = self.service.reviews
             if gateway is None:
                 raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
-            value = await asyncio.to_thread(gateway.workbench_data, self.service.bound_review_source(source, actor))
-            return Response(value, media_type="application/json", headers={"Cache-Control":"no-store"})
+            value = await asyncio.to_thread(
+                gateway.workbench_data, self.service.bound_review_source(source, actor)
+            )
+            return Response(
+                value, media_type="application/json", headers={"Cache-Control": "no-store"}
+            )
 
         @router.post("/api/review/{source_id}/workbench/save-review")
         async def native_review_save(source_id: str, request: Request) -> JSONResponse:
             body = await read_body(request, NativeReviewWrite)
-            await self.service.save_review(source_id, self.actor(request), body.object_id, ReviewChange(kind="review", expected_version=body.version, image=body.image, text=body.text, note=body.note))
-            return JSONResponse({"saved":True})
+            await self.service.save_review(
+                source_id,
+                self.actor(request),
+                body.object_id,
+                ReviewChange(
+                    kind="review",
+                    expected_version=body.version,
+                    image=body.image,
+                    text=body.text,
+                    note=body.note,
+                ),
+            )
+            return JSONResponse({"saved": True})
 
         @router.post("/api/review/{source_id}/workbench/save-introduction")
         async def native_introduction_save(source_id: str, request: Request) -> JSONResponse:
             body = await read_body(request, NativeIntroductionWrite)
-            await self.service.save_review(source_id, self.actor(request), body.object_id, ReviewChange(kind="introduction", expected_version=body.version, content=body.content))
-            return JSONResponse({"saved":True})
+            await self.service.save_review(
+                source_id,
+                self.actor(request),
+                body.object_id,
+                ReviewChange(
+                    kind="introduction", expected_version=body.version, content=body.content
+                ),
+            )
+            return JSONResponse({"saved": True})
 
         @router.get("/api/review/{source_id}/workbench/media/{relative:path}")
-        async def native_review_image(source_id: str, relative: str, request: Request) -> FileResponse:
+        async def native_review_image(
+            source_id: str, relative: str, request: Request
+        ) -> FileResponse:
             actor = self.actor(request)
             source = self.service.source(source_id, actor)
             gateway = self.service.reviews
             if gateway is None:
                 raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
-            path = await asyncio.to_thread(gateway.workbench_media, self.service.bound_review_source(source, actor), relative)
+            path = await asyncio.to_thread(
+                gateway.workbench_media, self.service.bound_review_source(source, actor), relative
+            )
             if path.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp"):
                 raise ServiceError("REVIEW_ASSET_INVALID", "此文件不是审核图片。", 422)
-            return FileResponse(path, headers={"Cache-Control":"no-store","X-Content-Type-Options":"nosniff"})
+            return FileResponse(
+                path, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"}
+            )
 
         @router.get("/api/review/{source_id}")
         async def review(source_id: str, request: Request) -> JSONResponse:
-            value = await asyncio.to_thread(self.service.review_view, source_id, self.actor(request))
-            return JSONResponse(value.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+            value = await asyncio.to_thread(
+                self.service.review_view, source_id, self.actor(request)
+            )
+            return JSONResponse(
+                value.model_dump(mode="json"), headers={"Cache-Control": "no-store"}
+            )
 
         @router.post("/api/review/{source_id}/objects/{number}")
         async def edit_review(source_id: str, number: int, request: Request) -> JSONResponse:
-            value = await self.service.save_review(source_id, self.actor(request), number, await read_body(request, ReviewChange))
-            return JSONResponse(value.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+            value = await self.service.save_review(
+                source_id, self.actor(request), number, await read_body(request, ReviewChange)
+            )
+            return JSONResponse(
+                value.model_dump(mode="json"), headers={"Cache-Control": "no-store"}
+            )
 
         @router.post("/api/review/{source_id}/apply")
         async def apply_review(source_id: str, request: Request) -> JSONResponse:
             body = await read_body(request, ReviewAcknowledgment)
-            identifier = await self.service.apply_review(source_id, self.actor(request), body.revision)
+            identifier = await self.service.apply_review(
+                source_id, self.actor(request), body.revision
+            )
             return JSONResponse({"source_id": identifier})
 
         @router.get("/api/review/{source_id}/media/{asset_id}")
@@ -350,26 +470,49 @@ class OrganizerRoutes:
             gateway = self.service.reviews
             if gateway is None:
                 raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
-            target = await asyncio.to_thread(gateway.media, self.service.bound_review_source(source, actor), self.service.request(source), asset_id)
+            target = await asyncio.to_thread(
+                gateway.media,
+                self.service.bound_review_source(source, actor),
+                self.service.request(source),
+                asset_id,
+            )
             if target.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp", ".pdf", ".idml"):
                 raise ServiceError("REVIEW_ASSET_INVALID", "此文件不能作为审核图片展示。", 422)
-            return FileResponse(target, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "sandbox"})
+            return FileResponse(
+                target,
+                headers={
+                    "Cache-Control": "no-store",
+                    "X-Content-Type-Options": "nosniff",
+                    "Content-Security-Policy": "sandbox",
+                },
+            )
 
         @router.post("/api/sources/{source_id}/story-compatibility")
         async def check_story_reuse(source_id: str, request: Request) -> JSONResponse:
-            identifier=await self.service.check_story_reuse(source_id,self.actor(request))
-            return JSONResponse({"source_id":identifier},headers={"Cache-Control":"no-store"})
+            identifier = await self.service.check_story_reuse(source_id, self.actor(request))
+            return JSONResponse({"source_id": identifier}, headers={"Cache-Control": "no-store"})
 
         @router.post("/api/sources/{source_id}/confirm-story-reuse")
         async def confirm_story_reuse(source_id: str, request: Request) -> JSONResponse:
-            actor=self.actor(request)
-            body=await read_body(request,StoryReuseConfirmation)
-            identifier=await self.service.check_story_reuse(source_id,actor,body)
-            return JSONResponse({"source_id":identifier},headers={"Cache-Control":"no-store"})
+            actor = self.actor(request)
+            body = await read_body(request, StoryReuseConfirmation)
+            identifier = await self.service.check_story_reuse(source_id, actor, body)
+            return JSONResponse({"source_id": identifier}, headers={"Cache-Control": "no-store"})
 
         @router.get("/api/sources")
-        async def sources(request: Request, active_source_id: str | None = None, default_only: bool = False, metadata_only: bool = False) -> JSONResponse:
-            values = await asyncio.to_thread(self.service.sources, self.actor(request), active_source_id, default_only, metadata_only)
+        async def sources(
+            request: Request,
+            active_source_id: str | None = None,
+            default_only: bool = False,
+            metadata_only: bool = False,
+        ) -> JSONResponse:
+            values = await asyncio.to_thread(
+                self.service.sources,
+                self.actor(request),
+                active_source_id,
+                default_only,
+                metadata_only,
+            )
             return JSONResponse(
                 [value.model_dump(mode="json") for value in values],
                 headers={"Cache-Control": "no-store"},
@@ -401,9 +544,11 @@ class OrganizerRoutes:
                             raise ServiceError("DELIVERY_TOO_LARGE", "交付包不能超过 2 GiB。", 413)
                         stream.write(chunk)
                 async with self.service.submission:
-                    operation = asyncio.create_task(asyncio.to_thread(
-                        import_delivery, self.service.store, actor.actor_id, name, archive
-                    ))
+                    operation = asyncio.create_task(
+                        asyncio.to_thread(
+                            import_delivery, self.service.store, actor.actor_id, name, archive
+                        )
+                    )
                     try:
                         job = await asyncio.shield(operation)
                     except asyncio.CancelledError:
@@ -438,14 +583,16 @@ class OrganizerRoutes:
         @router.get("/api/jobs/{job_id}/open-mounted")
         async def open_mounted(job_id: str, request: Request) -> RedirectResponse:
             job = self.service.job(job_id, self.actor(request))
-            relative = "native/scene3d-1/result" if job.entry_level == "catalog3d" else "mounted-review/scene"
+            relative = (
+                "native/scene3d-1/result"
+                if job.entry_level == "catalog3d"
+                else "mounted-review/scene"
+            )
             root = self.service.directory(job.job_id) / relative
             if not job.mounted_preview_ready or not (root / "scene3d/attachment.json").is_file():
                 raise ServiceError("ORGANIZER_RESULT_UNAVAILABLE", "3D 审核预览尚未就绪。", 404)
-            from pastport_matched_environment.application.reference_preview import ReferencePreviewPool
-
             if self.mounted_previews is None:
-                self.mounted_previews = ReferencePreviewPool()
+                self.mounted_previews = SDKMountedPreviewPool()
             port = await self.mounted_previews.ensure(root)
             return RedirectResponse(
                 f"http://127.0.0.1:{port}/scene3d/index.html",
@@ -553,7 +700,16 @@ class OrganizerRoutes:
             project_id: str,
             request: Request,
             role: Literal[
-                "original_pdf", "photos", "mapping_pdf", "tour", "matched_vr", "mounted_3d", "scene_splat", "scene_mesh", "original_idml", "historical_links"
+                "original_pdf",
+                "photos",
+                "mapping_pdf",
+                "tour",
+                "matched_vr",
+                "mounted_3d",
+                "scene_splat",
+                "scene_mesh",
+                "original_idml",
+                "historical_links",
             ],
             filename: str,
         ) -> JSONResponse:
@@ -571,7 +727,13 @@ class OrganizerRoutes:
                     "mapping": {"original_pdf", "mapping_pdf", "tour"},
                     "vr": {"original_pdf", "matched_vr"},
                     "3d": {"original_pdf", "mounted_3d"},
-                    "idml3d": {"original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"},
+                    "idml3d": {
+                        "original_idml",
+                        "historical_links",
+                        "photos",
+                        "scene_splat",
+                        "scene_mesh",
+                    },
                     "catalog3d": {"original_pdf", "scene_splat", "scene_mesh"},
                     "raw3d": {"original_pdf", "photos", "scene_splat", "scene_mesh"},
                 }[material.entry_level]
@@ -588,7 +750,16 @@ class OrganizerRoutes:
                 total = sum(item.size_bytes for item in material.files)
                 maximum = min(
                     (6 if material.entry_level == "idml3d" else 4) * 1024**3 - total,
-                    (32 if role == "original_idml" else 3072 if role == "historical_links" else 512 if role in ("original_pdf", "mapping_pdf") else 2048) * 1024**2,
+                    (
+                        32
+                        if role == "original_idml"
+                        else 3072
+                        if role == "historical_links"
+                        else 512
+                        if role in ("original_pdf", "mapping_pdf")
+                        else 2048
+                    )
+                    * 1024**2,
                 )
                 file_id = uuid4().hex
                 directory = (
@@ -614,9 +785,15 @@ class OrganizerRoutes:
                         role in ("original_pdf", "mapping_pdf") and b"%PDF-" not in header
                     ):
                         raise ServiceError("ORGANIZER_UPLOAD_INVALID", "文件为空或不是 PDF。", 422)
-                    if role == "original_idml" and (not filename.lower().endswith(".idml") or not header.startswith(b"PK")):
-                        raise ServiceError("IDML_UPLOAD_INVALID", "请上传有效IDML压缩结构文件。", 422)
-                    if role == "historical_links" and (not filename.lower().endswith(".zip") or not header.startswith(b"PK")):
+                    if role == "original_idml" and (
+                        not filename.lower().endswith(".idml") or not header.startswith(b"PK")
+                    ):
+                        raise ServiceError(
+                            "IDML_UPLOAD_INVALID", "请上传有效IDML压缩结构文件。", 422
+                        )
+                    if role == "historical_links" and (
+                        not filename.lower().endswith(".zip") or not header.startswith(b"PK")
+                    ):
                         raise ServiceError("IDML_LINKS_INVALID", "历史配图请上传Links ZIP。", 422)
                     file = OrganizerFile(
                         file_id=file_id,

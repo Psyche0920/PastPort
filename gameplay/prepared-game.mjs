@@ -24,7 +24,6 @@ export async function preparedStoryInput(draft,plan,environment,museum,pluginCod
   const bindings=new Map(plan.bindings.map(binding=>[binding.task_id,binding]));
   const intents=new Map(draft.spatial_intents.map(intent=>[intent.task_id,intent]));
   requireValue(bindings.size===plan.bindings.length&&bindings.size===scenes.length&&intents.size===scenes.length,'Task coverage differs');
-  let previous=environment.entry_view_id;
   const tasks=[];
   for(const [index,scene]of scenes.entries()){
     requireValue(scene.tasks.length===1,'Only one task per scene is supported');
@@ -37,13 +36,6 @@ export async function preparedStoryInput(draft,plan,environment,museum,pluginCod
     const node=world.geometry.result.objects.find(node=>node.key===`object:${intent.object_number}`);
     const observation=node?.planning.observation_positions.find(item=>item.station===station.station_id);
     requireValue(node?.planning.enabled_interactions.includes('inspect')&&observation&&same(observation.point,station.point),'Selected station is not registered');
-    // This bounded profile supports staying in one view or one registered transition.
-    if(previous!==world.view_id){
-      const origin=environment.metric_spatial.worlds.find(world=>world.view_id===previous);
-      const link=origin?.navigation.find(link=>link.target_view_id===world.view_id);
-      requireValue(link?.point&&Number.isFinite(link.arrival_yaw)&&Number.isFinite(link.arrival_pitch),'Task sequence has no registered transition with arrival orientation');
-    }
-    previous=world.view_id;
     requireValue(same(binding.source_claim_ids,task.evidence_refs)&&binding.lifecycle.status==='passed'&&binding.config_sha256===await contentHash(binding.config)&&binding.lifecycle.config_sha256===binding.config_sha256,'Task source/config receipt differs');
     requireValue(binding.plugin.code_sha256===pluginCodeSha256&&binding.lifecycle.plugin_code_sha256===pluginCodeSha256,'Plugin code changed after verification');
     const requested=mechanicIntents.get(task.task_id);
@@ -57,6 +49,21 @@ export async function preparedStoryInput(draft,plan,environment,museum,pluginCod
     }else requireValue(requested.kind==='source_reading'&&binding.completion==='source_exposure_not_comprehension','Reading completion differs');
     new Activity(config);
     tasks.push({task_id:task.task_id,scene_id:scene.scene_id,chapter:index+1,objects:[intent.object_number],required_sources:[intent.object_number],target_number:intent.object_number,asset_object_number:intent.object_number,plugin:structuredClone(config),access:{view_id:intent.view_id,station_id:intent.station_id,interaction:'inspect'}});
+  }
+  // Check actual graph edges, not adjacent entries in a serialized scene array.
+  const byScene=new Map(scenes.map(scene=>[scene.scene_id,scene]));
+  const transition=(from,to)=>{
+    if(from===to)return;
+    const origin=environment.metric_spatial.worlds.find(world=>world.view_id===from);
+    const link=origin?.navigation.find(link=>link.target_view_id===to);
+    requireValue(link?.point&&Number.isFinite(link.arrival_yaw)&&Number.isFinite(link.arrival_pitch),'Story edge has no registered transition with arrival orientation');
+  };
+  const opening=byScene.get(draft.package.game.initial_state?.current_scene_id??scenes[0]?.scene_id);
+  requireValue(opening,'Opening scene is missing');
+  transition(environment.entry_view_id,intents.get(opening.tasks[0].task_id)?.view_id);
+  for(const scene of scenes)for(const next of scene.next_scene_ids??[]){
+    const target=byScene.get(next);requireValue(target,'Story edge points to a missing scene');
+    transition(intents.get(scene.tasks[0].task_id)?.view_id,intents.get(target.tasks[0].task_id)?.view_id);
   }
   const locales=draft.package.game.locales;
   const firstCopy=locale=>locales.find(table=>table.locale===locale).entries.find(entry=>entry.key===scenes[0].body_key).text;

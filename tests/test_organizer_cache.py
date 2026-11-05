@@ -22,13 +22,13 @@ from pastport.domain.organizer import OrganizerCatalog, OrganizerSource
 from pastport.domain.story_inputs import EnvironmentSpatialRevision
 
 
-def bundle_fixture(root: Path):
+def bundle_fixture(root: Path) -> tuple[GameMakingRequest, OrganizerCachedBundle, Path]:
     settings, production = setup(root)
     request = GameMakingRequest.model_validate_json((root / "request.json").read_bytes())
     directory = root / "cache"
     directory.mkdir()
 
-    def file(name: str, content: bytes):
+    def file(name: str, content: bytes) -> CachedFile:
         path = directory / name
         path.write_bytes(content)
         return CachedFile(path=path, sha256=hashlib.sha256(content).hexdigest())
@@ -109,12 +109,12 @@ def bundle_fixture(root: Path):
     return request, result, path
 
 
-def test_complete_bundle_validates_all_source_links(tmp_path):
+def test_complete_bundle_validates_all_source_links(tmp_path: Path) -> None:
     request, bundle, path = bundle_fixture(tmp_path)
     assert CachedBundleValidator.validate(path, request) == bundle
 
 
-def test_a_different_pdf_cache_is_not_accepted_even_with_same_photo(tmp_path):
+def test_a_different_pdf_cache_is_not_accepted_even_with_same_photo(tmp_path: Path) -> None:
     request, bundle, path = bundle_fixture(tmp_path)
     body = json.loads(bundle.photo_manifest.path.read_text())
     body["source"]["sha256"] = "f" * 64
@@ -132,14 +132,14 @@ def test_a_different_pdf_cache_is_not_accepted_even_with_same_photo(tmp_path):
         CachedBundleValidator.validate(path, request)
 
 
-def test_one_changed_file_invalidates_whole_bundle(tmp_path):
+def test_one_changed_file_invalidates_whole_bundle(tmp_path: Path) -> None:
     request, bundle, path = bundle_fixture(tmp_path)
     bundle.mapping_pdf.path.write_bytes(b"%PDF-another mapping")
     with pytest.raises(ServiceError, match="文件改变"):
         CachedBundleValidator.validate(path, request)
 
 
-def test_default_without_complete_bundle_is_rejected(tmp_path):
+def test_default_without_complete_bundle_is_rejected(tmp_path: Path) -> None:
     settings, production = setup(tmp_path)
     catalog = OrganizerCatalog(
         sources=(
@@ -156,7 +156,7 @@ def test_default_without_complete_bundle_is_rejected(tmp_path):
         OrganizerService(OrganizerStore(tmp_path / "store"), catalog, production)
 
 
-def test_missing_saved_story_stops_complete_cache_reuse(tmp_path):
+def test_missing_saved_story_stops_complete_cache_reuse(tmp_path: Path) -> None:
     request, bundle, path = bundle_fixture(tmp_path)
     (request.saved_story_run / "narrative-draft.json").unlink()
     with pytest.raises(ServiceError, match="缺少已保存故事"):

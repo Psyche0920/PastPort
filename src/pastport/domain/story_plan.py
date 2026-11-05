@@ -7,7 +7,7 @@ from pydantic import Field, model_validator
 from pastport.domain.common import Contract, Identifier, Sha256, Text
 from pastport.domain.mechanics import CoverageProblem, SourceChoiceRequirement
 
-StoryStructure = Literal["authored_graph", "compiled_plan_v1"]
+StoryStructure = Literal["authored_graph", "compiled_plan_v1", "compiled_branch_v1"]
 
 
 class StoryText(Contract):
@@ -73,6 +73,51 @@ class StoryPlanResult(Contract):
     decision: Literal["complete", "no_feasible_story"]
     reason: Text
     plan: StoryPlan | None
+
+    @model_validator(mode="after")
+    def complete_content(self) -> Self:
+        if (self.decision == "complete") != (self.plan is not None):
+            raise ValueError("Complete needs a plan; infeasible must not contain one")
+        return self
+
+
+class StoryInvestigation(Contract):
+    """One exclusive route; findings are fictional notebook content, not source approval."""
+
+    label: StoryText
+    tasks: tuple[StoryPlanTask, ...] = Field(min_length=1, max_length=3)
+    finding: StoryText
+    reunion_feedback: StoryText
+    ending_consequences: tuple[StoryText, ...] = Field(min_length=2, max_length=4)
+
+
+class BranchStoryPlan(Contract):
+    """Bounded foldback; models select content, never runtime variables or rules."""
+
+    structure: Literal["compiled_branch_v1"]
+    protagonist_name: StoryText
+    protagonist_goal: StoryText
+    opening: tuple[StoryPlanTask, ...] = Field(min_length=1, max_length=3)
+    investigations: tuple[StoryInvestigation, ...] = Field(min_length=2, max_length=4)
+    reunion: tuple[StoryPlanTask, ...] = Field(min_length=1, max_length=3)
+    choices: tuple[StoryPlanChoice, ...] = Field(min_length=2, max_length=4)
+    fiction_notice: Text
+    capability_catalog_sha256: Sha256
+    unresolved_items: tuple[Text, ...]
+
+    @model_validator(mode="after")
+    def consequence_coverage(self) -> Self:
+        if any(
+            len(route.ending_consequences) != len(self.choices) for route in self.investigations
+        ):
+            raise ValueError("Every investigation needs a consequence for each final choice")
+        return self
+
+
+class BranchStoryPlanResult(Contract):
+    decision: Literal["complete", "no_feasible_story"]
+    reason: Text
+    plan: BranchStoryPlan | None
 
     @model_validator(mode="after")
     def complete_content(self) -> Self:

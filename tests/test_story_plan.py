@@ -3,23 +3,25 @@
 import asyncio
 import json
 import subprocess
+from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 from test_story_automation import ROOT, material_fixture
 
 from pastport.adapters.story_workflow import StoryAutomationWorkflow
-from pastport.application.execution_models import ProviderResponse
+from pastport.application.execution_models import ProviderRequest, ProviderResponse
 from pastport.application.models import ServiceError
 from pastport.domain.modules import NarrativeDraft
 from pastport.domain.story_plan import StoryPlanResult
 
 
-def words(en, zh):
+def words(en: str, zh: str) -> dict[str, str]:
     return {"en": en, "zh": zh}
 
 
-def plan_fixture():
+def plan_fixture() -> dict[str, Any]:
     from pastport.adapters.gameplay_catalog import load_gameplay_catalog
 
     task = {
@@ -78,14 +80,15 @@ def plan_fixture():
 
 
 class PlanProvider:
-    def __init__(self, invalid=False):
+    def __init__(self, invalid: bool = False) -> None:
         self.calls = 0
         self.invalid = invalid
-        self.schema = None
+        self.schema: dict[str, Any] | None = None
 
-    async def respond(self, request, timeout_seconds):
+    async def respond(self, request: ProviderRequest, timeout_seconds: float) -> ProviderResponse:
         self.calls += 1
         self.schema = json.loads(request.output_schema_json)
+        assert self.schema is not None
         assert "StoryPlan" in self.schema["$defs"]
         assert "Rule" not in self.schema["$defs"]
         assert "Variable" not in self.schema["$defs"]
@@ -106,7 +109,7 @@ class PlanProvider:
         )
 
 
-def test_content_plan_generates_and_resumes_without_a_second_call(tmp_path):
+def test_content_plan_generates_and_resumes_without_a_second_call(tmp_path: Path) -> None:
     provider = PlanProvider()
     runner = StoryAutomationWorkflow(
         material_fixture(tmp_path / "inputs"),
@@ -180,7 +183,7 @@ console.log('Both compiled endings passed');
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_fixed_plan_rejects_model_authored_runtime_rules_and_does_not_retry(tmp_path):
+def test_fixed_plan_rejects_model_authored_runtime_rules_and_does_not_retry(tmp_path: Path) -> None:
     provider = PlanProvider(invalid=True)
     runner = StoryAutomationWorkflow(
         material_fixture(tmp_path / "inputs"),
@@ -198,7 +201,7 @@ def test_fixed_plan_rejects_model_authored_runtime_rules_and_does_not_retry(tmp_
     assert provider.calls == 1
 
 
-def test_fixed_plan_requires_explicit_gameplay_and_preserves_infeasibility():
+def test_fixed_plan_requires_explicit_gameplay_and_preserves_infeasibility() -> None:
     output = plan_fixture()
     del output["plan"]["tasks"][0]["gameplay"]
     with pytest.raises(ValidationError):

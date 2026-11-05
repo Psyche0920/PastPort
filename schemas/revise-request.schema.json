@@ -1104,7 +1104,8 @@
           "default": "authored_graph",
           "enum": [
             "authored_graph",
-            "compiled_plan_v1"
+            "compiled_plan_v1",
+            "compiled_branch_v1"
           ],
           "title": "Structure Profile",
           "type": "string"

@@ -1,121 +1,130 @@
-# PastPort Development Handoff
+# PastPort 决赛交接 / Finals Handoff
 
-Use the current `main` as the integration baseline. **wcheung owns the pipeline before Story; maslan owns Story and the downstream game-production pipeline.** The current implementation is available in main; neither developer needs to recover implementation from historical Demo branches. This does not mean every commit on every historical branch has been merged.
+[中文](#zh) · [English](#en)
 
-See the [Technical PRD](docs/TECHNICAL_PRD.md) for system architecture and contracts, and the [README](README.md) for installation, startup, accounts and storage locations. This handoff covers ownership, source locations, inputs, outputs, change impact and next tasks.
+<a id="zh"></a>
 
-The [current private playable Release](https://github.com/Psyche0920/PastPort/releases/tag/3d-review-playable-2026-11-03) is the shared baseline for visual and gameplay changes. Run it before editing, then compare changes from a separate working copy. For full upstream replay materials, use the older bundle listed in the [README](README.md). The new playable bundle does not import local Organizer history.
+## 中文
 
-## 1. Ownership and handoff boundary
+交付一条可现场操作的路径：从城市地图发现多处真实 vakıf 遗产，查看图文和出处，进入主试玩，再展示制作流程如何复用以及内容如何更新。
 
-```mermaid
-flowchart LR
-    A[wcheung: PDF / photos / tours / models] --> B[Evidence / Environment / Stylization]
-    B --> C[Traceable sources / reviewed objects / space / navigation / assets]
-    C --> D[maslan: Story content plan and compiler]
-    E[Verified gameplay capability catalog] --> D
-    D --> F[Gameplay preparation and presentation]
-    F --> G[Independent assembler]
-    G --> H[User browser game]
-    O[Organizer production UI] --> M[main API and orchestration]
-    M -.calls.-> B
-    M -.calls.-> D
-    M -.calls.-> F
-    M -.calls.-> G
-```
-
-| Owner | Modules | Handoff responsibility |
-|---|---|---|
-| wcheung | Evidence, Matched Environment, Stylization and their upstream main adapters | Deliver the original PDF and extracted sources, stable object/source mappings, saved descriptions and review state, environment snapshot, viewpoints/stations/navigation, and scene/media manifests and hashes for the same project. |
-| maslan | Story, Gameplay Preparation & Presentation, their main adapters, assembly and player runtime integration | Consume the canonical upstream inputs and produce checked narrative tasks, executable gameplay, presentation bindings and a complete playable bundle. |
-| Both | Shared contracts, main's public production API and compatible SDK/runtime versions | Identify all consumers before changing a contract; update and test affected consumers together. |
-
-Organizer is the organizer-facing production UI; User is the player-facing game UI. Preserve the existing Organizer workflow. New player accounts, cross-device saves and analytics are later work.
-
-## 2. wcheung: where to change code
-
-| Change | Primary source location |
+| 负责人 | 交付与验收 |
 |---|---|
-| PDF extraction, photo identification, evidence mapping and mapping-PDF export | [Evidence SDK](packages/evidence-sdk/README.md): `packages/evidence-sdk/src/pastport_evidence/`, especially `application/`, `adapters/`, `domain/` and `ports/`; public entry points are `sdk.py` and `cli.py`. |
-| Environment building, object placement, shared VR/3D review and navigation | [Matched Environment SDK](packages/matched-environment-sdk/README.md): `packages/matched-environment-sdk/src/pastport_matched_environment/`. |
-| Review and spatial implementation | That SDK's `application/review_repository.py`, `vr_content.py`, `vr_positions.py`, `scene3d_review.py`, `scene3d_arrows.py`, `scene3d_projection.py` and `spatial_analysis.py`. Trusted review markup lives in `reference_environment/review.html`. |
-| Style and appearance processing | [Stylization SDK](packages/stylization-sdk/README.md): `packages/stylization-sdk/src/pastport_stylization/`. Keep style execution separate from the environment SDK. |
-| Upload/import and upstream-to-main integration | [organizer_native.py](src/pastport/adapters/organizer_native.py), [organizer_review.py](src/pastport/adapters/organizer_review.py), [organizer_review_environment.py](src/pastport/adapters/organizer_review_environment.py), [matched_environment.py](src/pastport/adapters/matched_environment.py), [environment_spatial.py](src/pastport/adapters/environment_spatial.py), and [source_lineage.py](src/pastport/application/source_lineage.py). |
+| **wcheung** | 基于现有四二 3D 环境打磨最佳 Demo，覆盖 Story Agent、任务设计、玩法插件、玩家端呈现和组包。对白完整，任务目标清楚，玩家能用线索操作并看到后果。将反复手改且可复用的改法加回生成规则、玩法校验、展品绑定或组包检查。先交付最佳可玩 Demo，随后对可复用改进做自动化复跑验证并记录仍需手调的部分。 |
+| **maslan** | 打磨答辩主试玩，自主选择 2D、重新生成 3D 或沿用已有 3D 做映射。玩家能完成一段完整体验，并用现场物件或有出处的史料做一次有后果的决定。历史内容注明出处，虚构剧情明确标记。 |
+| **wehan** | 负责用户端、账号、城市地图与平台自动化。地图可打开至少两处不同的真实 vakıf 遗产，展示图文和出处并直达主试玩。现场通过 Organizer 新增或编辑内容，再回用户端确认变化。 |
 
-### Inputs and outputs
+### 初始申请书与比赛方向
 
-Current inputs depend on the entry point: original PDF plus photos; original PDF plus mapping PDF and 360 tour; original PDF plus a native matched-VR archive; or original PDF plus a native mounted two-view 3D archive. Generation requires explicit, bounded authorization; installation and upload do not authorize model or Marble calls.
+团队参考保存在本机的[初始申请书版本](references/PastPort_ROOT_CODE_Application.pdf)。它提出从真实历史空间出发，让玩家选择角色、探索建筑和物件、使用线索并通过选择改变个人成长与后续机会。申请书中的安卡拉章节是机制示例，明确不是本届比赛已确认的合格试点。PDF 本身不包含提交回执，需以实际提交记录确认最终版本。
 
-The Story handoff is more than a screenshot or raw model. Deliver traceable source documents, an environment snapshot, object records and assets. The shared snapshot contract is `EnvironmentSnapshot` in [story_inputs.py](src/pastport/domain/story_inputs.py); [story_materials.py](src/pastport/adapters/story_materials.py) implements the reading/projection boundary. Actual typed models are authoritative; do not create a parallel unvalidated JSON format.
+本届以[参赛条款](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf)为准。面向真实 vakıf 遗产做可运行的端到端体验，让用户发现多处遗产并查看历史、图片与来源，支持新增和编辑内容，现场展示核心流程。史实注明来源，依据资料的重建与原创角色、对白和情节清楚区分。
 
-Preserve project, object, source and scene identities; separate original-PDF and mapping-PDF hashes/page references; review/spatial revisions; coordinate systems; calibration; and navigation. Unknown identity, scale or location must remain explicitly unknown rather than being guessed for downstream convenience.
+尽量在现实交付范围内靠近申请书方向：优先让玩家在一处真实遗址通过角色目标、物件线索和行动做出有后果的选择，再逐步扩展多角色、成长状态与重玩。申请书里的两个角色、五个节点、三个关键选择、任务适配和 5–8 次试玩是原先提出的 MVP 与测试目标，不代表现已完成，也不是条款中逐项规定的数量。现有地图接入、玩家成长与试玩验证按实际进度记录。
 
-### Next task: a raw 3D model plus PDF entry point
+### 工作方式与交付
 
-1. Obtain a real export from a phone-capture service. Verify file format, textures/dependencies, units, axes, origin, scale, collision/floor support and usage rights. SpAItial Echo-3 is a candidate, not an integrated provider. Validate exported files first, then determine whether API integration is available and appropriate.
-2. Add an input adapter for a raw model plus PDF, distinct from the existing native mounted-3D archive. Identify and locate objects, match them to source evidence, and send candidates through the existing shared VR/3D review workbench. Do not create a second review authority.
-3. Prepare stations, task-relevant visibility/accessibility and navigation, then emit the existing environment contract. The current game host supports two viewpoints; arbitrary model/viewpoint counts require explicit adaptation, not a renamed file extension.
-4. With maslan, run the same environment through Story, gameplay, presentation and assembly. Verify saved/reopened object positions and arrows, source mappings, navigation and resource integrity. Distinguish captured geometry from generated completion. A rendered model alone does not prove a playable, evidence-matched environment.
+先各自下载、启动和试玩现有游戏包，在游戏包的代码和资源上打磨 Demo，可以用 Codex 辅助修改。直接修改并启动现有包无需重新运行 Main 的生成流程。
 
-## 3. maslan: where to change code
+- **maslan** 负责最佳遗产试玩，重点打磨剧情、玩家行动、线索、互动反馈与结局。场景可选 2D、现有 3D 或新生成 3D。历史内容标明来源，虚构内容标明性质。
+- **wcheung** 负责四二最佳试玩，重点打磨故事、任务、玩法插件和玩家端呈现，让线索、玩家操作和结果形成完整可玩的流程。完成试玩后，将适合复用的改进整理到 Story Agent、玩法、绑定和组包校验，再验证自动生成结果。
+- **wehan** 负责用户端、账号、城市地图、自动化和后续平台接入。城市地图和游戏发布接入仍待建设和验证。
 
-| Change | Primary source location |
+Main 和 SDK 的目标是基于材料生成可试玩、可继续编辑的游戏初版。主办方审核后可直接使用，或与 Codex 一起打磨并再次试玩。团队先验收优化后的游戏包，再将可复用的经验落实到 Main 和 SDK，使后续生成也能受益。直接修改游戏包不会自动改变生成流程。
+
+用户平台建成后，将验收通过的游戏部署到可访问的位置，从地图对应遗产入口打开。地图进入游戏、资源加载和返回平台需要联调；账号或存档共享需另行对接。现有 Organizer 导入可登记并打开符合格式的试玩包；修改后仍需按实际打包规范验证导入与试玩，不代表公众平台发布功能已经完成。
+
+答辩顺序为 **wehan 城市地图 → maslan 主试玩 → wcheung 技术复用 → wehan 后台更新**。wcheung 用四二展示换一份图文 PDF 和场景后如何匹配实物并点击查看介绍。四二作为复用样例，两处真实遗产从地图展示。耗时的生成步骤用已完成的结果说明。
+
+每次有新版，沿用 `wcheung.tar.gz` 和 `maslan.tar.gz`，上传到 PastPort GitHub Releases，用发布标签区分版本。发布说明写清变更和试玩起点，再更新 [中文 README](README.md) 和 [英文 README](README_EN.md) 里对应的下载链接并推送。wehan 下载后导入 Organizer，在「制作进度与交付」打开同名记录试玩验收。彩排确认地图能直达主试玩，以及后台更新能在用户端看到。
+
+### 最终交付包
+
+用有 PastPort 仓库访问权限的 GitHub 账号下载。wcheung 的交付包可直接解包，打开包内的 `MANIFEST.md`。 [下载 wcheung 完整交付包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar)
+
+#### Maslan 交付清单
+
+| 项目 | 内容 | 下载 |
+|---|---|---|
+| 比赛章程与赛事说明 | 主办方发布的两份 PDF | [参赛条款](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [赛事说明](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
+| 可试玩游戏包 | Maslan 的独立试玩版本，可导入 Organizer | [可试玩游戏包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [启动和导入说明](README_EN.md) |
+| 游戏包的原始材料 | 原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY、匹配结果 JSON 和 CSV | [Organizer 原始材料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
+| 主办方 Vakıf 资料（穆拉迪遗址） | 原始 IDML、配套 `Links` 文件夹和章节 PDF | [Google Drive 穆拉迪文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
+| 团队分工与答辩安排 | 本文中的负责人和答辩顺序 | [团队分工](#zh) |
+
+Maslan 打磨当前试玩时，只需要可试玩游戏包和对应的原始材料包。wehan 负责地图站点、配图、数据和试玩入口，等 Maslan 交付最终可玩版本后接入地图。
+
+系统设计与接口见[技术 PRD](docs/TECHNICAL_PRD.md)。
+
+<a id="en"></a>
+
+## English
+
+Deliver a live, end-to-end experience. Users discover multiple real vakıf heritage sites on a city map, inspect images and historical sources, and launch the featured game. The team then demonstrates how it can reuse the production workflow and update published content.
+
+| Owner | Delivery and acceptance |
 |---|---|
-| Public Story SDK | [Story SDK](packages/story-sdk/README.md): `packages/story-sdk/src/pastport_story/client.py` and its CLI. |
-| Story generation, compilation and reference constraints | [story_workflow.py](src/pastport/adapters/story_workflow.py), [story_authoring.py](src/pastport/application/story_authoring.py), [story_compiler.py](src/pastport/application/story_compiler.py), [story_plan_schema.py](src/pastport/application/story_plan_schema.py), and [story_reference_contract.py](src/pastport/application/story_reference_contract.py). |
-| Story models, Skill and compatibility/reuse | [story_plan.py](src/pastport/domain/story_plan.py), [modules.py](src/pastport/domain/modules.py), [narrative Skill](skills/narrative/SKILL.md), and [story_reuse.py](src/pastport/adapters/story_reuse.py). The Skill is maintained once as source and bundled by the shared runtime; do not hand-maintain another installed copy. |
-| Gameplay SDK and preparation | [Gameplay SDK](packages/gameplay-sdk/README.md): `packages/gameplay-sdk/src/pastport_gameplay/`, plus shared [gameplay_preparation.py](src/pastport/application/gameplay_preparation.py) and [gameplay_verifier.py](src/pastport/adapters/gameplay_verifier.py). |
-| Plugin rules, capabilities and presentation | [gameplay/plugins](gameplay/plugins/), [gameplay.mjs](gameplay/gameplay.mjs), [prepared-game.mjs](gameplay/prepared-game.mjs), and [prepare_presentation.mjs](tools/prepare_presentation.mjs). Keep capability declarations aligned with the real plugin implementation. |
-| Assembly, player frontend and engine | [tools/game-package](tools/game-package/), [frontend/game](frontend/game/), and [src/pastport/player](src/pastport/player/). Maintain a single authoritative engine implementation. |
-| main orchestration and stage handoffs | [game_making.py](src/pastport/adapters/game_making.py), [organizer_production.py](src/pastport/adapters/organizer_production.py), and [organizer.py](src/pastport/application/organizer.py). The public HTTP boundary is [api/organizer.py](src/pastport/api/organizer.py). |
+| **wcheung** | Polish the strongest playable demo using the existing 42 3D environment. Own the chain from Story Agent through task design, gameplay plugins, player presentation and packaging. Dialogue must be complete, objectives clear, and clues actionable with visible consequences. Where fixes are repeatable, incorporate them into generation rules, gameplay checks, exhibit bindings or package validation. Deliver the polished playable demo first, then validate reusable improvements with an automated run and record remaining manual work. |
+| **maslan** | Polish the featured game for the jury. Choose 2D, a newly generated 3D scene, or mapping into an existing 3D environment. Players should be able to complete an experience and use a site object or sourced historical clue to make a consequential choice. Cite historical sources and label fictional material. |
+| **wehan** | Own the player-facing product, accounts, city map and platform automation. The map opens at least two distinct real vakıf heritage sites with images, descriptions and sources, and links directly to the featured game. Demonstrate a content addition or edit in Organizer and verify it in the player-facing product. |
 
-The Story and Gameplay packages are public facades backed by shared `src/pastport/` implementation. Changing only a facade is insufficient when the real behavior lives in the shared runtime. Update the implementation and rebuild compatible runtime/SDK packages together. Installed packages use bundled resources rather than loading files from a working checkout.
+### Original proposal and competition direction
 
-### Inputs and outputs
+Use the locally preserved [initial proposal version](references/PastPort_ROOT_CODE_Application.pdf) as a reference. It describes character-driven exploration of real historical places, architectural and object clues, and choices that shape personal growth and later opportunities. Its Ankara chapter is an illustration of the mechanics and explicitly not a confirmed eligible pilot for this competition. The PDF does not contain a submission receipt, so the final submitted version requires independent confirmation.
 
-| Stage | Input | Output and consumer |
+The [competition terms](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) govern the final delivery. Build a working end-to-end experience around real vakıf heritage, enabling users to discover multiple sites, view historical information, images and sources, and add and edit content. Demonstrate core flows live. Cite historical facts and distinguish evidence-based reconstructions from fictional characters, dialogue and events.
+
+Move toward the proposal within the deliverable scope: first let players pursue a character goal, investigate objects and make consequential choices at a real heritage site. Extend to multiple roles, progression and replay as feasible. The proposal's two roles, five exploration nodes, three key choices, adaptive task and 5–8 playtests are proposed MVP and testing targets, not claims of completion or item-by-item numeric requirements in the competition terms. Record actual progress for map integration, character progression and play-testing.
+
+### Working and delivery workflow
+
+First, each owner downloads, starts and plays their existing game bundle. Polish the demo by editing the bundle’s code and assets, with Codex where useful. Editing and running an existing bundle does not require rerunning the Main generation pipeline.
+
+- **maslan** owns the best heritage demo, focusing on story, player actions, clues, feedback and endings. Choose 2D, an existing 3D environment or a newly generated one. Cite historical sources and label fiction.
+- **wcheung** owns the best 42 demo, polishing story, tasks, gameplay plugins and player presentation so clues lead to actions and consequences. After play-testing, integrate reusable improvements into Story Agent, gameplay, bindings and package checks, then validate the automated output.
+- **wehan** owns the player product, accounts, city map, automation and eventual platform integration. The city map and public game publishing integration still need implementation and validation.
+
+Main and the SDKs aim to generate a playable, editable first version from source materials. After review, an organizer may use it directly or polish and replay it with tools such as Codex. The team accepts the improved bundle first, then carries reusable lessons back into Main and the SDKs. Editing a game bundle does not automatically change subsequent generated output.
+
+Once the user platform exists, deploy an accepted game to an accessible location and open it from the corresponding map entry. Map-to-game navigation, asset loading and return navigation need integration testing. Shared accounts or saves require additional integration. The existing Organizer importer can register and open compatible playable bundles; validate the packaging format and preview after edits. Public platform publishing remains to be built and verified.
+
+Present in this order: **wehan (city map), maslan (featured game), wcheung (workflow reuse), wehan (Organizer update)**. Use the 42 demo to show how a different illustrated PDF and scene can be matched and how players open an object's description. The map provides the two real heritage sites. Use completed runs to explain generation steps that take longer than the live slot allows.
+
+Upload each reviewable build to PastPort GitHub Releases as `wcheung.tar.gz` or `maslan.tar.gz`, using release tags for versions. Describe the changes and where to start playing, then update the corresponding download links in both [Chinese README](README.md) and [English README](README_EN.md) and push the edits. wehan downloads each bundle, imports it into Organizer, and tests the matching entry under **Progress & delivery**. Rehearse the map-to-game transition and verify that an Organizer edit appears in the player-facing product.
+
+### Final handoff packages
+
+Sign in to GitHub with access to the PastPort repository. Extract the wcheung archive and open its `MANIFEST.md`. [Download the complete wcheung handoff](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/pastport-wcheung-final-handoff.tar)
+
+#### Maslan handoff manifest
+
+| Item | Contents | Download |
 |---|---|---|
-| Story | `StoryRequest`: original PDF, source document, environment snapshot, media directory, brief, Skill and a new output directory. Generation also reads the gameplay capability catalog. | `StoryResult`: readable story, `NarrativeDraft`, validation, input lock and budget receipts. New runs generate content plans; the compiler creates internal structure. Saved runs retain their pinned contract. |
-| Gameplay preparation | Checked Story, source/environment identity, explicit gameplay intents and capabilities. | `GameplayPlan`, exact plugin parameters, solver/lifecycle checks and canonical environment. Missing gameplay declarations must not silently fall back to reading. |
-| Presentation | The same Story version, preparation, existing museum and spatial bindings. | `story-input.json` and exact task/object/station/view/UI bindings. |
-| Assembly | Presentation outputs, story/environment/media, frontend, plugins and shared JS engine. | A browser-playable game bundle and resource manifest. Python SDKs remain on the production side; they are not shipped to players. |
+| Competition rules and information note | Two official PDFs | [Terms and Conditions](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [Information Note](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
+| Playable game bundle | Maslan’s standalone playable build, ready for Organizer import | [Playable game bundle](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
+| Original materials for the game bundle | Original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching results | [Organizer source archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
+| Organizer-provided Vakıf materials (Muradiye) | Original IDML, its `Links` folder, and the chapter PDF | [Muradiye Google Drive folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
+| Team roles and presentation plan | Ownership and presentation order in this document | [Team handoff](#en) |
 
-### Next task: story and gameplay quality
+For work on the current demo, Maslan only needs the playable game and its source archive. wehan owns the map sites, images, data, and launch entry, and will connect the final playable build to the map once Maslan delivers it.
 
-1. Use one existing real material set to create a short, complete experience. Clarify player identity, opening goal, conflict, task sequence and visible choice consequences; reduce mandatory consecutive reading.
-2. Make actual heritage evidence necessary for reasoning and progression. Reading and source checks must serve the task. An unrelated quiz followed by a generic puzzle is not sufficient integration.
-3. Design within verified plugin capabilities. For a new mechanic, define configuration, actions, state and completion/failure/exit behavior, then verify/register it before allowing Story to use it. Do not let the model invent executable state-machine rules.
-4. Test fresh generation, compatible reuse, failure/retry, exit/reload recovery, viewpoint transitions and endings. Evaluate quality through actual play. Schema validity is not human acceptance of story quality or historical accuracy.
+See the [Technical PRD](docs/TECHNICAL_PRD_EN.md) for architecture and interfaces.
 
-## 4. Change rules and downstream impact
 
-| Change | Required delivery | Potential impact |
-|---|---|---|
-| Internal implementation changes with compatible input/output semantics | Update the module and its real shared implementation, build matching packages and integrate through main. Include new dependencies/resources in the distribution. | Organizer usually stays unchanged. |
-| wcheung changes environment/source output | Document field, identity, unit, revision, resource-layout and semantic changes; adapt actual consumers. | Story, spatial checks, gameplay/presentation, assembly and main upload/review adapters may all be affected. |
-| maslan changes Story output | Update compiler contracts, schemas, Gameplay readers, presentation and main wiring; preserve old locks or define an explicit migration. | Gameplay, assembly and runtime rules; coordinate with wcheung if new requirements exceed environment capabilities. |
-| A new plugin requires new player controls | Update plugin capabilities, verifier, User frontend and assembly resources together. | A compatible Organizer API can remain unchanged; the player frontend does not gain new controls automatically. |
-| main changes its Organizer API or progress states | Coordinate and preserve compatibility where possible; version and migrate incompatible changes. | `frontend/organizer/` must be adapted when its contract actually changes. |
+## wcheung 本机开发的合入边界 / Local integration boundary
 
-Avoid changing established project/object/source identities, review authority, separation of VR and 3D positions, input locks, usage receipts, global reward ownership, successful game snapshots, or public production API semantics unnecessarily. Do not make a pipeline pass by removing validation, hardcoding a sample quantity, substituting caches implicitly or retrying models automatically. Do not copy an engine from an old Demo branch or mix frontend, plugins and assembly back into one directory.
+当前分支包含共用 Story profile/schema/compiler、玩家呈现与封装，以及对应测试和双语规格的待审改动。它们属于 source-review 候选，不代表已经合入 main。按功能组审查、测试并通过 PR 集成；不要把本机制作目录直接复制到 main。
 
-An unchanged interface means compatible types, required fields, units, coordinates, identity meanings, states, resource layout and error behavior—not merely unchanged field names. Determine affected consumers from code and integration checks rather than owner names. Shared runtime changes can still affect both Story and Gameplay.
+`.runtime/`、原始照片/PDF/SPZ/mesh、grant、执行/审核数据库、备份 patch 和临时 probe 不进入 source commit。可编辑故事稿、编译后的试玩包与验证记录作为独立 release 内容交接。当前第四幕是人工创作的 runtime-package 扩展；已完成旧版存档通过精确旧包校验和共用引擎重播续接，不改历史审核状态。保存的 Spark LOD adapter 仍是特定 renderer 的准备步骤，尚未作为通用自动化验收。
 
-## 5. Collaboration and delivery checks
+The working branch contains review candidates for shared Story profiles/schemas/compiler, player presentation/packaging, matching tests and bilingual specifications. Integrate reviewed functional groups through a PR; do not copy a local production directory directly into main. `.runtime/`, raw photos/PDF/SPZ/meshes, grants, execution/review databases, backup patches and temporary probes stay out of source commits. Editable story content, compiled playable output and verification records are separate release materials. Act IV is a human-authored runtime-package extension. Completed prior saves continue only after exact prior-package validation and replay through the shared engine; historical review authority is unchanged. The saved Spark LOD adapter remains renderer-specific preparation, not accepted general automation.
 
-- Start from current main and work on a development branch. Historical branches are not required dependencies; avoid two people editing main directly at the same time. Integrate completed changes back into main and verify the combined workflow.
-- State the changed modules, contract changes, affected consumers, matching runtime/SDK versions, test evidence and remaining limits. Existing wheels do not update when source changes: rebuild and verify installation contents.
-- Do not trigger model or Marble calls without authorization. Use the same-source default materials for zero-call regression first. Real generation needs an explicit budget and retained receipts; preserve previous failures.
-- wcheung runs the relevant SDK offline suites using each package README. maslan runs Story/Gameplay and real JS lifecycle checks. Both run the root checks below, verify installed packages outside the checkout, and inspect any affected rendered UI.
 
-```sh
-.venv/bin/python -m pytest -q tests
-.venv/bin/mypy --strict src
-node --test tests/test_organizer_i18n.mjs
-node tools/check_javascript.mjs
-.venv/bin/python tools/check_repository.py
-.venv/bin/python tools/check_handoff.py
-git diff --check
-```
+四玩法试玩版 / Four-mechanic preview: image differences, drag timeline, scene-object search and chat-image reconstruction are registered JS activities with source-backed blueprint validation and reusable Skill templates. Native illustrations and authored case screenshots are original fiction, not field photographs. A new versioned local package preserves the earlier build/saves; reading-only completion is not migrated into puzzle completion. Functional traversal, browser UI review and real-device FPS remain distinct acceptance checks. The typed Story/Gameplay SDK still requires separate intent/catalog integration before a fresh automatic chain can claim these patterns.
 
-Installation, offline tests, saved-result replay, fresh model generation, browser playability, human quality acceptance and public release are separate evidence levels. Do not substitute one for another. README owns startup/navigation, the technical PRD owns system specification, and this file owns team responsibilities; do not duplicate them into competing guides.
+
+### 2026-11-04 零模型交付验收 / Zero-model delivery acceptance
+
+用户报告四玩法试玩无问题后，在独立 `.runtime/delivery-r4-20261104` 从保存的故事和显式 blueprint 复跑共用编译/组包器；runtime 与呈现内容和试玩版一致。新包通过包内引擎36组分支/结局检查、正式 Organizer importer 的隔离 store 导入/重复导入/持久化与全文件 checksum、正式 preview manager HTTP资源检查，以及 browser 自动LOD→人物介绍→3D调查。交付候选为本机 Desktop/PastPort-delivery-20261104/wcheung.tar.gz；没有发布或推送，也未修改现有 Organizer 数据库。首次 LOD 在测试 browser 中耗时数分钟，未重测FPS。
+
+Following user-reported acceptance, the saved story and explicit blueprint were replayed through shared compilation/assembly in an isolated workspace. Runtime and presentation matched the tested build. The candidate passed 36 packaged-engine route/ending combinations, production Organizer import/idempotency/persistence and all file checksums in an isolated store, production preview HTTP checks, and browser LOD preparation → character introduction → 3D investigation. No fresh model generation, publication, push, existing Organizer database changes or new FPS measurement was performed. The four-mechanic typed intent/catalog integration remains outside this zero-model acceptance.

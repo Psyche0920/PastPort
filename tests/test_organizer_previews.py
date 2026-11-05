@@ -29,11 +29,51 @@ def test_preview_is_authenticated_reused_and_closed(tmp_path: Path) -> None:
                 assert response.status_code == 200
                 assert "Transport fixture only" in response.text
                 assert "preview_token" not in str(response.url)
-                assert (await client.get(origin, headers={"Host": "untrusted.example"})).status_code == 403
+                assert (
+                    await client.get(origin, headers={"Host": "untrusted.example"})
+                ).status_code == 403
         finally:
             await pool.close()
         async with httpx.AsyncClient() as client:
             with pytest.raises(httpx.ConnectError):
                 await client.get(origin)
+
+    asyncio.run(check())
+
+
+def test_mounted_preview_adapter_is_lazy_reuses_pool_and_closes_owned_resources(
+    tmp_path: Path,
+) -> None:
+    from pastport.adapters.organizer_review_environment import SDKMountedPreviewPool
+    from pastport.ports.organizer import MountedEnvironmentPreviews
+
+    class Pool:
+        def __init__(self) -> None:
+            self.roots: list[Path] = []
+            self.closed: list[bool] = []
+
+        async def ensure(self, root: Path) -> int:
+            self.roots.append(root)
+            return 18888
+
+        async def close(self) -> None:
+            self.closed.append(True)
+
+    pool = Pool()
+    creations: list[bool] = []
+
+    def factory() -> MountedEnvironmentPreviews:
+        creations.append(True)
+        return pool
+
+    async def check() -> None:
+        adapter = SDKMountedPreviewPool(factory)
+        await adapter.close()
+        assert not creations and not pool.closed
+        assert await adapter.ensure(tmp_path) == 18888
+        assert await adapter.ensure(tmp_path) == 18888
+        assert creations == [True] and pool.roots == [tmp_path, tmp_path]
+        await adapter.close()
+        assert pool.closed == [True]
 
     asyncio.run(check())

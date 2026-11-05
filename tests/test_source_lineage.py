@@ -25,6 +25,7 @@ def test_exact_original_page_projection_preserves_objects_and_reviews(tmp_path: 
             ),
         ),
     )
+    assert projected.snapshot.objects[0].quote is not None
     assert projected.snapshot.objects[0].quote.pdf_page == 2
     assert projected.receipt.citations[0].input_page == 1
     assert projected.receipt.citations[0].outcome == "exact_unique_page"

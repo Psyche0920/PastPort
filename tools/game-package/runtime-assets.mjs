@@ -4,9 +4,9 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const frontend = ['index.html','app.mjs','app.css','dialogue.mjs','session.mjs',
-  'navigation.mjs','walkmesh.mjs','interaction.mjs','cinematic-view.mjs',
-  'scene3d-view.mjs','scene3d-runtime.js','scene3d-navigation.mjs','scene3d-bridge.mjs'];
-const plugins = ['plugins.mjs','coverage.mjs','gameplay-catalog.mjs'];
+  'investigation-view.mjs','slice-continuation.mjs','navigation.mjs','walkmesh.mjs','interaction.mjs','cinematic-view.mjs',
+  'scene3d-view.mjs','scene-preparation.mjs','scene3d-runtime.js','scene3d-navigation.mjs','scene3d-bridge.mjs'];
+const plugins = ['plugins.mjs','investigation.mjs','coverage.mjs','gameplay-catalog.mjs'];
 const engine = ['actions.mjs','context.mjs','errors.mjs','generated-schemas.mjs',
   'rules.mjs','runtime.mjs','validation.mjs'];
 

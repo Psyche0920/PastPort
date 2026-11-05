@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-03 — Finals handoff
+
+- Updated the bilingual root handoff, READMEs and technical PRDs with the responsibilities of wcheung, maslan and wehan, the live demonstration order, and the Release-to-Organizer acceptance process.
+
 ## 2026-11-03 — IDML to playable 3D
 
 - Added native IDML, linked graphics, site photos and existing SPZ/PLY input. Photo scanning retains coverage gaps, and IDML matching and audit run in groups of up to 16 identities with separate receipts.

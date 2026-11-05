@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -11,8 +12,9 @@ from pastport.domain.modules import NarrativeDraft
 FIXTURE = Path(__file__).parent / "fixtures/reference/draft-result.json"
 
 
-def original() -> dict:
-    return json.loads(FIXTURE.read_text())
+def original() -> dict[str, Any]:
+    document: dict[str, Any] = json.loads(FIXTURE.read_text())
+    return document
 
 
 def test_dead_store_removal_preserves_all_prose_sources_guards_and_other_effects() -> None:

@@ -112,7 +112,9 @@ class StageRunner:
         package_loader: RuntimePackageLoader,
         execution: "ExecutionRuntime | None" = None,
         authoring_constraints: tuple[str, ...] = (),
-        authoring_structure: Literal["authored_graph", "compiled_plan_v1"] = "authored_graph",
+        authoring_structure: Literal[
+            "authored_graph", "compiled_plan_v1", "compiled_branch_v1"
+        ] = "authored_graph",
     ) -> None:
         self.database = database
         self.releases = releases

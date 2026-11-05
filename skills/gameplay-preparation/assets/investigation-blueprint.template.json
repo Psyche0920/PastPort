@@ -1,0 +1,312 @@
+{
+  "schema_version": "investigation-blueprint/1",
+  "package_id": "replace-with-new-package-id",
+  "asset_manifest": [
+    {
+      "path": "assets/patterns/left.svg",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "content_kind": "original_fiction",
+      "source_claim_ids": []
+    },
+    {
+      "path": "assets/patterns/right.svg",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "content_kind": "original_fiction",
+      "source_claim_ids": []
+    },
+    {
+      "path": "assets/patterns/reconstruction-zh.svg",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "content_kind": "original_fiction",
+      "source_claim_ids": []
+    },
+    {
+      "path": "assets/patterns/reconstruction-en.svg",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "content_kind": "original_fiction",
+      "source_claim_ids": []
+    }
+  ],
+  "intro": {
+    "zh": "請換成目前故事介紹。",
+    "en": "Replace with the target story introduction."
+  },
+  "instructions": {
+    "zh": "拖放，或先選擇再放置；關閉後保留進度。",
+    "en": "Drag, or select then place. Closing preserves progress."
+  },
+  "interludes": [
+    {
+      "after_scene_id": "replace-with-anchor-1",
+      "scene_id": "new-activity-1",
+      "task_id": "new-task-1",
+      "source_object": 1,
+      "required_sources": [
+        1
+      ],
+      "title": {
+        "zh": "請填玩法標題。",
+        "en": "Replace with the activity title."
+      },
+      "body": {
+        "zh": "請填與目前情節扣連嘅背景。",
+        "en": "Explain the activity’s connection to this story."
+      },
+      "objective": {
+        "zh": "根據當前素材填寫可驗證完成目標。",
+        "en": "Specify the verifiable completion goal for these assets."
+      },
+      "opening_lines": [],
+      "plugin": {
+        "kind": "spot-difference",
+        "content_kind": "original_fiction",
+        "prompt": {
+          "zh": "找出兩幅圖片嘅視覺差異。",
+          "en": "Find visual differences between the two pictures."
+        },
+        "success": {
+          "zh": "記錄差異，交代佢支持同唔支持乜推論。",
+          "en": "Explain what the differences establish and what they do not."
+        },
+        "left_image": "assets/patterns/left.svg",
+        "right_image": "assets/patterns/right.svg",
+        "differences": [
+          {
+            "id": "difference-one",
+            "left": [
+              1000,
+              1000,
+              1000,
+              1000
+            ],
+            "right": [
+              1000,
+              1000,
+              1000,
+              1000
+            ],
+            "label": {
+              "zh": "請換成實際圖像差異。",
+              "en": "Replace with an actual visible difference."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "after_scene_id": "replace-with-anchor-2",
+      "scene_id": "new-activity-2",
+      "task_id": "new-task-2",
+      "source_object": 1,
+      "required_sources": [
+        1,
+        2
+      ],
+      "title": {
+        "zh": "請填玩法標題。",
+        "en": "Replace with the activity title."
+      },
+      "body": {
+        "zh": "請填與目前情節扣連嘅背景。",
+        "en": "Explain the activity’s connection to this story."
+      },
+      "objective": {
+        "zh": "根據當前素材填寫可驗證完成目標。",
+        "en": "Specify the verifiable completion goal for these assets."
+      },
+      "opening_lines": [],
+      "plugin": {
+        "kind": "scene-search",
+        "content_kind": "original_fiction",
+        "prompt": {
+          "zh": "喺場景搵物件。",
+          "en": "Find objects in the scene."
+        },
+        "success": {
+          "zh": "解釋收集結果嘅意義。",
+          "en": "Explain why the collected records matter."
+        },
+        "targets": [
+          {
+            "number": 1,
+            "clue": {
+              "zh": "第一個已綁定物件嘅視覺線索。",
+              "en": "A visual clue for the first bound object."
+            }
+          },
+          {
+            "number": 2,
+            "clue": {
+              "zh": "第二個已綁定物件嘅視覺線索。",
+              "en": "A visual clue for the second bound object."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "after_scene_id": "replace-with-anchor-3",
+      "scene_id": "new-activity-3",
+      "task_id": "new-task-3",
+      "source_object": 1,
+      "required_sources": [
+        1
+      ],
+      "title": {
+        "zh": "請填玩法標題。",
+        "en": "Replace with the activity title."
+      },
+      "body": {
+        "zh": "請填與目前情節扣連嘅背景。",
+        "en": "Explain the activity’s connection to this story."
+      },
+      "objective": {
+        "zh": "根據當前素材填寫可驗證完成目標。",
+        "en": "Specify the verifiable completion goal for these assets."
+      },
+      "opening_lines": [],
+      "plugin": {
+        "kind": "image-puzzle",
+        "content_kind": "original_fiction",
+        "prompt": {
+          "zh": "重組圖片。",
+          "en": "Reconstruct the image."
+        },
+        "success": {
+          "zh": "解釋完整圖片新增咗乜上下文。",
+          "en": "Explain what context the reconstructed image adds."
+        },
+        "image": {
+          "zh": "assets/patterns/reconstruction-zh.svg",
+          "en": "assets/patterns/reconstruction-en.svg"
+        },
+        "columns": 3,
+        "rows": 2,
+        "pieces": [
+          {
+            "id": "fragment-c",
+            "target_slot": 4
+          },
+          {
+            "id": "fragment-a",
+            "target_slot": 1
+          },
+          {
+            "id": "fragment-f",
+            "target_slot": 5
+          },
+          {
+            "id": "fragment-d",
+            "target_slot": 0
+          },
+          {
+            "id": "fragment-b",
+            "target_slot": 3
+          },
+          {
+            "id": "fragment-e",
+            "target_slot": 2
+          }
+        ]
+      }
+    },
+    {
+      "after_scene_id": "replace-with-anchor-4",
+      "scene_id": "new-activity-4",
+      "task_id": "new-task-4",
+      "source_object": 1,
+      "required_sources": [
+        1
+      ],
+      "title": {
+        "zh": "請填玩法標題。",
+        "en": "Replace with the activity title."
+      },
+      "body": {
+        "zh": "請填與目前情節扣連嘅背景。",
+        "en": "Explain the activity’s connection to this story."
+      },
+      "objective": {
+        "zh": "根據當前素材填寫可驗證完成目標。",
+        "en": "Specify the verifiable completion goal for these assets."
+      },
+      "opening_lines": [],
+      "plugin": {
+        "kind": "timeline",
+        "content_kind": "original_fiction",
+        "prompt": {
+          "zh": "重建有依據嘅時間線。",
+          "en": "Rebuild a supported timeline."
+        },
+        "success": {
+          "zh": "記錄已知次序同仍然未知嘅部分。",
+          "en": "Record known ordering and remaining uncertainty."
+        },
+        "slots": [
+          {
+            "id": "known-time-1",
+            "label": {
+              "zh": "已知時間 1（填實際依據）",
+              "en": "Known time 1 (replace with supported time)"
+            }
+          },
+          {
+            "id": "known-time-2",
+            "label": {
+              "zh": "已知時間 2（填實際依據）",
+              "en": "Known time 2 (replace with supported time)"
+            }
+          },
+          {
+            "id": "known-time-3",
+            "label": {
+              "zh": "已知時間 3（填實際依據）",
+              "en": "Known time 3 (replace with supported time)"
+            }
+          },
+          {
+            "id": "unknown",
+            "label": {
+              "zh": "時間未明",
+              "en": "Time unknown"
+            }
+          }
+        ],
+        "cards": [
+          {
+            "id": "card-taken",
+            "text": {
+              "zh": "請填有依據嘅事件 1。",
+              "en": "Replace with supported event 1."
+            },
+            "target_slot": "unknown"
+          },
+          {
+            "id": "record-export",
+            "text": {
+              "zh": "請填有依據嘅事件 2。",
+              "en": "Replace with supported event 2."
+            },
+            "target_slot": "known-time-3"
+          },
+          {
+            "id": "setup-list",
+            "text": {
+              "zh": "請填有依據嘅事件 3。",
+              "en": "Replace with supported event 3."
+            },
+            "target_slot": "known-time-1"
+          },
+          {
+            "id": "first-vote",
+            "text": {
+              "zh": "請填有依據嘅事件 4。",
+              "en": "Replace with supported event 4."
+            },
+            "target_slot": "known-time-2"
+          }
+        ]
+      }
+    }
+  ]
+}

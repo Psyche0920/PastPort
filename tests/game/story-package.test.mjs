@@ -1,3 +1,7 @@
+import {prepareInvestigationBlueprint} from '../../tools/game-package/investigation-blueprint.mjs';
+import {mkdtemp,mkdir,writeFile,unlink,rmdir} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {continueCompletedSlice} from '../../frontend/game/slice-continuation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -196,4 +200,81 @@ test('failed and exited plugin results preserve Story gates and survive host sav
   await session.dispatch({kind:'resume'});assert.equal(session.entry().activity.placements.length,1);
   for(let id=1;id<4;id++)await session.dispatch({kind:'place',id,x:id,y:0,rotated:false});
   assert.equal(session.taskDone(),true);assert.equal(session.state.completed_task_ids.filter(id=>id===session.taskId()).length,1);
+});
+
+
+test('localizes speaker labels without changing stable identities or accepting incomplete labels',async()=>{
+  const {input,museum}=await fixture();
+  input.presentation.speakerNames={maya:{zh:'方晴',en:'Maya Brooks'}};
+  const compiled=await new StoryPackageCompiler().compile(input,museum);
+  assert.deepEqual(compiled.presentation.speakerNames.maya,{zh:'方晴',en:'Maya Brooks'});
+  assert.deepEqual(compiled.runtime.game,input.story.payload.game);
+  input.presentation.speakerNames.maya={en:'Maya Brooks'};
+  await assert.rejects(()=>new StoryPackageCompiler().compile(input,museum),error=>error.code==='STORY_CAST_INVALID');
+});
+
+
+test('opening-only character profiles preserve saves while gameplay changes remain incompatible',async()=>{
+  const {input,museum}=await fixture();
+  const original=await new StoryPackageCompiler().compile(input,museum);
+  const oldPresentation=structuredClone(original.presentation);delete oldPresentation.characterProfiles;
+  const old=await GameSession.create(original.runtime,original.reference,oldPresentation);
+  input.presentation.speakerNames={maya:{zh:'方晴',en:'Maya Brooks'}};
+  input.presentation.startupPreparation='lod';
+  input.presentation.characterProfiles=[{id:'maya',introduction:{zh:'召集重聚嘅舊組員。',en:'A former teammate who organized the reunion.'}}];
+  // Use the same speaker metadata in both versions; only profiles are cosmetic.
+  oldPresentation.speakerNames=input.presentation.speakerNames;
+  const before=await GameSession.create(original.runtime,original.reference,oldPresentation);
+  const compiled=await new StoryPackageCompiler().compile(input,museum);
+  const after=await GameSession.create(compiled.runtime,compiled.reference,compiled.presentation);
+  assert.equal(before.identity,after.identity);after.restore(before.serialize());
+  const changed=structuredClone(compiled.presentation);changed.chapters[0].plugin={kind:'dialogue',items:[{id:'different-evidence',text:{zh:'另一份材料',en:'Different evidence'}}]};
+  const incompatible=await GameSession.create(compiled.runtime,compiled.reference,changed);
+  assert.notEqual(before.identity,incompatible.identity);
+  assert.throws(()=>incompatible.restore(before.serialize()),/其他内容版本/);
+  input.presentation.characterProfiles=[null];
+  await assert.rejects(()=>new StoryPackageCompiler().compile(input,museum),error=>error.code==='STORY_CAST_INVALID');
+  assert.ok(old.identity);
+});
+
+
+test('completed slice continuation replays exact prior choices and rejects mismatched gameplay',async()=>{
+ const {input,museum}=await fixture();const g=input.story.payload.game;
+ g.scenes=g.scenes.slice(0,1);const boundary=g.scenes[0];boundary.next_scene_ids=[];boundary.decision_id=g.decisions[0].decision_id;g.decisions=g.decisions.slice(0,1);g.decisions[0].options=g.decisions[0].options.slice(0,2);
+ g.variables.push({name:'continuation-choice',initial:0},{name:'continuation-ready',initial:false});
+ const table=structuredClone(g.endings[0]);table.endings=table.endings.slice(0,2);table.endings.forEach((e,i)=>{e.guard=i===1?null:{kind:'variable_equals',name:'continuation-choice',value:1};e.fallback=i===1;});g.endings=[table];
+ g.rules=[{rule_id:'continuation-ready',priority:1,event:'task_completed',target_id:boundary.tasks[0].task_id,guard:{kind:'variable_equals',name:'started',value:true},effects:[{kind:'set_variable',name:'continuation-ready',value:true}],once_key:'once:continuation-ready'},...g.decisions[0].options.map((o,i)=>({rule_id:'continuation-choice-'+i,priority:2+i,event:'option_chosen',target_id:boundary.decision_id,guard:{kind:'all',conditions:[{kind:'variable_equals',name:'continuation-ready',value:true},{kind:'choice_equals',decision_id:boundary.decision_id,option_id:o.option_id}]},effects:[{kind:'set_variable',name:'continuation-choice',value:i+1},{kind:'resolve_ending',ending_table_id:table.ending_table_id}],once_key:'once:continuation-choice-'+i}))];
+ input.tasks=input.tasks.slice(0,1);delete input.tasks[0].automatic_decision;
+ const old=await new StoryPackageCompiler().compile(input,museum);const unfinished=await GameSession.create(old.runtime,old.reference,old.presentation);
+ const prior=await GameSession.create(old.runtime,old.reference,old.presentation);for(const n of prior.current.requiredSources)prior.observeSource(n);await prior.dispatch({kind:'answer',id:prior.current.plugin.options.find(o=>o.correct).id});await prior.choose(prior.current.options[0].id);assert.ok(prior.state.ending_id);
+ const extended=structuredClone(input);extended.story.payload.package_id='continuation-fixture-r2';const game=extended.story.payload.game;game.scenes[0].next_scene_ids=['continuation-entry'];for(const r of game.rules)if(r.event==='option_chosen')r.effects=r.effects.map(e=>e.kind==='resolve_ending'?{kind:'unlock_scene',scene_id:'continuation-entry'}:e);
+ const extra=structuredClone(game.scenes[0]);extra.scene_id='continuation-entry';extra.tasks[0].task_id='continuation-task';extra.required_task_ids=['continuation-task'];extra.decision_id=null;extra.next_scene_ids=[];game.scenes.push(extra);
+ game.rules.push({rule_id:'continuation-end',priority:9,event:'task_completed',target_id:'continuation-task',guard:{kind:'variable_equals',name:'started',value:true},effects:[{kind:'resolve_ending',ending_table_id:table.ending_table_id}],once_key:'once:continuation-end'});
+ const binding=structuredClone(extended.tasks[0]);binding.scene_id=extra.scene_id;binding.task_id=extra.tasks[0].task_id;extended.tasks.push(binding);
+ const next=await new StoryPackageCompiler().compile(extended,museum);const manifest={schema_version:'completed-slice-continuation/1',previous:old,next_runtime_sha256:next.reference.sha256,boundary_scene_id:boundary.scene_id,entry_scene_id:extra.scene_id};
+ const resumed=await continueCompletedSlice(manifest,next,prior.serialize());assert.equal(resumed.current.id,extra.scene_id);assert.equal(resumed.state.ending_id,null);assert.deepEqual(resumed.state.decisions,prior.state.decisions);assert.deepEqual(resumed.state.completed_task_ids,prior.state.completed_task_ids);
+ await assert.rejects(()=>continueCompletedSlice(manifest,next,unfinished.serialize()),/not complete/);
+ await assert.rejects(()=>continueCompletedSlice({...manifest,next_runtime_sha256:'0'.repeat(64)},next,prior.serialize()),/destination/);
+ const changed=structuredClone(extended);changed.tasks[0].plugin.options[0].correct=!changed.tasks[0].plugin.options[0].correct;changed.tasks[0].plugin.options[1].correct=true;
+ const incompatible=await new StoryPackageCompiler().compile(changed,museum);await assert.rejects(()=>continueCompletedSlice({...manifest,next_runtime_sha256:incompatible.reference.sha256},incompatible,prior.serialize()),/activity/);
+});
+
+
+test('scene-search ignores caller-supplied finds until host observations exist',async()=>{
+ const {input,museum}=await fixture();const binding=input.tasks[0];binding.plugin={kind:'scene-search',content_kind:'original_fiction',prompt:{zh:'搵物件',en:'Find objects'},success:{zh:'完成',en:'Complete'},targets:binding.required_sources.map(number=>({number,clue:{zh:'測試物件',en:'Test object'}}))};
+ const compiled=await new StoryPackageCompiler().compile(input,museum);const session=await GameSession.create(compiled.runtime,compiled.reference,compiled.presentation);
+ await assert.rejects(()=>session.dispatch({kind:'complete-search',verified_numbers:binding.required_sources}));session.observeSource(binding.required_sources[0]);await assert.rejects(()=>session.dispatch({kind:'complete-search',verified_numbers:binding.required_sources}));
+ for(const n of binding.required_sources)session.observeSource(n);await session.dispatch({kind:'complete-search',verified_numbers:[]});assert.equal(session.taskDone(),true);
+});
+
+test('blueprint checks actual asset hashes and inserts a solvable activity on an existing edge',async()=>{
+ const root=await mkdtemp(path.join(tmpdir(),'pastport-blueprint-test-'));await mkdir(path.join(root,'assets'));
+ try{
+  const names=['left.svg','right.svg'];const assets=[];for(const name of names){const bytes='<svg xmlns="http://www.w3.org/2000/svg"><rect width="20" height="20" fill="'+(name==='left.svg'?'red':'blue')+'"/></svg>';await writeFile(path.join(root,'assets',name),bytes);assets.push({path:'assets/'+name,sha256:createHash('sha256').update(bytes).digest('hex'),content_kind:'original_fiction',source_claim_ids:[]});}
+  const {input,museum}=await fixture();const source=input.tasks[0],L={zh:'合成測試',en:'Synthetic test'};
+  const blueprint={schema_version:'investigation-blueprint/1',package_id:'blueprint-fixture',asset_manifest:assets,interludes:[{after_scene_id:source.scene_id,scene_id:'blueprint-scene',task_id:'blueprint-task',source_object:source.asset_object_number,required_sources:[source.asset_object_number],title:L,body:L,objective:L,opening_lines:[],plugin:{kind:'spot-difference',content_kind:'original_fiction',prompt:L,success:L,left_image:assets[0].path,right_image:assets[1].path,differences:[{id:'color',left:[0,0,10000,10000],right:[0,0,10000,10000],label:L}]}}]};
+  const result=await prepareInvestigationBlueprint(input,museum,blueprint,{assetRoot:root});assert.equal(result.compiled.presentation.chapters.length,9);assert.deepEqual(result.compiled.runtime.game.scenes[0].next_scene_ids,['blueprint-scene']);assert.ok(result.receipt.bindings[0].lifecycle.checks.includes('completion'));assert.equal(result.receipt.assets.length,2);
+  const bad=structuredClone(blueprint);bad.asset_manifest[0].sha256='0'.repeat(64);await assert.rejects(()=>prepareInvestigationBlueprint(input,museum,bad,{assetRoot:root}),/asset changed/);
+  const missing=structuredClone(blueprint);missing.interludes[0].source_object=999999;await assert.rejects(()=>prepareInvestigationBlueprint(input,museum,missing,{assetRoot:root}),/source object missing/);
+ }finally{await unlink(path.join(root,'assets','left.svg'));await unlink(path.join(root,'assets','right.svg'));await rmdir(path.join(root,'assets'));await rmdir(root);}
 });

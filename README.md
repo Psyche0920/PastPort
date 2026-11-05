@@ -6,23 +6,24 @@
 
 **当前：五个 SDK 已与本地 main 集成；真实材料的保存结果复跑、组包与 3D 通关已验证。命令行复跑不调用模型；Organizer分别提供缓存复用与明确授权后的新生成。源码通过 Git 管理；本地试玩产物不随源码发布。**
 
-[开发交接：wcheung / maslan的修改范围、输入输出与任务](handoff.md)
+[决赛交接：wcheung、maslan 和 wehan](handoff.md#zh)
 
-## 团队本机测试资料
+[初始申请书版本（PDF）](references/PastPort_ROOT_CODE_Application.pdf) · [申请书与比赛方向](handoff.md#初始申请书与比赛方向)
 
-### 新包 · 3D 审核版试玩与修改基线
+## 团队试玩交付
 
-wcheung 和 maslan（Mert）可从[私有 Release 下载新包](https://github.com/Psyche0920/PastPort/releases/tag/3d-review-playable-2026-11-03)，文件名为 `pastport-3d-review-playable.tar.gz`。包内有本次试玩的 3D 场景、Story 和游戏成品，可作为后续修改与效果对比的基线。
+从[私有 GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03)下载：
 
-解压后进入 `pastport-3d-review`，运行 `node game-3d/serve3d.mjs`，再[打开本机游戏](http://127.0.0.1:18824/?scene=3d)。需要 Node.js，无需模型密钥或 Admin 账号。启动和修改说明见包内 `START.md`，校验文件 `SHA256SUMS` 在同一 Release。包内不含本机 Admin 任务历史。
+| 包 | 内容 |
+| --- | --- |
+| `wcheung.tar.gz` | 四二独立试玩《最后一段录音》，含 3D 场景、调查、线索回看和三个结局。交付记录原名 `42handover`。 |
+| `maslan.tar.gz` | Organizer 已完成任务 `3d-test777` 的独立玩家包。 |
 
-### 旧包 · Murat SDK 复跑与完整材料
+**Maslan：穆拉迪遗址原始资料。** 文件夹内有原始 IDML、配套 `Links` 文件夹和章节 PDF。 [打开穆拉迪遗址资料文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
 
-maslan（Mert）和wcheung可从[本仓库的私有材料Release](https://github.com/Psyche0920/PastPort/releases/tag/material-handoff-2026-11-02)下载 **`pastport-maslan-wcheung-murat-2026-11-02.tar.gz`**（约714 MiB）。这是已核对的同源 `murat-sdk-replay` 完整集：原始PDF、保存的Story、已挂载双点位3D环境及可玩成品；不是裸模型导入，也不需要重新生成。
+解压后进入同名目录，按 `OPEN.txt` 启动，使用支持 WebGL 的浏览器打开其中的本机地址。需要 Node.js。交付包独立于 Organizer 的本机记录。
 
-解压后进入 `pastport-materials`，执行 `sh start_game.sh`，浏览器打开 `http://127.0.0.1:18824/?scene=3d`；需要Node.js 22+，无需模型密钥、Organizer账号或Marble。完整输入、准备好的组包请求和操作说明在包内 `MANIFEST.md` / `RUN.md`。校验文件 `ARCHIVE_SHA256SUMS` 位于同一Release；包内还有逐文件 `SHA256SUMS`。
-
-材料作为Release附件单独下载，普通 `git clone` 和GitHub自动生成的“Source code”压缩包不包含它。仓库访问权限保持不变，仅供团队私有本机测试；不代表历史、内容质量或公开分发已获批准。
+**工作流程。** Main 和 SDK 的目标是基于素材生成可试玩、可编辑的游戏初版。团队可直接修改并试玩现有游戏包，验收后再将可复用的改进接回 Main 和 SDK。城市地图和面向公众的发布接入仍待建设和验证。详见[团队交接](handoff.md#zh)。
 
 ## 启动与使用
 
@@ -595,7 +596,7 @@ PastPort/
 ├── <a href=".gitignore">.gitignore</a>  — 排除本地环境、私有输入、运行产物和缓存，防止误提交。
 ├── <a href=".python-version">.python-version</a>  — 指定项目使用的 Python 版本。
 ├── <a href="AGENTS.md">AGENTS.md</a>  — 开发代理的架构、实现、验证和文档维护约束。
-├── <a href="handoff.md">handoff.md</a>  — wcheung与maslan的分工、修改位置、输入输出、接口兼容规则和下一步任务。
+├── <a href="handoff.md">handoff.md</a>  — 中英双语决赛交接。
 ├── <a href="LICENSE">LICENSE</a>  — 本模块的许可证；分发源码或安装包时保留。
 ├── <a href="README.md">README.md</a>  — 项目安装、启动、复跑和逐文件导航的统一入口。
 ├── <a href="README_EN.md">README_EN.md</a> — 根README的英文译本，包含完整可点击目录树和逐文件用途。

@@ -71,7 +71,9 @@ class AppSettings:
     story_3d_museum_directory: Path | None = None
     story_3d_output_directory: Path | None = None
     story_host_constraints: tuple[str, ...] = ()
-    story_structure: Literal["authored_graph", "compiled_plan_v1"] = "authored_graph"
+    story_structure: Literal["authored_graph", "compiled_plan_v1", "compiled_branch_v1"] = (
+        "authored_graph"
+    )
     accounts_file: Path | None = None
     organizer_local_admin_setup: bool = False
     organizer_catalog: Path | None = None

@@ -72,3 +72,88 @@ body:has(#source-dialog[open]) #story-panel,body:has(#notebook-dialog[open]) #st
 @media(max-width:600px){.scene3d-mode #story-panel.is-task-window{width:96vw;padding:16px;max-height:94dvh}.scene3d-mode #story-panel.is-minigame .task-box{padding:10px}.scene3d-mode #story-panel.is-minigame .board{width:min(100%,41dvh,360px)}.scene3d-mode #story-panel.is-minigame button{padding:8px 10px;font-size:12px}}
 
 #quest-title{pointer-events:auto;border:0;background:none;color:inherit;padding:0;text-align:left;cursor:pointer}
+
+/* Readable exploration layout: ordinary tasks stay left; decisions retain focus. */
+.scene3d-mode{font-size:22px}
+.scene3d-mode button{min-height:54px;font-size:20px!important;padding:12px 18px!important;border:2px solid #cbb578;border-radius:10px;background:#244d43;color:#fff8e9;font-weight:650}
+.scene3d-mode button:hover{background:#386354;border-color:#ffe6a2}
+.scene3d-mode button:focus-visible{outline:4px solid #ffe199;outline-offset:3px}
+.scene3d-mode .primary{background:#e4c06a!important;color:#142d26!important;border-color:#ffe7a3!important}
+.scene3d-mode #story-panel,.scene3d-mode #source-dialog{inset:100px auto auto 18px;width:min(560px,52vw);max-width:none;max-height:calc(100dvh - 124px);padding:26px;background:#153a34fa;border:2px solid #c6ab72;box-shadow:0 10px 38px #0007}
+.scene3d-mode #story-panel p,.scene3d-mode #story-panel summary,.scene3d-mode #source-dialog p,.scene3d-mode #source-dialog summary,.scene3d-mode #source-dialog pre{font-size:22px!important;line-height:1.65!important}
+.scene3d-mode #story-panel h2,.scene3d-mode #source-dialog h2{font-size:30px!important;margin-right:48px}
+.scene3d-mode #story-panel h3{font-size:24px!important}
+.scene3d-mode #story-panel .close,.scene3d-mode #source-dialog .close{min-width:50px;font-size:30px!important;padding:2px!important;top:8px;right:8px}
+.scene3d-mode #story-panel.is-task-window{inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(820px,92vw);max-height:90dvh;padding:30px}
+.scene3d-mode #story-panel.is-task-window .option{font-size:23px!important;line-height:1.6;margin:16px 0;padding:18px!important;text-align:left;border-left:7px solid #e4c06a}
+.scene3d-mode #dialogue{left:18px;right:18px;bottom:18px;top:auto;padding:24px 24px 24px 116px;min-height:190px;max-height:46dvh;border:2px solid #d7bd7a}
+.scene3d-mode #dialogue .speaker{font-size:23px;margin-bottom:12px}
+.scene3d-mode #dialogue .dialogue-text{font-size:28px;line-height:1.65;max-width:1200px;min-height:48px}
+.scene3d-mode #dialogue .dialogue-actions{gap:14px;flex-wrap:wrap;margin-top:18px}
+#characters-button{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:39;box-shadow:0 3px 18px #0008}
+#character-dialog{width:min(900px,94vw);max-width:94vw;padding:30px;font-size:22px}
+#character-list{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.character-card{padding:20px;border:2px solid #c9bd9f;border-radius:12px;background:#fffdf6}
+.character-card h3{font-size:26px;margin:0 0 10px}.character-card p{font-size:21px;line-height:1.7;margin:0}
+#character-note{font-size:21px}#welcome-characters{margin:12px 12px 12px 0}
+.scene3d-mode #welcome{max-width:min(760px,94vw);width:760px;font-size:22px}
+.scene3d-mode #welcome p{font-size:22px}.scene3d-mode #welcome h2{font-size:34px}
+.scene3d-mode .task-box,.scene3d-mode .choice-note{font-size:22px;background:#ffffff12;color:#fff6df}
+.scene3d-mode #story-panel .completed{font-size:21px}
+@media(max-width:700px){.scene3d-mode #story-panel,.scene3d-mode #source-dialog{inset:100px auto auto 10px;width:calc(100vw - 20px);max-height:calc(100dvh - 120px);padding:20px}.scene3d-mode #story-panel.is-task-window{inset:50% auto auto 50%;width:96vw;max-height:90dvh}.scene3d-mode #dialogue{left:8px;right:8px;bottom:8px;padding:18px 18px 18px 88px;max-height:52dvh}.scene3d-mode #dialogue .dialogue-text{font-size:24px}#character-list{grid-template-columns:1fr}#characters-button{top:14px;left:42%;font-size:17px!important;padding:10px!important}}
+
+.scene3d-mode .scene-tools summary{font-size:20px;padding:12px 18px;min-height:52px;border:2px solid #cbb578}
+#character-dialog h2{padding-right:60px}
+
+.scene3d-mode #story-panel:not(.is-task-window) #story>h2{display:block;font-size:30px;margin:0 48px 14px 0}
+.scene3d-mode #story-panel .task-objective{border-left:5px solid #e4c06a;padding-left:14px;font-weight:650}
+
+@media(max-width:700px){#characters-button{top:76px;left:12px;transform:none}.scene3d-mode #story-panel:not(.is-task-window),.scene3d-mode #source-dialog{top:140px;max-height:calc(100dvh - 160px)}}
+
+.scene3d-mode #source-body .limit{color:#173b36;background:#f0dfb7;border-left:5px solid #9e742b}
+.scene3d-mode #source-body .caption{color:#e4dac4;font-size:18px!important}
+.scene3d-mode #story-panel .source-hint,.scene3d-mode #story-panel .muted,.scene3d-mode #story-panel .fiction-note{color:#e3dbc9}
+.scene3d-mode #story-panel .fiction-note{font-size:18px!important;line-height:1.6!important}
+.scene3d-mode .source-chips button.seen{background:#315544;color:#fff5db;border-color:#9fc997}
+
+#quality-button{pointer-events:auto;margin-left:auto;margin-right:12px}#quality-button[hidden],#characters-button[hidden]{display:none!important}#scene-preparation-status{padding:18px;background:#e7dfcb;color:#173b36;border-radius:10px;line-height:1.7}#welcome-language{margin:10px 12px 10px 0}.character-continue{grid-column:1/-1;width:100%;margin-top:12px}
+
+#quality-button{position:fixed;right:140px;top:18px;margin:0;z-index:40;font-size:18px!important;padding:12px!important;white-space:nowrap}
+@media(max-width:1000px){#characters-button{top:78px;left:18px;transform:none}.scene3d-mode #story-panel:not(.is-task-window),.scene3d-mode #source-dialog{top:146px;max-height:calc(100dvh - 166px)}}
+
+/* Align player controls and keep the next step last in reading panels. */
+.scene3d-mode .topbar{height:92px;align-items:center}
+.scene3d-mode .scene-tools summary,#quality-button,#characters-button{font-size:18px!important;line-height:1.3!important;padding:12px 16px!important;min-height:52px;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.scene3d-mode .scene-tools{position:fixed;top:18px;right:18px;margin:0}
+#quality-button,#characters-button{top:18px}
+.source-actions{display:flex;flex-direction:column;gap:16px;margin-top:24px}
+.source-secondary-actions{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap}
+.source-secondary-actions>button{flex:1;min-width:180px;margin:0}
+.source-actions>.primary{align-self:stretch;margin:0;min-height:56px}
+#dialogue .dialogue-actions{align-items:stretch;flex-wrap:wrap}
+#dialogue .dialogue-actions>button{min-height:52px;margin:0}
+@media(max-width:1000px){#characters-button{top:84px;left:18px;transform:none}}
+
+/* Long case files scroll within the text; navigation remains visible below. */
+.scene3d-mode #dialogue:not([hidden]){display:grid;grid-template-rows:auto minmax(0,1fr) auto;max-height:60dvh;overflow:hidden}
+.scene3d-mode #dialogue .dialogue-text{min-height:0;overflow:auto;max-height:calc(60dvh - 170px);padding-right:10px}
+.scene3d-mode #dialogue .dialogue-actions{margin-top:14px;flex-shrink:0}
+
+/* Cover the still-rendering iframe until the player enters the investigation. */
+body[data-player-startup]:not([data-player-startup="playing"])::after{content:"";position:fixed;inset:0;background:#0c2422;z-index:2000;pointer-events:auto}
+
+/* Conversation dismissal is separate from story navigation. */
+.scene3d-mode #dialogue .dialogue-close{position:absolute;right:18px;top:16px;min-height:40px;font-size:17px;padding:8px 12px;z-index:2;opacity:1}
+.scene3d-mode #dialogue .speaker{padding-right:230px;min-height:42px}
+.scene3d-mode #dialogue .dialogue-actions>button{opacity:1}
+.scene3d-mode #dialogue.is-case-file:not([hidden]){left:50%;right:auto;bottom:24px;transform:translateX(-50%);width:min(900px,calc(100vw - 36px));max-height:76dvh;background:#f5efdfff;color:#173b36;border:2px solid #d6b66b;box-shadow:0 12px 80px #0009;border-radius:12px;padding:28px}
+.scene3d-mode #dialogue.is-case-file .speaker{font:700 19px system-ui;letter-spacing:2px;color:#796032;border-bottom:1px solid #cbbb96;margin-bottom:18px;padding-bottom:12px}
+.scene3d-mode #dialogue.is-case-file .dialogue-text{font:24px/1.65 system-ui;max-width:none;white-space:pre-wrap;max-height:calc(76dvh - 190px);padding:0 12px 0 0}
+.scene3d-mode #dialogue.is-case-file button{background:#173b36;color:#fff4d7;border-color:#997c3f}
+@media(max-width:700px){.scene3d-mode #dialogue .speaker{padding-right:170px}.scene3d-mode #dialogue .dialogue-close{font-size:14px;right:12px;top:12px}.scene3d-mode #dialogue.is-case-file:not([hidden]){padding:20px}.scene3d-mode #dialogue.is-case-file .dialogue-text{font-size:21px}}
+
+.investigation-activity{font:20px/1.55 system-ui}.investigation-activity h3{font-size:25px}.activity-success,.found-note{color:#235a38;font-weight:700;background:#ecf3df;padding:12px;border-radius:8px}.activity-feedback{background:#fff1cf;color:#4d3510;padding:14px;border-left:5px solid #b97c25}.difference-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}.difference-pair figure{margin:0}.difference-image{position:relative;padding:0;width:100%;overflow:hidden;line-height:0;border:2px solid #c7af73;background:white;cursor:crosshair}.difference-image img{width:100%;height:auto;display:block}.found-difference{position:absolute;border:4px solid #b12828;border-radius:40%;pointer-events:none}.difference-cursor{display:none;position:absolute;width:20px;height:20px;border:2px solid #095cbc;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}.difference-image:focus-visible .difference-cursor{display:block}.timeline-bank,.image-piece-bank{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}.timeline-board{display:grid;gap:12px}.activity-piece{font:18px/1.45 system-ui!important;background-color:#f8f1dc!important;color:#173b36!important;border:2px solid #9b814b!important;cursor:grab;white-space:pre-wrap}.activity-piece.selected{outline:4px solid #206ab3}.activity-slot{border:2px dashed #a38f66;border-radius:9px;padding:10px;min-height:90px;background:#fbf8ef;color:#173b36}.activity-slot>strong{display:block;margin-bottom:7px}.activity-slot .activity-piece{width:100%}.image-puzzle-board{display:grid;gap:3px;max-width:720px;margin:auto}.image-puzzle-board .activity-slot{padding:0;position:relative;aspect-ratio:1}.image-puzzle-board .activity-piece,.image-piece-bank .activity-piece{aspect-ratio:1;width:100%;padding:0;background-repeat:no-repeat}.image-piece-bank{max-width:720px;margin:18px auto}.empty-slot{width:100%;height:100%;min-height:64px}.remove-piece{font-size:13px!important;padding:4px!important}.image-puzzle-board .remove-piece{position:absolute;bottom:3px;right:3px;background:#173b36!important;color:white!important}.activity-controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}.restored-chat{display:block;width:100%;max-width:900px;height:auto}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.scene3d-mode #story-panel.is-task-window:has(.investigation-activity){width:min(1100px,96vw);max-height:90dvh}.scene3d-mode .investigation-activity p{font-size:20px}.search-clue{border-bottom:1px solid #cfbf97;padding:10px}.activity-piece:disabled{opacity:.6}@media(max-width:700px){.difference-pair{grid-template-columns:1fr}.timeline-bank{grid-template-columns:1fr}.activity-piece{font-size:17px!important}}
+
+.scene3d-mode #story-panel .difference-image{padding:0!important}.scene3d-mode #story-panel .image-puzzle-board .activity-piece,.scene3d-mode #story-panel .image-piece-bank .activity-piece{padding:0!important}.scene3d-mode #story-panel .empty-slot{background:#f5edda;color:#173b36}
+
+.arrangement-layout{display:grid;grid-template-columns:minmax(230px,1fr) minmax(330px,1.4fr);gap:18px;align-items:start}.arrangement-layout .timeline-bank{grid-template-columns:1fr;margin:0}.arrangement-layout .image-piece-bank{grid-template-columns:repeat(2,minmax(0,1fr));margin:0}.arrangement-layout .image-puzzle-board{width:100%}.arrangement-layout>.timeline-bank,.arrangement-layout>.timeline-board{max-height:52dvh;overflow:auto;padding:4px}.arrangement-layout.is-image-layout{grid-template-columns:minmax(180px,.75fr) minmax(330px,1.5fr)}@media(max-width:700px){.arrangement-layout,.arrangement-layout.is-image-layout{grid-template-columns:1fr}.arrangement-layout .image-piece-bank{grid-template-columns:repeat(3,minmax(0,1fr))}}

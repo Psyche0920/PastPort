@@ -64,7 +64,7 @@ export class StoryPackageCompiler {
     const objects=new Map(museum.objects.map(item=>[item.number,item]));
     const stageTargets={};
     const chapters=pkg.game.scenes.map((scene,index)=>{
-      requireValue(scene.tasks.length===1&&scene.next_scene_ids.length<=1,'STORY_HOST_UNSUPPORTED','This 3D host requires one task per scene and at most one outgoing scene');
+      requireValue(scene.tasks.length===1&&(scene.next_scene_ids.length<=1||(scene.decision_id!==null&&scene.next_scene_ids.length<=4)),'STORY_HOST_UNSUPPORTED','This 3D host requires one task per scene and at most four decision-gated routes');
       const task=scene.tasks[0],binding=input.tasks.find(item=>item.task_id===task.task_id);
       keys(binding,['task_id','scene_id','chapter','objects','required_sources','target_number','asset_object_number','plugin','automatic_decision','access'],['task_id','scene_id','objects','required_sources','target_number','asset_object_number','plugin']);
       requireValue(binding.scene_id===scene.scene_id,'STORY_BINDING_INVALID','Task binding belongs to another scene');
@@ -87,7 +87,7 @@ export class StoryPackageCompiler {
         requireValue(sameSet(outcomes,decision.options.map(option=>option.option_id)),'STORY_OUTCOME_MISMATCH','Plugin outcomes differ from the narrative decision options');
       }
       stageTargets[scene.scene_id]=binding.target_number;
-      return {id:scene.scene_id,taskId:task.task_id,...(binding.access?{access:structuredClone(binding.access)}:{}),chapter:binding.chapter??index+1,title:text(scene.title_key),body:text(scene.body_key),after:text(task.feedback_key),hints:task.hint_keys.map(text),objects:[...binding.objects],requiredSources:[...binding.required_sources],plugin:structuredClone(binding.plugin),
+      return {id:scene.scene_id,taskId:task.task_id,...(binding.access?{access:structuredClone(binding.access)}:{}),chapter:binding.chapter??index+1,title:text(scene.title_key),body:text(scene.body_key),feedback:scene.feedback.map(item=>({guard:structuredClone(item.guard),text:text(item.text_key)})),after:text(task.feedback_key),hints:task.hint_keys.map(text),objects:[...binding.objects],requiredSources:[...binding.required_sources],plugin:structuredClone(binding.plugin),
         ...(decision?{[binding.automatic_decision?'automaticDecision':'decision']:decision.decision_id,options:decision.options.map(option=>({id:option.option_id,text:text(option.text_key)}))}:{})};
     });
     requireValue(unique(pkg.game.scenes.map(scene=>scene.scene_id))&&unique(pkg.game.scenes.flatMap(scene=>scene.tasks.map(task=>task.task_id))),'STORY_ID_DUPLICATED','Scene or task identities are duplicated');
@@ -95,8 +95,12 @@ export class StoryPackageCompiler {
     requireValue(pkg.game.scenes.every(scene=>scene.next_scene_ids.every(id=>sceneIds.has(id))),'STORY_SCENE_MISSING','Next scene is not declared');
     const presentation=structuredClone(museumSnapshot(museum));
     const copy=input.presentation;
-    keys(copy,['title','intro','openingLines','guideLines','castFrames','castRows','sourceTitle'],['intro']);
-    requireValue(displayText(copy.intro)&&(!copy.title||displayText(copy.title))&&(!copy.sourceTitle||displayText(copy.sourceTitle)),'STORY_TEXT_MISSING','Presentation needs readable story title and introduction');
+    keys(copy,['title','intro','openingLines','guideLines','castFrames','castRows','sourceTitle','speakerNames','endingNotice','instructions','startLabel','characterProfiles','startupPreparation','continuation'],['intro']);
+    requireValue(displayText(copy.intro)&&(!copy.title||displayText(copy.title))&&(!copy.sourceTitle||displayText(copy.sourceTitle))&&(!copy.endingNotice||displayText(copy.endingNotice))&&(!copy.instructions||displayText(copy.instructions))&&(!copy.startLabel||displayText(copy.startLabel)),'STORY_TEXT_MISSING','Presentation needs readable story title and introduction');
+    requireValue(copy.speakerNames===undefined||object(copy.speakerNames)&&Object.values(copy.speakerNames).every(displayText),'STORY_CAST_INVALID','Speaker display names require readable locales');
+    requireValue(copy.characterProfiles===undefined||Array.isArray(copy.characterProfiles)&&copy.characterProfiles.length<=20&&copy.characterProfiles.every(p=>object(p)&&typeof p.id==='string'&&p.id.length>0&&displayText(p.introduction)&&copy.speakerNames&&Object.hasOwn(copy.speakerNames,p.id))&&unique(copy.characterProfiles.map(p=>p.id)),'STORY_CAST_INVALID','Character introductions need unique stable identities, localized names and readable copy');
+    requireValue(copy.startupPreparation===undefined||copy.startupPreparation==='lod','STORY_INPUT_INVALID','Unknown scene preparation mode');
+    if(copy.continuation){keys(copy.continuation,['manifest','boundary_scene_id','entry_scene_id']);requireValue(copy.continuation.manifest==='data/previous-slice.json'&&sceneIds.has(copy.continuation.boundary_scene_id)&&sceneIds.has(copy.continuation.entry_scene_id),'STORY_INPUT_INVALID','Invalid continuation metadata');}
     const lines=values=>Array.isArray(values)&&values.length<=128&&values.every(line=>object(line)&&typeof line.speaker==='string'&&line.speaker.length>0&&displayText(line.text));
     requireValue((copy.guideLines===undefined||lines(copy.guideLines))&&(copy.openingLines===undefined||object(copy.openingLines)&&Object.entries(copy.openingLines).every(([id,value])=>sceneIds.has(id)&&lines(value))),'STORY_DIALOGUE_INVALID','Opening dialogue must belong to a declared story scene');
     requireValue((copy.castFrames===undefined||object(copy.castFrames)&&Object.values(copy.castFrames).every(value=>Number.isSafeInteger(value)&&value>=0&&value<=3))&&(copy.castRows===undefined||object(copy.castRows)&&Object.values(copy.castRows).every(value=>value===0||value===100)),'STORY_CAST_INVALID','Portrait frame or row is unsupported');
@@ -107,7 +111,7 @@ export class StoryPackageCompiler {
     Object.assign(presentation,{profile:'story-3d-0.1.0',title:copy.title??{zh:pkg.game.chapter_id,en:pkg.game.chapter_id},intro:copy.intro,chapters,stageTargets,
       sourceNotes:structuredClone(museum.sourceNotes),sourceTitle:copy.sourceTitle??{zh:'馆藏资料',en:'Museum sources'},
       openingLines:copy.openingLines??{},guideLines:copy.guideLines??[],castFrames:copy.castFrames??{},castRows:copy.castRows??{},castByStage:{},worldActors:[],spokenCopy:{},
-      protagonist:text(hero.name_key),fictionNotice:input.story.kind==='narrative-draft'?input.story.payload.package.fiction_notice:null,
+      ...(copy.startupPreparation?{startupPreparation:copy.startupPreparation}:{}),...(copy.continuation?{continuation:structuredClone(copy.continuation)}:{}),characterProfiles:structuredClone(copy.characterProfiles??[]),instructions:copy.instructions??null,startLabel:copy.startLabel??null,endingNotice:copy.endingNotice??null,speakerNames:structuredClone(copy.speakerNames??{}),protagonist:text(hero.name_key),fictionNotice:input.story.kind==='narrative-draft'?input.story.payload.package.fiction_notice:null,
       endings:pkg.game.endings.flatMap(table=>table.endings.map(ending=>({id:ending.ending_id,title:text(ending.outcomes[0].label_key),text:text(ending.outcomes[0].text_key),outcomes:ending.outcomes.map(outcome=>({title:text(outcome.label_key),text:text(outcome.text_key),variants:outcome.variants.map(variant=>({...variant,text:text(variant.text_key)}))}))}))),
       interactionVersion:4,releaseId:'story-3d-preview',saveKey:`pastport:story-3d:${pkg.project_id}:${packageHash}:${input.museum.snapshot_sha256.slice(0,16)}`});
     for(const shot of presentation.shots)shot.taskScenes=chapters.filter(chapter=>chapter.objects.includes(shot.number)||stageTargets[chapter.id]===shot.number).map(chapter=>chapter.id);

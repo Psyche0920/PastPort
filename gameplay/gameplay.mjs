@@ -2,6 +2,7 @@ import {Activity} from './plugins/plugins.mjs';
 import {contentHash} from '../src/pastport/player/validation.mjs';
 
 const definitions = new Map([
+  ...['spot-difference','timeline','image-puzzle','scene-search'].map(kind=>[kind,{pluginId:'pastport.activity.'+kind,version:'1.0.0'}]),
   ['question', {pluginId:'pastport.activity.question', version:'1.0.0'}],
   ['routing', {pluginId:'pastport.activity.routing', version:'1.0.0'}],
   ['dialogue', {pluginId:'pastport.activity.dialogue', version:'1.0.0'}],

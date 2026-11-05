@@ -5,16 +5,24 @@ import sqlite3
 import zipfile
 from dataclasses import replace
 from pathlib import Path
+from typing import NoReturn
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from test_organizer import await_job, headers, setup
+from test_organizer import Production, await_job, headers, setup
 
 from pastport.adapters.organizer_archives import BoundedNativeArchive
+from pastport.adapters.organizer_processes import NativeSDKProcessRunner
 from pastport.api.app import create_app
 from pastport.application.models import ServiceError
 from pastport.domain.game_making import GameMakingRequest
-from pastport.domain.organizer_inputs import NativeInputRequest, NativePreparedInputs
+from pastport.domain.organizer_inputs import (
+    NativeEntryLevel,
+    NativeInputRequest,
+    NativePreparedInputs,
+    UploadRole,
+)
 
 
 class NativePreparation:
@@ -49,7 +57,7 @@ class NativePreparation:
         pass
 
 
-def app_inputs(tmp_path: Path, wait: bool = False):
+def app_inputs(tmp_path: Path, wait: bool = False) -> tuple[FastAPI, Production, NativePreparation]:
     settings, production = setup(tmp_path)
     settings = replace(settings, organizer_player_assets=tmp_path / "material/museum")
     request = GameMakingRequest.model_validate_json((tmp_path / "request.json").read_bytes())
@@ -76,7 +84,11 @@ def upload(client: TestClient, level: str, roles: tuple[str, ...]) -> None:
             "/organizer/api/materials/fixture-project/files",
             headers=headers(),
             params={"role": role, "filename": role + suffix},
-            content=b"%PDF-native-fixture" if suffix == ".pdf" else b"PK-fixture" if role in ("original_idml","historical_links") else b"fixture",
+            content=b"%PDF-native-fixture"
+            if suffix == ".pdf"
+            else b"PK-fixture"
+            if role in ("original_idml", "historical_links")
+            else b"fixture",
         )
         assert response.status_code == 201, response.text
 
@@ -93,7 +105,9 @@ def upload(client: TestClient, level: str, roles: tuple[str, ...]) -> None:
         ("catalog3d", ("original_pdf", "scene_splat", "scene_mesh")),
     ],
 )
-def test_all_http_branches_dispatch_exact_input_snapshot(tmp_path, level, roles):
+def test_all_http_branches_dispatch_exact_input_snapshot(
+    tmp_path: Path, level: NativeEntryLevel, roles: tuple[UploadRole, ...]
+) -> None:
     app, production, preparation = app_inputs(tmp_path)
     with TestClient(app) as client:
         upload(client, level, roles)
@@ -121,7 +135,7 @@ def test_all_http_branches_dispatch_exact_input_snapshot(tmp_path, level, roles)
         )
 
 
-def test_raw_without_tour_stops_after_mapping_and_explicitly_resumes(tmp_path):
+def test_raw_without_tour_stops_after_mapping_and_explicitly_resumes(tmp_path: Path) -> None:
     app, production, preparation = app_inputs(tmp_path, wait=True)
     with TestClient(app) as client:
         upload(client, "raw", ("original_pdf", "photos"))
@@ -156,7 +170,7 @@ def test_raw_without_tour_stops_after_mapping_and_explicitly_resumes(tmp_path):
 
 
 @pytest.mark.parametrize("name", ["../escape.json", "/absolute.json", "a\\evil.json", "X.json"])
-def test_unsafe_archive_rejected_without_mutating_input(tmp_path, name):
+def test_unsafe_archive_rejected_without_mutating_input(tmp_path: Path, name: str) -> None:
     archive = tmp_path / "source.zip"
     with zipfile.ZipFile(archive, "w") as stream:
         stream.writestr("x.json", "{}")
@@ -168,7 +182,7 @@ def test_unsafe_archive_rejected_without_mutating_input(tmp_path, name):
     assert not (tmp_path / "admitted").exists()
 
 
-def test_uploaded_program_not_executed_and_active_database_rejected(tmp_path):
+def test_uploaded_program_not_executed_and_active_database_rejected(tmp_path: Path) -> None:
     archive = tmp_path / "data.zip"
     with zipfile.ZipFile(archive, "w") as stream:
         stream.writestr("untrusted.py", "raise RuntimeError()")
@@ -196,8 +210,11 @@ def test_uploaded_program_not_executed_and_active_database_rejected(tmp_path):
     ],
 )
 def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatch(
-    tmp_path, monkeypatch, level, expected
-):
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    level: NativeEntryLevel,
+    expected: tuple[str, ...],
+) -> None:
     import hashlib
 
     import pastport.adapters.organizer_native as native
@@ -208,19 +225,32 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
     source = tmp_path / "native-source"
     source.mkdir()
     (source / "import-manifest.json").write_text("{}")
-    entry = {
+    entries: dict[NativeEntryLevel, tuple[UploadRole, ...]] = {
         "raw": ("original_pdf", "photos", "tour"),
         "raw3d": ("original_pdf", "photos", "scene_splat", "scene_mesh"),
         "idml3d": ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"),
         "mapping": ("original_pdf", "mapping_pdf", "tour"),
         "vr": ("original_pdf", "matched_vr"),
         "3d": ("original_pdf", "mounted_3d"),
-    }[level]
+    }
+    entry = entries[level]
     assets = []
     for index, role in enumerate(entry):
         path = tmp_path / f"asset-{index}"
         path.write_bytes(b"fixture")
-        suffix = ".idml" if role == "original_idml" else ".pdf" if role.endswith("pdf") else ".png" if role == "photos" else ".spz" if role == "scene_splat" else ".ply" if role == "scene_mesh" else ".zip"
+        suffix = (
+            ".idml"
+            if role == "original_idml"
+            else ".pdf"
+            if role.endswith("pdf")
+            else ".png"
+            if role == "photos"
+            else ".spz"
+            if role == "scene_splat"
+            else ".ply"
+            if role == "scene_mesh"
+            else ".zip"
+        )
         if role == "original_pdf" and level == "raw3d":
             from pypdf import PdfWriter
 
@@ -248,16 +278,19 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
         entry_level=level,
         files=tuple(assets),
         options=UploadedProductionStart(
-            authorize_model=True, authorize_marble=level != "raw3d", marble_credit_budget=1500 if level != "raw3d" else 0
+            authorize_model=True,
+            authorize_marble=level != "raw3d",
+            marble_credit_budget=1500 if level != "raw3d" else 0,
         ),
         shared_player_assets=tmp_path / "material/museum",
     )
 
-    class Runner:
-        def __init__(self):
-            self.calls = []
+    class Runner(NativeSDKProcessRunner):
+        def __init__(self) -> None:
+            self.calls: list[str] = []
 
-        def run(self, module, args, timeout):
+        def run(self, module: str, arguments: tuple[str, ...], timeout_seconds: float) -> None:
+            args = arguments
             workspace = Path(args[args.index("--workspace") + 1])
             workspace.mkdir(parents=True, exist_ok=True)
             if module == "pastport_evidence.idml_cli":
@@ -268,7 +301,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                 (handoff / "idml-matches.json").write_text("{}")
             elif module == "pastport_matched_environment.idml_cli":
                 command = "idml-environment"
-                result = workspace / "runs" / args[args.index("--run-id")+1] / "result"
+                result = workspace / "runs" / args[args.index("--run-id") + 1] / "result"
                 result.mkdir(parents=True)
                 (result / "import-manifest.json").write_text("{}")
             elif module == "pastport_evidence.cli":
@@ -280,9 +313,13 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                         {"pdf": str(pdf), "idml": "unused", "status": "completed", "gaps": []}
                     )
                 )
-                (workspace / "result-budget-0.json").write_text((workspace / "result.json").read_text())
+                (workspace / "result-budget-0.json").write_text(
+                    (workspace / "result.json").read_text()
+                )
                 if (workspace / "candidate-policy.json").exists():
-                    (workspace / "result-indexed-0-linked-pdf.json").write_text((workspace / "result.json").read_text())
+                    (workspace / "result-indexed-0-linked-pdf.json").write_text(
+                        (workspace / "result.json").read_text()
+                    )
             else:
                 command = args[0]
                 if command == "raw-scene-import":
@@ -295,7 +332,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                     (workspace / "delivery.json").write_text("{}")
                     (workspace / "result").mkdir()
                 elif command == "environment-build":
-                    pointer = workspace / "runs" / args[args.index("--run-id")+1]
+                    pointer = workspace / "runs" / args[args.index("--run-id") + 1]
                     pointer.mkdir(parents=True)
                     (pointer / "result-pointer.json").write_text(
                         json.dumps(
@@ -303,7 +340,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                                 "project_id": "fixture-project",
                                 "source_binding": "a" * 64,
                                 "grant_binding": "b" * 64,
-                                "result_run_id": args[args.index("--run-id")+1],
+                                "result_run_id": args[args.index("--run-id") + 1],
                             }
                         )
                     )
@@ -317,20 +354,19 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                     (result / "result").mkdir()
             self.calls.append(command)
 
-        def close(self):
+        def close(self) -> None:
             pass
 
     preparer = native.SDKUploadedInputPreparer()
-    preparer.runner = Runner()
+    runner = Runner()
+    preparer.runner = runner
     tour = native._Tour.model_validate_json(
         '{"firstSceneId":"one","scenes":[{"id":"one"},{"id":"two"}]}'
     )
     monkeypatch.setenv("WORLDLABS_API_KEY", "synthetic-not-dispatched")
     if level in ("raw3d", "idml3d"):
         monkeypatch.delenv("WORLDLABS_API_KEY", raising=False)
-        tour = native._Tour.model_validate_json(
-            '{"firstSceneId":"one","scenes":[{"id":"one"}]}'
-        )
+        tour = native._Tour.model_validate_json('{"firstSceneId":"one","scenes":[{"id":"one"}]}')
     monkeypatch.setattr(preparer, "_tour_preflight", lambda request, path, output: path)
     monkeypatch.setattr(preparer.admission, "tour", lambda root: tour)
     monkeypatch.setattr(preparer.admission, "matched_vr", lambda archive, output: source)
@@ -347,32 +383,38 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
     output = tmp_path / "native-job"
     first = preparer.prepare(request, output)
     assert first.state == "ready"
-    assert tuple(preparer.runner.calls) == expected
+    assert tuple(runner.calls) == expected
     assert preparer.prepare(request, output).request == first.request
-    assert tuple(preparer.runner.calls) == expected
-    assert (
-        all("scene3d" not in command for command in preparer.runner.calls)
-        if level == "3d"
-        else True
-    )
+    assert tuple(runner.calls) == expected
+    assert all("scene3d" not in command for command in runner.calls) if level == "3d" else True
 
 
-@pytest.mark.parametrize("level,roles", [
-    ("raw", ("original_pdf", "photos", "tour")),
-    ("mapping", ("original_pdf", "mapping_pdf", "tour")),
-    ("vr", ("original_pdf", "matched_vr")),
-    ("3d", ("original_pdf", "mounted_3d")),
-    ("raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh")),
-])
-def test_native_environment_stage_stops_before_story(tmp_path, level, roles):
+@pytest.mark.parametrize(
+    "level,roles",
+    [
+        ("raw", ("original_pdf", "photos", "tour")),
+        ("mapping", ("original_pdf", "mapping_pdf", "tour")),
+        ("vr", ("original_pdf", "matched_vr")),
+        ("3d", ("original_pdf", "mounted_3d")),
+        ("raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh")),
+    ],
+)
+def test_native_environment_stage_stops_before_story(
+    tmp_path: Path, level: NativeEntryLevel, roles: tuple[UploadRole, ...]
+) -> None:
     app, production, preparation = app_inputs(tmp_path)
     with TestClient(app) as client:
         upload(client, level, roles)
-        response = client.post("/organizer/api/materials/fixture-project/jobs", headers=headers(), json={
-            "authorize_model": True, "authorize_marble": level not in ("3d", "raw3d"),
-            "marble_credit_budget": 1500 if level not in ("3d", "raw3d") else 0,
-            "stop_after": "environment",
-        })
+        response = client.post(
+            "/organizer/api/materials/fixture-project/jobs",
+            headers=headers(),
+            json={
+                "authorize_model": True,
+                "authorize_marble": level not in ("3d", "raw3d"),
+                "marble_credit_budget": 1500 if level not in ("3d", "raw3d") else 0,
+                "stop_after": "environment",
+            },
+        )
         assert response.status_code == 202, response.text
         job = await_job(client, response.json()["job_id"])
         assert job["status"] == "environment_ready", job
@@ -383,7 +425,9 @@ def test_native_environment_stage_stops_before_story(tmp_path, level, roles):
         assert not production.calls
 
 
-def test_raw_scene_insufficient_budget_stops_before_any_sdk_dispatch(tmp_path, monkeypatch):
+def test_raw_scene_insufficient_budget_stops_before_any_sdk_dispatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     import hashlib
 
     from PIL import Image
@@ -404,18 +448,35 @@ def test_raw_scene_insufficient_budget_stops_before_any_sdk_dispatch(tmp_path, m
     mesh = tmp_path / "scene.ply"
     splat.write_bytes(b"not dispatched")
     mesh.write_bytes(b"not dispatched")
-    paths = (("original_pdf", pdf), ("photos", photo), ("scene_splat", splat), ("scene_mesh", mesh))
+    paths: tuple[tuple[UploadRole, Path], ...] = (
+        ("original_pdf", pdf),
+        ("photos", photo),
+        ("scene_splat", splat),
+        ("scene_mesh", mesh),
+    )
     request = NativeInputRequest(
-        project_id="fixture-project", owner_id="owner", job_id="budget-test", entry_level="raw3d",
-        files=tuple(UploadedAsset(file_id=f"input-{index}", role=role, path=path,
-            filename=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest())
-            for index, (role, path) in enumerate(paths)),
+        project_id="fixture-project",
+        owner_id="owner",
+        job_id="budget-test",
+        entry_level="raw3d",
+        files=tuple(
+            UploadedAsset(
+                file_id=f"input-{index}",
+                role=role,
+                path=path,
+                filename=path.name,
+                sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+            )
+            for index, (role, path) in enumerate(paths)
+        ),
         options=UploadedProductionStart(authorize_model=True, max_evidence_calls=2),
         shared_player_assets=tmp_path,
     )
     preparer = SDKUploadedInputPreparer()
-    def reject_dispatch(*args, **kwargs):
+
+    def reject_dispatch(*args: object, **kwargs: object) -> NoReturn:
         pytest.fail("Insufficient budgets must fail before SDK/model dispatch")
+
     monkeypatch.setattr(preparer.runner, "run", reject_dispatch)
     output = tmp_path / "output"
     output.mkdir()
@@ -429,11 +490,12 @@ def test_raw_scene_insufficient_budget_stops_before_any_sdk_dispatch(tmp_path, m
     preparer.close()
 
 
-def test_invalid_project_id_reports_actionable_message_before_upload(tmp_path):
+def test_invalid_project_id_reports_actionable_message_before_upload(tmp_path: Path) -> None:
     app, _, preparation = app_inputs(tmp_path)
     with TestClient(app) as client:
         response = client.post(
-            "/organizer/api/materials", headers=headers(),
+            "/organizer/api/materials",
+            headers=headers(),
             json={"project_id": "3d test", "entry_level": "raw3d"},
         )
         assert response.status_code == 422
@@ -443,13 +505,18 @@ def test_invalid_project_id_reports_actionable_message_before_upload(tmp_path):
         assert not preparation.calls
 
 
-@pytest.mark.parametrize("field,limit", [("max_evidence_calls", 100), ("max_environment_calls", 40)])
-def test_uploaded_budget_above_limit_is_actionable_and_never_dispatched(tmp_path, field, limit):
+@pytest.mark.parametrize(
+    "field,limit", [("max_evidence_calls", 100), ("max_environment_calls", 40)]
+)
+def test_uploaded_budget_above_limit_is_actionable_and_never_dispatched(
+    tmp_path: Path, field: str, limit: int
+) -> None:
     app, production, preparation = app_inputs(tmp_path)
     with TestClient(app) as client:
         upload(client, "raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh"))
         response = client.post(
-            "/organizer/api/materials/fixture-project/jobs", headers=headers(),
+            "/organizer/api/materials/fixture-project/jobs",
+            headers=headers(),
             json={"authorize_model": True, field: 120, "stop_after": "environment"},
         )
         assert response.status_code == 422
@@ -459,7 +526,7 @@ def test_uploaded_budget_above_limit_is_actionable_and_never_dispatched(tmp_path
         assert client.get("/organizer/api/jobs", headers=headers()).json() == []
 
 
-def test_native_failure_reason_uses_safe_code_and_preserves_legacy_ledger(tmp_path):
+def test_native_failure_reason_uses_safe_code_and_preserves_legacy_ledger(tmp_path: Path) -> None:
     from pastport.adapters.organizer_processes import NativeSDKProcessRunner
 
     args = ("--workspace", str(tmp_path))
@@ -468,7 +535,10 @@ def test_native_failure_reason_uses_safe_code_and_preserves_legacy_ledger(tmp_pa
         db.execute("CREATE TABLE executions(project TEXT,grant_ref TEXT,binding TEXT,state TEXT)")
     assert NativeSDKProcessRunner._failure_reason(args) is None
     with sqlite3.connect(path) as db:
-        db.execute("CREATE TABLE execution_failures(project TEXT,grant_ref TEXT,binding TEXT,failure_code TEXT)")
+        db.execute(
+            "CREATE TABLE execution_failures(project TEXT,grant_ref TEXT,"
+            "binding TEXT,failure_code TEXT)"
+        )
         db.execute("INSERT INTO executions VALUES ('p','g','b','recovery_required')")
         db.execute("INSERT INTO execution_failures VALUES ('p','g','b','transport_timeout')")
     result = NativeSDKProcessRunner._failure_reason(args)
