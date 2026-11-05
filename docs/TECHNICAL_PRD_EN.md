@@ -907,4 +907,40 @@ This change adds `frontend/player/remote.mjs`, `network.mjs` and `organizer-gate
 
 The staff gateway forwards only the existing authenticated `/organizer/` surface. It strips untrusted forwarding identity headers, sets the explicit Host/HTTPS scheme and denies remote initialization and unrelated APIs. Tunnels use isolated temporary configuration, without account tokens. Startup failure, unexpected exit and Ctrl+C clean up owned tunnels/children while preserving existing services and databases. Distribute the new network module and launchers with source/install resources.
 
-Limits: this covers part of P1, not completion of P0–P5. Remote private previews, permanent game URLs, running-session recovery across restarts, legacy UI Trial cloud saves and default continuation of old releases remain unimplemented. Temporary links change on restart; data stays on the host. Import large bundles locally, then view history/publish remotely. Quick Tunnels depend on device DNS and third-party networking; see README's official testing/development limitations. Neither loopback HTTP regression nor a connected tunnel is full public-game or physical-two-device acceptance. Keep run evidence under ignored artifacts and execute A1–A16 separately.
+Limits: this covers part of P1, not completion of P0–P5. Remote private previews, permanent game URLs and running-session recovery across restarts remain unimplemented (legacy UI Trial cloud saves and continuing earlier releases: see 14.12). Temporary links change on restart; data stays on the host. Large bundles upload in chunks (14.12). Quick Tunnels depend on device DNS and third-party networking; see README's official testing/development limitations. Neither loopback HTTP regression nor a connected tunnel is full public-game or physical-two-device acceptance. Keep run evidence under ignored artifacts and execute A1–A16 separately.
+
+<a id="shared-package-platform"></a>
+### 14.12 Shared package versions, publish rollback and resume (this implementation, per the acceptance document)
+
+Source: root `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`. Implementation:
+
+- **Package versions** (`src/pastport/adapters/organizer_packages.py`): packages with the same name under one staff account form a version chain. Each submission is a new immutable job that keeps its original `delivery.tar.gz`. The current pointer moves only when `base_job_id` equals the current version; otherwise 409 `DELIVERY_VERSION_CONFLICT` and nothing is stored. Submitting an existing name without a base returns 409 `DELIVERY_NAME_EXISTS`. Restoring uses compare-and-set on `expected_revision`. Imports made before versioning are registered as versions 1…N in time order.
+- **Chunked upload**: `POST /organizer/api/delivery-uploads` → `PUT …/{id}?offset=` (16 MB chunks; a repeated chunk is acknowledged without rewriting, a gap is refused) → `POST …/{id}/import`. A service restart discards incomplete uploads. The single-request import remains and accepts `base_job_id`.
+- **Get**: `GET /organizer/api/jobs/{id}/download` returns the original package, or for older records without one, a re-importable package built from the game files. `GET …/materials` lists available and missing materials; uploaded project files download from `GET /organizer/api/materials/{project}/files/{file_id}`.
+- **Publish**: `publish-to-map` accepts `expected_version` (the site’s live version, or `none` if unpublished) and returns 409 on mismatch. Each publication is appended to `player-map-{site}.history.json` (up to 50 entries) before the pointer switches atomically. `GET /organizer/api/map-publications` returns live publications and history; rollback republishes a version from history.
+- **Players**: `GET /api/launch-options`; `POST /api/launch` accepts `resume_mode` (continue/latest) and an optional `version`, launches only versions published to that site, and returns 410 when an earlier release’s directory is gone. Sessions last 7 days and runs 12 hours. The legacy UI Trial uses the `authored-adventure-v1` format: its save is hydrated before the original modules start, writes sync to the account, and the original engine replays them on restore. The map, passport and leaderboard refresh every 4 seconds, and the leaderboard no longer shows fictional sample rows.
+- **Data protection**: `data-identity.json` / `.pastport-data-id` bind the Organizer and player databases, and startup is refused when a directory is missing or replaced. `organizer-backup` uses SQLite online backup plus file copies; a backup directory starts directly as an isolated restore deployment.
+
+Acceptance (2026-11-05): run on this computer with isolated data on ports 18870/18871. Independent Chrome browser sessions stood in for devices A and B, using the three real packages.
+
+| Item | Result | Evidence summary |
+|---|---|---|
+| Shared history, auto-update | Pass (one computer) | Uploads, new versions and restores appeared in the other session within 0.8–3.3 s |
+| Self-service upload with progress | Pass (one computer) | wcheung 124 MB and maslan 148 MB uploaded in chunks with progress and a success message |
+| Get materials | Pass | Downloads matched the uploaded SHA-256; missing materials are labelled |
+| Modify and share, no regeneration | Pass | Another session submitted muradiye-ui-trial version 2 with zero model calls |
+| Version retention, conflicts | Pass | Stale base refused with 409; both versions kept after restoring version 1 |
+| Self-service publish, propagation | Pass | Three packages published to three sites; an open map updated within 2.7–3.8 s |
+| In-progress protection, continue vs new | Pass | After a new version was published, the running iframe was unchanged and a notice appeared; the place card offers two explicit choices |
+| Failure protection, rollback | Pass | Stale publish refused with 409; after rollback, history had 3 entries and saves remained |
+| Account saves A→B (3 packages) | Pass (one computer) | muradiye (legacy format), maslan and wcheung all showed “account progress restored”; another player started fresh |
+| Concurrent conflict, failed save | Pass | Stale write got 409 and showed “save conflict” with an option to load the newest save; a 500 showed “not synced”, and “synced” appeared only after retry |
+| No stamp on opening, real leaderboard | Pass | No stamp after opening or mid-run; the leaderboard shows no fictional rows |
+| Full-playthrough stamp, two-player ranking, repeat completion | Not tested in browser | API tests pass (unique medal, cross-account refusal); no package was played to completion in the browser |
+| Service restart (A9) | Pass | Packages, versions, publications, players and saves unchanged; resume works after game ports changed |
+| Missing persistent data (A15) | Pass | Organizer and player both refuse to start and create no empty database |
+| Backup and restore (A16) | Pass | The isolated restore matched the original’s packages, publications, players and saves |
+| Two physical devices on different Wi-Fi, tunnel upload and play | Not tested | wehan needs to run section 7 of the document on two devices |
+| Remote audio/video loading item by item | Not tested | Local Chrome loaded 3D, characters and images with no page errors |
+
+Verdict: code and the on-computer items are complete; **the overall shared-platform acceptance is not complete**. Real two-device, different-Wi-Fi, tunnel and full-playthrough stamp checks remain. One known unrelated failure: `tests/test_optional_source_click.mjs` also fails on main before this change.

@@ -3,6 +3,22 @@ export class SaveConflict extends Error {}
 export class InvalidSave extends Error {}
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const maxBytes = 512 * 1024;
+/** Structural checks per runtime; each game's own engine still validates and replays on restore. */
+const formats = {
+  'gamesession-v2': snapshot => object(snapshot) && snapshot.version === 2 && typeof snapshot.identity === 'string' &&
+    /^[a-f0-9]{64}$/.test(snapshot.identity) && Number.isSafeInteger(snapshot.sequence) &&
+    snapshot.sequence >= 0 && snapshot.sequence < 1000000 && object(snapshot.engine) &&
+    object(snapshot.local) && Array.isArray(snapshot.notebook) && object(snapshot.positions),
+  // Legacy UI Trial: world/chapter identity plus the replayable action log and positions.
+  'authored-adventure-v1': snapshot => object(snapshot) &&
+    ['string','number'].includes(typeof snapshot.version) && ['string','number'].includes(typeof snapshot.chapter_version) &&
+    typeof snapshot.chapter_id === 'string' && snapshot.chapter_id.length <= 200 && typeof snapshot.started === 'boolean' &&
+    Array.isArray(snapshot.events) && snapshot.events.length <= 1500 &&
+    snapshot.events.every(event => object(event) && typeof event.kind === 'string' && event.kind.length <= 40 &&
+      Array.isArray(event.args) && event.args.length <= 2 && event.args.every(arg => typeof arg === 'string' && arg.length <= 200)) &&
+    (snapshot.positions === undefined || object(snapshot.positions)),
+};
+export const saveFormats = Object.freeze(Object.keys(formats));
 export class PlayerSaveRepository {
   constructor(database) {
     this.database = database;
@@ -15,7 +31,12 @@ export class PlayerSaveRepository {
     const row = this.database.prepare('SELECT payload,revision,updated FROM game_save WHERE player=? AND site=? AND version=?').get(player,site,version);
     return row ? {entries:JSON.parse(row.payload),revision:row.revision,updated:row.updated} : {entries:{},revision:0,updated:null};
   }
-  write(player, site, version, input, allowedKeys) {
+  list(player, site) {
+    return this.database.prepare('SELECT version,revision,updated FROM game_save WHERE player=? AND site=? AND revision>0 ORDER BY updated DESC, version').all(player,site);
+  }
+  write(player, site, version, input, allowedKeys, format = 'gamesession-v2') {
+    const valid = formats[format];
+    if (!valid) throw new InvalidSave('Unsupported save format');
     if (!Number.isSafeInteger(input.revision) || input.revision < 0 ||
         typeof input.operation !== 'string' || !/^[a-f0-9-]{32,64}$/.test(input.operation) ||
         !object(input.changes) || !Object.keys(input.changes).length || Object.keys(input.changes).length > 8) throw new InvalidSave('Invalid save envelope');
@@ -25,10 +46,7 @@ export class PlayerSaveRepository {
       if (typeof raw !== 'string' || Buffer.byteLength(raw) > 300000) throw new InvalidSave('Invalid snapshot size');
       let snapshot;
       try { snapshot=JSON.parse(raw); } catch { throw new InvalidSave('Snapshot is not JSON'); }
-      if (!object(snapshot) || snapshot.version !== 2 || typeof snapshot.identity !== 'string' ||
-          !/^[a-f0-9]{64}$/.test(snapshot.identity) || !Number.isSafeInteger(snapshot.sequence) ||
-          snapshot.sequence < 0 || snapshot.sequence >= 1000000 || !object(snapshot.engine) ||
-          !object(snapshot.local) || !Array.isArray(snapshot.notebook) || !object(snapshot.positions)) throw new InvalidSave('Invalid game snapshot');
+      if (!valid(snapshot)) throw new InvalidSave('Invalid game snapshot');
     }
     // Synchronous short transaction: no model/network work while holding the write lock.
     this.database.exec('BEGIN IMMEDIATE');

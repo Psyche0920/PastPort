@@ -15,12 +15,25 @@ from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import ValidationError
 
-from pastport.adapters.organizer_delivery import MAX_BYTES, delivery_name, import_delivery
+from pastport.adapters.organizer_delivery import MAX_BYTES, delivery_name
 from pastport.adapters.organizer_map import (
     MapPublication,
     MapSite,
+    MapSiteState,
     MapTarget,
     OrganizerMapPublisher,
+)
+from pastport.adapters.organizer_packages import (
+    ChunkedUploads,
+    DeliveryLibrary,
+    DeliveryPackage,
+    DeliveryRestore,
+    DeliveryResult,
+    DeliverySubmission,
+    DeliveryUploadStart,
+    DeliveryUploadState,
+    download_name,
+    is_delivery,
 )
 from pastport.adapters.organizer_previews import OrganizerPreviewPool
 from pastport.adapters.organizer_review_environment import SDKMountedPreviewPool
@@ -71,6 +84,8 @@ class OrganizerRoutes:
         self.sessions: dict[str, _Session] = {}
         self.previews = OrganizerPreviewPool()
         self.map_publisher = OrganizerMapPublisher(service.store.directory)
+        self.library = DeliveryLibrary(service.store)
+        self.uploads = ChunkedUploads(service.store.directory / "delivery-uploads")
         self.mounted_previews: MountedEnvironmentPreviews | None = None
 
     def actor(self, request: Request) -> Actor:
@@ -536,11 +551,32 @@ class OrganizerRoutes:
                 headers={"Cache-Control": "no-store"},
             )
 
+        async def submit_delivery(
+            actor: Actor, name: str, archive: Path, submission: DeliverySubmission
+        ) -> JSONResponse:
+            async with self.service.submission:
+                operation = asyncio.create_task(
+                    asyncio.to_thread(self.library.submit, actor, name, archive, submission)
+                )
+                try:
+                    result: DeliveryResult = await asyncio.shield(operation)
+                except asyncio.CancelledError:
+                    await operation
+                    raise
+            return JSONResponse(
+                {**result.job.model_dump(mode="json"), "delivery": result.model_dump(mode="json")},
+                status_code=201,
+                headers={"Cache-Control": "no-store"},
+            )
+
         @router.post("/api/jobs/import-delivery", status_code=201)
-        async def delivery(request: Request, filename: str) -> JSONResponse:
+        async def delivery(
+            request: Request, filename: str, base_job_id: str | None = None, note: str = ""
+        ) -> JSONResponse:
             actor = self.actor(request)
             name = delivery_name(filename)
             self.service.authorize(actor, name)
+            submission = DeliverySubmission(base_job_id=base_job_id, note=note)
             with TemporaryDirectory(prefix="pastport-delivery-") as temporary:
                 archive = Path(temporary) / "delivery.tar.gz"
                 size = 0
@@ -550,18 +586,77 @@ class OrganizerRoutes:
                         if size > MAX_BYTES:
                             raise ServiceError("DELIVERY_TOO_LARGE", "交付包不能超过 2 GiB。", 413)
                         stream.write(chunk)
-                async with self.service.submission:
-                    operation = asyncio.create_task(
-                        asyncio.to_thread(
-                            import_delivery, self.service.store, actor.actor_id, name, archive
-                        )
-                    )
-                    try:
-                        job = await asyncio.shield(operation)
-                    except asyncio.CancelledError:
-                        await operation
-                        raise
-            return JSONResponse(job.model_dump(mode="json"), status_code=201)
+                return await submit_delivery(actor, name, archive, submission)
+
+        @router.post("/api/delivery-uploads", status_code=201)
+        async def start_upload(request: Request) -> DeliveryUploadState:
+            actor = self.actor(request)
+            body = await read_body(request, DeliveryUploadStart)
+            self.service.authorize(actor, delivery_name(body.filename))
+            return self.uploads.start(actor.actor_id, body)
+
+        @router.put("/api/delivery-uploads/{upload_id}")
+        async def upload_chunk(
+            upload_id: str, offset: int, request: Request
+        ) -> DeliveryUploadState:
+            actor = self.actor(request)
+            return await self.uploads.append(actor.actor_id, upload_id, offset, request.stream())
+
+        @router.post("/api/delivery-uploads/{upload_id}/import", status_code=201)
+        async def finish_upload(upload_id: str, request: Request) -> JSONResponse:
+            actor = self.actor(request)
+            submission = await read_body(request, DeliverySubmission)
+            filename, archive = self.uploads.complete(actor.actor_id, upload_id)
+            name = delivery_name(filename)
+            self.service.authorize(actor, name)
+            try:
+                return await submit_delivery(actor, name, archive, submission)
+            finally:
+                self.uploads.discard(upload_id)
+
+        @router.get("/api/packages")
+        async def packages(request: Request) -> tuple[DeliveryPackage, ...]:
+            actor = self.actor(request)
+            return await asyncio.to_thread(self.library.packages, actor)
+
+        @router.post("/api/packages/{package_id}/restore")
+        async def restore_package(package_id: str, request: Request) -> DeliveryPackage:
+            actor = self.actor(request)
+            body = await read_body(request, DeliveryRestore)
+            return await asyncio.to_thread(self.library.restore, actor, package_id, body)
+
+        @router.get("/api/jobs/{job_id}/download")
+        async def download(job_id: str, request: Request) -> FileResponse:
+            job = self.service.job(job_id, self.actor(request))
+            if job.status != "completed" or not job.result_ready:
+                raise ServiceError("ORGANIZER_RESULT_UNAVAILABLE", "制作产物尚未就绪。", 409)
+            path = await asyncio.to_thread(
+                self.library.archive, job, self.service.game_directory(job)
+            )
+            return FileResponse(
+                path,
+                media_type="application/gzip",
+                filename=download_name(job.project_id) + ".tar.gz",
+                headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
+            )
+
+        @router.get("/api/jobs/{job_id}/materials")
+        async def job_materials(job_id: str, request: Request) -> JSONResponse:
+            job = self.service.job(job_id, self.actor(request))
+            game = self.service.game_directory(job)
+            items = await asyncio.to_thread(self.library.materials, job, game)
+            return JSONResponse(
+                {
+                    "delivery": is_delivery(job, self.service.store),
+                    "items": [item.model_dump(mode="json") for item in items],
+                },
+                headers={"Cache-Control": "no-store"},
+            )
+
+        @router.get("/api/map-publications")
+        async def map_publications(request: Request) -> tuple[MapSiteState, ...]:
+            self.actor(request)
+            return await asyncio.to_thread(self.map_publisher.states)
 
         @router.post("/api/jobs", status_code=202)
         async def start(request: Request) -> JSONResponse:
@@ -618,7 +713,12 @@ class OrganizerRoutes:
             target = await read_body(request, MapTarget)
             directory = self.service.game_directory(job)
             return await asyncio.to_thread(
-                self.map_publisher.publish, actor, job, directory, target.site_id
+                self.map_publisher.publish,
+                actor,
+                job,
+                directory,
+                target.site_id,
+                target.expected_version,
             )
 
         @router.get("/api/jobs/{job_id}/open")
@@ -715,6 +815,25 @@ class OrganizerRoutes:
                         value, connected=self.service.uploads_enabled
                     ).model_dump(mode="json"),
                 }
+            )
+
+        @router.get("/api/materials/{project_id}/files/{file_id}")
+        async def material_file(project_id: str, file_id: str, request: Request) -> FileResponse:
+            actor = self.actor(request)
+            material = self.service.materials(actor, project_id)
+            file = next((item for item in material.files if item.file_id == file_id), None)
+            directory = (
+                self.service.store.directory
+                / "uploads"
+                / hashlib.sha256((actor.actor_id + ":" + project_id).encode()).hexdigest()
+            )
+            if file is None or not (directory / file.file_id).is_file():
+                raise ServiceError("ORGANIZER_NOT_FOUND", "找不到此材料文件。", 404)
+            return FileResponse(
+                directory / file.file_id,
+                media_type="application/octet-stream",
+                filename=file.filename,
+                headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
             )
 
         @router.post("/api/materials/{project_id}/files")

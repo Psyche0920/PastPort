@@ -1,5 +1,7 @@
 import {browserOrigin,QuickTunnel,stopProcess} from './network.mjs';
 import {PlayerSaveRepository, SaveConflict, InvalidSave} from './cloud-saves.mjs';
+import {completionAdapter} from '../../tools/game-package/player-completion.mjs';
+import {verifyDataIdentity} from './data-identity.mjs';
 import {createServer} from 'node:http';
 import {createHash, randomBytes, scryptSync, timingSafeEqual} from 'node:crypto';
 import {DatabaseSync} from 'node:sqlite';
@@ -18,6 +20,11 @@ if(process.env.PLAYER_GAME_TUNNELS && !remoteGames)throw new Error('Unsupported 
 const secureCookie=origin.startsWith('https:') ? '; Secure' : '';
 const cookieName = `pastport_player_${platformPort}`;
 const data = process.env.PLAYER_DATA ?? join(root, '.local');
+const repository = fileURLToPath(new URL('../../', import.meta.url));
+const organizerData = process.env.ORGANIZER_DATA ?? join(repository,'var/organizer-integration/server/organizer');
+// Never replace a known player database with a new empty one after a path change or data loss.
+try {await verifyDataIdentity(data,organizerData);}
+catch(error){console.error('Player data: '+error.message);process.exit(1);}
 await mkdir(data, {recursive:true,mode:0o700});
 const db = new DatabaseSync(join(data, 'players.sqlite'));
 db.exec(`PRAGMA foreign_keys=ON;
@@ -26,28 +33,43 @@ CREATE TABLE IF NOT EXISTS session (token TEXT PRIMARY KEY, player TEXT REFERENC
 CREATE TABLE IF NOT EXISTS stamp (player TEXT REFERENCES player(id), game TEXT NOT NULL, awarded TEXT NOT NULL, PRIMARY KEY(player,game));`);
 db.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;');
 const saves = new PlayerSaveRepository(db);
-const repository = fileURLToPath(new URL('../../', import.meta.url));
-const organizerData = process.env.ORGANIZER_DATA ?? join(repository,'var/organizer-integration/server/organizer');
 const launcherPath = process.env.GAME_LAUNCHER ?? join(repository,'tools/game-package/serve3d.mjs');
 const publications = new Map();
 const siteCatalog = process.env.SITE_CATALOG ?? join(root,'sites.json');
 const mapSites = JSON.parse(await readFile(siteCatalog,'utf8'));
 const siteIds = new Set(mapSites.map(site=>site.id));
+async function resolvePublication(siteId,value) {
+  if (value?.site_id !== siteId || !/^[a-f0-9]{64}$/.test(value.version)
+    || !/^[a-f0-9]{32}$/.test(value.job_id)) throw new Error('Invalid Organizer publication');
+  const job = await realpath(join(organizerData,'jobs',value.job_id));
+  const directory = await realpath(join(organizerData,value.game_directory));
+  const scope = relative(job,directory);
+  if (!scope || scope.startsWith('..')) throw new Error('Invalid published game directory');
+  return {...value,directory};
+}
 async function readPublication(siteId) {
   if (!siteIds.has(siteId)) return null;
   try {
-    const value = JSON.parse(await readFile(join(organizerData,'player-map-'+siteId+'.json'),'utf8'));
-    if (value.site_id !== siteId || !/^[a-f0-9]{64}$/.test(value.version)
-      || !/^[a-f0-9]{32}$/.test(value.job_id)) throw new Error('Invalid Organizer publication');
-    const job = await realpath(join(organizerData,'jobs',value.job_id));
-    const directory = await realpath(join(organizerData,value.game_directory));
-    const scope = relative(job,directory);
-    if (!scope || scope.startsWith('..')) throw new Error('Invalid published game directory');
-    return {...value,directory};
+    return await resolvePublication(siteId,JSON.parse(await readFile(join(organizerData,'player-map-'+siteId+'.json'),'utf8')));
   } catch (error) {
     if (error.code==='ENOENT') return null;
     throw error;
   }
+}
+/** Only versions that were actually published to this site can be resumed. */
+async function publishedVersion(siteId,version) {
+  if (!siteIds.has(siteId) || !/^[a-f0-9]{64}$/.test(version ?? '')) return null;
+  let history=[];
+  try {history=JSON.parse(await readFile(join(organizerData,'player-map-'+siteId+'.history.json'),'utf8'));}
+  catch(error){if(error.code!=='ENOENT')throw error;}
+  const current=await readPublication(siteId);
+  if (current?.version===version) return current;
+  for (const entry of [...(Array.isArray(history)?history:[])].reverse()) {
+    if (entry?.version!==version) continue;
+    try {return await resolvePublication(siteId,entry);}
+    catch(error){if(error.code==='ENOENT')return null;throw error;}
+  }
+  return null;
 }
 const endingMessage = `
   const passportRun = new URL(location.href).searchParams.get('passportRun');
@@ -64,6 +86,7 @@ async function startPublishedGame(publication) {
     let staticPlayer=null;
     try {staticPlayer=JSON.parse(await readFile(join(game,'pastport-player.json'),'utf8'));}
     catch(error){if(error.code!=='ENOENT')throw error;}
+    let saveFormat=null;
     const input = staticPlayer ? {worlds:[]} : JSON.parse(await readFile(join(game,'data/scene3d-input.json'),'utf8'));
     for (const world of input.worlds) {
       const worldRoot = await realpath(join(game,world.root));
@@ -84,8 +107,14 @@ async function startPublishedGame(publication) {
         }
         if (saveKeys.some(key=>typeof key!=='string' || !key.length || key.length>512 || ['__proto__','constructor','prototype'].includes(key))) throw new Error('Invalid game save keys');
         await cp(join(root,'game-save-bridge.mjs'),join(game,'pastport-save-bridge.mjs'));
+        saveFormat='gamesession-v2';
       }
     } catch (error) {if(error.code!=='ENOENT')throw error;}
+    if (staticPlayer) {
+      // Known legacy runtimes are pinned by digest; their own engine replays the event log.
+      const adapter=await completionAdapter(game);
+      if (adapter.saveKeys.length) {saveKeys.push(...adapter.saveKeys);saveFormat=adapter.id;}
+    }
     const app = join(game,'app.mjs');
     try {
       const script = await readFile(app,'utf8');
@@ -133,7 +162,7 @@ window.parent.postMessage({type:'pastport:save-error',run:new URL(location.href)
       await tunnel.waitReady({signal:lifecycle.signal});
       if(child.exitCode!==null || child.signalCode!==null)throw new Error('Game stopped before remote access was ready.');
     }
-    return {url:tunnel?.url??url,child,saveKeys,close:async()=>{await tunnel?.close();await stopProcess(child);}};
+    return {url:tunnel?.url??url,child,saveKeys,saveFormat,close:async()=>{await tunnel?.close();await stopProcess(child);}};
   } catch (error) {
     await tunnel?.close();
     await stopProcess(child);
@@ -160,7 +189,9 @@ const runs = new Map();
 const opaque = () => randomBytes(32).toString('hex');
 const assets = new Map([['/','index.html'],['/style.css','style.css'],['/app.mjs','app.mjs'],['/save-sync.mjs','save-sync.mjs'],['/sites.mjs','sites.mjs'],['/illustrations.mjs','illustrations.mjs']]);
 const types = {html:'text/html',css:'text/css',mjs:'text/javascript'};
-const ends = () => Date.now()+60*60*1000;
+const sessionLifetime = 7*24*60*60*1000;
+const ends = () => Date.now()+sessionLifetime;
+const runEnds = () => Date.now()+12*60*60*1000;
 function send(res, status, value, headers={}) {
   res.writeHead(status, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store', ...headers});
   res.end(JSON.stringify(value));
@@ -205,14 +236,26 @@ const server = createServer(async (req,res) => {
       return;
     }
     if (req.method === 'GET' && route === '/api/publications') {
-      const all=await Promise.all([...siteIds].map(siteId=>readPublication(siteId)));
-      return send(res,200,all.filter(Boolean).map(({site_id,version})=>({site_id,version})));
+      const all=await Promise.all([...siteIds].map(siteId=>readPublication(siteId).catch(error=>{console.error(error.message);return null;})));
+      return send(res,200,all.filter(Boolean).map(({site_id,version,published_at})=>({site_id,version,published_at:published_at??null})));
     }
     if (req.method === 'GET' && route === '/api/leaderboard') {
       return send(res,200,leaderboard.all().map(row=>({rank:row.rank,name:row.name,games:JSON.parse(row.games)})));
     }
     const {token,account} = session(req);
     if (req.method === 'GET' && route === '/api/profile') return send(res,200,account ? profile(account) : null);
+    if (req.method === 'GET' && route === '/api/launch-options') {
+      if (!account) return send(res,401,{error:'请先登录，才能领取护照印章'});
+      const siteId=new URL(req.url,origin).searchParams.get('site_id');
+      const current=await readPublication(siteId);
+      if (!current) return send(res,409,{error:'此地点尚未发布试玩。'});
+      const listed=[];
+      for (const save of saves.list(account.id,siteId)) {
+        listed.push({version:save.version,updated:save.updated,current:save.version===current.version,
+          available:!!(await publishedVersion(siteId,save.version))});
+      }
+      return send(res,200,{current:{version:current.version,published_at:current.published_at??null},saves:listed});
+    }
     if (req.method !== 'POST') return send(res,404,{error:'未找到'});
     if (req.headers.origin !== origin) return send(res,403,{error:'来源不符'});
     const input = await body(req,route==='/api/save' ? 600*1024 : 4096);
@@ -235,7 +278,7 @@ const server = createServer(async (req,res) => {
       if (token) db.prepare('DELETE FROM session WHERE token=?').run(token);
       const next = opaque();
       db.prepare('INSERT INTO session VALUES (?,?,?)').run(next,player.id,ends());
-      return send(res,200,profile(player),{'Set-Cookie':`${cookieName}=${next}; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600${secureCookie}`});
+      return send(res,200,profile(player),{'Set-Cookie':`${cookieName}=${next}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${sessionLifetime/1000}${secureCookie}`});
     }
     if (!account) return send(res,401,{error:'请先登录，才能领取护照印章'});
     if (route === '/api/logout') {
@@ -244,8 +287,19 @@ const server = createServer(async (req,res) => {
       return send(res,200,null,{'Set-Cookie':`${cookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secureCookie}`});
     }
     if (route === '/api/launch') {
-      const publication=await readPublication(input.site_id);
-      if (!publication) return send(res,409,{error:'此地点尚未发布试玩。'});
+      const current=await readPublication(input.site_id);
+      if (!current) return send(res,409,{error:'此地点尚未发布试玩。'});
+      if (!['continue','latest',undefined].includes(input.resume_mode)) return send(res,400,{error:'请求无法处理'});
+      let publication=current;
+      if (input.resume_mode!=='latest') {
+        // Continue the requested (or most recent) saved release; a newer map release never replaces it.
+        const candidates=input.version ? [input.version] : saves.list(account.id,current.site_id).map(save=>save.version);
+        for (const version of candidates) {
+          const found=await publishedVersion(current.site_id,version);
+          if (found) {publication=found;break;}
+          if (input.version) return send(res,410,{error:'此存档对应的旧版本已不可用。'});
+        }
+      }
       const pending=publishedGame(publication);
       if(remoteGames){
         if(pending.failure){
@@ -255,20 +309,21 @@ const server = createServer(async (req,res) => {
         }
         if(!pending.game)return send(res,202,{pending:true});
       }
-      const {url,saveKeys} = await pending;
+      const {url,saveKeys,saveFormat} = await pending;
       const run = opaque();
       for (const [key, entry] of runs) if (entry.expires < Date.now()) runs.delete(key);
-      runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,expires:ends()});
+      runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,saveFormat,expires:runEnds()});
       const save=saveKeys.length ? saves.read(account.id,publication.site_id,publication.version) : null;
       const namespace=createHash('sha256').update(JSON.stringify([account.id,publication.site_id,publication.version])).digest('hex');
-      return send(res,200,{url:`${url}/?scene=3d&passportRun=${run}&passportScope=${namespace}`,run,version:publication.version,save,namespace});
+      return send(res,200,{url:`${url}/?scene=3d&passportRun=${run}&passportScope=${namespace}`,run,version:publication.version,
+        current_version:current.version,latest:publication.version===current.version,save_format:saveFormat,save,namespace});
     }
     if (route === '/api/save') {
       const issued=runs.get(input.run);
       if (!issued || issued.token!==token || issued.expires<Date.now()) return send(res,403,{error:'存档会话已失效，请返回地图重新打开游戏'});
       if (!issued.saveKeys.length) return send(res,409,{error:'此游戏尚未支持账号存档'});
       try {
-        const saved=saves.write(account.id,issued.siteId,issued.version,input,issued.saveKeys);
+        const saved=saves.write(account.id,issued.siteId,issued.version,input,issued.saveKeys,issued.saveFormat);
         return send(res,200,{revision:saved.revision,updated:saved.updated});
       } catch(error) {
         if(error instanceof SaveConflict)return send(res,409,{error:'另一设备已更新存档，请返回地图重新打开，避免覆盖',code:'SAVE_CONFLICT'});

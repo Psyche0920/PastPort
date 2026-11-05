@@ -23,6 +23,7 @@ const errors = {
   '请先登录，才能领取护照印章':'Sign in to earn passport stamps.',
   '本次通关回执无效':'This completion receipt is invalid.',
   '请求无法处理':'The request could not be processed.',
+  '此存档对应的旧版本已不可用。':'The release this save belongs to is no longer available.',
 };
 function renderLanguage() {
   document.documentElement.lang = t('zh-Hans','en');
@@ -34,8 +35,9 @@ function renderLanguage() {
     else el.setAttribute(el.matches('iframe') ? 'title' : 'aria-label',t(zh,el.dataset.enLabel));
   }
   for (const stamp of document.querySelectorAll('.map-stamp')) stamp.textContent=t('通关','Cleared');
-  retrySave.textContent=t('重试保存','Retry save');
+  retrySave.textContent=t('重试同步','Retry sync');
   exportSave.textContent=t('下载未同步存档','Export unsynced save');
+  reloadSave.textContent=t('载入另一设备的最新存档','Load the newest save from the other device');
 }
 const node = (tag, text, className) => {
   const el = document.createElement(tag);
@@ -44,7 +46,7 @@ const node = (tag, text, className) => {
   return el;
 };
 async function api(route, data) {
-  const response = await fetch('/api/'+route, data === undefined ? {} : {
+  const response = await fetch('/api/'+route, data === undefined ? {cache:'no-store'} : {
     method:'POST',keepalive:route==='save' && JSON.stringify(data).length<60000,headers:{'Content-Type':'application/json'},body:JSON.stringify(data),
   });
   const value = await response.json();
@@ -59,17 +61,30 @@ let claiming = false;
 const modal = $('#profile-dialog');
 const frame = $('#game iframe');
 let saveSync=null;
-const retrySave=node('button',t('重试保存','Retry save'));
+const retrySave=node('button',t('重试同步','Retry sync'));
 const exportSave=node('button',t('下载未同步存档','Export unsynced save'));
-retrySave.hidden=true;exportSave.hidden=true;
-$('#game-status').after(retrySave,exportSave);
+const reloadSave=node('button',t('载入另一设备的最新存档','Load the newest save from the other device'));
+retrySave.hidden=true;exportSave.hidden=true;reloadSave.hidden=true;
+const releaseNote=node('p','','release-note');releaseNote.hidden=true;
+$('#game-status').after(retrySave,exportSave,reloadSave,releaseNote);
+// Four explicit states; "synced" only after the server confirmed the write.
 function saveStatus(state,error) {
-  retrySave.hidden=state!=='failed' || error?.code==='SAVE_CONFLICT';
+  const conflict=error?.code==='SAVE_CONFLICT';
+  retrySave.hidden=state!=='failed' || conflict;
   exportSave.hidden=state!=='failed';
-  $('#game-status').textContent=state==='failed' ? t('尚未同步：','Not synced: ')+error.message
-    : state==='saved' ? t('进度已保存到账号','Progress saved to your account')
-    : t('正在保存进度…','Saving progress…');
+  reloadSave.hidden=!conflict;
+  $('#game-status').dataset.sync=conflict ? 'conflict' : state==='failed' ? 'unsynced' : state==='saved' ? 'synced' : 'syncing';
+  $('#game-status').textContent=conflict ? t('存档冲突：','Save conflict: ')+error.message
+    : state==='failed' ? t('未同步：','Not synced: ')+error.message
+    : state==='saved' ? t('已同步到账号','Synced to your account')
+    : t('正在同步…','Syncing…');
 }
+reloadSave.onclick=()=>{
+  if(!active||!selectedSite)return;
+  if(!confirm(t('载入最新存档会放弃本设备未同步的进度。建议先下载未同步存档。继续？','Loading the newest save discards this device’s unsynced progress. Export it first if needed. Continue?')))return;
+  const {version}=active;saveSync=null;
+  void launch(selectedSite,{mode:'continue',version});
+};
 retrySave.onclick=()=>{void saveSync?.retry().then(()=>{if(active?.endingPending)void claimEnding(active);}).catch(()=>{});};
 exportSave.onclick=()=>{
   if(!active?.save)return;
@@ -93,12 +108,10 @@ function medalLabel(site) {
   item.append(medal(site),node('span',site.name));
   return item;
 }
-const sampleTravelers = [
-  {name:'Deniz',stops:[14,3,4]},
-  {name:'Ece',stops:[14,1]},
-  {name:'Emir',stops:[9]},
-];
+const when=value=>value ? new Date(value).toLocaleString(t('zh-CN','en')) : '';
+let placeShown=null;
 async function showPlace(site) {
+  placeShown=site;
   let available = false;
   if (site.game) {
     try {
@@ -107,6 +120,12 @@ async function showPlace(site) {
       console.error(error.message);
     }
   }
+  let options=null;
+  if (available && current) {
+    try {options=await api('launch-options?site_id='+encodeURIComponent(site.id));}
+    catch(error){console.error(error.message);}
+  }
+  if (placeShown!==site) return;
   const dialog = $('#place-dialog');
   const content = $('#place-content');
   const earned = current?.stamps.some(stamp=>stamp.game===site.game);
@@ -114,25 +133,40 @@ async function showPlace(site) {
     earned ? t('已获得此地点的奖章。','You earned this place’s medal.')
     : available ? t('完成试玩即可获得此地点的奖章。','Complete the game to earn this place’s medal.')
     : t('此地点暂未开放试玩。','This place can be explored on the map. Its game is not available yet.')));
-  if (available) {
-    const play = node('button',t('进入试玩','Play game'));
-    play.onclick=()=>{dialog.close();void launch(site);};
+  const button=(label,launchOptions,className)=>{
+    const play=node('button',label,className);
+    play.onclick=()=>{dialog.close();void launch(site,launchOptions);};
     content.append(play);
+  };
+  if (available) {
+    const latestSave=options?.saves[0];
+    if (!latestSave) button(t('进入试玩','Play game'),{mode:'latest'});
+    else if (latestSave.current) button(t('继续游戏','Continue'),{mode:'continue'});
+    else if (latestSave.available) {
+      // A newer release never silently replaces an unfinished run on an older one.
+      content.append(node('p',t('此地点已发布新版。你上次的进度属于旧版（保存于 ','A newer release is published. Your last progress belongs to the earlier release (saved ')+when(latestSave.updated)+t('）。',').'),'muted'));
+      button(t('继续上次进度（旧版）','Continue last progress (earlier release)'),{mode:'continue',version:latestSave.version});
+      const hasNew=options.saves.some(save=>save.current);
+      button(hasNew ? t('打开新版存档','Open the new-release save') : t('体验新版（另开新存档，旧进度保留）','Play the new release (new save; earlier progress kept)'),{mode:'latest'},'secondary');
+    } else {
+      content.append(node('p',t('上次进度所属的版本已不可用；进入后将开始当前版本。','The release of your last progress is no longer available; you will start the current release.'),'muted'));
+      button(t('开始当前版本','Start the current release'),{mode:'latest'});
+    }
   }
-  dialog.showModal();
+  if (!dialog.open) dialog.showModal();
 }
+$('#place-dialog').addEventListener('close',()=>{placeShown=null;});
 let boardRequest = 0;
-async function loadLeaderboard() {
+async function loadLeaderboard({quiet=false}={}) {
   const request = ++boardRequest;
   const list = $('#rankings');
-  list.replaceChildren(node('p',t('正在读取排名…','Loading rankings…')));
+  if (!quiet) list.replaceChildren(node('p',t('正在读取排名…','Loading rankings…')));
   try {
     const entries = await api('leaderboard');
     if (request !== boardRequest) return;
-    const sample = !entries.length;
-    const rows = sample ? sampleTravelers.map((person,index)=>({
-      name:person.name,rank:index+1,places:person.stops.map(stop=>sites[stop]),
-    })) : entries.map(entry=>({
+    // Only real account medals are ranked; no fictional sample rows.
+    if (!entries.length) {list.replaceChildren(node('p',t('还没有玩家获得奖章。完成已开放地点的游戏即可上榜。','No traveler has earned a medal yet. Complete a published game to appear here.')));return;}
+    const rows = entries.map(entry=>({
       ...entry,places:entry.games.map(game=>sites.find(place=>place.game===game)).filter(Boolean),
     }));
     const ranking = node('ol','','rank-list');
@@ -143,8 +177,7 @@ async function loadLeaderboard() {
       row.append(node('strong',String(entry.rank)),node('span',entry.name),medals);
       ranking.append(row);
     }
-    list.replaceChildren(ranking);
-    if (sample) list.prepend(node('p',t('示例排名 · 虚构旅人及奖章','Sample rankings · Fictional travelers and medals'),'sample-note'));
+    if (request === boardRequest) list.replaceChildren(ranking);
   } catch {
     if (request === boardRequest) list.replaceChildren(node('p',t('暂时无法读取排行榜。','The leaderboard is temporarily unavailable.')));
   }
@@ -164,13 +197,32 @@ function syncStamps() {
     marker.querySelector('.map-stamp').hidden=!current?.stamps.some(entry=>entry.game===site.id);
   }
 }
+let publicationState='';
 async function refreshPublications() {
   const published=await api('publications');
   for (const site of sites) {
     document.querySelector('[data-site-id="'+site.id+'"]').classList.toggle('unavailable',
       !published.some(publication=>publication.site_id===site.id));
   }
+  const state=JSON.stringify(published);
+  const changed=publicationState && state!==publicationState;
+  publicationState=state;
+  if (active && selectedSite) {
+    const live=published.find(publication=>publication.site_id===selectedSite.id);
+    releaseNote.hidden=!live || live.version===active.version;
+    releaseNote.textContent=t('此地点已发布新版。本局继续当前版本；返回地图后可选择体验新版。','A newer release of this place is published. This run stays on its release; return to the map to try the new one.');
+  }
+  if (changed && placeShown && !active) void showPlace(placeShown);
 }
+// Other devices' publications, stamps and rankings arrive by polling (no manual refresh).
+setInterval(()=>{
+  if (document.visibilityState!=='visible') return;
+  void refreshPublications().catch(()=>{});
+  if (!$('#leaderboard').hidden) void loadLeaderboard({quiet:true});
+  if (!active) void api('profile').then(value=>{
+    if (JSON.stringify(value)!==JSON.stringify(current)) {current=value;syncStamps();if(modal.open && !$('#profile-content form'))showProfile();}
+  }).catch(()=>{});
+},4000);
 mapPoints.forEach(({site,index,mobileX,mobileY}) => {
   const marker = node('button','','marker');
   marker.type = 'button';
@@ -246,14 +298,14 @@ function showProfile(mode='login') {
       try {
         current=await api(mode,Object.fromEntries(new FormData(form)));
         showProfile();
-        if (pendingLaunch) {const site=pendingLaunch;pendingLaunch=null;await launch(site);}
+        if (pendingLaunch) {const site=pendingLaunch;pendingLaunch=null;modal.close();await showPlace(site);}
       } catch(error) {notice.textContent=error.message;} finally {submit.disabled=false;}
     };
     content.replaceChildren(node('h2',register?t('创建旅人档案','Create your traveler profile'):t('登录通关文书','Sign in to your passport')),form);
   }
   if (!modal.open) modal.showModal();
 }
-async function launch(site) {
+async function launch(site,options={mode:'continue'}) {
   const request=++launchRequest;
   selectedSite=site;
   if (!current) {pendingLaunch=site;showProfile();return;}
@@ -263,7 +315,7 @@ async function launch(site) {
     frame.src='about:blank';$('#game').hidden=false;
     let launch;
     for(let attempt=0;attempt<240;attempt++){
-      launch=await api('launch',{site_id:site.id});
+      launch=await api('launch',{site_id:site.id,resume_mode:options.mode,...(options.version?{version:options.version}:{})});
       if(request!==launchRequest)return;
       if(!launch.pending)break;
       await new Promise(resolve=>setTimeout(resolve,1000));
@@ -275,7 +327,10 @@ async function launch(site) {
     const launched=active;
     saveSync=active.save ? new SaveSynchronizer({revision:active.save.revision,
       persist:batch=>api('save',{run:launched.run,...batch}),status:saveStatus}) : null;
-    retrySave.hidden=true;exportSave.hidden=true;
+    retrySave.hidden=true;exportSave.hidden=true;reloadSave.hidden=true;
+    delete $('#game-status').dataset.sync;
+    releaseNote.hidden=active.latest!==false;
+    releaseNote.textContent=t('你正在继续旧版存档；地图上的新版不会影响这一局。','You are continuing an earlier-release save; the new release on the map does not affect this run.');
     $('#game strong').textContent=site.name;
     frame.title=site.name;
     if (modal.open) modal.close();

@@ -172,7 +172,8 @@ async function refreshJobs(){
   if(story?.status==='story_ready'&&story.prepared_source_id){if(story.source_id===environmentSource){environmentSource=story.prepared_source_id;sessionStorage.setItem('organizer-environment-source',environmentSource);environmentJob=null;sessionStorage.removeItem('organizer-environment-job');needsSources=!sources.some(s=>s.source_id===environmentSource&&s.ready);}storySource=story.prepared_source_id;await api('workspace',{method:'POST',body:JSON.stringify({source_id:storySource})});$('story-status').textContent=story.message;storyJob=null;sessionStorage.removeItem('organizer-story-job');}
   else if(story){$('story-status').textContent=story.message;if(!['queued','running','awaiting_external'].includes(story.status)){storyJob=null;sessionStorage.removeItem('organizer-story-job');}}
   if(needsSources)await refreshSources();storyChoice();drawReviewProjects();
-  for(const job of jobs){const article=document.createElement('article');article.dataset.jobId=job.job_id;article.append(text('h2',job.project_id+' · '+(job.mode==='reuse'?'缓存复用':'重新生成')+' · '+states[job.status]),text('p',job.message),text('p','本次新增模型调用：'+(job.new_model_calls===null?'等待真实回执确认':job.new_model_calls)),text('p','已保存步骤：'+(job.completed_stages.map(s=>stageLabels[s]||s).join(' → ')||'暂无阶段完成回执')));
+  const packaged=new Set(deliveryState.packages.flatMap(item=>item.versions.map(v=>v.job_id)));
+  for(const job of jobs){if(packaged.has(job.job_id))continue;const article=document.createElement('article');article.dataset.jobId=job.job_id;article.append(text('h2',job.project_id+' · '+(job.mode==='reuse'?'缓存复用':'重新生成')+' · '+states[job.status]),text('p',job.message),text('p','本次新增模型调用：'+(job.new_model_calls===null?'等待真实回执确认':job.new_model_calls)),text('p','已保存步骤：'+(job.completed_stages.map(s=>stageLabels[s]||s).join(' → ')||'暂无阶段完成回执')));
     if(job.prepared_source_id){
       const continueProject=text('button','继续此项目');continueProject.dataset.selectSource=job.prepared_source_id;
       continueProject.addEventListener('click',async()=>{continueProject.disabled=true;try{await selectProjectSource(job.prepared_source_id,'make');}catch(error){message(error.message);}finally{continueProject.disabled=false;}});
@@ -214,30 +215,134 @@ async function refreshJobs(){
     }
     root.append(article);
   }
-  if(!jobs.length)root.append(text('p','还没有制作记录。'));
+  if(!jobs.some(job=>!packaged.has(job.job_id)))root.append(text('p',jobs.length?'其余记录都是上方的共享游戏包版本。':'还没有制作记录。'));
   clearInterval(polling);if(jobs.some(j=>['queued','running','awaiting_external'].includes(j.status)))polling=setInterval(()=>refreshJobs().catch(e=>{clearInterval(polling);message(e.message);}),2500);
 }
 $('refresh').addEventListener('click',()=>refreshJobs().catch(e=>message(e.message)));
-$('import-delivery').addEventListener('click', async () => {
-  const input = $('delivery-file');
-  const button = $('import-delivery');
-  const file = input.files[0];
-  if (!file) { message('请先选择交付包。'); return; }
-  button.disabled = true;
-  try {
-    const query = new URLSearchParams({filename:file.name});
-    const job = await api('jobs/import-delivery?'+query, {
-      method:'POST', body:file, headers:{'Content-Type':'application/octet-stream'},
-    });
-    input.value = '';
-    await refreshJobs();
-    message('已导入 '+job.project_id+'。');
-  } catch (error) {
-    message(error.message);
-  } finally {
-    button.disabled = false;
+// Shared delivery packages: chunked upload (tunnel-safe), immutable versions, CAS publish/restore.
+let deliveryState={packages:[],publications:[],sites:[]},deliveryBusy=0,deliverySignature='',jobSignature='',deliveryDeferred=false;
+const megabytes=bytes=>(bytes/1024/1024).toFixed(1)+' MB';
+const timeText=value=>value?new Date(value).toLocaleString():'';
+function uploadChunk(id,offset,blob,onProgress){
+  return new Promise((resolve,reject)=>{
+    const request=new XMLHttpRequest();
+    request.open('PUT','/organizer/api/delivery-uploads/'+encodeURIComponent(id)+'?offset='+offset);
+    request.setRequestHeader('X-PastPort-Edit','1');request.setRequestHeader('Content-Type','application/octet-stream');
+    request.upload.onprogress=event=>onProgress(event.loaded);
+    request.onload=()=>{let data={};try{data=JSON.parse(request.responseText);}catch{}
+      if(request.status>=200&&request.status<300)resolve(data);else{const error=new Error(data.message||'上传分块失败。');error.status=request.status;reject(error);}};
+    request.onerror=()=>{const error=new Error('网络中断，上传分块未完成。');error.status=0;reject(error);};
+    request.send(blob);
+  });
+}
+async function uploadDelivery(file,submission,progress){
+  const session=await api('delivery-uploads',{method:'POST',body:JSON.stringify({filename:file.name,size:file.size})});
+  let received=0;
+  while(received<file.size){
+    const end=Math.min(file.size,received+session.chunk_bytes);
+    for(let attempt=1;;attempt++){
+      try{received=(await uploadChunk(session.upload_id,received,file.slice(received,end),loaded=>progress(Math.min(file.size,received+loaded)))).received;break;}
+      catch(error){if((error.status!==0&&error.status<500)||attempt>=4)throw error;progress(received,'网络不稳，正在从断点重试（第 '+attempt+' 次）…');await new Promise(r=>setTimeout(r,1500*attempt));}
+    }
   }
-});
+  progress(file.size,'上传完成，正在校验并解包；不会运行包内代码…');
+  return api('delivery-uploads/'+encodeURIComponent(session.upload_id)+'/import',{method:'POST',body:JSON.stringify(submission)});
+}
+async function runUpload(file,submission,button){
+  if(!file){message('请先选择交付包。');return;}
+  deliveryBusy++;button.disabled=true;
+  const box=$('upload-progress'),bar=$('upload-bar'),label=$('upload-text');box.hidden=false;bar.value=0;
+  const show=(bytes,note)=>{bar.value=bytes/file.size;label.textContent=note||('正在上传 '+file.name+'：'+Math.floor(bytes/file.size*100)+'%（'+megabytes(bytes)+' / '+megabytes(file.size)+'）');};
+  try{
+    show(0);const result=await uploadDelivery(file,submission,show);
+    const version=result.delivery.package.versions.find(v=>v.job_id===result.job_id);
+    label.textContent=(result.delivery.created?'上传成功：':'内容与已有版本相同，未重复保存：')+result.project_id+' 第 '+version.number+' 版。';
+    message(label.textContent);
+  }catch(error){label.textContent='上传失败：'+error.message+'（原有版本未受影响）';message(label.textContent);}
+  finally{deliveryBusy--;button.disabled=false;await refreshDeliveries(true).catch(e=>message(e.message));}
+}
+$('import-delivery').addEventListener('click',()=>{const input=$('delivery-file');void runUpload(input.files[0],{base_job_id:null,note:''},$('import-delivery')).then(()=>{input.value='';});});
+function versionLabel(jobId){
+  for(const item of deliveryState.packages){const version=item.versions.find(v=>v.job_id===jobId);if(version)return item.name+' 第 '+version.number+' 版';}
+  return '其他制作记录 '+jobId.slice(0,8);
+}
+function renderPackages(){
+  const root=$('package-list');root.replaceChildren();
+  if(!deliveryState.packages.length){root.append(text('p','还没有共享游戏包。上传 .tar.gz 后，所有成员都会看到。'));return;}
+  for(const item of deliveryState.packages){
+    const current=item.versions.find(v=>v.job_id===item.current_job_id);
+    const card=document.createElement('article');card.className='package-card';card.dataset.packageId=item.package_id;
+    card.append(text('h3',item.name+' · 当前第 '+current.number+' 版'),text('p','提交于 '+timeText(current.submitted_at)+' · '+megabytes(current.size_bytes)+(current.note?' · '+current.note:'')));
+    const actions=document.createElement('div');actions.className='row';
+    const download=text('a','下载当前版');download.href='/organizer/api/jobs/'+current.job_id+'/download';download.setAttribute('download','');
+    const preview=text('a','打开独立玩家预览 ↗');preview.href='/organizer/api/jobs/'+current.job_id+'/open';preview.target='_blank';preview.rel='noopener';
+    const showMaterials=text('button','查看配套资料');showMaterials.className='secondary';
+    const materials=document.createElement('ul');materials.hidden=true;
+    showMaterials.onclick=async()=>{materials.hidden=!materials.hidden;if(materials.hidden)return;materials.replaceChildren(text('li','正在读取…'));try{const value=await api('jobs/'+current.job_id+'/materials');materials.replaceChildren();for(const entry of value.items){const li=document.createElement('li');if(entry.href&&entry.available){const a=text('a',entry.label);a.href=entry.href;li.append(a);}else li.append(text('strong',entry.label));li.append(text('span',' · '+(entry.available?'可获取':'缺失')+(entry.detail?'：'+entry.detail:'')));if(!entry.available)li.className='missing';materials.append(li);}}catch(e){materials.replaceChildren(text('li',e.message));}};
+    actions.append(download,preview,showMaterials);card.append(actions,materials);
+    const publish=document.createElement('div');publish.className='row';
+    const site=document.createElement('select');site.setAttribute('aria-label','发布站点');const none=text('option','选择地图站点');none.value='';site.append(none);
+    for(const entry of deliveryState.sites){const option=text('option',entry.name);option.value=entry.id;site.append(option);}
+    const version=document.createElement('select');version.setAttribute('aria-label','发布版本');
+    for(const v of [...item.versions].reverse()){const option=text('option','第 '+v.number+' 版'+(v.job_id===item.current_job_id?'（当前）':''));option.value=v.job_id;version.append(option);}
+    version.value=item.current_job_id;
+    const go=text('button','发布到玩家地图');go.disabled=true;site.onchange=()=>{go.disabled=!site.value;};
+    go.onclick=async()=>{const state=deliveryState.publications.find(p=>p.site_id===site.value);go.disabled=true;deliveryBusy++;try{await api('jobs/'+encodeURIComponent(version.value)+'/publish-to-map',{method:'POST',body:JSON.stringify({site_id:site.value,expected_version:state?.current?.version??'none'})});message('已发布到玩家地图：'+site.selectedOptions[0].textContent+' · '+versionLabel(version.value)+'。玩家地图会在几秒内自动更新。');}catch(e){message(e.message);}finally{deliveryBusy--;go.disabled=false;await refreshDeliveries(true).catch(e=>message(e.message));}};
+    publish.append(site,version,go);card.append(publish);
+    const submit=document.createElement('div');submit.className='row';
+    const file=document.createElement('input');file.type='file';file.accept='.tar.gz,application/gzip';file.setAttribute('aria-label','新版游戏包');
+    const note=document.createElement('input');note.type='text';note.maxLength=500;note.placeholder='修改说明（可选）';
+    const send=text('button','提交新版（基于第 '+current.number+' 版）');
+    send.onclick=()=>{const chosen=file.files[0];if(chosen&&chosen.name!==item.name+'.tar.gz'){message('新版文件名须为 '+item.name+'.tar.gz（包内顶层文件夹同名）。');return;}void runUpload(chosen,{base_job_id:item.current_job_id,note:note.value},send);};
+    submit.append(file,note,send);card.append(submit);
+    const list=document.createElement('ol');list.className='version-list';
+    for(const v of [...item.versions].reverse()){
+      const li=document.createElement('li');li.append(text('span','第 '+v.number+' 版 · '+timeText(v.submitted_at)+' · '+megabytes(v.size_bytes)+(v.note?' · '+v.note:'')));
+      if(v.job_id===item.current_job_id)li.append(text('span','当前版本','badge'));
+      else{const restore=text('button','设为当前版本');restore.className='secondary';restore.onclick=async()=>{if(!confirm('把 '+item.name+' 的当前版本改为第 '+v.number+' 版？其他版本都会保留。'))return;deliveryBusy++;try{await api('packages/'+item.package_id+'/restore',{method:'POST',body:JSON.stringify({job_id:v.job_id,expected_revision:item.revision})});message(item.name+' 的当前版本已改为第 '+v.number+' 版；已发布的地图不变，需要时再发布。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};li.append(restore);}
+      const link=text('a','下载');link.href='/organizer/api/jobs/'+v.job_id+'/download';link.setAttribute('download','');li.append(link);list.append(li);
+    }
+    card.append(text('p','版本历史（不会被覆盖或删除）：'),list);root.append(card);
+  }
+}
+function renderPublications(){
+  const root=$('publication-list');root.replaceChildren();const live=deliveryState.publications.filter(p=>p.current);
+  if(!live.length){root.append(text('p','玩家地图上还没有发布的游戏。'));return;}
+  for(const state of live){
+    const article=document.createElement('article');article.className='package-card';
+    article.append(text('h3',state.name),text('p','当前发布：'+versionLabel(state.current.job_id)+(state.current.published_at?' · '+timeText(state.current.published_at):'')));
+    const previous=[...state.history].reverse().find(entry=>entry.version!==state.current.version);
+    if(previous){const back=text('button','回退到上一次发布：'+versionLabel(previous.job_id));back.className='secondary';back.onclick=async()=>{if(!confirm('把「'+state.name+'」回退到 '+versionLabel(previous.job_id)+'？玩家存档和奖章不会删除。'))return;deliveryBusy++;try{await api('jobs/'+encodeURIComponent(previous.job_id)+'/publish-to-map',{method:'POST',body:JSON.stringify({site_id:state.site_id,expected_version:state.current.version})});message('已回退「'+state.name+'」。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};article.append(back);}
+    root.append(article);
+  }
+}
+function interacting(){
+  const element=document.activeElement;
+  return deliveryBusy>0||(!!element&&!!element.closest?.('#package-list,#publication-list')&&['SELECT','INPUT'].includes(element.tagName))
+    ||[...document.querySelectorAll('#package-list input[type=file]')].some(input=>input.files.length)
+    ||[...document.querySelectorAll('#package-list ul')].some(list=>!list.hidden);
+}
+async function refreshDeliveries(force=false){
+  const [packages,publications,sites]=await Promise.all([api('packages'),api('map-publications'),deliveryState.sites.length?deliveryState.sites:api('map-sites')]);
+  const signature=JSON.stringify([packages,publications]);
+  if(!force&&signature===deliverySignature)return;
+  if(!force&&interacting()){deliveryDeferred=true;$('delivery-sync').textContent='有新的更新，你完成当前操作后自动显示。';return;}
+  deliverySignature=signature;deliveryDeferred=false;deliveryState={packages,publications,sites};
+  $('delivery-sync').textContent='同一后台的所有成员看到同一份游戏包、版本与发布；列表每 4 秒自动更新。上次更新 '+new Date().toLocaleTimeString()+'。';
+  renderPackages();renderPublications();
+}
+// Other members' uploads, versions and publications appear without a manual refresh.
+setInterval(async()=>{
+  if(document.visibilityState!=='visible'||$('workspace').hidden||$('jobs').hidden)return;
+  try{
+    await refreshDeliveries();
+    const jobs=await api('jobs');const signature=JSON.stringify(jobs.map(j=>[j.job_id,j.status,j.message,j.result_ready]));
+    if(jobSignature&&signature!==jobSignature&&!interacting())await refreshJobs();
+    jobSignature=signature;
+  }catch(error){if(!String(error.message).includes('登录'))console.error(error.message);}
+},4000);
+document.querySelectorAll('[data-page="jobs"]').forEach(button=>button.addEventListener('click',()=>{void refreshDeliveries(true).catch(e=>message(e.message));}));
+$('refresh').addEventListener('click',()=>refreshDeliveries(true).catch(e=>message(e.message)));
 // Recover the server session after reload; never persist the raw bearer token in browser storage.
 api('access').then(state=>{adminSetup=state.setup_required;$('username').value='admin';$('login-title').textContent=adminSetup?'首次设置管理员密码':'管理员登录';$('confirmation-field').hidden=!adminSetup;$('password-confirmation').required=adminSetup;$('password').autocomplete=adminSetup?'new-password':'current-password';$('password').placeholder=adminSetup?'首次设置至少12个字符':'输入管理员密码';$('login-submit').textContent=adminSetup?'保存密码并进入':'登录';$('login-submit').disabled=false;}).catch(e=>message(e.message));
 api('jobs').then(async()=>{$('login').hidden=true;$('workspace').hidden=false;await restoreWorkspace();}).catch(error=>message(error.message));
@@ -249,6 +354,7 @@ async function restoreWorkspace(){
   ({environmentSource,storySource,environmentJob,storyJob}=restored);
   for(const [key,value] of [['organizer-environment-source',environmentSource],['organizer-environment-job',environmentJob],['organizer-story-job',storyJob]]){if(value)sessionStorage.setItem(key,value);else sessionStorage.removeItem(key);}
   if(restored.projectId){loadedProject=restored.projectId;$('project').value=restored.projectId;$('use-default').checked=false;$('environment-status').textContent='已恢复项目：'+restored.projectId+'；按保存的阶段继续。';}
+  await refreshDeliveries(true).catch(error=>message(error.message));
   await refreshJobs();await refreshSources(environmentSource);await refreshProjects();
 }
 

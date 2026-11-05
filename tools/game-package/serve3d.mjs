@@ -51,7 +51,10 @@ const server=http.createServer(async(req,res)=>{
     }
     if(url.pathname==='/'+staticEntry && playerOrigin){
       const html=await readFile(path.join(localDemo,staticEntry),'utf8');
-      return respond(res,200,html.replace(/<head(?:\s[^>]*)?>/i,match=>match+completionBootstrap(integration,playerOrigin)),'text/html; charset=utf-8');
+      let page=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+completionBootstrap(integration,playerOrigin));
+      // Account saves must hydrate before the original modules read storage; the bridge starts them.
+      if(integration.saveKeys.length)page=page.replace(/<script\s+type=(["'])module\1(\s[^>]*)?>/gi,(match,quote,rest='')=>`<script type="pastport/deferred-module"${rest}>`);
+      return respond(res,200,page,'text/html; charset=utf-8');
     }
     return await file(res,localDemo,'.'+decodeURIComponent(url.pathname));
   }

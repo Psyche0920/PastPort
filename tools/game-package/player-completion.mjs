@@ -27,9 +27,32 @@ export function installCompletionBridge(config, platformOrigin) {
     const prefix='pastport:account:'+scope+':';
     const get=Storage.prototype.getItem,set=Storage.prototype.setItem,remove=Storage.prototype.removeItem;
     const tracked=(storage,key)=>storage===localStorage && config.saveKeys.includes(String(key));
+    // Mirror tracked writes to the platform, which saves them to the signed-in account.
+    const changed=(key,value)=>window.parent.postMessage({type:'pastport:save-change',run,key:String(key),value},platformOrigin);
     Storage.prototype.getItem=function(key){return get.call(this,tracked(this,key)?prefix+key:key);};
-    Storage.prototype.setItem=function(key,value){return set.call(this,tracked(this,key)?prefix+key:key,value);};
-    Storage.prototype.removeItem=function(key){return remove.call(this,tracked(this,key)?prefix+key:key);};
+    Storage.prototype.setItem=function(key,value){const match=tracked(this,key);set.call(this,match?prefix+key:key,value);if(match)changed(key,String(value));};
+    Storage.prototype.removeItem=function(key){const match=tracked(this,key);remove.call(this,match?prefix+key:key);if(match)changed(key,null);};
+    const start=()=>{for(const held of document.querySelectorAll('script[type="pastport/deferred-module"]')){
+      const script=document.createElement('script');
+      for(const attribute of held.attributes)if(attribute.name!=='type')script.setAttribute(attribute.name,attribute.value);
+      script.type='module';script.textContent=held.textContent;held.replaceWith(script);
+    }};
+    const whenParsed=callback=>document.readyState==='loading' ? document.addEventListener('DOMContentLoaded',callback,{once:true}) : callback();
+    const timer=setTimeout(()=>{
+      window.removeEventListener('message',hydrate);
+      window.parent.postMessage({type:'pastport:save-error',run},platformOrigin);
+    },10000);
+    function hydrate(event){
+      if(event.source!==window.parent || event.origin!==platformOrigin || event.data?.type!=='pastport:save-state' || event.data.run!==run)return;
+      clearTimeout(timer);window.removeEventListener('message',hydrate);
+      for(const key of config.saveKeys){
+        const raw=event.data.entries?.[key];
+        if(typeof raw==='string')set.call(localStorage,prefix+key,raw);else remove.call(localStorage,prefix+key);
+      }
+      whenParsed(start);
+    }
+    window.addEventListener('message',hydrate);
+    window.parent.postMessage({type:'pastport:save-ready',run},platformOrigin);
   }
   let sent=false;
   const finished=()=>{

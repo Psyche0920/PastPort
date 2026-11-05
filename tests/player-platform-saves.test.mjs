@@ -160,3 +160,80 @@ test('game bridge hydrates before boot, namespaces account cache and preserves u
     localStorage.removeItem('save');assert.equal(messages.at(-1).message.value,null);
   } finally {for(const [key,value] of Object.entries(original)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}}
 });
+
+const legacy=(events=[{kind:'inspect',args:['ledger']}])=>JSON.stringify({version:'world-1',chapter_version:3,chapter_id:'last-two-sacks',started:true,events,positions:{yard:[1,2]}});
+test('legacy UI Trial event logs use their own validated format and never pass as modern snapshots',()=>{
+  const {db,repository:r}=create();
+  try {
+    const write=(changes,format)=>r.write('alice','site','v1',{revision:r.read('alice','site','v1').revision,operation:crypto.randomUUID(),changes},['legacy'],format);
+    assert.equal(write({legacy:legacy()},'authored-adventure-v1').revision,1);
+    assert.throws(()=>write({legacy:legacy()}),InvalidSave);
+    assert.throws(()=>write({legacy:snapshot(1)},'authored-adventure-v1'),InvalidSave);
+    assert.throws(()=>write({legacy:legacy([{kind:'inspect',args:[1]}])},'authored-adventure-v1'),InvalidSave);
+    assert.throws(()=>write({legacy:legacy(Array(1501).fill({kind:'advance',args:[]}))},'authored-adventure-v1'),InvalidSave);
+    assert.throws(()=>write({legacy:legacy()},'unknown-format'),InvalidSave);
+    assert.equal(JSON.parse(r.read('alice','site','v1').entries.legacy).events.length,1);
+    assert.deepEqual(r.list('alice','site').map(row=>row.version),['v1']);
+    assert.deepEqual(r.list('bob','site'),[]);
+  } finally {db.close();}
+});
+
+test('continue keeps an earlier published release; latest opens a separate save; lost player data fails closed',async()=>{
+  const directory=await mkdtemp(join(tmpdir(),'pastport-resume-'));
+  const organizer=join(directory,'organizer');const catalog=join(directory,'sites.json');
+  await writeFile(catalog,JSON.stringify([{id:'site'}]));
+  const jobs=['c'.repeat(32),'d'.repeat(32)];
+  for(const job of jobs){
+    const game=join(organizer,'jobs',job,'game');await mkdir(join(game,'data'),{recursive:true});
+    await writeFile(join(game,'index.html'),'<html></html>');
+    await writeFile(join(game,'session.mjs'),'export class GameSession {snapshot(){return {};}}');
+    await writeFile(join(game,'app.mjs'),'document.title="fixture";');
+    await writeFile(join(game,'data/presentation.json'),JSON.stringify({saveKey:'save'}));
+    await writeFile(join(game,'data/scene3d-input.json'),JSON.stringify({worlds:[]}));
+  }
+  const entry=(job,version)=>({site_id:'site',job_id:job,version,game_directory:`jobs/${job}/game`,published_at:new Date().toISOString()});
+  const history=[];
+  const publish=async(job,version)=>{history.push(entry(job,version));
+    await writeFile(join(organizer,'player-map-site.history.json'),JSON.stringify(history));
+    await writeFile(join(organizer,'player-map-site.json'),JSON.stringify(entry(job,version)));};
+  await publish(jobs[0],'e'.repeat(64));
+  const socket=createServer();socket.listen(0,'127.0.0.1');await once(socket,'listening');const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
+  const origin=`http://127.0.0.1:${port}`;let child;let errors='';
+  const env=players=>({PATH:process.env.PATH,PLAYER_PORT:String(port),PLAYER_DATA:players,ORGANIZER_DATA:organizer,SITE_CATALOG:catalog});
+  async function start(players=join(directory,'players')){
+    errors='';
+    child=spawn(process.execPath,[fileURLToPath(new URL('../frontend/player/server.mjs',import.meta.url))],{env:env(players),stdio:['ignore','pipe','pipe']});
+    child.stderr.on('data',chunk=>{errors+=chunk;});
+    return Promise.race([once(child.stdout,'data').then(()=>true),once(child,'exit').then(()=>false)]);
+  }
+  async function stop(){if(child && child.exitCode===null){const done=once(child,'exit');child.kill();await done;}}
+  async function post(path,input,cookie=''){
+    const response=await fetch(origin+'/api/'+path,{method:'POST',headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify(input)});
+    return {status:response.status,value:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
+  }
+  const options=async cookie=>(await fetch(origin+'/api/launch-options?site_id=site',{headers:{Cookie:cookie}})).json();
+  try {
+    assert.equal(await start(),true);
+    const alice=await post('register',{username:'alice',name:'A',password:'isolated-fixture-only'});
+    const first=(await post('launch',{site_id:'site',resume_mode:'continue'},alice.cookie)).value;
+    assert.equal(first.latest,true);
+    assert.equal((await post('save',{run:first.run,revision:0,operation:crypto.randomUUID(),changes:{save:snapshot(4)}},alice.cookie)).status,200);
+    await publish(jobs[1],'f'.repeat(64));
+    const listed=await options(alice.cookie);
+    assert.equal(listed.current.version,'f'.repeat(64));
+    assert.deepEqual(listed.saves.map(s=>[s.version,s.current,s.available]),[['e'.repeat(64),false,true]]);
+    const resumed=(await post('launch',{site_id:'site',resume_mode:'continue'},alice.cookie)).value;
+    assert.equal(resumed.version,'e'.repeat(64));assert.equal(resumed.latest,false);
+    assert.equal(JSON.parse(resumed.save.entries.save).sequence,4);
+    const fresh=(await post('launch',{site_id:'site',resume_mode:'latest'},alice.cookie)).value;
+    assert.equal(fresh.version,'f'.repeat(64));assert.equal(fresh.save.revision,0);
+    assert.equal((await post('launch',{site_id:'site',version:'0'.repeat(64)},alice.cookie)).status,410);
+    // The old save stays usable; nothing was cleared by publishing.
+    assert.equal(JSON.parse((await post('launch',{site_id:'site',version:'e'.repeat(64)},alice.cookie)).value.save.entries.save).sequence,4);
+    await stop();
+    assert.equal(await start(join(directory,'players-typo')),false);
+    assert.match(errors,/No empty database was created/);
+    assert.equal(await start(),true);
+    assert.equal((await options(alice.cookie)).saves.length,1);
+  } finally {await stop();await rm(directory,{recursive:true,force:true});}
+});

@@ -2,8 +2,13 @@
 
 import hashlib
 import json
+import threading
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Literal
+
+from pydantic import Field, TypeAdapter
 
 from pastport.adapters.organizer_delivery import validate_player_game
 from pastport.adapters.runtime_resources import runtime_root
@@ -17,10 +22,25 @@ class MapPublication(Contract):
     job_id: Identifier
     version: Sha256
     game_directory: Path
+    published_at: str | None = None
+    actor_id: Identifier | None = None
 
 
 class MapTarget(Contract):
     site_id: Identifier
+    # Compare-and-set: the version the publisher last saw ("none" = unpublished).
+    expected_version: Sha256 | Literal["none"] | None = None
+
+
+class MapSiteState(Contract):
+    site_id: Identifier
+    name: str
+    current: MapPublication | None
+    history: tuple[MapPublication, ...] = Field(default=())
+
+
+HISTORY = TypeAdapter(tuple[MapPublication, ...])
+HISTORY_LIMIT = 50
 
 
 class MapSite(Contract):
@@ -31,13 +51,57 @@ class MapSite(Contract):
 class OrganizerMapPublisher:
     def __init__(self, directory: Path) -> None:
         self.directory = directory.resolve()
+        self.lock = threading.Lock()
+
+    def current(self, site_id: str) -> MapPublication | None:
+        path = self.directory / f"player-map-{site_id}.json"
+        if not path.is_file():
+            return None
+        return MapPublication.model_validate_json(path.read_bytes())
+
+    def history(self, site_id: str) -> tuple[MapPublication, ...]:
+        path = self.directory / f"player-map-{site_id}.history.json"
+        if not path.is_file():
+            return ()
+        return HISTORY.validate_json(path.read_bytes())
+
+    def states(self) -> tuple[MapSiteState, ...]:
+        return tuple(
+            MapSiteState(
+                site_id=site.id,
+                name=site.name,
+                current=self.current(site.id),
+                history=self.history(site.id),
+            )
+            for site in self.sites()
+        )
+
+    def _write(self, name: str, content: bytes) -> None:
+        temporary: Path | None = None
+        try:
+            with NamedTemporaryFile(dir=self.directory, prefix=".map-", delete=False) as stream:
+                temporary = Path(stream.name)
+                stream.write(content)
+            temporary.replace(self.directory / name)
+        except OSError as error:
+            raise ServiceError(
+                "MAP_PUBLICATION_UNAVAILABLE", "无法保存玩家地图发布记录。", 503
+            ) from error
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
 
     def sites(self) -> tuple[MapSite, ...]:
         values = json.loads((runtime_root() / "frontend/player/sites.json").read_text())
         return tuple(MapSite(id=value["id"], name=value["name"]) for value in values)
 
     def publish(
-        self, actor: Actor, job: OrganizerJob, game: Path, site_id: str = "42heilbronn"
+        self,
+        actor: Actor,
+        job: OrganizerJob,
+        game: Path,
+        site_id: str = "42heilbronn",
+        expected_version: str | None = None,
     ) -> MapPublication:
         if (
             not {"operator", "publisher"}.intersection(actor.roles)
@@ -80,18 +144,20 @@ class OrganizerMapPublisher:
             job_id=job.job_id,
             version=digest.hexdigest(),
             game_directory=root.relative_to(self.directory),
+            published_at=datetime.now(UTC).isoformat(timespec="seconds"),
+            actor_id=actor.actor_id,
         )
-        temporary: Path | None = None
-        try:
-            with NamedTemporaryFile(dir=self.directory, prefix=".map-", delete=False) as stream:
-                temporary = Path(stream.name)
-                stream.write(publication.model_dump_json().encode())
-            temporary.replace(self.directory / f"player-map-{site_id}.json")
-        except OSError as error:
-            raise ServiceError(
-                "MAP_PUBLICATION_UNAVAILABLE", "无法保存玩家地图发布记录。", 503
-            ) from error
-        finally:
-            if temporary is not None:
-                temporary.unlink(missing_ok=True)
+        with self.lock:
+            current = self.current(site_id)
+            seen = current.version if current else "none"
+            if expected_version is not None and expected_version != seen:
+                raise ServiceError(
+                    "MAP_PUBLICATION_CONFLICT",
+                    "此站点刚被他人发布了其他版本；请查看最新发布状态后再决定。",
+                    409,
+                )
+            # History first: the pointer switch is the single atomic step players observe.
+            history = (*self.history(site_id), publication)[-HISTORY_LIMIT:]
+            self._write(f"player-map-{site_id}.history.json", HISTORY.dump_json(history))
+            self._write(f"player-map-{site_id}.json", publication.model_dump_json().encode())
         return publication

@@ -24,6 +24,12 @@ def main() -> None:
         initialize = sys.argv.pop(1) == "organizer-init"
         organizer_main(initialize=initialize)
         return
+    if len(sys.argv) > 1 and sys.argv[1] == "organizer-backup":
+        from pastport.organizer_cli import backup
+
+        sys.argv.pop(1)
+        backup()
+        return
     if len(sys.argv) > 1 and sys.argv[1] == "account-password":
         from pastport.account_cli import main as account_main
 

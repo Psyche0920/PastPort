@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from pastport.api.settings import Accounts
+from pastport.organizer_data import DataIdentity, DeploymentBackup
 from pastport.organizer_init import OrganizerAdminInitializer
 
 
@@ -36,6 +37,7 @@ class OrganizerLauncher:
         Accounts.model_validate_json(self.accounts.read_bytes())
         if shutil.which("node") is None:
             raise ValueError("Install Node.js 22 or later, then reopen your terminal.")
+        DataIdentity(self.directory).verify()
         with socket.socket() as listener:
             try:
                 listener.bind(("127.0.0.1", port))
@@ -68,6 +70,19 @@ class OrganizerLauncher:
                 raise ValueError("The player assets directory does not exist.")
             result.extend(("--organizer-player-assets", str(assets.resolve())))
         return result
+
+
+def backup() -> None:
+    parser = argparse.ArgumentParser(description="Back up Organizer and player data consistently")
+    parser.add_argument("--directory", type=Path, default=Path("var/organizer-integration"))
+    parser.add_argument("--player-data", type=Path, default=Path("frontend/player/.local"))
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    try:
+        summary = DeploymentBackup(args.directory, args.player_data).create(args.output)
+    except (OSError, ValueError) as error:
+        parser.exit(2, f"Backup failed: {error}\n")
+    print(f"Backup written: {args.output}\n{summary}", flush=True)
 
 
 def main(*, initialize: bool = False) -> None:

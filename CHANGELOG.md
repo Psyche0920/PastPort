@@ -2,6 +2,11 @@
 
 ## 2026-11-05
 
+- Shared game-package platform (per `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`). Organizer packages are now immutable versions with a current pointer. Uploads go in resumable 16 MB chunks with progress; the original archive is downloadable, and a materials list marks what is missing. A new version must name the current version as its base (stale bases are refused with 409), and earlier versions can be restored. Map publication records history, refuses a stale expected version and supports rollback. Organizer lists and the player map refresh every 4 seconds.
+- Players: a run stays on its release, with explicit choices to continue an earlier release or start a separate new-release save; the game bar shows syncing, synced, not synced or conflict. The legacy UI Trial saves to the account in its own event-log format. The leaderboard no longer shows fictional sample travelers, and the open game now covers the header menu so “back to map” stays clickable.
+- Data protection: Organizer and player services refuse to start when their persistent directory is missing or replaced. `python -m pastport organizer-backup` writes a consistent backup that can be started as an isolated restore.
+- Verified on one computer with independent browser sessions and the three real packages (results in PRD §14.12). Not verified: two physical devices on different Wi-Fi, tunnel uploads, and full playthrough stamps in the browser.
+
 - Released the featured game *The Last Two Sacks / 最后两袋* as `maslan.tar.gz` (maslan-demo-2026-11-05-r1), built on the team-handover `maslan.tar.gz` room with the shared compiler and investigation blueprint, zero model and zero Marble calls. Updated the README and handoff download links.
 - Organizer setup works on any computer: `python -m pastport organizer-init` creates the private `admin` account (password typed twice, hash only, 0600, never overwrites), the start command no longer needs one person's private paths, and a missing account file now names itself and the setup command. `python -m pastport organizer` starts it with the standard local options, and the README setup is now four numbered steps. READMEs and technical PRDs use repository-relative commands.
 - Routing tasks may set their own prompt, instruction and wrong-bin copy; investigation activity hints no longer mention one specific story.
