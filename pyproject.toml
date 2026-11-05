@@ -65,9 +65,23 @@ include = ["src/**/*.py", "tests/**/*.py", "tools/check_contracts.py", "tools/ch
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/frontend/organizer/i18n.mjs", "/frontend/organizer/review.mjs", "/frontend/organizer/index.html", "/frontend/organizer/app.mjs", "/frontend/organizer/app.css", "/src", "/skills", "/pyproject.toml", "/uv.lock", "/README.md", "/LICENSE", "/frontend/game/app.mjs", "/frontend/game/app.css", "/frontend/game/index.html", "/frontend/game/dialogue.mjs", "/gameplay/plugins/plugins.mjs", "/gameplay/plugins/coverage.mjs", "/gameplay/plugins/gameplay-catalog.mjs", "/frontend/game/session.mjs", "/gameplay/gameplay.mjs", "/frontend/game/navigation.mjs", "/frontend/game/walkmesh.mjs", "/frontend/game/interaction.mjs", "/frontend/game/cinematic-view.mjs", "/frontend/game/scene3d-view.mjs", "/frontend/game/scene-preparation.mjs", "/frontend/game/startup-options.mjs", "/frontend/game/room-minimap.mjs", "/frontend/game/slice-continuation.mjs", "/frontend/game/investigation-view.mjs", "/gameplay/plugins/investigation.mjs", "/frontend/game/scene3d-runtime.js", "/frontend/game/scene3d-navigation.mjs", "/frontend/game/scene3d-bridge.mjs", "/tools/game-package/serve3d.mjs", "/gameplay/prepared-game.mjs", "/gameplay/story-presentation.mjs", "/tools/game-package/story-package.mjs", "/tools/game-package/investigation-blueprint.mjs", "/tools/game-package/generated-story.mjs", "/tools/game-package/build-story-package.mjs", "/tools/game-package/runtime-assets.mjs", "/gameplay/contracts.mjs", "/schemas/draft-result.schema.json", "/tools/gameplay_lifecycle.mjs", "/tools/prepare_presentation.mjs"]
+include = ["/frontend/player/network.mjs", "/frontend/player/remote.mjs", "/frontend/player/organizer-gateway.mjs", "/frontend/player/index.html", "/frontend/player/style.css", "/frontend/player/app.mjs", "/frontend/player/server.mjs", "/frontend/player/sites.json", "/frontend/player/sites.mjs", "/frontend/player/illustrations.mjs", "/frontend/player/cloud-saves.mjs", "/frontend/player/save-sync.mjs", "/frontend/player/game-save-bridge.mjs", "/frontend/player/data-identity.mjs", "/frontend/organizer/i18n.mjs", "/frontend/organizer/review.mjs", "/frontend/organizer/index.html", "/frontend/organizer/app.mjs", "/frontend/organizer/app.css", "/src", "/skills", "/pyproject.toml", "/uv.lock", "/README.md", "/LICENSE", "/frontend/game/app.mjs", "/frontend/game/app.css", "/frontend/game/index.html", "/frontend/game/dialogue.mjs", "/gameplay/plugins/plugins.mjs", "/gameplay/plugins/coverage.mjs", "/gameplay/plugins/gameplay-catalog.mjs", "/frontend/game/session.mjs", "/gameplay/gameplay.mjs", "/frontend/game/navigation.mjs", "/frontend/game/walkmesh.mjs", "/frontend/game/interaction.mjs", "/frontend/game/cinematic-view.mjs", "/frontend/game/scene3d-view.mjs", "/frontend/game/scene-preparation.mjs", "/frontend/game/slice-continuation.mjs", "/frontend/game/investigation-view.mjs", "/gameplay/plugins/investigation.mjs", "/frontend/game/scene3d-runtime.js", "/frontend/game/scene3d-navigation.mjs", "/frontend/game/scene3d-bridge.mjs", "/tools/game-package/serve3d.mjs", "/tools/game-package/player-completion.mjs", "/gameplay/prepared-game.mjs", "/tools/game-package/story-package.mjs", "/tools/game-package/investigation-blueprint.mjs", "/tools/game-package/generated-story.mjs", "/tools/game-package/build-story-package.mjs", "/tools/game-package/runtime-assets.mjs", "/gameplay/contracts.mjs", "/schemas/draft-result.schema.json", "/tools/gameplay_lifecycle.mjs", "/tools/prepare_presentation.mjs", "/frontend/game/startup-options.mjs", "/frontend/game/room-minimap.mjs", "/gameplay/story-presentation.mjs"]
 
 [tool.hatch.build.targets.wheel.force-include]
+"frontend/player/network.mjs" = "pastport/runtime_assets/frontend/player/network.mjs"
+"frontend/player/remote.mjs" = "pastport/runtime_assets/frontend/player/remote.mjs"
+"frontend/player/organizer-gateway.mjs" = "pastport/runtime_assets/frontend/player/organizer-gateway.mjs"
+"frontend/player/index.html" = "pastport/runtime_assets/frontend/player/index.html"
+"frontend/player/style.css" = "pastport/runtime_assets/frontend/player/style.css"
+"frontend/player/app.mjs" = "pastport/runtime_assets/frontend/player/app.mjs"
+"frontend/player/server.mjs" = "pastport/runtime_assets/frontend/player/server.mjs"
+"frontend/player/sites.json" = "pastport/runtime_assets/frontend/player/sites.json"
+"frontend/player/sites.mjs" = "pastport/runtime_assets/frontend/player/sites.mjs"
+"frontend/player/illustrations.mjs" = "pastport/runtime_assets/frontend/player/illustrations.mjs"
+"frontend/player/cloud-saves.mjs" = "pastport/runtime_assets/frontend/player/cloud-saves.mjs"
+"frontend/player/save-sync.mjs" = "pastport/runtime_assets/frontend/player/save-sync.mjs"
+"frontend/player/game-save-bridge.mjs" = "pastport/runtime_assets/frontend/player/game-save-bridge.mjs"
+"frontend/player/data-identity.mjs" = "pastport/runtime_assets/frontend/player/data-identity.mjs"
 "skills" = "pastport/bundled_skills"
 "frontend/game/app.mjs" = "pastport/runtime_assets/frontend/game/app.mjs"
 "frontend/game/app.css" = "pastport/runtime_assets/frontend/game/app.css"
@@ -87,6 +101,7 @@ include = ["/frontend/organizer/i18n.mjs", "/frontend/organizer/review.mjs", "/f
 "frontend/game/scene3d-navigation.mjs" = "pastport/runtime_assets/frontend/game/scene3d-navigation.mjs"
 "frontend/game/scene3d-bridge.mjs" = "pastport/runtime_assets/frontend/game/scene3d-bridge.mjs"
 "tools/game-package/serve3d.mjs" = "pastport/runtime_assets/tools/game-package/serve3d.mjs"
+"tools/game-package/player-completion.mjs" = "pastport/runtime_assets/tools/game-package/player-completion.mjs"
 "gameplay/prepared-game.mjs" = "pastport/runtime_assets/gameplay/prepared-game.mjs"
 "tools/game-package/story-package.mjs" = "pastport/runtime_assets/tools/game-package/story-package.mjs"
 "tools/game-package/generated-story.mjs" = "pastport/runtime_assets/tools/game-package/generated-story.mjs"

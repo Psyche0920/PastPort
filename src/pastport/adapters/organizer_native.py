@@ -246,6 +246,7 @@ class NativeGameInputExporter:
         ).model_dump_json())
         document_file = output / "source-document.json"
         is_idml = original_pdf.suffix.lower() == ".idml"
+        direct_catalog = request.entry_level == "catalog3d"
         document: RegisteredPDF | None = None
         if is_idml:
             from pastport_evidence.adapters.idml import IDMLDocumentReader
@@ -529,7 +530,8 @@ class NativeGameInputExporter:
             ],
             "walkArea": None,
             "sourceNotes": {
-                str(obj.object_number): (obj.introduction or (obj.quote.text if obj.quote else "")) if is_idml else obj.evidence_limitation or "候选映射，独立审核状态保留。"
+                str(obj.object_number): (obj.introduction or (obj.quote.text if obj.quote else ""))
+                if is_idml or direct_catalog else obj.evidence_limitation or "候选映射，独立审核状态保留。"
                 for obj in snapshot.objects
                 if not is_idml or any(p.object_number == obj.object_number for p in snapshot.positions)
             },
@@ -585,7 +587,8 @@ class SDKUploadedInputPreparer:
 
     @staticmethod
     def _stages(output: Path) -> tuple[str, ...]:
-        order = ("local_scene_import", "evidence", "matched_environment", "scene3d_1", "scene3d_2", "input_handoff")
+        order = ("local_scene_import", "catalog_extraction", "evidence", "catalog_localization",
+                 "matched_environment", "scene3d_1", "scene3d_2", "input_handoff")
         return tuple(
             stage for stage in order if (output / "native-receipts" / (stage + ".json")).is_file()
         )
@@ -713,8 +716,8 @@ class SDKUploadedInputPreparer:
             raise ServiceError("ORIGINAL_PDF_REQUIRED", "缺少原始史料PDF。", 422)
         tour_input = self._path(request, inputs, "tour")
         tour = self._tour_preflight(request, tour_input, output) if tour_input else None
-        if request.entry_level == "idml3d":
-            worlds = self._idml_scene(request, inputs, original, output)
+        if request.entry_level in ("idml3d", "catalog3d"):
+            worlds = self._source_native_scene(request, inputs, original, output)
         elif request.entry_level == "raw3d":
             worlds = self._raw_scene(request, inputs, original, output)
         elif request.entry_level == "3d":
@@ -956,16 +959,37 @@ class SDKUploadedInputPreparer:
         self._record(output, "evidence", mapping)
         return mapping
 
-    def _idml_scene(self, request: NativeInputRequest, inputs: Path, original: Path, output: Path) -> NativeWorldSet:
+    def _source_native_scene(self, request: NativeInputRequest, inputs: Path, original: Path, output: Path) -> NativeWorldSet:
         links = self._path(request, inputs, "historical_links")
         splat = self._path(request, inputs, "scene_splat")
         mesh = self._path(request, inputs, "scene_mesh")
-        if links is None or splat is None or mesh is None:
+        catalog = request.entry_level == "catalog3d"
+        if splat is None or mesh is None:
+            raise ServiceError("LOCAL_SCENE_REQUIRED", "需要同一场景的SPZ和PLY。", 422)
+        if links is None and not catalog:
             raise ServiceError("IDML_INPUTS_REQUIRED", "需要IDML、Links ZIP、现场照片、SPZ和PLY。", 422)
         imported = output / "raw-scene"
         if not (imported / "tour.html").exists():
             self.runner.run("pastport_matched_environment.cli", ("raw-scene-import", "--spz", str(splat), "--mesh", str(mesh), "--workspace", str(imported)), 270)
         self._record(output, "local_scene_import", imported / "scene/raw-scene.json")
+        handoff = output / "evidence" / "native-handoff"
+        if catalog:
+            from pastport_matched_environment.application.catalog_handoff import CatalogHandoff
+
+            try:
+                CatalogHandoff().prepare(original, handoff)
+            except (ValueError, OSError) as exc:
+                raise ServiceError("CATALOG_INPUT_INVALID", "无法读取展签图录：" + str(exc), 422) from exc
+            self._record(output, "catalog_extraction", handoff / "objects.json")
+        else:
+            assert links is not None
+            self._prepare_idml_handoff(request, inputs, original, output, links, handoff)
+        return self._localize_native_handoff(request, output, imported, handoff, catalog=catalog)
+
+    def _prepare_idml_handoff(
+        self, request: NativeInputRequest, inputs: Path, original: Path, output: Path,
+        links: Path, handoff: Path,
+    ) -> None:
         photos = self._photos(request, inputs, output)
         workspace = output / "evidence"
         workspace.mkdir(exist_ok=True)
@@ -976,12 +1000,16 @@ class SDKUploadedInputPreparer:
             grant_file.write_text(EvidenceGrant(grant_ref="org_"+request.job_id+"_evidence", project_id=request.project_id,
                 max_calls=request.options.max_evidence_calls,max_recorded_tokens=request.options.max_recorded_tokens,
                 timeout_seconds=240).model_dump_json())
-        handoff = workspace / "native-handoff"
         if not (handoff / "source-units.json").exists():
             self.runner.run("pastport_evidence.idml_cli", ("--idml",str(original),"--links",str(links),
                 "--photos",str(photos),"--workspace",str(workspace),"--grant",str(grant_file)),
                 240*request.options.max_evidence_calls+180)
         self._record(output,"evidence",handoff / "idml-matches.json")
+
+    def _localize_native_handoff(
+        self, request: NativeInputRequest, output: Path, imported: Path, handoff: Path,
+        *, catalog: bool,
+    ) -> NativeWorldSet:
         from pastport_matched_environment.domain.execution import SubscriptionGrant as EnvironmentGrant
         environment_workspace = output / "environment-build"
         environment_grant = output / "environment-grant.json"
@@ -994,7 +1022,7 @@ class SDKUploadedInputPreparer:
             self.runner.run("pastport_matched_environment.idml_cli",("--handoff",str(handoff),"--tour",str(imported / "tour.html"),
                 "--workspace",str(environment_workspace),"--run-id",request.job_id,"--grant",str(environment_grant)),
                 240*request.options.max_environment_calls+180)
-        self._record(output,"matched_environment",environment / "import-manifest.json")
+        self._record(output,"catalog_localization" if catalog else "matched_environment",environment / "import-manifest.json")
         tour = self.admission.tour(environment)
         attachment = output / "scene3d-1"
         if not (attachment / "delivery.json").exists():

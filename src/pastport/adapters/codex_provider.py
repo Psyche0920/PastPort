@@ -47,7 +47,7 @@ class CodexStoryProvider:
             ) from error
         if request.model != self.MODEL:
             raise ServiceError(
-                "MODEL_NOT_ALLOWED", "Story generation is pinned to Sol 6.1 Medium", 403
+                "MODEL_NOT_ALLOWED", "Story generation is pinned to Sol 6.1 High", 403
             )
         schema = TypeAdapter(dict[str, JsonValue]).validate_json(request.output_schema_json)
         executable = str(self.codex_path) if self.codex_path else shutil.which("codex")
@@ -100,7 +100,7 @@ class CodexStoryProvider:
                         turn = await thread.turn(
                             request.input_text,
                             output_schema=schema,
-                            effort=ReasoningEffort.medium,
+                            effort=ReasoningEffort.high,
                         )
                         invocation = updated(invocation, state="turn_started", turn_id=turn.id)
                         self.save_trace(invocation)

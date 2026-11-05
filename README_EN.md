@@ -10,20 +10,13 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Initial proposal version (PDF)](references/PastPort_ROOT_CODE_Application.pdf) · [Proposal and competition direction](handoff.md#original-proposal-and-competition-direction)
 
+[Shared online platform: Claude execution PRD](docs/TECHNICAL_PRD_EN.md#shared-online-platform)
+
 ## Team playable handoff
 
-Download from the [private GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03).
-
-| Package | Contents |
-| --- | --- |
-| `wcheung.tar.gz` | The 42 standalone demo *The Last Recording*, including the 3D scene, investigation, clue review and three endings. The delivery record was previously named `42handover`. |
-| `maslan.tar.gz` | Featured game *The Last Two Sacks*: the `3d-test777` 3D room and its 30 Muradiye records, where a researcher reconstructs a fictional 1430s ledger case; five record nodes, four investigation activities, three key choices and 12 distinct ending texts. [Download the new build (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz); the earlier standalone player bundle remains in the release above. |
-
-**Maslan: Muradiye source materials.** The folder contains the original IDML, its `Links` folder, and the chapter PDF. [Open the Muradiye source folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
-
-Extract the archive, enter the matching directory and follow `OPEN.txt`. Open the local address in a WebGL-capable browser. Node.js is required. The bundles are separate from local Organizer job records.
-
-**Workflow.** Main and the SDKs aim to generate a playable, editable first version from source materials. The team can edit and play an existing bundle directly, then integrate reusable improvements into Main and the SDKs after acceptance. The city map and public publishing integration remain to be built and verified. See the [team handoff](handoff.md#en).
+- [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-04-r4/wcheung.tar.gz)
+- [maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)
+- [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz)
 
 ## Startup and use
 
@@ -48,9 +41,41 @@ uv run python -m pastport organizer
 
 Open [Organizer](http://127.0.0.1:18840/organizer/) and sign in. The service runs in your terminal; keep it open and stop with Ctrl+C. If the port is occupied, check the existing service or run `uv run python -m pastport organizer --port 18841` and open that port.
 
+
+### Different Wi-Fi networks: temporarily share this computer
+
+Start Organizer in your own terminal as above, and run the player platform at least once to create its data directory. Install [cloudflared](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) first; on macOS use `brew install cloudflared`. Open another terminal at the repository root:
+
+```sh
+node frontend/player/remote.mjs --share-organizer
+```
+
+The command prints two temporary HTTPS links: share **PLAYER** with players and **STAFF** only with teammates, who sign in with the existing Organizer account. Everyone connects to this host's history, publications and player database; teammates do not start another independent service or reimport published games. Existing local services stay running. The remote player listener uses loopback port 18852; use `--port 18853` if occupied, or `--organizer-port 18841` for another Organizer port. Omit `--share-organizer` to share only the player platform.
+
+When using custom `ORGANIZER_DATA` or `PLAYER_DATA`, pass the same original directories to the sharing command. Sharing requires the existing player database and Organizer directory and does not silently initialize replacement data. Ctrl+C stops only the processes owned by this command, preserving existing local services and all stored data.
+
+Each published game receives a separate on-demand HTTPS tunnel, preserving absolute resource paths and the correct platform Origin for dialogue, 3D, media and account-save messages. Games and staff accounts use separate origins. HTTPS player cookies use Secure; the staff gateway forwards only `/organizer/`, retains authentication/origin checks and blocks remote admin initialization. **Remote private preview URLs are not adapted yet**: import on the host, publish, and verify through the PLAYER map. Packages uploaded through the STAFF link are sent in chunks, so tunnel per-request size limits do not apply.
+
+This is a temporary integration setup. Keep the host awake, online and its terminal open. Restarting the sharing command changes the links without deleting data. A private URL is not a substitute for authentication; do not publish the STAFF link. Legacy UI Trial now saves to the account in its own event-log format, replayed and validated by its original engine on restore. Permanent hosting, stable domains and full physical-device acceptance remain in technical PRD §14.
+
+If a temporary hostname does not resolve, check that device's network/DNS; do not disable origin checks or redirect games to the visitor's loopback address. See [Cloudflare's official limitations](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/): temporary hostnames, no uptime guarantee, 200 in-flight requests and no SSE.
+
+### Shared game packages: upload, get, modify, publish
+
+Everyone signs in to the same Organizer (locally or through the STAFF link) and works on the same packages, versions and publications under **Progress & delivery**. The lists and the player map refresh every 4 seconds; no re-import or manual reload is needed.
+
+1. **Upload**: under **Shared game packages**, choose a `.tar.gz` and click **Import delivery**. The file uploads in 16 MB chunks (below tunnel per-request limits), with progress, resume-on-retry and a clear success or failure result. Package code is never run. If a package of that name exists, use **Submit new version** on its card instead.
+2. **Get**: **Download current version** returns the originally submitted file, ready to re-import. **Show materials** lists editable files in the package (such as `authoring/`) and marks source material or matching results the backend does not hold as missing.
+3. **Modify and submit**: extract, edit, repack with the same folder name (`tar -czf maslan.tar.gz maslan`), then click **Submit new version (based on version N)** on the card. No main pipeline rerun or model call is required. If someone submitted a newer version first, your submission is refused and nothing is stored; download the latest version and merge your changes.
+4. **Versions**: each submission is a new immutable version; earlier versions remain downloadable, and **Make current** restores an earlier one.
+5. **Publish and roll back**: choose a site and version on the card and click **Publish to player map**. **Player map publications** shows each site’s live version and offers **Roll back to the previous publication**. If someone else published a different version in the meantime, the publish is refused. Publishing or rolling back never deletes player saves or medals.
+6. **Players**: a started run stays on the version it began with. After a new version is published, the place card offers **Continue last progress (earlier release)** or **Play the new release (new save)**. The game bar shows syncing, synced to account, not synced or save conflict; “synced” appears only after server confirmation. The legacy UI Trial (`muradiye-ui-trial`) now also saves to the account.
+
+**Backup, restore and data protection**: `uv run python -m pastport organizer-backup --output var/backups/2026-11-05` writes a consistent backup of both databases, game packages, publications and the account file (password hashes; keep it private). For a restore drill, start on separate ports: `uv run python -m pastport organizer --directory var/backups/2026-11-05 --port 18841`, then `PLAYER_PORT=18861 PLAYER_DATA=var/backups/2026-11-05/player ORGANIZER_DATA=var/backups/2026-11-05/server/organizer node frontend/player/server.mjs`. If a persistent directory is missing or points to different data, Organizer and the player service refuse to start instead of creating an empty replacement.
+
 ### Organizer: organizer-facing entry
 
-Download a team delivery, select its `.tar.gz` under Progress & delivery, and import it. Open its standalone preview. A new computer builds its history through imports.
+Download a team delivery, select its `.tar.gz` under Progress & delivery, and import it. Open its standalone preview. A new computer builds its history through imports. Every completed, previewable delivery can select a map site for publication.
 
 Accounts, uploads, cache and delivery history persist under `var/organizer-integration/` in this checkout after shutdown. Import team packages or upload original materials on another computer. Account configuration and databases contain private data and need a separate backup.
 
@@ -65,7 +90,7 @@ New photo jobs use a compact policy: two photos per batch, at most 12 new entiti
 
 1. **Prepare materials and environment:** select an entry point from the table below. Check the grey box to reuse the complete default materials/environment with zero model/Marble calls. Unchecked uses uploads at the selected stage; separately authorize Marble when 3D generation is required. Complete native 3D inputs are not regenerated.
 2. **Materials and review:** automatically consume the previous output. Use the environment SDK's shared VR/3D workbench for photos, evidence, descriptions and review state, with panorama/3D links. Descriptions/review are shared; positions/navigation are saved separately. Saved changes automatically update current inputs, without project reselection or transfer confirmation.
-3. **Prepare Story:** first check saved-story provenance, tasks, gameplay and spatial compatibility. A pass permits reuse. Introduction-only changes needing review require human confirmation; invalid critical evidence/task conditions cannot be bypassed. A new saved revision with identical content needs no confirmation. Alternatively, explicitly authorize SOL 6.1 Medium for a new story, without automatic retry. Both paths stop at Story readiness.
+3. **Prepare Story:** first check saved-story provenance, tasks, gameplay and spatial compatibility. A pass permits reuse. Introduction-only changes needing review require human confirmation; invalid critical evidence/task conditions cannot be bypassed. A new saved revision with identical content needs no confirmation. Alternatively, explicitly authorize SOL 6.1 High for a new story, without automatic retry. Both paths stop at Story readiness.
 4. **Build game:** once Story is ready, click Build game to prepare gameplay, bind presentation, assemble and check resources. Open the player preview from Progress & delivery. The environment and Story are not regenerated.
 
 Switching interface language does not translate evidence/descriptions/stories, submit forms, call models or discard unsaved input. Target play time is a Story creative goal, not generation time or exact timed play.
@@ -76,6 +101,7 @@ Switching interface language does not translate evidence/descriptions/stories, s
 | Original PDF + mapping PDF + 360° tour | Environment matching → 3D | Mapping PDF |
 | Original PDF + native matched-VR archive | Validate/import → 3D | VR bindings, review and navigation |
 | Original PDF + native mounted two-view 3D archive | Validate/import | 3D, objects, review, positions/navigation; no Marble calls |
+| Two-column exhibit PDF + matching SPZ and triangular PLY | Read exhibit identifiers and reference photos → locate the same physical objects → 3D review and Story input | In Admin, select the exhibit PDF entry and prepare the environment. Open the preview or continue the project from its history record. |
 
 Defaults use a complete registered same-source PDF/photo/mapping/VR/3D set; Story is selected separately. Changed files, mixed PDFs, missing data or inconsistent provenance stop execution without cache substitution. Uploaded packages are data, not executable code. **An ordinary panorama is not matched VR; a raw model is not a mounted environment.** The new PDF + photos + SPZ/PLY upload path prepares a mounted, reviewable environment before Story; the raw model alone is still not a mounted environment.
 
@@ -116,7 +142,7 @@ History identifies each project and offers Continue this project and View materi
 
 Organizer supports single-admin login, four material starts, complete default reuse, automatic review handoff, saved-story compatibility, new Story, real progress and game access. Manual Chinese/English selection has been checked. Zero-call cache-to-game execution and new Story from registered environments have real run evidence. Fresh external Evidence/Marble execution for every material path has not been fully accepted.
 
-New Story uses a fixed content plan; code generates IDs, states, rules and references. Valid structure does not mean engaging narrative or approved historical content. Stylization has an SDK, but Organizer can only reuse existing appearance results rather than request new ones. User remains the existing game frontend; no new player accounts/cross-device saves were added. Current source is the baseline; old wheels require rebuilding to include later fixes.
+New Story uses a fixed content plan; code generates IDs, states, rules and references. Valid structure does not mean engaging narrative or approved historical content. Stylization has an SDK, but Organizer can only reuse existing appearance results rather than request new ones. The player map now uses separate player accounts and SQLite saves. Devices sharing the same backend can restore progress for the same account, site and published release; see the startup and scope notes below. Current source is the baseline; old wheels require rebuilding to include later fixes.
 
 ## Architecture and modules
 
@@ -207,6 +233,17 @@ PastPort/
 │   │   ├── <a href="frontend/game/scene3d-view.mjs">scene3d-view.mjs</a>  — Browser adapter connecting 3D host interaction to the existing narrative UI.
 │   │   ├── <a href="frontend/game/session.mjs">session.mjs</a>  — Manages preview sessions, state progression and save recovery.
 │   │   └── <a href="frontend/game/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+│   ├── <a href="frontend/player/">player/</a>  — Player map, accounts, stamps and account-save synchronization
+│   │   ├── <a href="frontend/player/app.mjs">app.mjs</a>  — Map, accounts, published games and save-sync UI.
+│   │   ├── <a href="frontend/player/server.mjs">server.mjs</a>  — Player HTTP service, SQLite accounts and game mounting.
+│   │   ├── <a href="frontend/player/cloud-saves.mjs">cloud-saves.mjs</a>  — SQLite saves scoped by player, site and release.
+│   │   ├── <a href="frontend/player/save-sync.mjs">save-sync.mjs</a>  — Coalesced ordered writes, conflicts and explicit retry.
+│   │   ├── <a href="frontend/player/game-save-bridge.mjs">game-save-bridge.mjs</a>  — Hydrates before game boot and bridges existing save points.
+│   │   ├── <a href="frontend/player/index.html">index.html</a>  — Player-platform HTML entry.
+│   │   ├── <a href="frontend/player/style.css">style.css</a>  — Map and passport styles.
+│   │   ├── <a href="frontend/player/sites.json">sites.json</a>  — Shared map-site catalog for Organizer publication targets.
+│   │   ├── <a href="frontend/player/sites.mjs">sites.mjs</a>  — Loads map sites.
+│   │   └── <a href="frontend/player/illustrations.mjs">illustrations.mjs</a>  — Site and medal illustrations.
 │   └── <a href="frontend/organizer/">organizer/</a>  — Organizer frontend: authentication, actual uploads, registered-material reuse/regeneration, progress and delivery
 │       ├── <a href="frontend/organizer/index.html">index.html</a>  — Actual production page served by main at /organizer/; requires the HTTP service and login.
 │       ├── <a href="frontend/organizer/app.mjs">app.mjs</a>  — Orchestrates materials/environment, existing review, Story, then gameplay/assembly; controls reuse and generation separately.
@@ -576,6 +613,7 @@ PastPort/
 │   │   ├── <a href="tools/game-package/build-story-package.mjs">build-story-package.mjs</a>  — Standalone build entry reading Story/bindings, checking resources and assembling a runnable bundle.
 │   │   ├── <a href="tools/game-package/generated-story.mjs">generated-story.mjs</a>  — Validates generated Story input and converts it into host narrative/tasks.
 │   │   ├── <a href="tools/game-package/runtime-assets.mjs">runtime-assets.mjs</a>  — Explicit game-resource manifest/publisher collecting module source, relocating browser imports and preserving bundle layout.
+│   │   ├── <a href="tools/game-package/player-completion.mjs">player-completion.mjs</a>  — Generic completion receipts, pinned legacy-runtime adapters and account-cache isolation.
 │   │   ├── <a href="tools/game-package/serve3d.mjs">serve3d.mjs</a>  — Local 3D preview HTTP service serving the bundle and isolated scene resources.
 │   │   └── <a href="tools/game-package/story-package.mjs">story-package.mjs</a>  — Story package compiler validating museum snapshots/contracts and generating host input.
 │   ├── <a href="tools/check_contracts.py">check_contracts.py</a>  — Export deterministic schemas or check committed schemas and complete wire samples.
@@ -606,3 +644,31 @@ The [Technical PRD: current initial specification](docs/TECHNICAL_PRD_EN.md) def
 The Admin production workflow disables cumulative recorded-token stop thresholds under explicit user authorization for both Evidence and environment matching. Actual usage remains recorded. Authorized call counts, timeouts, source validation and unknown-usage recovery checks remain enforced. Continuation creates a new output revision and reuses successful receipts, preserving old PDFs and original grants. Standalone SDK execution still honors its explicit grant by default.
 
 [Change history](CHANGELOG.md)
+
+Start the player map from the checkout root in another terminal with `node frontend/player/server.mjs` (Node.js 22.13+), then open http://127.0.0.1:18851/ . It reads this checkout's Organizer data by default; set `ORGANIZER_DATA` to the same `server/organizer` directory for custom setups. Every completed delivery with a standalone preview can select a site and publish to the map. Refresh the map to see the site light up. Publishing again replaces that site's version while keeping other sites intact. Players use separate accounts from Organizer staff. Stamps require an existing completion event or supported ending bridge; merely opening a game awards no stamp.
+
+
+Player accounts, sessions, stamps and progress persist in `frontend/player/.local/players.sqlite`. Set `PLAYER_DATA` to a stable data directory and reuse it after service restarts. Use a consistent SQLite backup; copying only a live main database without its WAL can lose data. Never commit databases or account files.
+
+Signing in and launching from the map automatically restores this account/site/published-release save. Investigations, choices, minigames and existing game save points sync automatically; returning to the map waits for saving. The status bar reports saving/failure, with retry and unsynced-save export. Stale writes from another page/device are rejected; reopen from the map to load the newer save. Restarting the game synchronizes a reset for this release. Newly published releases start separate saves and retain old ones without forced migration. Unbound old browser saves remain untouched and are not automatically claimed.
+
+Existing `GameSession` snapshots and continuation saves are supported; the same game engine validates recovery. Incompatible custom bundles explicitly report local-only saves. The backend accepts structurally validated client snapshots, rather than providing cheat-resistant server-side action adjudication. Stamps and progress are separate records. Cross-device use requires the same backend/data directory; the default loopback launcher is local development, not an internet cloud deployment. Closing/reloading attempts synchronization and warns about pending writes; after forced closure or disconnection, only acknowledged saves are guaranteed to restore from the server.
+
+
+Organizer delivery import and map publication support both existing 3D bundles and static 2D bundles. A 2D bundle provides root `index.html` and `pastport-player.json` (`format: pastport-static-v1`, `entrypoint: a relative HTML path within the bundle`); the entry must exist and stay within the package. Previews reuse the trusted launcher, separate port and Organizer login gate without executing an imported server script. `muradiye-ui-trial` packages the original The Last Two Sacks from `demo-muradiye-ui-trial`, retaining 2D character animation, gameplay and assets; its delivery card can publish to a selected map site. This legacy version saves to the player account through its own adapter (`authored-adventure-v1`, identified by runtime-file hash): the full event log and positions are stored, and the original engine still validates and replays them on restore; it does not share the GameSession format. The platform now automatically adapts this pinned legacy runtime: its actual ending display sends the current player-run receipt, awards a passport stamp and updates the leaderboard. Ordinary reading awards nothing; repeating a site does not add another medal. Legacy detection uses runtime-file hashes without changing authored gameplay. New static games emit `pastport:completed` with a nonempty `endingId`; an unknown runtime cannot claim completion merely because it opens. Local caches remain scoped by account/site/release.
+
+
+### Sharing game bundles, Organizer history and the player platform
+
+Within one deployment the flow is: **game bundle → Organizer import/production history → publish to a chosen site → player map opens that release → player accounts retain progress, stamps and rankings**. Organizer and the player platform share the same `server/organizer` data through `ORGANIZER_DATA`, including publications and their game files. Players do not sign into Organizer or download/upload/import the bundle individually. Staff history remains subject to owner/project authorization; public players access published content only.
+
+| Situation | Is a separate game-bundle handoff needed? |
+|---|---|
+| Another player joins a platform where the bundle is already imported | No. Import once, publish once and let players launch from the map. |
+| A game is updated within the same platform | An administrator imports or generates the new build and publishes it to the chosen site. Subsequent launches use that release without forcing incompatible saves together. |
+| A teammate runs an independent Organizer on their computer | Yes. Download the game from GitHub Releases and import it. Independent local histories/databases do not merge automatically. |
+| Moving the local platform to another deployment | Import the needed bundles or migrate the complete persistent data/assets separately. Back up/migrate the private player database securely. |
+
+`git push/pull` synchronizes source and documentation, not game files, Organizer history, uploaded sources, player databases or passwords. GitHub Releases distribute team deliverables and support moves between computers; players on an existing deployment do not repeatedly download Releases.
+
+Sharing runs on the host computer plus temporary tunnels (see “Different Wi-Fi networks” above), not a cloud deployment with a stable domain. `PLAYER_DATA` persists player accounts, saves and stamps separately from Organizer staff accounts/production history. Serving multiple real devices requires a unified deployment and client-reachable game-resource routes instead of the current loopback game URLs. Copying the webpage or exposing a `127.0.0.1` port alone does not provide cross-device access. No public deployment was performed in this task.

@@ -18,17 +18,23 @@ from pastport.observability import LoggingConfiguration
 
 
 def main() -> None:
-    if len(sys.argv) > 1 and sys.argv[1] == "account-password":
-        from pastport.account_cli import main as account_main
-
-        sys.argv.pop(1)
-        account_main()
-        return
     if len(sys.argv) > 1 and sys.argv[1] in ("organizer-init", "organizer"):
         from pastport.organizer_cli import main as organizer_main
 
         initialize = sys.argv.pop(1) == "organizer-init"
         organizer_main(initialize=initialize)
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "organizer-backup":
+        from pastport.organizer_cli import backup
+
+        sys.argv.pop(1)
+        backup()
+        return
+    if len(sys.argv) > 1 and sys.argv[1] == "account-password":
+        from pastport.account_cli import main as account_main
+
+        sys.argv.pop(1)
+        account_main()
         return
     if len(sys.argv) > 1 and sys.argv[1] == "gameplay-prepare":
         from pastport.gameplay_cli import main as gameplay_main

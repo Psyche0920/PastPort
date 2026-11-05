@@ -1,0 +1,82 @@
+:root{color-scheme:light;--paper:#f7ebcf;--ink:#302b25;--jade:#285854;--red:#863e32;--border:#9a765b;font-family:Georgia,"Songti SC",serif;background:#e9d6ad;color:var(--ink)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#fbf1d8,transparent 65%),repeating-linear-gradient(0deg,transparent 0 4px,#97704c0b 4px 5px)}
+header{display:flex;align-items:center;gap:1rem;padding:1rem clamp(1rem,5vw,5rem);border-bottom:1px solid var(--border);background:#f9edcf}.wordmark{font-size:1.5rem;letter-spacing:.19em;color:var(--jade);font-weight:bold;text-decoration:none}.wordmark span{color:var(--red)}.tag{color:#674d3c;font-size:.85rem}header button{margin-left:auto}
+main{max-width:1460px;margin:auto;padding:clamp(1rem,4vw,3.2rem)}.intro{margin-bottom:1.4rem}.intro h1{font-size:clamp(2.1rem,5vw,4.6rem);line-height:1.12;margin:.1em 0;color:var(--jade)}.intro p{max-width:48rem}.eyebrow{font:700 .75rem system-ui;letter-spacing:.15em;color:var(--red)}h2{color:var(--jade);margin:.35rem 0 .7rem;overflow-wrap:anywhere}p{line-height:1.55}button{font:inherit;cursor:pointer;background:var(--jade);color:#fff7e6;border:1px solid var(--jade);border-radius:.35rem;padding:.62rem .9rem}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #a34831;outline-offset:3px}.secondary{color:var(--jade);background:transparent;margin:.5rem}
+dialog{border:2px solid var(--border);border-radius:.7rem;background:#fbefd4;color:var(--ink);width:min(92vw,460px);padding:1.2rem}dialog::backdrop{background:#28261bbb}.close{float:right;padding:.25rem .6rem}.document{border:1px double var(--border);padding:1rem;background:repeating-linear-gradient(0deg,transparent 0 22px,#c7ab7c22 22px 23px)}label{display:block;margin:.75rem 0}input{display:block;width:100%;padding:.6rem;border:1px solid var(--border);border-radius:.25rem;background:#fff8e7;font:inherit}.seal{display:grid;place-content:center;text-align:center;border:4px double var(--red);border-radius:50%;width:9rem;height:9rem;color:var(--red);margin:1rem auto;transform:rotate(-8deg)}.seal span{font-size:1.6rem}.seal b,.seal small{font-size:.73rem}#notice{color:var(--red)}#game{position:fixed;z-index:3;inset:0;background:#272a24;color:#f6ead1;display:grid;grid-template-rows:auto 1fr}#game[hidden]{display:none}#game>div{display:flex;align-items:center;gap:1rem;padding:.5rem}iframe{width:100%;height:100%;border:0;background:#141914}
+/* Travel atlas */
+:root{color-scheme:dark;--jade:#d8bb81;--red:#a73f32;--border:#806c4d;background:#151e19;color:#f1e4c8}
+body{background:radial-gradient(ellipse at 47% -10%,#3c5040 0%,#202d23 44%,#121b17 90%)}
+header{background:#1b2821;border-color:#62553c}.wordmark span{color:#e4a683}.tag{color:#c9bea4}
+main{padding:clamp(1rem,3.5vw,3.1rem);max-width:1480px}.intro{margin:0 0 1.45rem}.intro .eyebrow{color:#e6a883}.intro h1{color:#f0d59c}.intro p{margin:.6em 0;color:#dfd2b8}
+.atlas{padding:9px;border:1px solid #ad9163;background:#342d24;box-shadow:0 20px 48px #0b110cb3,inset 0 0 0 4px #1e2a22}
+.map-scroll{overflow:auto;scrollbar-color:#b49967 #372f25}.map-sheet{position:relative;isolation:isolate;min-width:830px;aspect-ratio:1200/690}
+.landscape,#markers{position:absolute;inset:0;width:100%;height:100%}.landscape{pointer-events:none}
+.map-sheet:after{position:absolute;content:'';inset:5px;border:1px solid #fff1c872;pointer-events:none}
+.map-label{position:absolute;top:6%;left:50%;transform:translateX(-50%);color:#50382d;font:700 clamp(.75rem,1.5vw,1.1rem) Georgia,serif;letter-spacing:.27em}.map-label span{color:#923e34}
+.marker{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);width:clamp(91px,9.4vw,139px);display:grid;justify-items:center;gap:.25rem;padding:0;background:none;color:#382b24;border:0}
+.marker:disabled{cursor:default}.thumb{display:block;width:clamp(60px,7vw,104px);aspect-ratio:94/70;border:2px solid #664c39;border-radius:42% 42% 13% 13% / 48% 48% 14% 14%;overflow:hidden;box-shadow:0 4px 7px #3e332b73}
+.thumb svg{display:block;width:100%;height:100%}.marker:disabled .thumb{filter:saturate(.45) brightness(.69)}.marker:disabled .marker-label{background:#e6cfaa;color:#49382d}
+.marker-label{font:700 clamp(9px,1vw,13px)/1.15 Georgia,serif;background:#f5d897;border:1px solid #997348;padding:.22rem .42rem;border-radius:.18rem;text-wrap:balance}
+#launch{z-index:2;color:#291b18}#launch .thumb{border-color:#ffe6a0;box-shadow:0 0 18px #ffdb71,0 4px 8px #2c241b}#launch:hover .thumb{box-shadow:0 0 25px 4px #fff0b2}
+.map-stamp{position:absolute;top:-5%;right:-6%;transform:rotate(-12deg);padding:.22rem .38rem;border:3px double #a5342d;background:#f8dfad;color:#8b2d25;font-weight:bold}
+#passport,#back{color:#30271b}.secondary{color:#59452c}.close{color:#332619}dialog{color-scheme:light}dialog h2{color:#473a2b}dialog button{color:#30271b}
+.drift,.clouds{animation:drift 10s ease-in-out var(--drift,0s) infinite alternate}.clouds{animation-duration:21s}.water{animation:river 10s linear infinite}
+@keyframes drift{to{transform:translateX(17px)}}@keyframes river{to{stroke-dashoffset:-64}}
+@media(max-width:880px){
+  .tag{display:none}.atlas{padding:5px}
+  .map-sheet{min-width:0;aspect-ratio:auto;height:clamp(440px,116vw,620px)}
+  .marker{left:var(--mobile-x);top:var(--mobile-y);width:24%}
+  .thumb{width:clamp(47px,13vw,78px)}
+  .marker-label{font-size:clamp(8px,2.3vw,12px);padding:.16rem .22rem}
+  .map-stamp{right:0;top:-12%;font-size:.65rem}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}}
+.header-actions{display:flex;align-items:center;gap:.5rem;margin-left:auto}
+.header-actions button{white-space:nowrap}
+#language{background:transparent;border-color:#a68d62;color:#f4ddb0}
+@media(max-width:440px){header{gap:.5rem}.wordmark{font-size:1.12rem;letter-spacing:.1em}.header-actions button{font-size:.85rem;padding:.5rem}}
+[hidden]{display:none!important}
+.home{display:grid;grid-template-columns:1fr minmax(220px,38%);align-items:center;gap:3rem;max-width:1120px;margin:clamp(2rem,9vh,8rem) auto;padding:clamp(1.4rem,5vw,4rem);border:1px solid #806c4d;background:linear-gradient(135deg,#30443a,#1b2821);box-shadow:0 16px 40px #0b110c66}
+.home h1,.board h1{color:#f0d59c;font-size:clamp(2.7rem,7vw,6.2rem);line-height:1;margin:.1em 0}.home .eyebrow{color:#e6a883}
+.home-lead{color:#e9dbc0;max-width:32ch;font-size:clamp(1rem,2vw,1.3rem)}.passport-art{width:100%}
+.home-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.65rem}.home-actions a{text-decoration:none;padding:.7rem 1rem;border:1px solid #d8bb81;border-radius:3px}
+.primary-link{background:#e7c988;color:#282317}.outline-link,#map>a,.board>a{color:#f3d8a3}
+.board{max-width:800px;margin:2rem auto}.board h1{font-size:clamp(2.5rem,6vw,4rem);margin-top:.45em}
+.rank-list{padding:0;list-style:none}.rank-row{display:grid;grid-template-columns:3rem minmax(0,1fr) auto;align-items:center;gap:.75rem;padding:.8rem;border-bottom:1px solid #8c7955;color:#f6e8c7}.rank-row>strong{color:#eac481;font-size:1.35rem}
+.rank-medals{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:flex-end}.rank-medal{color:#f0d59c;border:1px solid #8a714a;padding:.2rem .4rem;font-size:.8rem}
+#map>.intro{margin-top:1rem}
+.marker .thumb{transition:transform .24s ease,filter .24s ease}.marker:hover .thumb,.marker:focus-visible .thumb{transform:translateY(-4px) scale(1.08);filter:saturate(.95) brightness(1.06)}
+@media(max-width:650px){.home{grid-template-columns:1fr;gap:.8rem}.passport-art{max-width:240px;justify-self:center}.rank-row{grid-template-columns:1.5rem 1fr}.rank-medals{grid-column:2;justify-content:flex-start}}
+:root{background:#240e18}
+body{background:radial-gradient(ellipse at 55% 0,#652337,#381523 55%,#220d18)}
+header{background:#39121f;border-color:#976d47}
+.wordmark{font-family:"Baskerville","Palatino Linotype",Palatino,Georgia,serif;font-weight:600;letter-spacing:.045em;font-size:clamp(1.25rem,3vw,2.1rem)}
+.wordmark span{color:#e6bb77}
+.site-menu{position:relative;z-index:5}
+.site-menu summary{display:flex;align-items:center;gap:.4rem;cursor:pointer;color:#f1d59d;border:1px solid #ad8353;padding:.42rem .55rem;border-radius:3px;list-style:none}
+.site-menu summary::-webkit-details-marker{display:none}
+.site-menu nav{position:absolute;top:calc(100% + 8px);left:0;min-width:9rem;display:grid;padding:.35rem;background:#4b1929;border:1px solid #ad8353;box-shadow:0 8px 24px #17050a88}
+.site-menu nav a{color:#f5dbad;text-decoration:none;padding:.6rem}
+.site-menu nav a:hover,.site-menu nav a:focus-visible{background:#6d2b3a}
+.home{background:radial-gradient(ellipse at 72% 48%,#743145,#481928 65%,#34131f);position:relative;isolation:isolate;overflow:hidden;border-color:#aa8151}
+.home h1{font-family:"Baskerville","Palatino Linotype",Palatino,Georgia,serif;font-weight:500;letter-spacing:-.025em}
+.home::before{content:"";position:absolute;z-index:-1;inset:-40%;background:repeating-radial-gradient(ellipse at center,transparent 0 28px,#ecbd7616 30px 31px,transparent 33px 46px);animation:hero-shimmer 17s ease-in-out infinite alternate}
+.cover-float,.stamp-float{animation:passport-float 5s ease-in-out infinite alternate}
+.stamp-float{animation-delay:-2s;animation-duration:4s}
+@keyframes passport-float{from{transform:translateY(4px)}to{transform:translateY(-9px)}}
+@keyframes hero-shimmer{to{transform:translate(3%,-4%) rotate(7deg);opacity:.62}}
+.marker.unavailable .thumb{filter:saturate(.58) brightness(.82)}
+.marker.unavailable:hover .thumb,.marker.unavailable:focus-visible .thumb{filter:none}
+.medal-art{display:inline-grid;overflow:hidden;vertical-align:middle;width:2.2rem;aspect-ratio:1;border:2px solid #edcc86;border-radius:50%;box-shadow:0 0 0 1px #8c5d2e;background:#b78649}
+.medal-art svg{width:100%;height:100%;object-fit:cover;transform:scale(1.22)}
+.rank-medal{display:inline-flex;gap:.45rem;align-items:center}
+.sample-note{color:#f2d7a3}
+.release-note{margin:0;color:#f2d7a3;font-size:.9rem}
+#game-status[data-sync=conflict],#game-status[data-sync=unsynced]{color:#ffb4a8}
+#place-content>.medal-art{width:4.5rem;margin-top:.5rem}
+@media(max-width:440px){header{padding-inline:.55rem}.site-menu summary{padding:.35rem}.site-menu summary span+span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}}
+
+.marker:not(.unavailable) .thumb{border-color:#ffe6a0;box-shadow:0 0 18px #ffdb71,0 4px 8px #2c241b}
+#launch.unavailable .thumb{border-color:#664c39;box-shadow:0 4px 7px #3e332b73}
+/* The open game covers the page header and its menu, so "back to map" stays clickable. */
+#game{z-index:6}

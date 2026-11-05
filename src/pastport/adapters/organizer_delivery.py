@@ -7,9 +7,11 @@ import shutil
 import tarfile
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
+from typing import Literal
 from uuid import uuid4
 
 from pastport.application.models import ServiceError
+from pastport.domain.common import Contract
 from pastport.domain.organizer import OrganizerJob
 from pastport.ports.organizer import OrganizerRepository
 
@@ -38,9 +40,11 @@ def import_delivery(
         try:
             _extract(archive, root)
             game = root / name
-            _check_game(game)
+            validate_player_game(game)
         except (OSError, ValueError, tarfile.TarError, EOFError, KeyError, TypeError) as error:
-            raise ServiceError("DELIVERY_INVALID", "交付包损坏或缺少有效的试玩文件。", 422) from error
+            raise ServiceError(
+                "DELIVERY_INVALID", "交付包损坏或缺少有效的试玩文件。", 422
+            ) from error
         destination = jobs / key
         job = OrganizerJob(
             job_id=key, owner_id=owner_id, project_id=name, source_id=key,
@@ -75,7 +79,27 @@ def _extract(archive: Path, root: Path) -> None:
             package.extract(member, root, filter="data")
 
 
-def _check_game(game: Path) -> None:
+class StaticPlayerManifest(Contract):
+    format: Literal["pastport-static-v1"]
+    entrypoint: str
+
+
+def validate_player_game(game: Path) -> None:
+    """Validate the declared player transport without running imported code."""
+    manifest = game / "pastport-player.json"
+    if manifest.is_file():
+        if manifest.stat().st_size > 16384 or not (game / "index.html").is_file():
+            raise ValueError("Invalid static player manifest")
+        specification = StaticPlayerManifest.model_validate_json(manifest.read_bytes())
+        entry = PurePosixPath(specification.entrypoint)
+        if (
+            not re.fullmatch(r"[a-zA-Z0-9_./-]+\.html", specification.entrypoint)
+            or entry.is_absolute() or ".." in entry.parts
+            or not (game / entry).resolve().is_relative_to(game.resolve())
+            or not (game / entry).is_file()
+        ):
+            raise ValueError("Invalid static player entrypoint")
+        return
     if not all((game / name).is_file() for name in ("index.html", "scene3d-runtime.js")):
         raise ValueError("Missing player entry")
     config = game / "data/scene3d-input.json"

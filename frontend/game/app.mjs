@@ -71,9 +71,26 @@ function openEncounter(){
   if($('#story-panel').open)$('#story-panel').close();
   if(session.state.ending_id){openTask();return;}
   const c=session.current;let lines=[];
+  if(session.presentation.profile==='story-3d-0.1.0'){
+    const turns=text(c.body).split(/\n+/).filter(line=>line.trim());
+    const spoken=turns.map(line=>line.match(/^([^:：]{1,40})[:：]\s*(\S.*)$/));
+    if(spoken.length>=2&&spoken.every(Boolean)&&new Set(spoken.map(turn=>turn[1].trim())).size>=2){
+      lines=spoken.map(turn=>({speaker:turn[1].trim(),text:turn[2].trim()}));
+    }
+  }
   if(c.plugin.kind==='dialogue'){
-    for(const item of c.plugin.items){const paragraphs=item.speaker==='archive'?[text(selectedVariant(item))]:text(selectedVariant(item)).split(/\n+/).filter(Boolean);paragraphs.forEach((value,index)=>lines.push({speaker:item.speaker,text:value,itemId:item.id,itemEnd:index===paragraphs.length-1,commit:c.plugin.commitments===true}));}
-  }else lines=((session.presentation.openingLines??openingLines)[c.id]??[{speaker:text(session.presentation.protagonist??'Yusuf'),text:c.body}]).map(line=>({...line,text:text(line.text)}));
+    for(const item of c.plugin.items){
+      const excerpt=text(selectedVariant(item));
+      const claim=item.speaker==='source' ? /^claim-object-([1-9]\d*)$/.exec(item.id) : null;
+      const source=claim&&session.presentation.objects.find(object=>object.number===Number(claim[1]));
+      const observation=source ? text(source.content).split(/\n\s*\n/,1)[0].trim() : '';
+      const normalize=value=>value.normalize('NFKC').replace(/\s+/g,'');
+      const fullText=excerpt.trim()&&observation&&normalize(observation).startsWith(normalize(excerpt))
+        ? observation : excerpt;
+      const paragraphs=item.speaker==='archive'?[fullText]:fullText.split(/\n+/).filter(Boolean);
+      paragraphs.forEach((value,index)=>lines.push({speaker:item.speaker,text:value,itemId:item.id,itemEnd:index===paragraphs.length-1,commit:c.plugin.commitments===true}));
+    }
+  }else if(!lines.length) lines=((session.presentation.openingLines??openingLines)[c.id]??[{speaker:text(session.presentation.protagonist??'Yusuf'),text:c.body}]).map(line=>({...line,text:text(line.text)}));
   lines=lines.map(line=>({...line,speakerLabel:text(session.presentation.speakerNames?.[line.speaker]??line.speaker),frame:session.presentation.castFrames[line.speaker]??1,row:session.presentation.castRows?.[line.speaker]??100}));
   const firstUnread=c.plugin.kind==='dialogue'&&!session.taskDone()?lines.findIndex(line=>!session.entry().activity.seen.includes(line.itemId)):0;
   dialogue.open(lines,{startIndex:Math.max(0,firstUnread),acknowledge:async line=>{if(line.itemEnd&&!session.entry().activity.seen.includes(line.itemId)&&!session.taskDone())await session.dispatch({kind:'read',id:line.itemId});},done:()=>openTask()});

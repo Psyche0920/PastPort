@@ -1,3 +1,4 @@
+import {completionAdapter,completionBootstrap} from './player-completion.mjs';
 import http from 'node:http';
 import {readFile,realpath,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
@@ -5,8 +6,25 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(process.env.PASTPORT_HOST_ROOT??path.dirname(fileURLToPath(import.meta.url)));
 const localDemo=path.resolve(process.env.PASTPORT_LOCAL_DEMO??root);
-const port=Number(process.env.PASTPORT_PORT??18824);if(!Number.isSafeInteger(port)||port<1||port>65535)throw new RangeError('Invalid PASTPORT_PORT');
-const input=JSON.parse(await readFile(path.resolve(process.env.PASTPORT_SCENE3D_INPUT??path.join(localDemo,'data/scene3d-input.json')),'utf8'));
+let port=Number(process.env.PASTPORT_PORT??18824);if(!Number.isSafeInteger(port)||port<0||port>65535)throw new RangeError('Invalid PASTPORT_PORT');
+let staticEntry=null,staticManifest=null;
+try {staticManifest=JSON.parse(await readFile(path.join(localDemo,'pastport-player.json'),'utf8'));}
+catch(error) {if(error.code!=='ENOENT')throw error;}
+if(staticManifest){
+  if(staticManifest.format!=='pastport-static-v1'||typeof staticManifest.entrypoint!=='string'||
+    !/^[a-zA-Z0-9_./-]+\.html$/.test(staticManifest.entrypoint)||staticManifest.entrypoint.split('/').includes('..')||path.isAbsolute(staticManifest.entrypoint))throw new Error('Invalid static player manifest');
+  const entry=await realpath(path.join(localDemo,staticManifest.entrypoint));
+  if(!entry.startsWith((await realpath(localDemo))+path.sep))throw new Error('Static player entry escapes package');
+  staticEntry=staticManifest.entrypoint;
+}
+const integration=staticEntry ? await completionAdapter(localDemo) : null;
+const playerOrigin=process.env.PASTPORT_PLAYER_ORIGIN??'';
+if(playerOrigin){
+  const target=new URL(playerOrigin);
+  const local=target.protocol==='http:' && ['127.0.0.1','localhost','[::1]'].includes(target.hostname);
+  if(target.origin!==playerOrigin || target.username || target.password || (!local && target.protocol!=='https:'))throw new Error('Invalid player platform origin');
+}
+const input=staticEntry ? {worlds:[]} : JSON.parse(await readFile(path.resolve(process.env.PASTPORT_SCENE3D_INPUT??path.join(localDemo,'data/scene3d-input.json')),'utf8'));
 for(const world of input.worlds)world.root=path.resolve(localDemo,world.root);
 const previewToken=process.env.PASTPORT_PREVIEW_TOKEN??'';
 const previewCookie=process.env.PASTPORT_PREVIEW_COOKIE??'pastport_preview';
@@ -26,6 +44,20 @@ const server=http.createServer(async(req,res)=>{
     }
     if(!(req.headers.cookie??'').split(';').some(value=>value.trim()===`${previewCookie}=${previewToken}`))return respond(res,401,'Open this preview through Organizer','text/plain');
   }
+  if(url.pathname==='/__pastport_ready')return respond(res,200,'pastport-remote-ready','text/plain');
+  if(staticEntry){
+    if(url.pathname==='/'||url.pathname==='/index.html'){
+      res.writeHead(302,{'Location':'/'+staticEntry+url.search,'Cache-Control':'no-store'});res.end();return;
+    }
+    if(url.pathname==='/'+staticEntry && playerOrigin){
+      const html=await readFile(path.join(localDemo,staticEntry),'utf8');
+      let page=html.replace(/<head(?:\s[^>]*)?>/i,match=>match+completionBootstrap(integration,playerOrigin));
+      // Account saves must hydrate before the original modules read storage; the bridge starts them.
+      if(integration.saveKeys.length)page=page.replace(/<script\s+type=(["'])module\1(\s[^>]*)?>/gi,(match,quote,rest='')=>`<script type="pastport/deferred-module"${rest}>`);
+      return respond(res,200,page,'text/html; charset=utf-8');
+    }
+    return await file(res,localDemo,'.'+decodeURIComponent(url.pathname));
+  }
   if((url.pathname==='/'||url.pathname==='/index.html')&&url.searchParams.get('scene')!=='3d'){
     url.searchParams.set('scene','3d');res.writeHead(302,{'Location':url.pathname+url.search,'Cache-Control':'no-store'});res.end();return;
   }
@@ -44,9 +76,12 @@ const server=http.createServer(async(req,res)=>{
   if(suffix==='navigation_boundary.js')return await file(res,world.root,'scene3d/navigation_boundary.js');
   if(suffix==='api/scene3d')return respond(res,200,JSON.stringify(world.snapshot));
   if(suffix==='api/scene3d/arrows')return respond(res,200,JSON.stringify({scene_binding:world.snapshot.binding,arrows:[]}));
-  if(suffix==='scene3d/portal-navigation.json')return respond(res,200,JSON.stringify({endpoint:`http://127.0.0.1:${port}/api/scene3d-navigation/00000000000000000000000000000000`}));
+  if(suffix==='scene3d/portal-navigation.json')return respond(res,200,JSON.stringify({endpoint:'/api/scene3d-navigation/00000000000000000000000000000000'}));
   if(suffix==='scene3d/viewer.js'||suffix==='scene3d/transitions.js'){
     let code=await readFile(path.join(world.root,suffix),'utf8');
+    if(suffix.endsWith('transitions.js'))code=code
+      .replace('new URL(config.endpoint)','new URL(config.endpoint,location.origin)')
+      .replace("endpoint.protocol!=='http:'||!['127.0.0.1','localhost'].includes(endpoint.hostname)",'endpoint.origin!==location.origin');
     code=code.replaceAll("'/api/",`'${prefix}/api/`).replaceAll('`/api/',`\`${prefix}/api/`);
     if(suffix.endsWith('viewer.js'))code+='\n'+await readFile(path.join(root,'scene3d-runtime.js'),'utf8');
     return respond(res,200,code,'text/javascript');
@@ -55,7 +90,7 @@ const server=http.createServer(async(req,res)=>{
   return await file(res,world.root,suffix);
  }catch(error){console.error(JSON.stringify({event:'story3d_request_failed',code:error.code??error.name}));if(!res.headersSent)respond(res,503,'Scene resource unavailable','text/plain');else res.destroy();}
 });
-const ready=()=>console.log(`Story 3D integration: http://127.0.0.1:${port}/?scene=3d`);
+const ready=()=>{port=server.address().port;console.log(`Story 3D integration: http://127.0.0.1:${port}/?scene=3d`);};
 if(process.env.PASTPORT_LISTEN_FD)server.listen({fd:Number(process.env.PASTPORT_LISTEN_FD)},ready);
 else server.listen(port,'127.0.0.1',ready);
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>server.close(()=>process.exit(0)));

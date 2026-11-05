@@ -646,6 +646,12 @@ class OrganizerService:
                 ("environment.scene3d", "story", "gameplay", "presentation", "assembly"),
                 ("已登记热点", "共享审核记录", "导航"),
             ),
+            "catalog3d": (
+                ("original_pdf", "scene_splat", "scene_mesh"),
+                ("scene_splat", "scene_mesh"),
+                ("local_scene_import", "catalog_extraction", "catalog_localization", "input_handoff"),
+                ("展签原文", "同一实物的外观证据", "3D候选落点", "交接到故事入口"),
+            ),
             "idml3d": (
                 ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"),
                 ("scene_splat", "scene_mesh"),
@@ -751,6 +757,8 @@ class OrganizerService:
         self, actor: Actor, project_id: str, options: UploadedProductionStart, key: str
     ) -> OrganizerJob:
         material = self.materials(actor, project_id)
+        if material.entry_level == "catalog3d":
+            options = options.model_copy(update={"stop_after": "environment"})
         if not self.uploads_enabled:
             raise ServiceError(
                 "UPLOAD_PRODUCTION_UNAVAILABLE", "原生制作所需的服务器资源尚未配置。", 503
@@ -895,6 +903,9 @@ class OrganizerService:
                         raise ServiceError("ENVIRONMENT_HANDOFF_MISSING", "环境交接文件缺失。", 409)
                     self.store.save("job", job.job_id, job.model_copy(update={
                         "status": "environment_ready", "prepared_source_id": prepared_source,
+                        "mounted_preview_ready": request.entry_level == "catalog3d" and (
+                            native / "scene3d-1/result/scene3d/attachment.json"
+                        ).is_file(),
                         "message": result.message + " 尚未调用Story或组包。",
                         "new_model_calls": self.model_calls(job),
                     }))

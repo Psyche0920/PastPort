@@ -10,20 +10,13 @@
 
 [初始申请书版本（PDF）](references/PastPort_ROOT_CODE_Application.pdf) · [申请书与比赛方向](handoff.md#初始申请书与比赛方向)
 
+[统一在线平台：Claude 执行 PRD](docs/TECHNICAL_PRD.md#shared-online-platform)
+
 ## 团队试玩交付
 
-从[私有 GitHub Release](https://github.com/Psyche0920/PastPort/releases/tag/team-handover-2026-11-03)下载：
-
-| 包 | 内容 |
-| --- | --- |
-| `wcheung.tar.gz` | 四二独立试玩《最后一段录音》，含 3D 场景、调查、线索回看和三个结局。交付记录原名 `42handover`。 |
-| `maslan.tar.gz` | 主试玩《最后两袋》：沿用 `3d-test777` 的3D房间与30条穆拉迪耶资料，研究员复原虚构的1430年代账页案件；五个资料节点、四种调查玩法、三个关键选择、12种结局文本。[下载新版（maslan-demo-2026-11-05-r1）](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)；旧版独立玩家包仍在上方 Release。 |
-
-**Maslan：穆拉迪遗址原始资料。** 文件夹内有原始 IDML、配套 `Links` 文件夹和章节 PDF。 [打开穆拉迪遗址资料文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
-
-解压后进入同名目录，按 `OPEN.txt` 启动，使用支持 WebGL 的浏览器打开其中的本机地址。需要 Node.js。交付包独立于 Organizer 的本机记录。
-
-**工作流程。** Main 和 SDK 的目标是基于素材生成可试玩、可编辑的游戏初版。团队可直接修改并试玩现有游戏包，验收后再将可复用的改进接回 Main 和 SDK。城市地图和面向公众的发布接入仍待建设和验证。详见[团队交接](handoff.md#zh)。
+- [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-04-r4/wcheung.tar.gz)
+- [maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)
+- [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz)
 
 ## 启动与使用
 
@@ -48,9 +41,41 @@ uv run python -m pastport organizer
 
 打开 [Organizer 后台](http://127.0.0.1:18840/organizer/)，使用管理员账号登录。服务在当前终端前台运行，保持终端打开，按 Ctrl+C 停止。端口占用时检查已有服务；也可以用 `uv run python -m pastport organizer --port 18841`，并打开相应端口。
 
+
+### 不同 Wi-Fi：临时共享本机服务
+
+先按上文在自己的终端启动 Organizer，并至少启动过一次玩家平台（建立玩家数据目录）。本机需装好 [cloudflared](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)；macOS 可用 `brew install cloudflared`。然后在仓库根目录另开终端：
+
+```sh
+node frontend/player/remote.mjs --share-organizer
+```
+
+终端打印两个临时 HTTPS 入口：**PLAYER** 发给玩家，**STAFF** 只发给队友，用原 Organizer 账号登录。所有人访问这台主机的同一份历史、发布和玩家数据库；队友不用在自己的电脑重新启动另一套服务或导入已发布的包。原本的本机服务继续运行，远程玩家服务使用本机 18852 端口；占用时加 `--port 18853`，Organizer 改端口时加 `--organizer-port 18841`。只分享玩家平台可去掉 `--share-organizer`。
+
+`ORGANIZER_DATA` 和 `PLAYER_DATA` 如有自定义，运行共享命令时仍须指向原来的数据目录。共享命令要求已有玩家数据库和 Organizer 目录，不自动创建空的替代库。它只启动本命令拥有的远程服务和隧道，Ctrl+C 会关闭这些子进程，不关闭原有本机 Organizer/玩家服务，不删除数据。
+
+每个已发布游戏按需使用独立的临时 HTTPS 隧道，保留原包的绝对资源路径，人物对话、3D、音视频与账号存档消息连接到正确的平台 Origin。游戏与后台账号位于不同 Origin。HTTPS 玩家会话 cookie 启用 Secure；后台入口只转发 `/organizer/`，保留登录/修改来源校验，并禁止远程管理员初始化。**远程私有预览地址尚未适配**；在主机导入后发布，再从 PLAYER 地图打开验证。通过 STAFF 入口上传的游戏包会分块传输，不受隧道单次请求的大小上限影响。
+
+这是临时联调入口：主机需保持联网和唤醒、终端需保持打开；重启共享命令会换地址，但原数据保留。地址不是账号密码保护的替代物，STAFF 不应公开转发。旧 UI Trial 已通过独立的事件日志格式保存到账号，恢复时由原引擎重放校验。正式长期服务、固定域名和完整双设备验收仍按技术 PRD 第14节执行。
+
+若出现域名无法解析，先检查访问设备的网络/DNS，不要用关闭来源校验或修改游戏指向本机来绕过。Quick Tunnels 的临时地址、无可用性保证、200 个在途请求限制及不支持 SSE 见 [Cloudflare 官方说明](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)。
+
+### 共享游戏包：上传、获取、修改、发布
+
+所有成员登录同一个 Organizer（本机或 STAFF 入口），在「制作进度与交付」操作同一份游戏包、版本和发布；列表与玩家地图每 4 秒自动更新，无需重新导入或手动刷新。
+
+1. **上传**：在「共享游戏包」选择 `.tar.gz`，点击「导入交付包」。文件按 16 MB 分块上传（低于隧道的单次请求上限），显示进度、断点重试与成功或失败结果；包内代码不会运行。同名包已存在时，改用该包卡片上的「提交新版」。
+2. **获取**：卡片上的「下载当前版」返回提交时的原文件，可直接重新导入。「查看配套资料」列出包内可编辑文件（如 `authoring/`）；后台没有保存的原始史料、匹配结果会标为“缺失”。
+3. **修改并提交新版**：解包、修改，再以同名文件夹重新打包（`tar -czf maslan.tar.gz maslan`），然后在原卡片点击「提交新版（基于第 N 版）」。无需重跑 main 流程或调用模型。若他人已先提交更新的版本，你的提交会被拒绝且文件不保存，请先下载最新版合并修改。
+4. **版本**：每次提交都是新的不可变版本，旧版保留并可下载；「设为当前版本」用于恢复上一版。
+5. **发布与回退**：在卡片选择站点和版本，点击「发布到玩家地图」。「玩家地图发布」显示各站点当前版本，可「回退到上一次发布」。若期间他人发布了其他版本，本次发布会被拒绝。发布或回退都不会删除玩家存档和奖章。
+6. **玩家**：已开始的一局固定在开局时的版本。地点发布新版后，玩家可选「继续上次进度（旧版）」或「体验新版（另开新存档）」。游戏页显示“正在同步”“已同步到账号”“未同步”或“存档冲突”；只有服务器确认后才显示“已同步”。旧版 UI Trial（`muradiye-ui-trial`）同样保存到账号。
+
+**备份、恢复与数据保护**：`uv run python -m pastport organizer-backup --output var/backups/2026-11-05` 会生成一致的备份，包含两套数据库、游戏包、发布记录和账号文件（含密码哈希，须私下保存）。恢复演练可在另一个端口启动：`uv run python -m pastport organizer --directory var/backups/2026-11-05 --port 18841`，以及 `PLAYER_PORT=18861 PLAYER_DATA=var/backups/2026-11-05/player ORGANIZER_DATA=var/backups/2026-11-05/server/organizer node frontend/player/server.mjs`。持久目录丢失或指向另一份数据时，Organizer 和玩家服务会拒绝启动，不会新建空库替代原数据。
+
 ### Organizer：主办方入口
 
-下载团队交付包，在「制作进度与交付」选择 `.tar.gz` 并点击「导入交付包」，再打开独立玩家预览。新电脑的历史记录从导入开始。
+下载团队交付包，在「制作进度与交付」选择 `.tar.gz` 并点击「导入交付包」，再打开独立玩家预览。新电脑的历史记录从导入开始。已完成且可预览的交付卡片均可选择地图站点发布。
 
 账号、上传、缓存和交付记录保存在当前仓库的 `var/organizer-integration/`。关闭服务后数据仍保留。换电脑时导入团队交付包或上传原始材料。账号配置和数据库包含私有数据，应单独备份。
 
@@ -65,7 +90,7 @@ uv run python -m pastport organizer
 
 1. **准备资料与环境**：选择下表中的材料起点。勾灰框复用整套默认资料和已有环境，零模型、零Marble调用；不勾则使用上传材料执行所选阶段，需要生成3D时单独授权Marble。完整原生3D环境不重复生成。
 2. **资料与审核**：自动承接上一步。使用环境SDK的同一套VR/3D审核界面，核对照片、史料、介绍和审核状态；可在全景与3D中查看。介绍/审核共用，位置和导航各自保存。保存后自动同步当前输入，无需重复选项目或确认传递。
-3. **准备故事**：旧故事先做来源、任务、玩法和空间兼容检查。通过即可复用；仅介绍发生待核对改动时需本人确认；关键依据或任务条件失效不能跳过。保存版本号变化而内容相同，不要求确认。也可明确授权SOL 6.1 Medium生成新故事，失败不自动重试。两种路径都在故事就绪后停下。
+3. **准备故事**：旧故事先做来源、任务、玩法和空间兼容检查。通过即可复用；仅介绍发生待核对改动时需本人确认；关键依据或任务条件失效不能跳过。保存版本号变化而内容相同，不要求确认。也可明确授权SOL 6.1 High生成新故事，失败不自动重试。两种路径都在故事就绪后停下。
 4. **制作游戏**：故事就绪后点击“开始制作”，执行玩法准备、呈现绑定、组包与资源检查；在“制作进度与交付”打开玩家预览。不会再生成环境或故事。
 
 切换界面语言不翻译史料、介绍或故事，不保存表单或调用模型，也不丢弃未保存输入。体验目标时长是Story创作目标，不是制作耗时或精确游玩计时。
@@ -73,6 +98,7 @@ uv run python -m pastport organizer
 | 上传起点 | 环境阶段执行内容 | 已有成果 |
 |---|---|---|
 | 原始PDF + 照片（或ZIP）+ 同场景SPZ + 三角PLY | 本地导入/六向取景 → Evidence → 物件匹配挂载 | 不调用Marble；保留待审核状态与待校准状态 |
+| 双栏展签PDF + 同场景SPZ + 三角PLY | 读取展签编号和左栏实物照片 → 匹配同一件物品 → 3D审核预览与故事输入 | 在 Admin 选“展签 PDF + 已有 SPZ / PLY 场景”，保存后点“准备资料与环境”。环境就绪后可在历史记录打开预览或继续此项目。 |
 | 原始史料PDF + 现场物件照片 + 可选360°导览 | Evidence生成映射 → 环境匹配 → 3D | 缺导览时先保存映射，补导览并查看摘要后继续 |
 | 原始PDF + 映射PDF + 360°导览 | 环境匹配 → 3D | 复用映射PDF |
 | 原始PDF + 原生匹配VR包 | 校验导入 → 3D | 复用VR绑定、审核和导航 |
@@ -117,7 +143,7 @@ PASTPORT_PORT=18839 node var/runtime-layout-20261101/release-run/game-3d/serve3d
 
 Organizer支持单管理员登录、四种材料起点、整套默认复用、审核自动衔接、旧故事兼容检查、新故事生成、真实进度与成品入口。中英文手动切换已验证。缓存到游戏的零模型链路及已有环境的新故事有实际运行记录；逐种新材料完整调用Evidence/Marble的外部生成验收仍未全部完成。
 
-Story新生成采用固定内容计划，由代码编译编号、状态、规则和引用；格式通过不代表故事好玩或历史内容获批。风格转绘SDK存在，但Organizer还没有新转绘操作，只能复用已有结果。User仍是现有游戏前端，本轮没有新增玩家账号或跨设备后台存档。源码是当前基线，既有wheel不自动包含后续源码修复，需要重新构建才能交付更新。
+Story新生成采用固定内容计划，由代码编译编号、状态、规则和引用；格式通过不代表故事好玩或历史内容获批。风格转绘SDK存在，但Organizer还没有新转绘操作，只能复用已有结果。玩家地图现已使用独立账号与 SQLite 存档；共享后端的设备可恢复同账号、站点及发布版本的游戏进度，具体启动及边界见文末。源码是当前基线，既有wheel不自动包含后续源码修复，需要重新构建才能交付更新。
 
 ## 架构与模块
 
@@ -209,6 +235,17 @@ PastPort/
 │   │   ├── <a href="frontend/game/scene3d-view.mjs">scene3d-view.mjs</a>  — 3D 宿主浏览器适配器，将场景交互接入现有剧情界面。
 │   │   ├── <a href="frontend/game/session.mjs">session.mjs</a>  — 管理试玩会话、状态推进及存档恢复。
 │   │   └── <a href="frontend/game/walkmesh.mjs">walkmesh.mjs</a>  — Screen-independent walkability, path finding and character locomotion.
+│   ├── <a href="frontend/player/">player/</a>  — 玩家地图、账号、印章及账号进度同步
+│   │   ├── <a href="frontend/player/app.mjs">app.mjs</a>  — 地图、账户、发布试玩及存档同步界面。
+│   │   ├── <a href="frontend/player/server.mjs">server.mjs</a>  — 玩家 HTTP 服务、SQLite 账号与游戏加载。
+│   │   ├── <a href="frontend/player/cloud-saves.mjs">cloud-saves.mjs</a>  — 按玩家、站点和版本隔离的 SQLite 存档仓储。
+│   │   ├── <a href="frontend/player/save-sync.mjs">save-sync.mjs</a>  — 合并写入、顺序保存、冲突与显式重试。
+│   │   ├── <a href="frontend/player/game-save-bridge.mjs">game-save-bridge.mjs</a>  — 游戏启动前恢复存档并桥接原有保存点。
+│   │   ├── <a href="frontend/player/index.html">index.html</a>  — 玩家平台 HTML 入口。
+│   │   ├── <a href="frontend/player/style.css">style.css</a>  — 玩家地图和护照样式。
+│   │   ├── <a href="frontend/player/sites.json">sites.json</a>  — 与 Organizer 发布选择共享的地图站点目录。
+│   │   ├── <a href="frontend/player/sites.mjs">sites.mjs</a>  — 读取地图站点。
+│   │   └── <a href="frontend/player/illustrations.mjs">illustrations.mjs</a>  — 地图节点与奖章插画。
 │   └── <a href="frontend/organizer/">organizer/</a>  — Organizer制作前端：认证、真实上传、登记材料复用/重新生成、执行进度与交付
 │       ├── <a href="frontend/organizer/index.html">index.html</a>  — 由 main 的 /organizer/ 提供的真实制作页；需 HTTP 服务与登录。
 │       ├── <a href="frontend/organizer/app.mjs">app.mjs</a>  — 按资料与环境→原审核后台→故事→最终玩法与组包编排；分别控制复用/新生成。
@@ -578,6 +615,7 @@ PastPort/
 │   │   ├── <a href="tools/game-package/build-story-package.mjs">build-story-package.mjs</a>  — 独立游戏构建入口：读取故事及绑定计划，检查资源并组装可运行包。
 │   │   ├── <a href="tools/game-package/generated-story.mjs">generated-story.mjs</a>  — 将生成的 Story 输入校验并转换成宿主可用的剧情与任务。
 │   │   ├── <a href="tools/game-package/runtime-assets.mjs">runtime-assets.mjs</a>  — 显式游戏资源清单与发布器：从各模块收集源码，重定位浏览器导入并保持生成包布局。
+│   │   ├── <a href="tools/game-package/player-completion.mjs">player-completion.mjs</a>  — 通用通关回执桥接、已知旧运行时适配与账号缓存隔离。
 │   │   ├── <a href="tools/game-package/serve3d.mjs">serve3d.mjs</a>  — 本地 3D 试玩 HTTP 服务，提供生成包及隔离场景资源。
 │   │   └── <a href="tools/game-package/story-package.mjs">story-package.mjs</a>  — 故事包编译器，校验博物馆快照与契约并生成宿主输入。
 │   ├── <a href="tools/check_contracts.py">check_contracts.py</a>  — Export deterministic schemas or check committed schemas and complete wire samples.
@@ -608,3 +646,31 @@ PastPort/
 Admin制作流程已按用户授权取消累计token用量停机阈值，照片/史料与环境匹配均继续记录真实用量，不再因默认25万或旧100万阈值停止。已授权调用次数、超时、输入与史料校验、未知用量恢复保护仍保留。当前任务恢复采用新输出修订，复用成功回执，保留旧PDF及原始授权记录；独立SDK调用默认仍遵守其显式grant。
 
 [变更记录](CHANGELOG.md)
+
+玩家地图在另一终端从仓库根目录运行 `node frontend/player/server.mjs`（Node.js 22.13+），打开 http://127.0.0.1:18851/ 。默认读取本仓库 Organizer 的数据目录；自定义部署需通过 `ORGANIZER_DATA` 指向相同的 `server/organizer` 目录。所有已完成且能打开独立玩家预览的交付卡片，均可选择站点并「发布到玩家地图」。发布后刷新地图，对应站点点亮；同一站点再次发布会切到新版本，其他站点保持原有版本。玩家登录独立于工作人员登录。通关奖章需要游戏已有结局回执或支持的结局桥接，打开游戏本身不会发章。
+
+
+玩家账号、登录、印章与游戏进度保存在 `frontend/player/.local/players.sqlite`；用 `PLAYER_DATA` 指定固定数据目录，服务重启时继续使用同一路径。备份时应包含 SQLite 的完整一致性备份，不能只复制运行中的主数据库而遗漏 WAL。不要提交数据库或账号文件。
+
+从地图登录后进入游戏，会自动恢复此账号、站点及已发布版本的存档；调查、选择、小游戏和游戏原有保存点会自动同步，返回地图前等待保存完成。状态栏显示保存/失败；失败可重试并下载未同步存档。另一页面或设备已更新时拒绝旧版本覆盖，需要返回地图重新打开；重开游戏会同步清除本版本进度。新发布版本从新存档开始，旧版存档保留，不自动强行迁移。未绑定账号的旧浏览器存档保留在原处，不自动认领。
+
+当前支持已有 `GameSession` 格式的游戏及其续幕存档，仍由同一个游戏引擎校验恢复内容；不兼容的自定义包明确显示仅本机存档。后端接收经过格式校验的客户端快照，并非防作弊的服务端动作裁定。通关印章与进度是独立记录。跨设备必须访问同一后端与同一数据目录；默认 loopback 启动是本机开发模式，并未部署互联网云服务。关闭/刷新时会尝试同步并提示未保存；强制关闭、断网时只有已确认保存的进度保证能从服务器恢复。
+
+
+Organizer 交付导入和地图发布同时支持现有 3D 包及静态二维包。二维包在根目录提供 `index.html` 与 `pastport-player.json`（`format: pastport-static-v1`、`entrypoint: 包内相对 HTML 路径`）；入口必须存在且不能越出包目录。预览沿用可信启动器、独立端口及后台登录校验，不运行导入包里的服务端脚本。`muradiye-ui-trial` 来自 `demo-muradiye-ui-trial` 的原版《最后两袋》，保留二维人物动画、玩法与素材，可在交付卡片选择地图站点发布。该旧版通过独立适配器（`authored-adventure-v1`，按运行时文件摘要识别）保存到玩家账号：保存完整事件流与位置，恢复时仍由原引擎按版本校验并重放，不与 `GameSession` 共用格式；平台已自动适配这份原版的结局显示：实际出现结局后发送当前玩家运行回执，护照发章并计入排行榜；普通阅读不会发章，同一站点重复完成不重复计分。已知旧版按运行时文件摘要识别，不修改原始剧情；新静态游戏通过 `pastport:completed` 事件提供非空 `endingId`。未知运行时不能仅凭“能打开”冒充已通关。本机缓存仍按玩家/站点/发布版本分开。
+
+
+### 游戏包、后台历史与玩家平台如何共享
+
+同一部署中的链路为：**游戏包 → Organizer 导入/生成历史 → 选择站点发布 → 玩家地图打开该发布版本 → 玩家账号保存进度、印章和排名**。Organizer 与玩家平台通过 `ORGANIZER_DATA` 指向同一份 `server/organizer` 数据，读取对应的发布记录与游戏文件；玩家端不需要登录 Organizer，也不需要每人下载、上传或导入游戏包。后台历史仍按工作人员权限和项目归属过滤，公众玩家只能访问已发布内容。
+
+| 场景 | 是否需要单独交付游戏包 |
+|---|---|
+| 同一平台后台已有该包，新增玩家游玩 | 不需要。后台导入一次并发布，玩家统一从地图打开。 |
+| 同一平台更新游戏版本 | 管理员导入或生成新版，再发布到所选站点；玩家进入该站点时读取新发布版本。不同版本存档不强行混用。 |
+| 队友在自己的电脑独立运行 Organizer | 需要从 GitHub Release 下载游戏包并导入；各自的本机历史和数据库不会自动合并。 |
+| 把本机平台迁到新的部署环境 | 将所需游戏包导入新后台，或单独迁移完整持久数据及资产；玩家数据库另行安全备份/迁移。 |
+
+`git push/pull` 只同步源码和说明，不同步游戏文件、Organizer 历史、上传资料、玩家数据库或密码。GitHub Release 用于团队交付与换电脑；同一平台内已导入游戏的玩家访问不依赖反复下载 Release。
+
+共享方式为主机运行 + 临时隧道（见上文“不同 Wi-Fi”），并非固定域名的云部署。`PLAYER_DATA` 持久保存玩家账号、存档及印章，与 Organizer 工作人员账号/制作历史分开。要让多台真实设备共用同一平台，需要完成统一服务部署，并将目前返回的回环游戏地址改为客户端可访问的资源路由；仅复制网页或把 `127.0.0.1` 端口开放出去不会自动实现跨设备访问。当前任务没有执行公开部署。

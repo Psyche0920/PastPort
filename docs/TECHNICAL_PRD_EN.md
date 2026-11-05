@@ -42,7 +42,7 @@ The current experience includes 360° presentation and generated 3D scenes. Regi
 | Gameplay and assembly | Reading, source judgment plus rectangular coverage, presentation bindings, shared assembly and browser execution | Completion, failure/retry and recovery evidence exists; this is not a general minigame library |
 | SDKs/runtime | Five SDKs depend on one shared core; external-checkout installation/integration has been tested | Source continues to change; old wheels do not necessarily include current fixes |
 | Stylization | Independent SDK and reuse of existing results | Organizer has no new-stylization action yet |
-| User/saves | Existing game frontend and browser-local recovery | New player accounts and cross-device backend saves are not implemented |
+| User/saves | Separate map-player accounts, durable SQLite progress and browser cache/recovery | Cross-device use requires the same backend; saves are isolated by account, site and published release |
 
 UI, structure, execution and content quality are separate acceptance layers. Old full-suite counts must not imply those checks were rerun for every update. Current interface evidence is in `var/organizer-integration/interface-language-acceptance.json`; other run records are in the same directory. They do not authorize additional paid calls. Original PDF OCR, source mapping, calibration and evidence-applicability limitations remain in force.
 
@@ -140,7 +140,7 @@ Contract changes need fixed inputs/outputs and compatibility checks. Independent
 | Existing service API | FastAPI, Uvicorn, HTTPX | Retain authentication, requests and lifecycle |
 | Workflow | LangGraph | Stages, conditional routing and checkpoints; nodes are not automatically agents |
 | Persistence | SQLite, SqliteSaver/AsyncSqliteSaver | Current single-machine state, execution and recovery |
-| Story model | Sol 6.1 Medium through the Codex login channel | Shared controlled execution; quota only with explicit generation authorization |
+| Story model | Sol 6.1 High through the Codex login channel | Shared controlled execution; quota only with explicit generation authorization |
 | Gameplay verification/presentation/assembly | Node.js and existing JS modules | Same rules as the browser runtime |
 | Scenes/UI | Existing HTML/CSS/JS and 360°/3D viewers | No new Unity, Unreal or frontend framework |
 | Upstream tools | Poppler; some workflows need ffmpeg and PDF/image libraries | SDK-declared requirements; installation is not generation authorization |
@@ -220,7 +220,7 @@ New photo jobs use a compact policy: two photos per batch, at most 12 new entiti
 
 The upper-right manual Chinese/English selector defaults to Chinese and stores a browser-local preference; it does not follow the browser locale. `frontend/organizer/i18n.mjs` localizes login, production, review wrapper and progress, including existing labels in the shared embedded review UI. It changes text in place without reload, form reconstruction/submission, model/Marble calls or review saves. PDF text, object names, descriptions, story, paths and input values retain their language; uncatalogued diagnostics retain original text. The module is bundled and included in resource fingerprints to avoid stale mixed scripts.
 
-main serves `frontend/organizer/` at `/organizer/`, retaining roles/project scope. The static Sites sketch is not connected to this service. User UI/player databases are unchanged.
+main serves `frontend/organizer/` at `/organizer/`, retaining roles/project scope. The static Sites sketch is not connected to this service. The player map has its own account/save database, separate from Organizer staff and review data.
 
 | Input/path | Execution | Boundary |
 |---|---|---|
@@ -249,9 +249,11 @@ Builds live under a task's `builds/` by input/implementation fingerprint. Code u
 
 The page follows **materials/environment → review → Story → build**, with no duplicate existing-project/regenerate selector:
 
+Direct exhibit PDF matching uses numbered reference photos with boxes in the left column and the observation and usage sections in the right column. Use one unique PP identifier per physical object, grouping its angles in one primary entry. Numbered addenda extend the exhibit text. The environment SDK locates and checks candidate points without historical mapping or Marble. Uncertain objects retain their source entries without an anchor. Environment readiness registers a 3D preview and Story input. Story starts separately at the user's request.
+
 1. **Materials/environment:** a checked grey box reuses registered default materials/environment only, with no model/Marble, Story or assembly. Unchecked executes the selected upload path without fallback to default caches. Raw, mapping and matched-VR starts require Marble for 3D; a complete 3D upload is validated/handed off. External generation still needs explicit authorization and a finite budget.
 2. **Review:** embed the SDK's existing numbered-object UI and retain its layout/actions. Prepared projects/defaults need no reupload; merge entries for the same project. Photos, original text/images, descriptions and separate image/text verdicts use one authority. main proxies reads/saves with authentication; media is allowlisted. Uploaded HTML/scripts do not run. SDK revisions/history and current account identity govern saves. Previous-step outputs become inputs automatically, without reselecting/uploading or another transfer confirmation. Pending/unreviewed status remains intact.
-3. **Story:** use the environment identity returned by preparation. Check the grey box to revalidate that environment's story; leave it unchecked to generate through SOL 6.1 Medium. Never attach the default story to another environment. Disable reuse when no matching story exists. Both paths stop after Story validation; they do not prepare gameplay, presentation or assembly yet.
+3. **Story:** use the environment identity returned by preparation. Check the grey box to revalidate that environment's story; leave it unchecked to generate through SOL 6.1 High. Never attach the default story to another environment. Disable reuse when no matching story exists. Both paths stop after Story validation; they do not prepare gameplay, presentation or assembly yet.
 4. **Build:** enable only after Story readiness. Use step three's checked Story/environment for gameplay, presentation and assembly without regenerating Story or 3D.
 
 Review endpoints under `review/{source_id}` read materials; `objects/{number}` saves review/descriptions; `apply` exports new reviewed environment inputs locally. Embed via `workbench/`, read `workbench/data`, and save through `workbench/save-review` / `save-introduction`. Photos/evidence use strict manifest routes. The iframe runs only trusted installed SDK templates, retains edits, and notifies its parent after successful saves.
@@ -673,7 +675,7 @@ See root [handoff.md](../handoff.md) for finals ownership, playable acceptance a
 | 3D model + PDF | Raw-model import, coordinate/scale checks, object/evidence matching, numbered review, stations/navigation and existing environment contracts. Distinct from mounted native 3D archives. Test actual SpAItial Echo-3 exports before deciding API integration; arbitrary model support is not promised. |
 | Story/gameplay quality · wcheung | Story, Gameplay and related main integration; improve goals, causality, evidence reasoning, minigame relevance and consequences using the same materials; accept through complete play, not schema checks alone. |
 | Integration/delivery: main maintainer | Compatible Organizer API/progress, pinned runtime/SDK combinations, multiple datasets/mobile performance, rebuilt candidate packages and rollback verification. |
-| Later stages | User improvements, player accounts/cross-device saves/analytics, new stylization actions in Organizer. |
+| Later stages | User improvements, public deployment/play analytics, new stylization actions in Organizer. |
 | As needed | Targeted revision, cited/bounded external research, verified plugins and eventual assembler SDK; do not default to more agents or regenerate every resource. |
 
 The Admin production workflow disables cumulative recorded-token stop thresholds under explicit user authorization for both Evidence and environment matching. Actual usage remains recorded. Authorized call counts, timeouts, source validation and unknown-usage recovery checks remain enforced. Continuation creates a new output revision and reuses successful receipts, preserving old PDFs and original grants. Standalone SDK execution still honors its explicit grant by default.
@@ -732,3 +734,225 @@ New compiled plans optionally carry `opening_context`: bilingual title, setting,
 The Gameplay SDK `investigate` command accepts an existing Story bridge, pinned museum, explicit approved investigation blueprint and checked image root; it validates and assembles a new game with its lifecycle/hash receipt. NarrativeDraft inputs pass the canonical schema/compiler before conversion. Search requires explicit same-view bindings. Asset collisions, changed hashes and existing outputs fail. It makes no model calls and does not establish fresh generation, visual acceptance or Organizer import; expanding the base task-intent catalog and fresh-generation acceptance remain separate.
 
 Compiled Story plans additionally accept optional typed `activity_design` for bounded four-pattern interludes. The compiler owns new IDs and serializes versioned preparation metadata; Gameplay consumes it once, preserving legacy drafts and the base task-intent union. The model selects task anchors and registered objects, never graph rules or review authority. Actual image bytes/hashes remain required inputs. Deterministic model-response replay and local real-demo reassembly are distinct from fresh model quality and human visual acceptance.
+
+Player-map publishing authorizes completed deliveries, validates against `frontend/player/sites.json`, and atomically stores one `player-map-<site_id>.json` per site. Version identity includes actual delivery-file hashes. Player launches resolve the requested site's publication; sessions and stamps remain scoped to the player and site. Existing Forty Two publication files remain readable. A game without a recognized ending bridge can still open; completion-stamp compatibility requires separate validation.
+
+
+Player accounts, sessions, stamps and progress persist in `frontend/player/.local/players.sqlite`. Set `PLAYER_DATA` to a stable data directory and reuse it after service restarts. Use a consistent SQLite backup; copying only a live main database without its WAL can lose data. Never commit databases or account files.
+
+Signing in and launching from the map automatically restores this account/site/published-release save. Investigations, choices, minigames and existing game save points sync automatically; returning to the map waits for saving. The status bar reports saving/failure, with retry and unsynced-save export. Stale writes from another page/device are rejected; reopen from the map to load the newer save. Restarting the game synchronizes a reset for this release. Newly published releases start separate saves and retain old ones without forced migration. Unbound old browser saves remain untouched and are not automatically claimed.
+
+Existing `GameSession` snapshots and continuation saves are supported; the same game engine validates recovery. Incompatible custom bundles explicitly report local-only saves. The backend accepts structurally validated client snapshots, rather than providing cheat-resistant server-side action adjudication. Stamps and progress are separate records. Cross-device use requires the same backend/data directory; the default loopback launcher is local development, not an internet cloud deployment. Closing/reloading attempts synchronization and warns about pending writes; after forced closure or disconnection, only acknowledged saves are guaranteed to restore from the server.
+
+
+Organizer delivery import and map publication support both existing 3D bundles and static 2D bundles. A 2D bundle provides root `index.html` and `pastport-player.json` (`format: pastport-static-v1`, `entrypoint: a relative HTML path within the bundle`); the entry must exist and stay within the package. Previews reuse the trusted launcher, separate port and Organizer login gate without executing an imported server script. `muradiye-ui-trial` packages the original The Last Two Sacks from `demo-muradiye-ui-trial`, retaining 2D character animation, gameplay and assets; its delivery card can publish to a selected map site. This legacy version retains its own browser-local saves and does not yet use the new GameSession account-save format. The platform now automatically adapts this pinned legacy runtime: its actual ending display sends the current player-run receipt, awards a passport stamp and updates the leaderboard. Ordinary reading awards nothing; repeating a site does not add another medal. Legacy detection uses runtime-file hashes without changing authored gameplay. New static games emit `pastport:completed` with a nonempty `endingId`; an unknown runtime cannot claim completion merely because it opens. Legacy local saves are now scoped by account/site/release, but remain distinct from cross-device backend saves.
+
+
+### Sharing game bundles, Organizer history and the player platform
+
+Within one deployment the flow is: **game bundle → Organizer import/production history → publish to a chosen site → player map opens that release → player accounts retain progress, stamps and rankings**. Organizer and the player platform share the same `server/organizer` data through `ORGANIZER_DATA`, including publications and their game files. Players do not sign into Organizer or download/upload/import the bundle individually. Staff history remains subject to owner/project authorization; public players access published content only.
+
+| Situation | Is a separate game-bundle handoff needed? |
+|---|---|
+| Another player joins a platform where the bundle is already imported | No. Import once, publish once and let players launch from the map. |
+| A game is updated within the same platform | An administrator imports or generates the new build and publishes it to the chosen site. Subsequent launches use that release without forcing incompatible saves together. |
+| A teammate runs an independent Organizer on their computer | Yes. Download the game from GitHub Releases and import it. Independent local histories/databases do not merge automatically. |
+| Moving the local platform to another deployment | Import the needed bundles or migrate the complete persistent data/assets separately. Back up/migrate the private player database securely. |
+
+`git push/pull` synchronizes source and documentation, not game files, Organizer history, uploaded sources, player databases or passwords. GitHub Releases distribute team deliverables and support moves between computers; players on an existing deployment do not repeatedly download Releases.
+
+The current system is local development, not an already deployed shared cloud backend. `PLAYER_DATA` persists player accounts, saves and stamps separately from Organizer staff accounts/production history. Serving multiple real devices requires a unified deployment and client-reachable game-resource routes instead of the current loopback game URLs. Copying the webpage or exposing a `127.0.0.1` port alone does not provide cross-device access. No public deployment was performed in this task.
+
+
+<a id="shared-online-platform"></a>
+## 14. Shared online platform technical PRD (Claude execution handoff)
+
+Status: implementation specification; shared deployment is not implemented. Owner: wehan. Executor: Claude. Use current main as the baseline. Local validation is not cross-device acceptance. This section defines the target; earlier local/deployment limitations describe current behavior.
+
+### 14.1 Product outcomes and scope
+
+1. A game imported/generated on device A appears, with its history and version, when device B signs into the same central Organizer account. No second import is needed. The same management account shares its history; different staff accounts retain owner/project restrictions.
+2. Publishing a version to a selected site makes it playable for all platform players, without access to the administrator’s computer, individual downloads, or Organizer login.
+3. Each player’s story, observations, choices, minigames and scene state persist centrally. The same player resumes automatically on another device; other players cannot inherit/overwrite it. “Real-time” means automatic checkpoint sync with server acknowledgment, not a guarantee for unacknowledged writes during disconnection/forced shutdown.
+4. Players share a leaderboard ranked by distinct-site medals, with tied ranks and no duplicate medal for repeated completion of one site.
+
+Out of scope: rewriting stories, regenerating recognition/matching/environments, paid model calls, committing private databases, merging identities merely by equal usernames, or public deployment to an unspecified server.
+
+### 14.2 Existing code and gaps
+
+| Location | Existing behavior | Required change |
+|---|---|---|
+| `organizer_cli.py`, `__main__.py` | Portable initialization/start, existing accounts retained | Configured central bind/public addresses, keeping safe local defaults; opening a port alone is insufficient |
+| `organizer_store.py`, `application/organizer.py` | SQLite history and ownership | Central persistent data shared by devices; preserve actor/project/review identities |
+| `organizer_delivery.py`, `organizer_map.py` | Import hashes and per-site publication | Stable release access, atomic switching, rollback and package capability diagnostics |
+| `organizer_previews.py`, `serve3d.mjs` | Private preview and trusted 2D/3D launcher | Remote-reachable resource gateway; keep internal ports/loopback URLs out of client responses |
+| `frontend/player/server.mjs` | Accounts, runs, saves, stamps, rankings | Central data, configurable origins, stable game URLs and session recovery |
+| `cloud-saves.mjs`, `save-sync.mjs`, `game-save-bridge.mjs` | Modern snapshots, revision locks, retry, hydration | Multi-device/offline tests, continuation policy and legacy format adapters |
+| `player-completion.mjs` | Pinned legacy ending bridge and local account namespaces | Backend saves for legacy UI Trial; stamping is not cloud-save acceptance |
+| `frontend/player/app.mjs` | Bilingual map/passport/leaderboard | Remote launch, visible syncing/synced/failed/conflict states, continue/latest choice |
+
+Equal GameSession class names do not imply equal schemas. Modern version-2 snapshots contain identity/sequence/engine/local/notebook/positions/shotState. Legacy UI Trial stores world/chapter versions, chapter ID, started, events and positions, replayed by its original engine. Never bypass validation or force both into one fake format.
+
+### 14.3 Architecture and deployment configuration
+
+Use one central deployment/data authority and multiple browsers. Retain Python Organizer and the Node player service; do not duplicate rules or build a second business platform.
+
+```mermaid
+flowchart LR
+    A[Staff devices A/B] --> P[Central reverse proxy / platform]
+    U[Player devices A/B] --> P
+    P --> O[Organizer auth/history/import/publication]
+    P --> V[Player accounts/saves/passport/leaderboard]
+    O --> S[Persistent game assets and publication directory]
+    V --> S
+    V --> D[Central player database]
+    U --> G[Separate game origin / resource gateway]
+    G --> S
+```
+
+Read and validate configuration centrally at startup. Names below are proposed contracts; adjustments must be documented consistently.
+
+| Configuration | Contract |
+|---|---|
+| `PLATFORM_PUBLIC_ORIGIN` | Browser-reachable platform origin; HTTPS in production, explicit origin allowlist |
+| `GAME_PUBLIC_ORIGIN` | Separate game origin; game scripts cannot access staff sessions or write staff APIs |
+| `BIND_HOST` | Loopback by default; explicitly configure LAN/production, never silently expose publicly |
+| `ORGANIZER_DATA` | Same persistent `server/organizer` directory for Python and player services |
+| `PLAYER_DATA` | Central player data; reuse after restart/container replacement |
+| Trusted proxy settings | Trust only configured proxies/forwarded hosts, never arbitrary Host headers |
+
+Keep single-instance SQLite/WAL on local persistent disk initially. Cross-device use does not require PostgreSQL. Do not simulate multi-instance storage by putting SQLite on a shared network drive. Use separate game/platform origins and host-only session cookies; public routes cannot enumerate staff history or unpublished previews.
+
+Prefer stable game-origin `/games/{release_id}/...` routes. Bind release identity to imported content hashes. Serve only published or privately authorized previews, never a client-supplied filesystem path. Keep transient process ports internal and stable routes valid after restart. Adapt relative/absolute asset URLs, `/world/...`, scene/navigation APIs, modules/workers, audio/video and SPZ/PLY through shared launchers/adapters; do not hardcode sites. A reachable HTML page alone is not remote-resource acceptance.
+
+Claude may deliver LAN two-device validation before production configuration. Without a server/domain, complete code and isolated deployment scripts, leave real addresses as wehan-supplied settings, and do not purchase hosting, expose data or claim deployment.
+
+### 14.4 Identity, history, publication and persistence
+
+- One central staff account configuration preserves actor IDs across devices. Browser sessions differ, ownership does not. Keep owner/project filters.
+- Player data and staff production/review data are separate. Players see published games, not raw uploaded materials, review databases or job directories.
+- Import once centrally; retain idempotency. New bundles create immutable versions rather than overwriting active directories.
+- Publication atomically changes a site pointer. Failure preserves the previous version. Active runs stay pinned; rollback never deletes saves/stamps.
+- Back up consistently and rehearse restoration before migrating local data. Preserve staff/actor/job/project/review identities. Do not replace data with an empty account database or merge independent players by matching usernames.
+
+### 14.5 APIs and game bridge
+
+Retain existing Organizer/player routes and use backward-compatible field migrations. These are target contracts, not claims of current completeness. Python boundaries use typed Contract/Pydantic models.
+
+| API | Target behavior |
+|---|---|
+| `GET /organizer/api/jobs` | Central history authorized for the staff actor |
+| `POST /organizer/api/jobs/import-delivery` | Existing ownership/hash/safe extraction; return release and completion/save capability diagnostics |
+| `POST /organizer/api/jobs/{job_id}/publish-to-map` | Check ownership, entry, assets, site/capabilities; atomically publish |
+| `GET /api/publications` | Public site/version/capability data without server paths |
+| `POST /api/launch` | site_id plus resume_mode continue/latest; derive ownership from login and return stable URL, run, pinned version, save adapter/schema and revision |
+| `POST /api/save` | Expected revision, idempotent operation and snapshot; infer owner/site/version from session/run, never trust player_id supplied by the client |
+| `POST /api/stamp` | Bind player/run/site; reject invalid, foreign or expired runs; repeat receipts remain idempotent |
+| `GET /api/profile`, `GET /api/leaderboard` | Central data; actual persisted medals only |
+
+Save reads may remain in launch responses; do not add synonymous APIs unnecessarily. Validate exact message Origin, current iframe source, run and pinned version. The platform host forwards saves; games never possess staff credentials. Configure the target platform origin and remove production loopback constants. New bundles declare completion/save capabilities; known legacy bundles use adapters. Unknown formats produce diagnostics, not silent loss or fabricated completion.
+
+The first version remains a client completion-receipt system, not cheat-resistant server adjudication. Reject foreign message sources, cross-account runs and duplicate receipts. Trusted action verification is a separate requirement before real prizes/strong competition claims.
+
+### 14.6 Saves and legacy compatibility
+
+1. Scope by player_id, site_id, release_id and adapter/schema version. Database revision differs from game sequence.
+2. Reuse ordered/coalesced writes and retries; approximately 250ms batching is reasonable. Wait for acknowledgment before map return/logout. Preserve bounded snapshot sizes and readable errors.
+3. Display synced only after server acknowledgment. Keep pending data on failure, support explicit retry/export, handle expired sessions visibly. Unacknowledged forced-close data is not guaranteed.
+4. Concurrent devices use expected revisions. Reject stale writes with409; offer export/reload rather than last-writer-wins loss.
+5. Continue defaults to the account’s unfinished pinned release even after a site publishes a newer one. Offer explicit latest/new-release play with a separate save. With no previous progress, launch the current release. If the old release is unavailable, report it rather than silently restarting.
+6. Add a legacy UI Trial adapter preserving full events/positions and original version/replay checks. Do not force modern and legacy formats together, execute unaudited imported scripts on the server, or copy per-site rule implementations.
+7. Never automatically claim unbound old browser saves. Optional one-time import requires account/release selection and preserves originals; it is not a prerequisite for new cross-device saves.
+8. Validate account saving/recovery individually for `wcheung`, `maslan` and `muradiye-ui-trial`. One game or a visible stamp does not prove all-package coverage.
+
+### 14.7 Rankings and accounts
+
+Reuse central player/session/game_save/stamp records. Keep `(player, site)` stamp uniqueness across versions/endings/refreshes. Rank by medal count descending with DENSE_RANK ties; display names/stable IDs only stabilize ordering. Zero-medal players are unranked. Production must not show fictional sample rankings; any demo mode is separately isolated/labeled. Refresh on entering rankings, after a stamp or explicit user refresh; WebSocket is unnecessary initially. Shared deployment never means distributing passwords/session tokens.
+
+### 14.8 Implementation phases and exit criteria
+
+| Phase | Work | Required evidence |
+|---|---|---|
+| P0 Configuration/data baseline | Inspect identities/paths/releases, read-only backup, public-address and persistent-data configuration | Restart retains real accounts/history/player data; no private files in Git |
+| P1 Cross-device transport | Origin configuration, separate game gateway, private preview authorization, proxy/resource routing | Second physical device opens staff and2D/3D games; all resources reachable without production loopback URLs |
+| P2 Central history/publication | Ownership/idempotent import, atomic pointers and immutable versions | A imports→B same staff sees→A publishes→B player opens; failed publication preserves old game |
+| P3 All-package saves | Adapter contract, legacy event saves, conflicts/failures, continue/latest | All three packages save onA and resume onB; other players start independently; stale writes cannot overwrite |
+| P4 Stamps/rankings | Completion receipts, unique medals and actual rankings | Two players finish independently; map/passport/rankings agree; repeats do not add points |
+| P5 Deployment/handoff | LAN/production examples, startup/backup/restore/rollback commands, documentation/regressions | Physical-device evidence; distinguish code/LAN validation from actual public deployment |
+
+Complete reviewable authorized work without repeated approval requests. Record genuine missing server/domain/migration decisions for wehan. Do not call paid models, alter stories, clear history or leave duplicate services. User-operated services remain started in the user’s own terminal.
+
+### 14.9 Mandatory acceptance matrix
+
+Use isolated data and two physical devices/independent browser sessions connected to one central deployment. Same-machine tabs, changed ports or copied localStorage are supplementary evidence, not a substitute.
+
+| ID | Action | Required result |
+|---|---|---|
+| A1 | A imports; B refreshes same staff history | Same job/release appears without another upload |
+| A2 | Anonymous/unauthorized staff history or publication | Reject without private paths/materials |
+| A3 | A publishes; B uses player login only | Published2D/3D game and every required asset open without staff login |
+| A4 | New release while another player is mid-game | Active run stays old; subsequent launch honors explicit continue/latest choice |
+| A5 | Save partial observations/choices/minigame in each package and closeA after acknowledgment | B resumes exact state instead of restarting |
+| A6 | Different player launches the same game | No inherited progress/evidence/stamps |
+| A7 | Two devices write from one revision | One succeeds, stale write409; export/reload is available |
+| A8 | Disconnect/save500/expired session, then recover | Visible pending failure; idempotent retry; no false saved indicator |
+| A9 | Restart service/container and change transient game port | Stable public URL and persistent history/publications/accounts/saves/stamps |
+| A10 | Read/incomplete task/foreign completion message | No automatic stamp; reject foreign account/origin |
+| A11 | Two players independently finish | Separate passport/map stamps; actual shared ranking |
+| A12 | Refresh ending/reopen completed game/finish another release | One medal per player/site |
+| A13 | Failed publication or pointer rollback | Previous game remains reachable; saves/stamps retained |
+| A14 | Unsafe archive/symlink/unpublished or escaping path | Existing extraction and preview authorization checks remain effective |
+| A15 | Missing persistent directory/unwritable database | Explicit startup/write failure, not an empty replacement pretending to migrate successfully |
+| A16 | Restore backup into isolated deployment | Matching account, asset, release and save identities; shareable report excludes secrets |
+
+### 14.10 Claude deliverables
+
+- Implementation, configuration examples and a simple startup entry; no conflicting parallel specification.
+- Update both READMEs/technical PRDs and `handoff.md`, distinguishing development/LAN/production evidence.
+- Run relevant deterministic tests, Ruff, strict mypy, JS syntax, repository/handoff checks and `git diff --check`. Installation resources include new adapters/public frontends and exclude private game/player data.
+- Save input versions, sanitized configuration, resource checks, A1–A16 outcomes, physical-device evidence and remaining gaps under ignored artifacts. Mark unexecuted/failed items honestly, never replace them with simulated acceptance.
+- Separate source commit/push, Release assets and deployment. No database upload/public exposure/cloud purchases without explicit authorization; request only genuinely missing deployment details from wehan.
+
+### 14.11 Temporary sharing from the host computer (this implementation)
+
+This change adds `frontend/player/remote.mjs`, `network.mjs` and `organizer-gateway.mjs`. The existing player server accepts explicit `PLAYER_PUBLIC_ORIGIN` and `PLAYER_GAME_TUNNELS=quick`. The foreground sharing command starts a separate loopback player listener on 18852 with the specified existing persistent directories; Organizer stays in the user's own terminal. Cloudflare tunnels target loopback services, with separate temporary origins for platform, staff and each game. Launch returns HTTPS, writes retain exact Origin checks, public access checks Host, and HTTPS cookies use Secure. Trusted game navigation resources use relative URLs; imported server scripts remain unexecuted.
+
+The staff gateway forwards only the existing authenticated `/organizer/` surface. It strips untrusted forwarding identity headers, sets the explicit Host/HTTPS scheme and denies remote initialization and unrelated APIs. Tunnels use isolated temporary configuration, without account tokens. Startup failure, unexpected exit and Ctrl+C clean up owned tunnels/children while preserving existing services and databases. Distribute the new network module and launchers with source/install resources.
+
+Limits: this covers part of P1, not completion of P0–P5. Remote private previews, permanent game URLs and running-session recovery across restarts remain unimplemented (legacy UI Trial cloud saves and continuing earlier releases: see 14.12). Temporary links change on restart; data stays on the host. Large bundles upload in chunks (14.12). Quick Tunnels depend on device DNS and third-party networking; see README's official testing/development limitations. Neither loopback HTTP regression nor a connected tunnel is full public-game or physical-two-device acceptance. Keep run evidence under ignored artifacts and execute A1–A16 separately.
+
+<a id="shared-package-platform"></a>
+### 14.12 Shared package versions, publish rollback and resume (this implementation, per the acceptance document)
+
+Source: root `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`. Implementation:
+
+- **Package versions** (`src/pastport/adapters/organizer_packages.py`): packages with the same name under one staff account form a version chain. Each submission is a new immutable job that keeps its original `delivery.tar.gz`. The current pointer moves only when `base_job_id` equals the current version; otherwise 409 `DELIVERY_VERSION_CONFLICT` and nothing is stored. Submitting an existing name without a base returns 409 `DELIVERY_NAME_EXISTS`. Restoring uses compare-and-set on `expected_revision`. Imports made before versioning are registered as versions 1…N in time order.
+- **Chunked upload**: `POST /organizer/api/delivery-uploads` → `PUT …/{id}?offset=` (16 MB chunks; a repeated chunk is acknowledged without rewriting, a gap is refused) → `POST …/{id}/import`. A service restart discards incomplete uploads. The single-request import remains and accepts `base_job_id`.
+- **Get**: `GET /organizer/api/jobs/{id}/download` returns the original package, or for older records without one, a re-importable package built from the game files. `GET …/materials` lists available and missing materials; uploaded project files download from `GET /organizer/api/materials/{project}/files/{file_id}`.
+- **Publish**: `publish-to-map` accepts `expected_version` (the site’s live version, or `none` if unpublished) and returns 409 on mismatch. Each publication is appended to `player-map-{site}.history.json` (up to 50 entries) before the pointer switches atomically. `GET /organizer/api/map-publications` returns live publications and history; rollback republishes a version from history.
+- **Players**: `GET /api/launch-options`; `POST /api/launch` accepts `resume_mode` (continue/latest) and an optional `version`, launches only versions published to that site, and returns 410 when an earlier release’s directory is gone. Sessions last 7 days and runs 12 hours. The legacy UI Trial uses the `authored-adventure-v1` format: its save is hydrated before the original modules start, writes sync to the account, and the original engine replays them on restore. The map, passport and leaderboard refresh every 4 seconds, and the leaderboard no longer shows fictional sample rows.
+- **Data protection**: `data-identity.json` / `.pastport-data-id` bind the Organizer and player databases, and startup is refused when a directory is missing or replaced. `organizer-backup` uses SQLite online backup plus file copies; a backup directory starts directly as an isolated restore deployment.
+
+Acceptance (2026-11-05): run on this computer with isolated data on ports 18870/18871. Independent Chrome browser sessions stood in for devices A and B, using the three real packages.
+
+| Item | Result | Evidence summary |
+|---|---|---|
+| Shared history, auto-update | Pass (one computer) | Uploads, new versions and restores appeared in the other session within 0.8–3.3 s |
+| Self-service upload with progress | Pass (one computer) | wcheung 124 MB and maslan 148 MB uploaded in chunks with progress and a success message |
+| Get materials | Pass | Downloads matched the uploaded SHA-256; missing materials are labelled |
+| Modify and share, no regeneration | Pass | Another session submitted muradiye-ui-trial version 2 with zero model calls |
+| Version retention, conflicts | Pass | Stale base refused with 409; both versions kept after restoring version 1 |
+| Self-service publish, propagation | Pass | Three packages published to three sites; an open map updated within 2.7–3.8 s |
+| In-progress protection, continue vs new | Pass | After a new version was published, the running iframe was unchanged and a notice appeared; the place card offers two explicit choices |
+| Failure protection, rollback | Pass | Stale publish refused with 409; after rollback, history had 3 entries and saves remained |
+| Account saves A→B (3 packages) | Pass (one computer) | muradiye (legacy format), maslan and wcheung all showed “account progress restored”; another player started fresh |
+| Concurrent conflict, failed save | Pass | Stale write got 409 and showed “save conflict” with an option to load the newest save; a 500 showed “not synced”, and “synced” appeared only after retry |
+| No stamp on opening, real leaderboard | Pass | No stamp after opening or mid-run; the leaderboard shows no fictional rows |
+| Full-playthrough stamp, two-player ranking, repeat completion | Not tested in browser | API tests pass (unique medal, cross-account refusal); no package was played to completion in the browser |
+| Service restart (A9) | Pass | Packages, versions, publications, players and saves unchanged; resume works after game ports changed |
+| Missing persistent data (A15) | Pass | Organizer and player both refuse to start and create no empty database |
+| Backup and restore (A16) | Pass | The isolated restore matched the original’s packages, publications, players and saves |
+| Two physical devices on different Wi-Fi, tunnel upload and play | Not tested | wehan needs to run section 7 of the document on two devices |
+| Remote audio/video loading item by item | Not tested | Local Chrome loaded 3D, characters and images with no page errors |
+
+Verdict: code and the on-computer items are complete; **the overall shared-platform acceptance is not complete**. Real two-device, different-Wi-Fi, tunnel and full-playthrough stamp checks remain. One known unrelated failure: `tests/test_optional_source_click.mjs` also fails on main before this change.

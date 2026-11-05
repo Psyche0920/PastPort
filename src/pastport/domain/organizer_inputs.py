@@ -20,7 +20,7 @@ UploadRole = Literal[
     "original_idml",
     "historical_links",
 ]
-NativeEntryLevel = Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d"]
+NativeEntryLevel = Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"]
 
 
 class UploadedProductionStart(Contract):

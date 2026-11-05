@@ -102,6 +102,7 @@ def upload(client: TestClient, level: str, roles: tuple[str, ...]) -> None:
         ("3d", ("original_pdf", "mounted_3d")),
         ("raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh")),
         ("idml3d", ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh")),
+        ("catalog3d", ("original_pdf", "scene_splat", "scene_mesh")),
     ],
 )
 def test_all_http_branches_dispatch_exact_input_snapshot(
@@ -115,11 +116,16 @@ def test_all_http_branches_dispatch_exact_input_snapshot(
         response = client.post(url, headers=headers(), json={"authorize_model": True})
         assert response.status_code == 202, response.text
         job = await_job(client, response.json()["job_id"])
-        assert job["status"] == "completed", job
+        assert job["status"] == ("environment_ready" if level == "catalog3d" else "completed"), job
         assert preparation.calls[0].entry_level == level
         assert {asset.role for asset in preparation.calls[0].files} == set(roles)
         assert all(asset.path.name == asset.file_id for asset in preparation.calls[0].files)
-        assert production.calls == [("regenerate", False)]
+        if level == "catalog3d":
+            assert preparation.calls[0].options.stop_after == "environment"
+            assert job["prepared_source_id"]
+            assert not production.calls
+        else:
+            assert production.calls == [("regenerate", False)]
         repeat = client.post(url, headers=headers(), json={"authorize_model": True})
         assert repeat.json()["job_id"] == job["job_id"]
         assert len(preparation.calls) == 1

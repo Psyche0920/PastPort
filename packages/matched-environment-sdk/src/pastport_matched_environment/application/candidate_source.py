@@ -53,12 +53,17 @@ class PDFCandidateSource(CandidateSource):
     filename='source.pdf'
     kind='pdf'
 
+    def __init__(self, upstream: Path, *, content_order: bool = False) -> None:
+        super().__init__(upstream)
+        self.content_order = content_order
+
     @property
     def count(self) -> int:
         with self.path.open('rb') as stream:return len(PdfReader(stream,strict=True).pages)
 
     def text(self, unit: int) -> str:
-        result=subprocess.run(['pdftotext','-f',str(unit),'-l',str(unit),str(self.path),'-'],
+        options = ['-raw'] if self.content_order else []
+        result=subprocess.run(['pdftotext',*options,'-f',str(unit),'-l',str(unit),str(self.path),'-'],
                               check=True,capture_output=True,text=True,timeout=60)
         return result.stdout
 
@@ -94,4 +99,4 @@ class IDMLCandidateSource(CandidateSource):
 
 def candidate_source(upstream: Path) -> CandidateSource:
     if (upstream/'source-units.json').is_file():return IDMLCandidateSource(upstream)
-    return PDFCandidateSource(upstream)
+    return PDFCandidateSource(upstream, content_order=(upstream/'catalog-text-order').is_file())

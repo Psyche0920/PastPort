@@ -7,7 +7,7 @@
 | Inputs | Original PDF/Evidence, reviewed object content, matched space/navigation, gameplay capabilities and brief. |
 | Outputs | Readable script, NarrativeDraft, explicit task gameplay/spatial intents, author report and execution receipts. |
 | Workflow | Lock four input constraints → generate content plan → deterministic graph compilation → typed/source/rule checks; old saved runs retain their pinned contract. |
-| Technology | Shared Python 3.12/FastAPI/LangGraph/SQLite runtime; metered Sol 6.1 Medium transport. |
+| Technology | Shared Python 3.12/FastAPI/LangGraph/SQLite runtime; metered Sol 6.1 High transport. |
 
 Unified architecture and exact current verification scope: [Technical PRD](../../docs/TECHNICAL_PRD.md#sdk-modules). Main reuses the registered upstream outputs and saved Story in its current replay entry; this is not a new recognition/rendering/model run.
 
@@ -29,7 +29,7 @@ copying the runtime or creating another repository.
 Both distributions are local release candidates. Use the matching wheelhouse;
 this does not imply either package has been published to an external registry.
 Python 3.12 and a previously signed-in Codex CLI are required for real generation.
-Sol 6.1 Medium uses account quota; SDK installation and offline validation do not.
+Sol 6.1 High uses account quota; SDK installation and offline validation do not.
 
 ## Reuse after review or spatial edits
 
