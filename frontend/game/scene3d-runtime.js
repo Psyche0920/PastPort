@@ -1,5 +1,6 @@
 // Appended only to the isolated viewer response; never written into the input.
 import {sourceArrival,screenBearing} from '/scene3d-navigation.mjs';
+import {prepareRenderer} from '/scene-preparation.mjs';
 import {NavigationBoundary} from '../navigation_boundary.js?v=plane-3';
 const storyPost=message=>parent.postMessage(message,location.origin);
 let storyRoute=null,storyPaused=false,storyReady=false;
@@ -120,12 +121,12 @@ addEventListener('message',async event=>{
   }
   if(msg?.type==='story3d:prepare'&&typeof msg.request==='string'){
     storySetLocale(msg.locale);const preparation=globalThis.pastportScenePreparation;
-    try{if(!preparation)throw Error('Renderer preparation is unavailable');storyPost({type:'story3d:preparation-progress',request:msg.request,phase:'optimizing'});await preparation.prepare();storyPost({type:'story3d:quality-changed',value:preparation.getQuality()});storyPost({type:'story3d:prepared',request:msg.request});}
+    try{storyPost({type:'story3d:preparation-progress',request:msg.request,phase:msg.buildLod===false?'loading':'optimizing'});const value=await prepareRenderer(preparation,msg.buildLod!==false);if(value)storyPost({type:'story3d:quality-changed',value});storyPost({type:'story3d:prepared',request:msg.request});}
     catch(error){console.error('Scene preparation failed',error);storyPost({type:'story3d:preparation-failed',request:msg.request});}return;
   }
 
   if(msg?.type==='story3d:objective')storySetObjective(msg);
-  if(msg?.type==='story3d:ping'&&storyReady)storyPost({type:'story3d:ready'});
+  if(msg?.type==='story3d:ping'&&storyReady)storySendReady();
   if(msg?.type==='story3d:pause'){storyPaused=msg.paused===true||!storySpawnValid;if(storyPaused)keys.clear();}
   if(msg?.type==='story3d:cancel'){storyRoute=null;keys.clear();}
   if(msg?.type==='story3d:check-access'){
@@ -240,7 +241,7 @@ function storyTick(now){
     }else storyObjectiveHint.textContent=storyObjective.number===null?(storyObjective.mode==='search'?storyObjective.title:storyT('可以繼續調查','Continue investigation')):`${storyObjective.number} · ${storyT('請沿導航前往目標','Follow navigation to the target')}`;
   }
   storyUpdateSharpLabels();
-  if(now-storyLastAudit>200){document.documentElement.dataset.storyPosition=JSON.stringify(camera.position);storyLastAudit=now;}
+  if(now-storyLastAudit>200){document.documentElement.dataset.storyPosition=JSON.stringify(camera.position);camera.getWorldDirection(storyMapDirection);storyPost({type:'story3d:pose',x:camera.position.x,z:camera.position.z,dx:storyMapDirection.x,dz:storyMapDirection.z});storyLastAudit=now;}
   if(performanceDiagnostic)performanceDiagnostic.storyCpuMs=performance.now()-storyCpuStarted;
   storyPosition.copy(camera.position);requestAnimationFrame(storyTick);
 }
@@ -255,4 +256,10 @@ for(const button of document.querySelectorAll('button'))if(['Compare original','
 }
 const storyArrivalDirection=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).applyQuaternion(alignmentQuaternion().clone().invert());
 document.documentElement.dataset.storyArrivalPose=JSON.stringify({yaw:THREE.MathUtils.radToDeg(Math.atan2(storyArrivalDirection.x,-storyArrivalDirection.z)),pitch:THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(storyArrivalDirection.y,-1,1)))});
-storyReady=true;storyPost({type:'story3d:ready'});requestAnimationFrame(storyTick);
+function storySendMap(){
+  const bounds=new THREE.Box3().setFromObject(collider);
+  storyPost({type:'story3d:map',bounds:{minX:bounds.min.x,maxX:bounds.max.x,minZ:bounds.min.z,maxZ:bounds.max.z},objects:markers.map(marker=>{const p=marker.getWorldPosition(new THREE.Vector3());return {number:marker.userData.object.id,x:p.x,z:p.z};})});
+}
+function storySendReady(){storyPost({type:'story3d:ready',qualityControl:typeof globalThis.pastportScenePreparation?.setQuality==='function'});storySendMap();}
+const storyMapDirection=new THREE.Vector3();
+storyReady=true;storySendReady();requestAnimationFrame(storyTick);

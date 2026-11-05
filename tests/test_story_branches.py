@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 from test_story_automation import ROOT, material_fixture
-from test_story_plan import plan_fixture
+from test_story_plan import activity_fixture, opening_fixture, plan_fixture
 
 from pastport.adapters.story_workflow import StoryAutomationWorkflow
 from pastport.application.execution_models import ProviderRequest, ProviderResponse
@@ -105,6 +105,18 @@ def test_exclusive_branches_compile_resume_package_and_play(tmp_path: Path) -> N
     assert revision.package.evidence_package_hash == draft.package.evidence_package_hash
     assert revision.package.routes == draft.package.routes
     assert "Human-edited" in revision.unresolved_items[-1]
+    public = branch_fixture()
+    public["plan"]["opening_context"] = opening_fixture()
+    public_plan = BranchStoryPlanResult.model_validate_json(json.dumps(public)).plan
+    assert public_plan is not None
+    onboarded = StoryPlanCompiler().compile_saved_revision(public_plan, draft)
+    assert onboarded.package.game.rules == revision.package.game.rules
+    assert onboarded.spatial_intents == revision.spatial_intents
+    assert any(
+        entry.key == "presentation.opening_v1"
+        for entry in onboarded.package.game.locales[0].entries
+    )
+
     unregistered = branch_fixture()
     unregistered["plan"]["opening"][0]["claim_ids"] = ["unregistered-claim"]
     changed = BranchStoryPlanResult.model_validate_json(json.dumps(unregistered)).plan
@@ -143,3 +155,12 @@ def test_branch_contract_is_bounded_and_does_not_mutate_v1() -> None:
     data["plan"]["investigations"][0]["variables"] = ["invented"]
     with pytest.raises(ValidationError):
         BranchStoryPlanResult.model_validate_json(json.dumps(data))
+
+
+def test_branch_activity_design_rejects_decision_anchor_but_accepts_exclusive_route() -> None:
+    data = branch_fixture()
+    data["plan"]["activity_design"] = activity_fixture()
+    with pytest.raises(ValidationError, match="non-decision"):
+        BranchStoryPlanResult.model_validate_json(json.dumps(data))
+    data["plan"]["activity_design"]["interludes"][0]["after_task"] = 2
+    assert BranchStoryPlanResult.model_validate_json(json.dumps(data)).plan is not None

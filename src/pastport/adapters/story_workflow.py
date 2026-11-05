@@ -295,6 +295,7 @@ class StoryAutomationWorkflow:
             digest = hashlib.sha256()
             for name in (
                 "domain/story_plan.py",
+                "domain/investigation_plan.py",
                 "application/story_compiler.py",
                 "application/story_plan_schema.py",
                 "application/story_branch_compiler.py",

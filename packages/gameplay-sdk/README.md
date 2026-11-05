@@ -89,3 +89,54 @@ gameplay-sdk/
 The shared JS player host can bind image spot-the-difference, drag timelines, image reconstruction and scene search using `prepareInvestigationBlueprint` from `tools/game-package/investigation-blueprint.mjs`. Supply a prepared runtime-package Story input, the exact museum snapshot, a filled blueprint and a local asset root; retain the returned compiled input and lifecycle/hash receipt for normal assembly. See the repository [Gameplay Preparation Skill](../../skills/gameplay-preparation/SKILL.md) for reusable patterns and a template.
 
 This is an explicit authored preparation path. The typed Python preparation catalog still covers source reading and source-gated coverage; it does not automatically generate or accept these new intent kinds. Unsupported typed requests must remain capability gaps. Image comparison, collection and puzzle completion grant Story progress only through the shared host. Scene-source uncertainty and review authority are unchanged.
+
+The start screen independently enables or disables Auto LOD. A device preference overrides package `startupPreparation` (`lod` or `none`). Off skips optimization but still waits for scene readiness, then presents a spoiler-free `briefing`, character introductions and gameplay. Cast and graphics controls do not depend on LOD. The display-only briefing contains a bilingual title, 1–10 heading/body sections and closing text. A collapsible SVG minimap uses same-origin collider bounds, registered object positions and camera direction, with pose updates at most five times per second. It provides orientation only, grants no observations, collects no clues and claims no metre calibration. It hides during dialogue and modal tasks.
+
+Renderer adapters may implement `prepareWithoutLod()` for explicit original-detail activation, separately from `prepare()` optimization. The saved Spark viewer must disable its mesh and renderer LOD flags on this path; skipping the optimizer alone can leave its default LOD renderer blank. This adapter is renderer-specific and is included with the standalone demo's viewer, not inferred for arbitrary providers.
+
+
+Optional presentation-only `mapSymbols` provide a registered object number, table/chair/board/shelf/laptop/object symbol and bilingual label. The minimap draws a plain schematic, not measured room geometry. Persistent information controls use People, Story background and Case notebook.
+
+Use optional `stationRecords` to explain why a real object matters to an authored task without changing its identity. Each entry has a registered number, localized title/body and optional assets/reference/<filename>.pdf. Keep historical reference claims separate from fictional character documents; station text grants no observations or approvals.
+
+The automatic `present` path now projects compiler-marked `opening_context` into the same briefing, character and station cards used by authored games. It validates bilingual coverage and exact used-object coverage, never derives introductions from hidden character goals, and creates no raw-PDF links. Unmarked legacy drafts retain the previous presentation. This is deterministic saved-content integration; fresh model quality, full four-mechanic typed-intent coverage and renderer-specific LOD remain separate acceptance work.
+
+### Deterministic investigation packaging
+
+After `present` has written a pinned Story input, an approved filled blueprint can be
+validated and packaged through the SDK, without a model call or manual output patching:
+
+```sh
+uv run --no-sync pastport-gameplay investigate \
+  --input /path/to/story-input.json \
+  --museum /path/to/prepared-museum \
+  --blueprint /path/to/investigation-blueprint.json \
+  --activity-assets /path/to/checked-image-root \
+  --output /path/to/new-investigation-game
+node /path/to/new-investigation-game/serve3d.mjs
+```
+
+`--input` accepts either the schema-validated NarrativeDraft bridge from `present` or
+an existing RuntimePackage bridge. It preserves source identities and Story choices,
+inserts the explicitly requested activities only on unambiguous edges, and packages
+only manifest-checked local activity images. Search targets need an explicit common
+prepared view. Images cannot overwrite museum assets; changed hashes and existing
+output directories fail. The new game retains `data/investigation-receipt.json`,
+including upstream/input, blueprint, runtime and asset identities, lifecycle checks
+and zero model-call evidence. Existing games and their saves are not migrated.
+
+This automates approved blueprint validation and assembly, not blueprint authoring,
+image creation, fresh Story generation, human readability acceptance or Organizer
+import. Older schemas/catalogs still report unsupported intents as gaps; the optional
+compiled-plan design path below is separate from the base task-intent catalog.
+
+Compiled Story plans can now include typed `activity_design`. The compiler chooses stable
+interlude IDs and emits a bounded versioned blueprint; `investigate` reads it directly:
+omit `--blueprint` and retain `--activity-assets` only when image files are requested.
+Absent design metadata preserves legacy assembly. Malformed/different bilingual
+metadata, invalid insertion edges, missing images and mismatched explicit overrides
+fail. Preparation consumes the metadata once and retains the emitted blueprint beside
+its receipt; rebuilding the prepared result does not insert the activities twice.
+The original Story input and image files remain the reproducible upstream inputs.
+This supports model-output structure and deterministic replay, not a claim that a
+fresh model has produced a good game. The base `gameplay_intents` catalog is unchanged.

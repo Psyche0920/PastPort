@@ -3,7 +3,12 @@
 import argparse
 from pathlib import Path
 
-from pastport_gameplay.client import GameplayClient, PreparationRequest, PresentationRequest
+from pastport_gameplay.client import (
+    GameplayClient,
+    InvestigationRequest,
+    PreparationRequest,
+    PresentationRequest,
+)
 
 
 def main() -> None:
@@ -17,6 +22,12 @@ def main() -> None:
     present.add_argument("--preparation", type=Path, required=True)
     present.add_argument("--museum", type=Path, required=True)
     present.add_argument("--output", type=Path, required=True)
+    investigate = commands.add_parser("investigate")
+    investigate.add_argument("--input", type=Path, required=True)
+    investigate.add_argument("--museum", type=Path, required=True)
+    investigate.add_argument("--blueprint", type=Path)
+    investigate.add_argument("--activity-assets", type=Path)
+    investigate.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     client = GameplayClient()
     if args.command == "prepare":
@@ -24,6 +35,14 @@ def main() -> None:
             story_run=args.story_run, output_directory=args.output,
         ))
         print(result.plan_file)
+    elif args.command == "investigate":
+        investigation = client.investigate(InvestigationRequest(
+            story_input=args.input, museum_directory=args.museum,
+            blueprint_file=args.blueprint, asset_directory=args.activity_assets,
+            output_directory=args.output,
+        ))
+        print(investigation.game_directory)
+        print(investigation.receipt_file)
     else:
         presentation = client.present(PresentationRequest(
             story_run=args.story_run, preparation_directory=args.preparation,

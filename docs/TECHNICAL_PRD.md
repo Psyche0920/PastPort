@@ -408,7 +408,6 @@ Story 提出任务规则；玩法准备把同一规则转换为可运行参数�
 
 **可选玩家场景准备**
 
-`startupPreparation=lod` 是显式选择的玩家呈现配置，不改变剧情或既有存档身份。玩家点击开始后才载入场景；同源、当前 iframe 和请求编号绑定的准备协议确认渲染器完成后，才展示人物关系及进入故事。进度通知不是成功，逾时或失败必须保留进度并显示显式重试，不自动降级放行。当前学校副本使用保存 Spark renderer 的 LOD adapter；其他 renderer 未实现 adapter 时明确失败，不声称通用支持。玩家只见低／标准画质切换，切换不重新载入或重建已准备 LOD；诊断面板不作为玩家入口。语言同步至场景提示，单场景不显示多余切换入口。上一句只回看本段文本，不撤销选择或状态；第一句不显示回看按钮。
 
 - **输入**：原始 PDF/Evidence、审核物件内容、匹配空间及导航、玩法能力目录、创作要求、范围与预算。
 - **输出**：简短可读稿、`NarrativeDraft`、逐任务玩法/空间意图、作者报告、锁、校验结果、模型和用量回执。
@@ -725,6 +724,19 @@ IDML先本地读取原文、文本框前后连接、版面页和图片链接，�
 场景搜索的完成依据来自 host 已记录观察，玩家端必须先实际点选场景物件；清单和资料册不能代收集。三种桌面活动用 DOM/SVG 和拖放／先选再放两套输入；有支持 hook 的 renderer 在居中活动打开时暂停背景绘制，关闭后恢复且不重建LOD，搜索时不暂停。功能测试、图片可读性、空间核验和实机FPS分别记录。
 
 可复用规则和模板位于 Gameplay Preparation Skill 的 investigation-patterns reference / investigation-blueprint.template.json；Narrative Skill 负责指定推理问题、前提与后果。此 blueprint 路径并未扩大 Python typed Narrative/Gameplay catalog 的 source-reading/coverage intent union，不能因此宣称已跑过新 Story Agent 全链生成。
+
+玩家開始畫面可獨立開關自動 LOD，裝置偏好優先於包內 `startupPreparation`（`lod` 或 `none`）。關閉只跳過最佳化，仍等待場景就緒，依次閱讀不劇透的 `briefing`、人物介紹，再進入遊戲；人物與畫質控制不依賴 LOD。`briefing` 包含雙語標題、1–10 組標題／內文及結語，僅屬呈現資料。小地圖採用同源場景的碰撞範圍、已登記物件位置與相機方向，以 SVG 每秒最多更新五次；只作方向示意，不授予觀察、不代收線索、不聲稱公尺校準。可收起，對話或模態任務期間隱藏。
+
+
+小地圖採用簡單房間平面示意及資料驅動 `mapSymbols`（已登記物件編號、符號與雙語名稱），不顯示掃描截面、視線扇形或移動軌跡。圖形僅屬示意，非量度平面圖；不改動空間審核。頂部並排提供人物關係、故事背景、調查筆記。
+
+可選 `stationRecords` 將已登記實物編號連到本次遊戲工作站名稱、雙語用途及本機參考PDF；僅屬呈現，不改動來源、claim或空間審核。原始資料與虛構工作站內容分開顯示。參考PDF只允許 assets/reference/ 下的固定本機檔名，不接受外部或跳出目錄路徑。
+
+新的 compiled plan 可選 `opening_context`，包含雙語標題、時地、開場狀況、玩家立場、中央問題、已知人物介紹及每個已用 asset 的用途。Python 校驗與已選任務物件完全對應，compiler 寫入帶 opening-context/1 標記的 presentation locale keys，保持 NarrativeDraft／引擎 wire 結構不變。自動 present 投影為 briefing、人物及工作站卡，缺翻譯／物件不符明確失敗，不從隱藏角色目標生成介紹，不自動加入原始PDF下載。舊稿無標記時保留原行為。零模型契約復跑與新模型內容品質分開驗收。
+
+Gameplay SDK 新增 `investigate`：消费既有 Story 桥接输入、固定 museum、明确批准的四类调查 blueprint 与图片根目录，完成验证、独立游戏组包及生命周期/hash receipt。NarrativeDraft 先经标准 schema/compiler 验证再转换；场景搜索要求明确的同视图绑定。图片冲突、hash 变化或输出已存在均失败。此命令不调用模型，不代表新生成质量、视觉验收或 Organizer 导入完成；基础 task-intent catalog 扩展与新模型生成验收仍属后续工作。
+
+Compiled Story plan 新增可选 typed `activity_design`，表达四类有界玩法插段。Compiler 负责新 ID 并输出版本化 preparation metadata；Gameplay 消费一次，旧稿与基础 task-intent union 保持兼容。模型选择任务锚点与登记物件，不编写图规则或授予审核权限；图片实际文件和 hash 仍须提供。保存的模型响应复跑、本机真实 demo 重组，均不等于新模型生成质量或人工视觉验收。
 
 玩家地图发布使用已完成交付的授权检查、站点目录 `frontend/player/sites.json` 和按站点原子保存的 `player-map-<site_id>.json`。发布身份包含实际交付文件摘要。玩家端按请求的站点加载已发布版本；登录、运行回执和印章按玩家与站点隔离。既有四二发布文件继续可读。新游戏缺少已知结局桥接时仍可打开；通关发章兼容性另行验证。
 

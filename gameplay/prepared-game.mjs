@@ -1,3 +1,4 @@
+import {storyPresentation} from './story-presentation.mjs';
 import {contentHash} from '../src/pastport/player/validation.mjs';
 import {museumSnapshotHash,StoryPackageError} from './contracts.mjs';
 import {Activity} from './plugins/plugins.mjs';
@@ -68,5 +69,5 @@ export async function preparedStoryInput(draft,plan,environment,museum,pluginCod
   const locales=draft.package.game.locales;
   const firstCopy=locale=>locales.find(table=>table.locale===locale).entries.find(entry=>entry.key===scenes[0].body_key).text;
   const narrativeHash=await contentHash(draft.package);
-  return {schema_version:'story-3d-input-0.1.0',story:{kind:'narrative-draft',payload:draft,package_id:`prepared-story-${narrativeHash.slice(0,16)}`,authoring_mode:'internal_preview'},museum:{tour_id:museum.tourId,snapshot_sha256:await museumSnapshotHash(museum)},tasks,presentation:{title:{zh:'遗址故事 · 玩法试玩',en:'Heritage Story · Gameplay Trial'},intro:{zh:firstCopy('zh'),en:firstCopy('en')}}};
+  return {schema_version:'story-3d-input-0.1.0',story:{kind:'narrative-draft',payload:draft,package_id:`prepared-story-${narrativeHash.slice(0,16)}`,authoring_mode:'internal_preview'},museum:{tour_id:museum.tourId,snapshot_sha256:await museumSnapshotHash(museum)},tasks,presentation:storyPresentation(draft,tasks,{title:{zh:'遗址故事 · 玩法试玩',en:'Heritage Story · Gameplay Trial'},intro:{zh:firstCopy('zh'),en:firstCopy('en')}})};
 }

@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 
 const frontend = ['index.html','app.mjs','app.css','dialogue.mjs','session.mjs',
   'investigation-view.mjs','slice-continuation.mjs','navigation.mjs','walkmesh.mjs','interaction.mjs','cinematic-view.mjs',
-  'scene3d-view.mjs','scene-preparation.mjs','scene3d-runtime.js','scene3d-navigation.mjs','scene3d-bridge.mjs'];
+  'scene3d-view.mjs','scene-preparation.mjs','startup-options.mjs','room-minimap.mjs','scene3d-runtime.js','scene3d-navigation.mjs','scene3d-bridge.mjs'];
 const plugins = ['plugins.mjs','investigation.mjs','coverage.mjs','gameplay-catalog.mjs'];
 const engine = ['actions.mjs','context.mjs','errors.mjs','generated-schemas.mjs',
   'rules.mjs','runtime.mjs','validation.mjs'];
@@ -14,6 +14,7 @@ export const runtimeAssets = Object.freeze([
   ...frontend.map(name => ({source:`frontend/game/${name}`,destination:name})),
   ...plugins.map(name => ({source:`gameplay/plugins/${name}`,destination:name})),
   {source:'gameplay/gameplay.mjs',destination:'gameplay.mjs'},
+  {source:'gameplay/story-presentation.mjs',destination:'story-presentation.mjs'},
   {source:'tools/game-package/serve3d.mjs',destination:'serve3d.mjs'},
   {source:'tools/game-package/player-completion.mjs',destination:'player-completion.mjs'},
   ...engine.map(name => ({source:`src/pastport/player/${name}`,destination:`engine/${name}`})),

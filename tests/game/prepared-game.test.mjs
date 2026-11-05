@@ -1,3 +1,4 @@
+import {storyPresentation} from '../../gameplay/story-presentation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {contentHash} from '../../src/pastport/player/validation.mjs';
@@ -72,4 +73,32 @@ test('rejects a missing navigation edge on an alternative route',async()=>{
   f.environment.metric_spatial.worlds[0].navigation.pop();
   f.museum.spatialContext.worlds=structuredClone(f.environment.metric_spatial.worlds);
   await assert.rejects(()=>preparedStoryInput(f.draft,f.plan,f.environment,f.museum,'code','wire-hash'),/registered transition/);
+});
+
+async function addOpening(f){
+ const game=f.draft.package.game;game.protagonist='hero';game.characters=[{character_id:'hero',name_key:'hero.name',goal_key:'hidden.goal'}];
+ const copy={'presentation.opening_v1':{zh:'opening-context/1',en:'opening-context/1'},'hero.name':{zh:'你',en:'You'},'hidden.goal':{zh:'不可透露的结局',en:'SECRET ENDING'},'presentation.title':{zh:'核对标签',en:'Check the label'},'presentation.setting':{zh:'今晚，厨房',en:'Tonight, the kitchen'},'presentation.situation':{zh:'标签待核对',en:'The label needs checking'},'presentation.player_role':{zh:'你是讲解员',en:'You are the guide'},'presentation.question':{zh:'窗口说明是否准确？',en:'Is the hatch label accurate?'},'presentation.person.1.name':{zh:'叶晴',en:'Emma Reed'},'presentation.person.1.introduction':{zh:'来源研究员',en:'Source researcher'},'presentation.station.object-1.title':{zh:'核对位置',en:'Review station'},'presentation.station.object-1.purpose':{zh:'比较标签与来源',en:'Compare label and source'}};
+ for(const table of game.locales)for(const[key,text]of Object.entries(copy))table.entries.push({key,text:text[table.locale]});
+ f.plan.story_draft_sha256=await contentHash(f.draft);f.plan.narrative_ref.sha256=await contentHash(f.draft.package);
+}
+test('automatic presentation carries opening and station purposes without private goals or raw PDF links',async()=>{
+ const f=await fixture();await addOpening(f);
+ const input=await preparedStoryInput(f.draft,f.plan,f.environment,f.museum,'code','wire-hash');
+ assert.equal(input.presentation.title.en,'Check the label');assert.equal(input.presentation.briefing.sections.length,4);
+ assert.equal(input.presentation.characterProfiles.length,2);assert.equal(input.presentation.speakerNames['presentation-person-1'].en,'Emma Reed');
+ assert.deepEqual(input.presentation.stationRecords,[{number:1,title:{zh:'核对位置',en:'Review station'},body:{zh:'比较标签与来源',en:'Compare label and source'}}]);
+ assert.ok(!JSON.stringify(input.presentation).includes('SECRET ENDING'));assert.equal(input.presentation.startupPreparation,'none');
+});
+test('partial translations and unknown station selections block automatic opening instead of dropping it',async()=>{
+ for(const variant of ['translation','station']){const f=await fixture();await addOpening(f);const table=f.draft.package.game.locales.find(t=>t.locale==='en');
+ if(variant==='translation')table.entries=table.entries.filter(e=>e.key!=='presentation.question');
+ else for(const entry of table.entries)entry.key=entry.key.replace('station.object-1','station.object-99');
+ f.plan.story_draft_sha256=await contentHash(f.draft);f.plan.narrative_ref.sha256=await contentHash(f.draft.package);
+ await assert.rejects(()=>preparedStoryInput(f.draft,f.plan,f.environment,f.museum,'code','wire-hash'),/STORY_OPENING_INVALID/);
+ }
+});
+
+test('legacy locale names without the compiler marker are not reinterpreted as opening metadata',()=>{
+ const fallback={title:{zh:'旧稿',en:'Legacy'}};
+ assert.equal(storyPresentation({package:{game:{locales:[{locale:'en',entries:[{key:'presentation.title',text:'Legacy custom title'}]}]}}},[],fallback),fallback);
 });

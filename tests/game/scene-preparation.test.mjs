@@ -1,7 +1,7 @@
 import {formatCaseFile} from '../../frontend/game/dialogue.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ScenePreparation} from '../../frontend/game/scene-preparation.mjs';
+import {ScenePreparation,prepareRenderer} from '../../frontend/game/scene-preparation.mjs';
 import {DialoguePlayer} from '../../frontend/game/dialogue.mjs';
 
 test('preparation is user-started, single-flight and nonce-bound; progress is not success',async()=>{
@@ -48,3 +48,15 @@ test('case-file formatting separates notices and limitations without changing di
  assert.ok(value.startsWith('舊通知 A\n\n'));assert.ok(value.includes('\n\n通知 B\n'));assert.ok(value.includes('問題甲？'));assert.ok(value.includes('聲明冇列出兩種題目。'));assert.ok(!value.includes('遊戲虛構'));
  assert.ok(formatCaseFile('[Fictional notice A] Question one. [Notice B] Question two.').includes('\n\nNotice B\n'));
 });
+
+ test('LOD off waits for scene readiness but never invokes optimizer; quality stays independent',async()=>{
+  let calls=0,originalCalls=0;const renderer={prepare:async()=>{calls++;},prepareWithoutLod:async()=>{originalCalls++;},getQuality:()=> 'standard'};
+  assert.equal(await prepareRenderer(renderer,false),'standard');assert.equal(calls,0);assert.equal(originalCalls,1);
+  assert.equal(await prepareRenderer(renderer,true),'standard');assert.equal(calls,1);
+  assert.equal(await prepareRenderer(undefined,false),null);
+  await assert.rejects(prepareRenderer(undefined,true),/unavailable/);
+  const gate=new ScenePreparation({id:()=> 'off'});let sent;
+  const waiting=gate.start(message=>{sent=message;},{buildLod:false});
+  assert.equal(sent.buildLod,false);assert.equal(gate.phase,'preparing');
+  gate.accept({type:'story3d:prepared',request:'off'});await waiting;
+ });

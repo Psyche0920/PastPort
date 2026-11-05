@@ -2,7 +2,7 @@
 name: gameplay-preparation
 description: Map approved story tasks to compatible gameplay plugins, request bounded implementation for genuine mechanic gaps, and bind validated plugin configurations to tasks. Does not write story content, presentation code or game-host rules.
 metadata:
-  version: "0.1.3"
+  version: "0.1.5"
   owner: maslan
 ---
 
@@ -51,4 +51,4 @@ ordered route edges for task continuity; absent edges are unresolved, not implic
 
 ## Reusable investigation patterns
 
-For requested **image** spot-the-difference, drag timelines, scene-object search or image/screenshot reconstruction, read [investigation-patterns.md](references/investigation-patterns.md) and use [the blueprint template](assets/investigation-blueprint.template.json). Choose patterns for their inference and consequence, not as mandatory filler. The registered JS host and deterministic blueprint binder support these activities; the typed Narrative/Gameplay catalog boundary remains as stated in that reference. Keep image comparison distinct from text questions and image fragments distinct from sentence sorting.
+For requested **image** spot-the-difference, drag timelines, scene-object search or image/screenshot reconstruction, read [investigation-patterns.md](references/investigation-patterns.md) and use [the blueprint template](assets/investigation-blueprint.template.json). Choose patterns for their inference and consequence, not as mandatory filler. The registered JS host and deterministic blueprint binder support these activities; compiled Story plans may provide `activity_design`, while the base Narrative/Gameplay intent catalog boundary remains as stated in that reference. Keep image comparison distinct from text questions and image fragments distinct from sentence sorting.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-05 — wcheung release candidate
+
+- Merge main `5805a76` into the wcheung working branch and rebuild the standalone disappearance-story demo with the shared completion bridge.
+- Carry typed opening context and four investigation designs from Story preparation metadata into zero-model game assembly: picture comparison, timeline, scene search and chat-image puzzle.
+- Candidate package: `wcheung-demo-2026-11-05-r1/wcheung.tar.gz`; original PDF, accounts, databases, grants and model traces are excluded.
+- Deterministic three-route/four-ending traversal and Node 22 game/platform checks pass. Fresh model-generation quality testing is paused; this saved-content replay does not establish new model quality or device FPS.
+
+
 ## 2026-11-05
 
 - Shared game-package platform (per `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`). Organizer packages are now immutable versions with a current pointer. Uploads go in resumable 16 MB chunks with progress; the original archive is downloadable, and a materials list marks what is missing. A new version must name the current version as its base (stale bases are refused with 409), and earlier versions can be restored. Map publication records history, refuses a stale expected version and supports rollback. Organizer lists and the player map refresh every 4 seconds.

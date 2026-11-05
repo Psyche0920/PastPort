@@ -141,3 +141,11 @@ Following user-reported acceptance, the saved story and explicit blueprint were 
 共享游戏包平台 / Shared package platform（2026-11-05，按 `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`）：同一 Organizer 中的游戏包可分块上传、下载原包、提交新版（基于当前版本，过期基线返回409）、恢复旧版，并发布或回退站点版本；后台列表和玩家地图每4秒自动刷新。玩家可继续旧版进度或另开新版存档；旧版 UI Trial 已接入账号存档。持久目录丢失时服务拒绝启动，`organizer-backup` 生成一致备份。用法见 [README](README.md#共享游戏包上传获取修改发布)，验收状态见 [技术 PRD §14.12](docs/TECHNICAL_PRD.md#shared-package-platform)。真实双设备、不同 Wi-Fi 及隧道远程验收仍需 wehan 用两台设备执行。Packages in one Organizer support chunked upload, original download, based-on-current new versions (stale bases get 409), restore, and per-site publish/rollback; staff lists and the player map refresh every 4 s. Players continue an earlier release or start a separate new-release save; the legacy UI Trial saves to accounts. Missing persistent data stops startup; `organizer-backup` writes a consistent backup. Real two-device, different-Wi-Fi and tunnel acceptance remains for wehan to run.
 
 Temporary remote sharing: use the foreground remote.mjs entry in the host terminal; see [Chinese README](README.md) / [English README](README_EN.md). Existing data and authentication are retained with separate temporary origins. This does not provide permanent hosting, remote private previews, legacy UI Trial cloud saves or full physical-device acceptance.
+
+## wcheung 2026-11-05 candidate / 候選交付
+
+`wcheung-demo-2026-11-05-r1` packages the disappearance-story demo after merging main `5805a76`. Download `wcheung.tar.gz` from the linked release in either README; extract and run `node serve3d.mjs` inside `wcheung`, or import the archive in Organizer. This is a candidate prerelease, preserving older stable deliveries.
+
+本版包括失聯故事、三條調查支線、四個結局與圖片找不同／時間線／場景搜尋／聊天截圖拼圖。可重用的 Story opening/activity design 與零模型組包已回到 SDK；已驗收 demo 原檔保留。模型新故事質素測試暫停，兩次未確認用量仍保留，未宣稱新模型故事或新裝置 FPS 驗收通過。原始 PDF 不提供玩家下載。
+
+Reusable preparation/compiler/plugin code belongs in Git. The generated game, images and scene assets belong in the release archive. `.runtime/`, `.agents/`, credentials, account stores and provider traces are not source or release inputs. The release includes saved-content automated verification; human acceptance of the revised story and performance on other devices remains separate.
