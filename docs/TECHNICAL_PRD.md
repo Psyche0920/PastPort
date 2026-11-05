@@ -48,11 +48,11 @@ PastPort 把真实遗址材料、物件及空间转换为可浏览、可阅读�
 
 ### 1.2 当前目录与入口
 
-便携启动入口为 `uv run python -m pastport organizer-init`（首次配置）和 `uv run python -m pastport organizer`（前台运行）。默认数据目录相对于仓库根目录为 `var/organizer-integration`；支持 `--directory`、`--port`、`--player-assets`，已有账号和历史保留。新电脑通过导入交付包建立历史，原始材料与模型授权单独准备。
+便携启动使用 `uv run python -m pastport organizer-init` 初始化本机账号，`uv run python -m pastport organizer` 在当前终端运行。默认私有目录为仓库下的 `var/organizer-integration`；支持 `--directory`、`--port`、`--player-assets`。已有账号保留；新电脑导入交付包建立历史。Windows 使用 WSL2。
 
 | 项目 | 当前位置 |
 |---|---|
-| 应用源码 | `/Users/hanweijia/PastPort`，本地main |
+| 应用源码 | 任意位置的 PastPort clone，本地main；命令均在仓库根目录运行 |
 | Organizer入口 | `http://127.0.0.1:18840/organizer/` |
 | 默认资料与账户配置 | `var/organizer-integration/catalog.json`、`staff-accounts.json`；均为私有配置 |
 | Organizer记录库 | `var/organizer-integration/server/organizer/organizer.sqlite3` |
@@ -547,7 +547,6 @@ Story 不读取整个模型重新做识别，不重复确认所有已挂载物�
 ### 10.2 本地工作区
 
 ```sh
-cd /Users/hanweijia/PastPort
 uv sync --extra authoring --extra game-making
 .venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
@@ -568,22 +567,20 @@ python3.12 -m venv .venv
 
 ### 10.4 Organizer服务
 
-当前本机配置的可执行启动命令如下；依赖安装见10.2，已有服务时直接打开入口，不重复启动：
+依赖安装见10.2；已有服务时直接打开入口，不重复启动。每台电脑首次使用先运行 `organizer-init`：它在已被 Git 忽略的 `var/organizer-integration/staff-accounts.json` 创建唯一管理员（账号固定 `admin`，与登录页一致；权限 editor/evidence/narrative/publisher/operator；目录0700、文件0600；只存密码哈希），密码在终端输入两次且不显示，至少12个字符；文件已存在时拒绝覆盖。账户文件缺失时，启动错误会指出该文件和 `organizer-init`。
 
 ```sh
-cd /Users/hanweijia/PastPort
-.venv/bin/python -m pastport \
-  --accounts var/organizer-integration/staff-accounts.json \
-  --data-directory var/organizer-integration/server \
-  --organizer-catalog var/organizer-integration/catalog.json \
-  --organizer-player-assets "/Users/hanweijia/Documents/ChatGPT/PastPort/work/main-integration/var/sdk-real-material-20261031-01/story-authoring/game-3d-open-roof-v3/assets" \
-  --evidence-mode disabled --narrative-mode disabled --resources-mode disabled \
-  --port 18840
+.venv/bin/python -m pastport organizer-init   # once per computer
+.venv/bin/python -m pastport organizer          # start
 ```
 
-打开 `http://127.0.0.1:18840/organizer/`，使用已有单管理员账号密码。当前配置已完成首次设置；命令不初始化或重置密码。重启会使内存会话失效，需要重新登录。维护者配置账户，主办方不填写Bearer令牌或运行终端初始化步骤。CLI只监听回环地址、单worker；不把此命令当公网部署方案。
+`organizer` 等同于 `--accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server`、三个 `--*-mode disabled` 与 `--port 18840`；其后追加的参数会覆盖这些默认值。
 
-这里关闭旧editorial演示通道，Organizer仍通过自己的受控SDK制作链执行。播放器assets路径来自本机已登记的私有环境材料，不是源码目录；换机器时必须准备相应文件并更新配置。源码仓库和当前生成文件不是一套可无条件分发的数据集。账户、凭据不进入网页静态资源、游戏包或Git。
+仅在存有团队私有默认材料的电脑上追加 `--organizer-catalog var/organizer-integration/catalog.json` 与 `--organizer-player-assets <本机播放器资源目录>`；不追加时 Organizer 照常运行并可导入团队交付包。
+
+打开 `http://127.0.0.1:18840/organizer/`，用 `admin` 和本机密码登录。启动命令不初始化或重置密码；改密码用 `account-password`。重启会使内存会话失效，需要重新登录。主办方不填写Bearer令牌。CLI只监听回环地址、单worker；不把此命令当公网部署方案。
+
+这里关闭旧editorial演示通道，Organizer仍通过自己的受控SDK制作链执行。默认材料与播放器assets是私有环境材料，不是源码目录，只在需要它们的电脑上单独准备。源码仓库和当前生成文件不是一套可无条件分发的数据集。账户、凭据不进入网页静态资源、游戏包或Git。
 
 ### 10.5 独立游戏预览
 
@@ -723,7 +720,7 @@ IDML先本地读取原文、文本框前后连接、版面页和图片链接，�
 
 案件文件使用独立纸张呈现及分行，人物对话保留底部展示，收起操作固定右上。完成试玩段落的续接必须验证精确旧包/旧存档、旧场景/规则/玩法/文本和来源身份，再通过单一共用引擎重播已有行为；禁止直接注入完成状态或迁移未完成任务。未完成旧局保留原包继续，完成后才解锁下一幕；新旧存档键独立保留。此人工 runtime-package 扩展不扩大自动 compiled_branch_v1 的生成边界。
 
-玩家 JS host 另注册 `spot-difference`、`timeline`、`image-puzzle`、`scene-search` 四种有界活动。`tools/game-package/investigation-blueprint.mjs` 对已准备 runtime-package/museum 和本机 assetRoot 应用显式 blueprint：核对素材 bytes/hash/预算、双语配置、确定性解、保存/退出生命周期、已有物件和同一视点，再用 StoryPackageCompiler 封装。它只在无歧义的非决策边插入任务，保留既有剧情选择；不以文字选择冒充图片差异或图像拼图。
+玩家 JS host 另注册 `spot-difference`、`timeline`、`image-puzzle`、`scene-search` 四种有界活动。`tools/game-package/investigation-blueprint.mjs` 对已准备 runtime-package/museum 和本机 assetRoot 应用显式 blueprint：核对素材 bytes/hash/预算、双语配置、确定性解、保存/退出生命周期、已有物件和同一视点，再用 StoryPackageCompiler 封装。它只在无歧义的非决策边插入任务，保留既有剧情选择；不以文字选择冒充图片差异或图像拼图。 归类（routing）任务可选提供 `prompt`、`instruction`、`wrong` 双语文案，未提供时沿用默认说明；四种活动的界面提示不再引用特定故事内容。
 
 场景搜索的完成依据来自 host 已记录观察，玩家端必须先实际点选场景物件；清单和资料册不能代收集。三种桌面活动用 DOM/SVG 和拖放／先选再放两套输入；有支持 hook 的 renderer 在居中活动打开时暂停背景绘制，关闭后恢复且不重建LOD，搜索时不暂停。功能测试、图片可读性、空间核验和实机FPS分别记录。
 

@@ -119,7 +119,15 @@ def main() -> None:
             story_3d_output_directory=arguments.story_3d_output_directory,
         )
     except (OSError, ValidationError, ValueError) as error:
-        parser.exit(2, "Configuration failed: " + type(error).__name__ + "\n")
+        hint = ""
+        if isinstance(error, FileNotFoundError):
+            hint = f" ({error.filename})"
+            if Path(str(error.filename)) == arguments.accounts:
+                hint += (
+                    "\nCreate this computer's administrator:"
+                    " .venv/bin/python -m pastport organizer-init"
+                )
+        parser.exit(2, "Configuration failed: " + type(error).__name__ + hint + "\n")
     with LoggingConfiguration(arguments.log_level):
         narrative_factory = (
             ModelNarrativeAdapter

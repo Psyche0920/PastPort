@@ -17,17 +17,17 @@
 | 包 | 内容 |
 | --- | --- |
 | `wcheung.tar.gz` | 四二独立试玩《最后一段录音》，含 3D 场景、调查、线索回看和三个结局。交付记录原名 `42handover`。 |
-| `maslan.tar.gz` | Organizer 已完成任务 `3d-test777` 的独立玩家包。 |
+| `maslan.tar.gz` | 主试玩《最后两袋》：沿用 `3d-test777` 的3D房间与30条穆拉迪耶资料，研究员复原虚构的1430年代账页案件；五个资料节点、四种调查玩法、三个关键选择、12种结局文本。[下载新版（maslan-demo-2026-11-05-r1）](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)；旧版独立玩家包仍在上方 Release。 |
 
 **Maslan：穆拉迪遗址原始资料。** 文件夹内有原始 IDML、配套 `Links` 文件夹和章节 PDF。 [打开穆拉迪遗址资料文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
 
 解压后进入同名目录，按 `OPEN.txt` 启动，使用支持 WebGL 的浏览器打开其中的本机地址。需要 Node.js。交付包独立于 Organizer 的本机记录。
 
-**工作流程。** Main 和 SDK 的目标是基于素材生成可试玩、可编辑的游戏初版。团队可直接修改并试玩现有游戏包，验收后再将可复用的改进接回 Main 和 SDK。城市地图和面向公众的发布接入仍待建设和验证。详见[团队交接](handoff.md#zh)。
+**工作流程。** Main 和 SDK 的目标是基于素材生成可试玩、可编辑的游戏初版。团队可直接修改并试玩现有游戏包，验收后再将可复用的改进接回 Main 和 SDK。本机地图、游戏发布、账号、印章和排行榜已接通；跨设备公网部署仍待实施。详见[团队交接](handoff.md#zh)。
 
 ## 启动与使用
 
-需要 Git、uv、Node.js 22+ 和支持 WebGL 的浏览器。以下命令适用于 macOS、Linux 和 Windows PowerShell。在仓库根目录运行；仓库可以放在任意目录。
+需要 Git、uv、Node.js 22+ 和支持 WebGL 的浏览器。以下命令用于 macOS、Linux；Windows 请使用 WSL2 的 Ubuntu 终端。在仓库根目录运行；仓库可以放在任意目录。
 
 首次使用这台电脑：
 
@@ -55,6 +55,11 @@ uv run python -m pastport organizer
 账号、上传、缓存和交付记录保存在当前仓库的 `var/organizer-integration/`。关闭服务后数据仍保留。换电脑时导入团队交付包或上传原始材料。账号配置和数据库包含私有数据，应单独备份。
 
 可用 `--directory` 指定另一份本地配置目录；初始化与启动应使用同一路径。若存在 `catalog.json`，启动时自动读取；新电脑可以直接导入游戏包。需要从原始材料制作游戏时，按页面提供资料和模型授权。共享玩家资源可显式指定 `--player-assets /path/to/assets`。历史项目中登记的材料路径也需要在当前电脑可用。
+
+已有3D上传：选择“原始 PDF + 照片 + 已有 SPZ / PLY 场景”，不勾默认资料，填写新项目编号并上传四类文件。保存后核对调用预算，再点“准备资料与环境”；后续按审核 → 故事 → 制作游戏继续。只在你明确授权后调用识别/故事模型，Marble为0。照片支持多张图片或ZIP；PLY须为二进制小端三角网格，需本机Chrome和Node.js进行取景。证据预算不足会在调用前停止；44张照片和62页PDF的首轮下限为43次，另需逐物件核验，不能用旧8次上限当整套预算。新路径的接线/模拟执行与单物件真实资料已检查，整套新材料的真实模型运行由上传测试验收。
+
+
+新照片任务采用紧凑策略：每批2张，最多12个新物件、24条观察；名称、特征及解释按Schema限制长度，单批最多120秒或授权的更短时限。发现超过本批容量时报告不完整并停止，不把缺失当成功。旧策略与已付费回执保持原样，失败不自动重试；此限制已通过离线回归，尚未完成真实模型速度验收。
 
 ### 制作流程
 
@@ -94,7 +99,6 @@ uv run python -m pastport organizer
 维护者可用已保存故事复核并重新组包，不调用模型：
 
 ```sh
-cd /Users/hanweijia/PastPort
 .venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
 

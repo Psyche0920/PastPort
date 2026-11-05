@@ -47,7 +47,7 @@ Main 和 SDK 的目标是基于材料生成可试玩、可继续编辑的游戏�
 | 项目 | 内容 | 下载 |
 |---|---|---|
 | 比赛章程与赛事说明 | 主办方发布的两份 PDF | [参赛条款](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [赛事说明](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
-| 可试玩游戏包 | Maslan 的独立试玩版本，可导入 Organizer | [可试玩游戏包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [启动和导入说明](README_EN.md) |
+| 可试玩游戏包 | 主试玩《最后两袋》，可导入 Organizer；编辑源在包内 `authoring/` | [可试玩游戏包（maslan-demo-2026-11-05-r1）](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) · [发布说明](https://github.com/Psyche0920/PastPort/releases/tag/maslan-demo-2026-11-05-r1) · [旧版](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [启动和导入说明](README.md) |
 | 游戏包的原始材料 | 原始 IDML、历史配图 ZIP、24 张现场照片、原始 SPZ 和 PLY、匹配结果 JSON 和 CSV | [Organizer 原始材料包](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
 | 主办方 Vakıf 资料（穆拉迪遗址） | 原始 IDML、配套 `Links` 文件夹和章节 PDF | [Google Drive 穆拉迪文件夹](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
 | 团队分工与答辩安排 | 本文中的负责人和答辩顺序 | [团队分工](#zh) |
@@ -101,7 +101,7 @@ Sign in to GitHub with access to the PastPort repository. Extract the wcheung ar
 | Item | Contents | Download |
 |---|---|---|
 | Competition rules and information note | Two official PDFs | [Terms and Conditions](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [Information Note](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
-| Playable game bundle | Maslan’s standalone playable build, ready for Organizer import | [Playable game bundle](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
+| Playable game bundle | Featured game *The Last Two Sacks*, ready for Organizer import; editable sources in the package's `authoring/` | [Playable game bundle (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) · [Release notes](https://github.com/Psyche0920/PastPort/releases/tag/maslan-demo-2026-11-05-r1) · [Earlier build](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
 | Original materials for the game bundle | Original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching results | [Organizer source archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
 | Organizer-provided Vakıf materials (Muradiye) | Original IDML, its `Links` folder, and the chapter PDF | [Muradiye Google Drive folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
 | Team roles and presentation plan | Ownership and presentation order in this document | [Team handoff](#en) |

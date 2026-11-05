@@ -3,15 +3,13 @@
 import argparse
 import errno
 import getpass
-import os
 import shutil
 import socket
 import sys
 from pathlib import Path
 
-from pastport.adapters.passwords import PasswordHasher
-from pastport.api.settings import Accounts, Credential
-from pastport.application.models import Actor
+from pastport.api.settings import Accounts
+from pastport.organizer_init import OrganizerAdminInitializer
 
 
 class OrganizerLauncher:
@@ -29,21 +27,7 @@ class OrganizerLauncher:
             raise ValueError("Use at least 12 characters.")
         if password != getpass.getpass("Confirm password: "):
             raise ValueError("Passwords do not match.")
-        accounts = Accounts(
-            accounts=(
-                Credential(
-                    username="admin",
-                    password_hash=PasswordHasher().hash(password),
-                    actor=Actor(
-                        actor_id="local-organizer", roles=("editor", "operator"), project_ids=None
-                    ),
-                ),
-            )
-        )
-        self.directory.mkdir(parents=True, exist_ok=True)
-        descriptor = os.open(self.accounts, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, "w") as stream:
-            stream.write(accounts.model_dump_json())
+        OrganizerAdminInitializer().create(self.accounts, password)
         print(f"Created admin account: {self.accounts}")
 
     def arguments(self, port: int, assets: Path | None) -> list[str]:

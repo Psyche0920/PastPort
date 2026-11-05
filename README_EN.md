@@ -17,17 +17,17 @@ Download from the [private GitHub Release](https://github.com/Psyche0920/PastPor
 | Package | Contents |
 | --- | --- |
 | `wcheung.tar.gz` | The 42 standalone demo *The Last Recording*, including the 3D scene, investigation, clue review and three endings. The delivery record was previously named `42handover`. |
-| `maslan.tar.gz` | The standalone player bundle from completed Organizer job `3d-test777`. |
+| `maslan.tar.gz` | Featured game *The Last Two Sacks*: the `3d-test777` 3D room and its 30 Muradiye records, where a researcher reconstructs a fictional 1430s ledger case; five record nodes, four investigation activities, three key choices and 12 distinct ending texts. [Download the new build (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz); the earlier standalone player bundle remains in the release above. |
 
 **Maslan: Muradiye source materials.** The folder contains the original IDML, its `Links` folder, and the chapter PDF. [Open the Muradiye source folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh)
 
 Extract the archive, enter the matching directory and follow `OPEN.txt`. Open the local address in a WebGL-capable browser. Node.js is required. The bundles are separate from local Organizer job records.
 
-**Workflow.** Main and the SDKs aim to generate a playable, editable first version from source materials. The team can edit and play an existing bundle directly, then integrate reusable improvements into Main and the SDKs after acceptance. The city map and public publishing integration remain to be built and verified. See the [team handoff](handoff.md#en).
+**Workflow.** Main and the SDKs aim to generate a playable, editable first version from source materials. The team can edit and play an existing bundle directly, then integrate reusable improvements into Main and the SDKs after acceptance. The local map, game publication, accounts, stamps and leaderboard are integrated; public cross-device deployment remains pending. See the [team handoff](handoff.md#en).
 
 ## Startup and use
 
-Requires Git, uv, Node.js 22+ and a WebGL browser. Run these commands from the repository root on macOS, Linux or Windows PowerShell. The checkout can live in any directory.
+Requires Git, uv, Node.js 22+ and a WebGL browser. Run these commands from the repository root on macOS or Linux; on Windows use an Ubuntu terminal in WSL2. The checkout can live in any directory.
 
 First setup on this computer:
 
@@ -55,6 +55,11 @@ Download a team delivery, select its `.tar.gz` under Progress & delivery, and im
 Accounts, uploads, cache and delivery history persist under `var/organizer-integration/` in this checkout after shutdown. Import team packages or upload original materials on another computer. Account configuration and databases contain private data and need a separate backup.
 
 Use `--directory` for another local configuration directory, with the same path for initialization and startup. An existing `catalog.json` is read automatically. A new machine can import game packages directly. Creating games from source materials requires supplying those materials and authorizing models through the interface. Shared player assets can be passed explicitly with `--player-assets /path/to/assets`. Material paths stored in historical projects must also exist on the current computer.
+
+Existing-3D uploads: select “Original PDF + photos + existing SPZ / PLY scene”, leave defaults unchecked, enter a new project ID and upload all four inputs. Save, review the finite call budgets, then prepare the environment. Continue through review → Story → game build. Recognition/Story calls require explicit consent; Marble calls are zero. Photos accept images or ZIP; PLY must be a binary little-endian triangle mesh. Local Chrome and Node.js are required for capture. An insufficient Evidence budget stops before dispatch: 44 photos and 62 PDF pages require at least 43 first-pass calls, plus per-object verification. The old eight-call default is not a full-set budget. Wiring/simulated execution and a real single-object handoff have been checked; a fresh full-set model run remains upload-test acceptance.
+
+
+New photo jobs use a compact policy: two photos per batch, at most 12 new entities and 24 sightings, schema-bounded names/features/explanations, and a 120-second deadline or the shorter authorized timeout. Overflow is reported as incomplete and stops acceptance. Existing policies and paid receipts stay unchanged; failures are not automatically retried. These bounds have offline regression evidence, not fresh-model speed acceptance.
 
 ### Production workflow
 
@@ -93,7 +98,6 @@ The game is the final artifact within its cache, not another complete duplicate.
 Maintainers can revalidate a saved Story and assemble again without models:
 
 ```sh
-cd /Users/hanweijia/PastPort
 .venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
 

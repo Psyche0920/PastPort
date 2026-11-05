@@ -4,9 +4,9 @@ export function renderInvestigation(root,c,state,{locale='zh',send,verifiedSourc
  const el=(tag,attrs={},children=[])=>{const n=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k.startsWith('on'))n[k]=v;else if(k==='text')n.textContent=v;else if(k==='class')n.className=v;else if(k==='disabled')n.disabled=v;else n.setAttribute(k,v);}for(const child of children)n.append(child);return n;};
  root.classList.add('investigation-activity');
  root.append(el('h3',{text:copy(c.prompt)}));
- if(state.done){root.append(el('p',{class:'activity-success',text:copy(c.success)}));if(c.kind==='image-puzzle')root.append(el('img',{class:'restored-chat',src:copy(c.image),alt:t('重組後完整聊天截圖','The complete reconstructed chat image')}));return;}
+ if(state.done){root.append(el('p',{class:'activity-success',text:copy(c.success)}));if(c.kind==='image-puzzle')root.append(el('img',{class:'restored-chat',src:copy(c.image),alt:t('重組後嘅完整圖像','The reconstructed image')}));return;}
  const feedbacks={
-  'not-a-difference':t('呢個位置兩幅圖冇指定差異。試比較卡片、掛繩同椅子，冇倒數。','No marked difference here. Compare the card, lanyard and chair. There is no timer.'),
+  'not-a-difference':t('呢個位置兩幅圖冇指定差異。再仔細比較，冇倒數。','No marked difference here. Compare the two images closely. There is no timer.'),
   'wrong-arrangement':t('仲未吻合。對照圖像接縫，或者時間卡上嘅已知時間；唔知道嘅唔好估。','Not yet. Compare image edges or the times on the cards. Keep unknown times unknown.'),
   'incomplete-arrangement':t('仲有卡片未放好。每個位置放一張，再核對。','Some cards are still unplaced. Fill each position, then check.')};
  if(feedbacks[feedback])root.append(el('p',{class:'activity-feedback',role:'status',text:feedbacks[feedback]}));
@@ -24,7 +24,7 @@ export function renderInvestigation(root,c,state,{locale='zh',send,verifiedSourc
   root.append(pair);for(const d of c.differences.filter(d=>state.seen.includes(d.id)))root.append(el('p',{class:'found-note',text:'✓ '+copy(d.label)}));
  }else if(c.kind==='timeline'||c.kind==='image-puzzle'){
   const puzzle=c.kind==='image-puzzle',items=puzzle?c.pieces:c.cards;
-  root.append(el('p',{text:puzzle?t('拖圖片碎片到格仔；亦可先點碎片，再點位置。全部放好後按核對。','Drag image fragments into the grid, or select a fragment and then a position. Check when every tile is placed.'):t('拖卡片到時間位置，或者先點卡片再點位置。未知道時間嘅放「時間未明」。','Drag cards into time positions, or select a card then a position. Put uncertain events in “Time unknown”.')}));
+  root.append(el('p',{text:puzzle?t('拖圖片碎片到格仔；亦可先點碎片，再點位置。全部放好後按核對。','Drag image fragments into the grid, or select a fragment and then a position. Check when every tile is placed.'):(c.slots.some(slot=>slot.id==='unknown')?t('拖卡片到時間位置，或者先點卡片再點位置。未知道時間嘅放「時間未明」。','Drag cards into time positions, or select a card then a position. Put uncertain events in “Time unknown”.'):t('拖卡片到時間位置，或者先點卡片再點位置。','Drag cards into time positions, or select a card then a position.'))}));
   const tile=(item,placed=false)=>{
    const attrs={class:'activity-piece'+(state.selected===item.id?' selected':''),draggable:'true','aria-pressed':String(state.selected===item.id),'aria-label':puzzle?t('圖片碎片 '+(items.indexOf(item)+1),'Image fragment '+(items.indexOf(item)+1)):copy(item.text),ondragstart:e=>{e.dataTransfer.setData('text/plain',item.id);e.dataTransfer.effectAllowed='move';},onclick:()=>send({kind:'select-piece',id:item.id})};
    if(puzzle){const col=item.target_slot%c.columns,row=Math.floor(item.target_slot/c.columns);attrs.style=`background-image:url("${copy(c.image)}");background-size:${c.columns*100}% ${c.rows*100}%;background-position:${col/(c.columns-1)*100}% ${row/(c.rows-1)*100}%`;}

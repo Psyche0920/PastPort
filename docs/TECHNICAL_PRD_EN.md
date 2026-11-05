@@ -48,11 +48,11 @@ UI, structure, execution and content quality are separate acceptance layers. Old
 
 ### 1.2 Current locations and entry points
 
-Portable startup uses `uv run python -m pastport organizer-init` for first setup and `uv run python -m pastport organizer` for foreground serving. Data defaults to `var/organizer-integration` relative to the checkout root. Options include `--directory`, `--port` and `--player-assets`; existing accounts and history are retained. New machines import deliveries to establish history and supply source materials and model authorization separately.
+Portable startup uses `uv run python -m pastport organizer-init` to initialize local accounts and `uv run python -m pastport organizer` to serve in the current terminal. Private data defaults to `var/organizer-integration` in the checkout; options include `--directory`, `--port` and `--player-assets`. Existing accounts are retained; new computers import deliveries to establish history. Windows uses WSL2.
 
 | Item | Current location |
 |---|---|
-| Application source | `/Users/hanweijia/PastPort`, local main |
+| Application source | Any PastPort clone, local main; commands run from the repository root |
 | Organizer | `http://127.0.0.1:18840/organizer/` |
 | Default materials/account configuration | `var/organizer-integration/catalog.json` and `staff-accounts.json`; private configuration |
 | Organizer records | `var/organizer-integration/server/organizer/organizer.sqlite3` |
@@ -546,7 +546,6 @@ The shared `build-story-package.mjs` tool performs assembly. There is no standal
 ### 10.2 Local workspace
 
 ```sh
-cd /Users/hanweijia/PastPort
 uv sync --extra authoring --extra game-making
 .venv/bin/pastport-game-trial --request var/runtime-layout-20261101/request-release.json
 ```
@@ -567,22 +566,20 @@ Manifests specify inputs/outputs; do not hardcode old Demo workspaces. Existing 
 
 ### 10.4 Organizer service
 
-For this computer's configuration, install dependencies as in §10.2, then run the command below. If the service is already running, open it instead of starting another instance.
+Install dependencies as in §10.2. If the service is already running, open it instead of starting another instance. On each computer, first run `organizer-init`: it creates the single administrator in the Git-ignored `var/organizer-integration/staff-accounts.json` (username always `admin`, matching the sign-in page; roles editor/evidence/narrative/publisher/operator; directory 0700, file 0600; password hash only). The password is typed twice in the terminal, never shown, and needs at least 12 characters; an existing file is never overwritten. If the account file is missing, the start error names it and `organizer-init`.
 
 ```sh
-cd /Users/hanweijia/PastPort
-.venv/bin/python -m pastport \
-  --accounts var/organizer-integration/staff-accounts.json \
-  --data-directory var/organizer-integration/server \
-  --organizer-catalog var/organizer-integration/catalog.json \
-  --organizer-player-assets "/Users/hanweijia/Documents/ChatGPT/PastPort/work/main-integration/var/sdk-real-material-20261031-01/story-authoring/game-3d-open-roof-v3/assets" \
-  --evidence-mode disabled --narrative-mode disabled --resources-mode disabled \
-  --port 18840
+.venv/bin/python -m pastport organizer-init   # once per computer
+.venv/bin/python -m pastport organizer          # start
 ```
 
-Open `http://127.0.0.1:18840/organizer/` and use the existing administrator username/password. Initial setup is complete on this computer; this command does not initialize/reset it. Restart invalidates in-memory sessions, requiring another login. Maintainers configure accounts; organizers do not enter Bearer tokens or run terminal initialization. The CLI binds loopback with one worker; this is not a public deployment recipe.
+`organizer` expands to `--accounts var/organizer-integration/staff-accounts.json --data-directory var/organizer-integration/server`, the three `--*-mode disabled` options and `--port 18840`; options added after it override these defaults.
 
-The disabled options affect old editorial demo channels, not Organizer's bounded SDK chain. Player assets are registered private environment materials, not source; another machine must supply files and update configuration. The repository and generated materials are not an unrestricted distributable dataset. Accounts/credentials do not enter static web resources, game bundles or Git.
+Only on a computer holding the team's private default materials, add `--organizer-catalog var/organizer-integration/catalog.json` and `--organizer-player-assets <local player assets directory>`; without them Organizer runs normally and imports team delivery packages.
+
+Open `http://127.0.0.1:18840/organizer/` and sign in with `admin` and this computer's password. The start command never initializes or resets it; change it with `account-password`. Restart invalidates in-memory sessions, requiring another login. Organizers do not enter Bearer tokens. The CLI binds loopback with one worker; this is not a public deployment recipe.
+
+The disabled options affect old editorial demo channels, not Organizer's bounded SDK chain. Default materials and player assets are private environment materials, not source, prepared only on computers that need them. The repository and generated materials are not an unrestricted distributable dataset. Accounts/credentials do not enter static web resources, game bundles or Git.
 
 ### 10.5 Independent game preview
 
@@ -720,7 +717,7 @@ Player object numbers may use a CSS text layer projected from their existing 3D 
 
 Case files use a separate paper presentation and line breaks; character dialogue stays at the bottom with dismissal at the upper right. Completed-slice continuation validates the exact previous package/save, prior scenes/rules/activities/text and source identities, then replays recorded actions through the single shared engine. It must not inject completion state or migrate unfinished tasks. Unfinished prior games retain their original package until completion; old and new save keys remain separate. This human-authored runtime-package extension does not expand automatic compiled_branch_v1 generation limits.
 
-The JS player host additionally registers bounded `spot-difference`, `timeline`, `image-puzzle` and `scene-search` activities. `tools/game-package/investigation-blueprint.mjs` applies an explicit blueprint to a prepared runtime-package/museum and local assetRoot: it checks asset bytes/hashes/budgets, bilingual configuration, deterministic solutions, save/exit lifecycle, existing objects and same-view bindings, then packages through StoryPackageCompiler. It inserts only on an unambiguous non-decision edge and preserves existing choices. Text choices are not a substitute for image differences or an image puzzle.
+The JS player host additionally registers bounded `spot-difference`, `timeline`, `image-puzzle` and `scene-search` activities. `tools/game-package/investigation-blueprint.mjs` applies an explicit blueprint to a prepared runtime-package/museum and local assetRoot: it checks asset bytes/hashes/budgets, bilingual configuration, deterministic solutions, save/exit lifecycle, existing objects and same-view bindings, then packages through StoryPackageCompiler. It inserts only on an unambiguous non-decision edge and preserves existing choices. Text choices are not a substitute for image differences or an image puzzle. A routing task may supply bilingual `prompt`, `instruction` and `wrong` copy; otherwise the default copy applies. Activity interface hints no longer refer to a specific story.
 
 Search completion uses host-recorded observations; the player must first select scene objects. A checklist or notebook cannot collect them. The three desktop activities use DOM/SVG with drag/drop and select/place alternatives. Renderers exposing the hook suspend background drawing while a centered activity is open, then resume without rebuilding LOD; search remains live. Functional tests, image readability, spatial validation and device FPS are recorded separately.
 
