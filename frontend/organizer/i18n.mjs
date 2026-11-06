@@ -1,5 +1,24 @@
 // UI-only catalog. Source documents, editable content and artifacts are never translated.
 export const messages = Object.freeze({
+  "已解除发布；列表刷新暂不可用，请稍后刷新。": "Unpublished. The list could not refresh; try refreshing later.",
+  "解除发布": "Unpublish",
+  "发布版本": "Publication version",
+  "已解除发布；游戏包和玩家数据已保留。": "Unpublished. The game package and player data are retained.",
+  "没有解除此发布的权限。": "You do not have permission to unpublish this delivery.",
+  "此站点的发布已改变，请刷新后再解除。": "This publication changed. Refresh before unpublishing.",
+  "无法解除玩家地图发布。": "Unable to unpublish the game from the player map.",
+
+  "存储位置与技术信息": "Storage and technical details",
+  "游戏包用于试玩与发布；制作记录用于查看执行过程；原始材料在「资料与审核」中管理。": "Use packages to preview and publish, production history to inspect runs, and Materials & review to manage original sources.",
+  "交付分类": "Delivery sections",
+  "游戏包": "Game packages",
+  "地图发布": "Map publications",
+  "这里显示玩家正在使用的版本；导入或提交新版不会自动替换地图。": "These are the versions players currently use. Importing or submitting a version does not automatically change the map.",
+  "查找制作记录": "Find production records",
+  "项目编号或状态": "Project ID or status",
+  "没有匹配的制作记录。": "No matching production records.",
+  "提交新版": "Submit new version",
+
   "共享游戏包": "Shared game packages",
   "玩家地图发布": "Player map publications",
   "制作记录": "Production history",
@@ -342,6 +361,9 @@ export function translate(value, locale = language, exactOnly = false) {
   const trimmed = value.trim();
   if (Object.hasOwn(messages, trimmed)) return value.replace(trimmed, messages[trimmed]);
   const templates = [
+    [/^(.+) · 当前第 (\d+) 版$/u, '$1 · current version $2'],
+    [/^第 (\d+) 版（当前）$/u, 'Version $1 (current)'],
+    [/^第 (\d+) 版$/u, 'Version $1'],
     [/^PDF 来源对象(.*)$/u, 'PDF source object$1'],
     [/^照片 (\d+) · 对象 (\d+)$/u, 'Photo $1 · Object $2'],
     [/^历史评价（(\d+) 次）$/u, 'Review history ($1 entries)'],

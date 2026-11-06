@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — Organizer delivery organization and unpublish
+
+- Separate Game packages, Map publications and Production history into delivery tabs. Collapse technical paths, version submission and version history; add project/status search for production records.
+- Add owner-authorized, version-checked unpublish. It removes only the live site binding and retains the map node, package, publication history, saves and medals. The card disappears immediately after success; stale refreshes cannot restore it, and refresh failure does not misreport successful unpublishing as failure.
+- Resolve archived production jobs by ID without listing them, preserving references from retained packages. No local history archive/restore, private account data, game bundles or publication data is included in this commit.
+- Verified with isolated Organizer API regression tests, frontend controller and language tests, strict typing, lint and documentation checks. Browser testing against an isolated real API confirmed the unpublish dialog, immediate removal, persistence after refresh and retained package. This does not establish cross-device/tunnel or gameplay completion acceptance. Test services are stopped after verification.
+
 ## 2026-11-05 — wcheung release candidate
 
 - Merge main `5805a76` into the wcheung working branch and rebuild the standalone disappearance-story demo with the shared completion bridge.

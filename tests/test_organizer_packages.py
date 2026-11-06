@@ -255,3 +255,64 @@ def test_backup_copies_databases_and_games_without_upload_staging(tmp_path: Path
     assert DataIdentity(output).verify() == DataIdentity(directory).verify()
     with pytest.raises(ValueError, match="already exists"):
         DeploymentBackup(directory, players).create(output)
+
+
+def test_unpublish_retains_package_history_and_rejects_stale_or_unauthorized_requests(
+    client: TestClient,
+) -> None:
+    first = upload(client, archive("unpublish-v1"))
+    second = upload(client, archive("unpublish-v2"), base=first["job_id"])
+    url = f"/organizer/api/jobs/{first['job_id']}/publish-to-map"
+    one = client.post(url, json={"site_id": "muradiye"}, headers=auth())
+    assert one.status_code == 200
+    target = {"site_id": "muradiye", "expected_version": one.json()["version"]}
+    assert client.delete(url, headers={}).status_code == 401
+    outsider = client.request("DELETE", url, json=target, headers=auth("stranger"))
+    assert outsider.status_code == 403
+    missing_guard = client.request("DELETE", url, json={"site_id": "muradiye"}, headers=auth())
+    assert missing_guard.status_code == 422
+    # Another operator may have published a newer delivery while the card was open.
+    newer_url = f"/organizer/api/jobs/{second['job_id']}/publish-to-map"
+    two = client.post(newer_url, json={"site_id": "muradiye"}, headers=auth())
+    assert two.status_code == 200
+    stale = client.request("DELETE", url, json=target, headers=auth())
+    assert stale.status_code == 409
+    detached = client.request(
+        "DELETE",
+        newer_url,
+        json={
+            "site_id": "muradiye",
+            "expected_version": two.json()["version"],
+        },
+        headers=auth(),
+    )
+    assert detached.status_code == 200, detached.text
+    assert detached.json()["current"] is None
+    assert len(detached.json()["history"]) == 2
+    states = client.get("/organizer/api/map-publications", headers=auth()).json()
+    assert next(s for s in states if s["site_id"] == "muradiye")["current"] is None
+    assert (
+        client.get(f"/organizer/api/jobs/{second['job_id']}/download", headers=auth()).status_code
+        == 200
+    )
+    assert (
+        client.get("/organizer/api/packages", headers=auth()).json()[0]["current_job_id"]
+        == second["job_id"]
+    )
+    # Repeated clicks are harmless, and the retained version can be published again.
+    repeat = client.request(
+        "DELETE",
+        newer_url,
+        json={
+            "site_id": "muradiye",
+            "expected_version": two.json()["version"],
+        },
+        headers=auth(),
+    )
+    assert repeat.status_code == 200
+    assert (
+        client.post(
+            newer_url, json={"site_id": "muradiye", "expected_version": "none"}, headers=auth()
+        ).status_code
+        == 200
+    )

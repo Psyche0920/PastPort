@@ -47,6 +47,13 @@ class OrganizerStore:
             row = connection.execute(
                 "SELECT payload FROM records WHERE kind=? AND id=?", (kind, key)
             ).fetchone()
+            if row is None and kind == "job":
+                # Archived history stays hidden from list(), while package links remain valid.
+                row = connection.execute(
+                    "SELECT payload FROM records WHERE kind GLOB 'archived_job_[0-9]*' "
+                    "AND id=? ORDER BY kind DESC LIMIT 1",
+                    (key,),
+                ).fetchone()
         if row is None:
             raise ServiceError("ORGANIZER_NOT_FOUND", "找不到此项目或制作记录。", 404)
         return model.model_validate_json(row[0])

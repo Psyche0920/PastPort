@@ -21,6 +21,7 @@ from pastport.adapters.organizer_map import (
     MapSite,
     MapSiteState,
     MapTarget,
+    MapUnpublishTarget,
     OrganizerMapPublisher,
 )
 from pastport.adapters.organizer_packages import (
@@ -717,6 +718,19 @@ class OrganizerRoutes:
                 actor,
                 job,
                 directory,
+                target.site_id,
+                target.expected_version,
+            )
+
+        @router.delete("/api/jobs/{job_id}/publish-to-map")
+        async def unpublish_from_map(job_id: str, request: Request) -> MapSiteState:
+            actor = self.actor(request)
+            job = self.service.job(job_id, actor)
+            target = await read_body(request, MapUnpublishTarget)
+            return await asyncio.to_thread(
+                self.map_publisher.unpublish,
+                actor,
+                job,
                 target.site_id,
                 target.expected_version,
             )

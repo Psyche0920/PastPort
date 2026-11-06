@@ -88,6 +88,8 @@ Everyone signs in to the same Organizer (locally or through the STAFF link) and 
 
 ### Organizer: organizer-facing entry
 
+Organizer’s delivery workspace separates Game packages, Map publications and Production history. Packages provide previews, downloads, materials and version submission; publications show live versions; history can be searched by project ID or status. Version history, version submission and technical paths are collapsed by default. Archiving run history preserves package files and resolves archived records by their original ID so preview, download and material references remain valid. Published cards offer Unpublish with confirmation and a version check. It removes only the site-to-game binding; the map node, package files, publication history, player saves and medals are retained. The card disappears immediately on success, even if a follow-up refresh fails; earlier in-flight responses cannot restore it. New launches stop after the player map refreshes; an already running game is not forcibly closed.
+
 Download a team delivery, select its `.tar.gz` under Progress & delivery, and import it. Open its standalone preview. A new computer builds its history through imports. Every completed, previewable delivery can select a map site for publication.
 
 Accounts, uploads, cache and delivery history persist under `var/organizer-integration/` in this checkout after shutdown. Import team packages or upload original materials on another computer. Account configuration and databases contain private data and need a separate backup.

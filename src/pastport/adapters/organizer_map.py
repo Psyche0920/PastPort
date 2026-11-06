@@ -32,6 +32,11 @@ class MapTarget(Contract):
     expected_version: Sha256 | Literal["none"] | None = None
 
 
+class MapUnpublishTarget(Contract):
+    site_id: Identifier
+    expected_version: Sha256
+
+
 class MapSiteState(Contract):
     site_id: Identifier
     name: str
@@ -161,3 +166,39 @@ class OrganizerMapPublisher:
             self._write(f"player-map-{site_id}.history.json", HISTORY.dump_json(history))
             self._write(f"player-map-{site_id}.json", publication.model_dump_json().encode())
         return publication
+
+    def unpublish(
+        self, actor: Actor, job: OrganizerJob, site_id: str, expected_version: str
+    ) -> MapSiteState:
+        """Remove only the current pointer; retain the package and publication history."""
+        if (
+            not {"operator", "publisher"}.intersection(actor.roles)
+            or job.owner_id != actor.actor_id
+            or (actor.project_ids is not None and job.project_id not in actor.project_ids)
+        ):
+            raise ServiceError("MAP_PUBLICATION_FORBIDDEN", "没有解除此发布的权限。", 403)
+        site = next((value for value in self.sites() if value.id == site_id), None)
+        if site is None:
+            raise ServiceError("MAP_SITE_UNKNOWN", "请选择地图中已有的站点。", 422)
+        with self.lock:
+            current = self.current(site_id)
+            if current is not None:
+                if current.job_id != job.job_id or current.version != expected_version:
+                    raise ServiceError(
+                        "MAP_PUBLICATION_CONFLICT",
+                        "此站点的发布已改变，请刷新后再解除。",
+                        409,
+                    )
+                history = self.history(site_id)
+                if current not in history:
+                    history = (*history, current)[-HISTORY_LIMIT:]
+                    self._write(f"player-map-{site_id}.history.json", HISTORY.dump_json(history))
+                try:
+                    (self.directory / f"player-map-{site_id}.json").unlink(missing_ok=True)
+                except OSError as error:
+                    raise ServiceError(
+                        "MAP_PUBLICATION_UNAVAILABLE", "无法解除玩家地图发布。", 503
+                    ) from error
+            return MapSiteState(
+                site_id=site.id, name=site.name, current=None, history=self.history(site_id)
+            )

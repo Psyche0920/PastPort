@@ -23,3 +23,12 @@ test('catalog covers static shell and critical human consent actions',()=>{
     assert.equal(translate(key,'zh'),key);
   }
 });
+
+test('delivery sections and actions translate without changing package names',()=>{
+  assert.equal(translate('wcheung · 当前第 2 版','en'),'wcheung · current version 2');
+  assert.equal(translate('第 2 版（当前）','en'),'Version 2 (current)');
+  assert.equal(translate('发布版本','en'),'Publication version');
+  assert.equal(translate('解除发布','en'),'Unpublish');
+  assert.equal(translate('已解除发布；列表刷新暂不可用，请稍后刷新。','en'),
+    'Unpublished. The list could not refresh; try refreshing later.');
+});
