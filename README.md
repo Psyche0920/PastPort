@@ -16,11 +16,11 @@
 
 [六个玩家端游戏包 · 统一下载](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
 
-穆拉迪耶行已更新为 2026-11-07 的《最后两袋》三语版；其余行保留 2026-11-06 的交付快照。站点是平台入口标签，不代表历史场景认证。
+四二与穆拉迪耶行已更新为 2026-11-07 的《The Last Tour》《最后两袋》三语版；其余行保留 2026-11-06 的交付快照。站点是平台入口标签，不代表历史场景认证。
 
 | 地图站点 | 项目 / 版本 | 下载 |
 | --- | --- | --- |
-| Forty Two Heilbronn | wcheung · `0ecef2790ab7` | [player-42heilbronn.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-42heilbronn.tar.gz) |
+| Forty Two Heilbronn | wcheung · `839c304f27ec` · zh / en / tr | [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
 | Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
 | Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
 | I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
@@ -108,7 +108,7 @@ Organizer 的「制作进度与交付」分为「游戏包」「地图发布」�
 3. **准备故事**：旧故事先做来源、任务、玩法和空间兼容检查。通过即可复用；仅介绍发生待核对改动时需本人确认；关键依据或任务条件失效不能跳过。保存版本号变化而内容相同，不要求确认。也可明确授权SOL 6.1 High生成新故事，失败不自动重试。两种路径都在故事就绪后停下。
 4. **制作游戏**：故事就绪后点击“开始制作”，执行玩法准备、呈现绑定、组包与资源检查；在“制作进度与交付”打开玩家预览。不会再生成环境或故事。
 
-Organizer 的语言选择只翻译操作界面，不改写史料、介绍或 Story 创作内容，不提交表单、调用模型或丢弃未保存输入。 Organizer 和玩家地图均可选简体中文 / English / Türkçe；从地图启动时把所选语言传给游戏。本次游戏范围仅为最后有发布时间的穆拉迪耶《最后两袋》可行走剧场：对白、任务、标牌、笔记和结局三语显示；史料原图与专名保留原样。其他游戏不变；已打开的游戏需退出后从地图重新打开新版。旧版存档继续对应旧版。体验目标时长是Story创作目标，不是制作耗时或精确游玩计时。
+Organizer 的语言选择只翻译操作界面，不改写史料、介绍或 Story 创作内容，不提交表单、调用模型或丢弃未保存输入。 Organizer 和玩家地图均可选简体中文 / English / Türkçe；从地图启动时把所选语言传给游戏。本机三语游戏现包括穆拉迪耶《最后两袋》可行走剧场和四二节点《The Last Tour》（wcheung）：对白、编译后任务目标、标牌、笔记、结局及游戏聊天线索图三语显示；史料原图与专名保留原样。其他游戏不变；已打开的游戏需退出后从地图重新打开新版。旧版存档继续对应旧版。体验目标时长是Story创作目标，不是制作耗时或精确游玩计时。
 
 | 上传起点 | 环境阶段执行内容 | 已有成果 |
 |---|---|---|

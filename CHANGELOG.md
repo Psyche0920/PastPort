@@ -1,10 +1,11 @@
 # Changelog
 
-## 2026-11-07 — Organizer, map and selected game: zh / en / tr
+## 2026-11-07 — Organizer, map and selected games: zh / en / tr
 
 - Add Simplified Chinese, English and Turkish selectors to Organizer and the player map; retain unsaved Organizer inputs and refresh dynamic save/release messages when language changes.
 - Add a display-only localization layer for the selected Muradiye UI Trial / The Last Two Sacks walkable-theatre package, including dialogue, tasks, CSS signs, notes and endings. Keep original engine bytes, evidence IDs, decisions, source images and save format.
 - Publish it as a new immutable package version; preserve historical releases and release-specific saves. Other game packages are unchanged. Download/import links are in both READMEs and the team handoff.
+- Follow-up: localize wcheung / The Last Tour on Forty Two Heilbronn, including compiled objectives, same-origin 3D frames, Canvas labels and fictional SVG clues. Synchronize in-game selection back to the map using active-frame/origin/run checks; clean up frame observers on navigation. Original gameplay and save identity stay unchanged. The exact staged source passed 57 related tests serially; an initial parallel remote-launch fixture exceeded its startup time budget and passed on the serial rerun.
 - Validation: 53 relevant JS tests passed on the exact staged source after integrating current main, plus 86-module syntax and repository/documentation checks. Earlier isolated browser opening, ledger-dialog and parent-language switching passed. The original engine is unchanged; all endings were not replayed in this localization run.
 
 ## 2026-11-06 — Organizer delivery organization and unpublish

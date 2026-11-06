@@ -36,3 +36,40 @@ test('display language changes preserve event logs, identifiers and numeric task
  assert.deepEqual(templateParts('Perde ${one} / ${two}').chunks,['Perde ',' / ','']);
  assert.throws(()=>lexicon.translate('abc','de'),RangeError);
 });
+
+test('game-origin language requests require the active frame, origin, run and a supported language',async()=>{
+ const sourceText=await readFile(new URL('../frontend/player/app.mjs',import.meta.url),'utf8');
+ const module=await import('data:text/javascript;base64,'+Buffer.from(sourceText.slice(0,sourceText.indexOf('import {SaveSynchronizer}'))).toString('base64'));
+ const frame={},context={source:frame,origin:'http://game.local',run:'active-run'};
+ const event={source:frame,origin:context.origin,data:{type:'pastport:language-change',run:context.run,locale:'tr'}};
+ assert.equal(module.requestedGameLanguage(event,context),'tr');
+ for(const invalid of [{...event,source:{}},{...event,origin:'http://other.local'},{...event,data:{...event.data,run:'stale-run'}},{...event,data:{...event.data,locale:'de'}},{...event,data:{...event.data,type:'other'}}])assert.equal(module.requestedGameLanguage(invalid,context),null);
+});
+
+test('nested game views follow language and release their mounts/listeners on navigation',async()=>{
+ const {SameOriginFrameLocalizations}=await import('../frontend/player/game-display-locale.mjs');
+ let document={body:{},URL:'http://game.local/world/1'},frameListeners=new Map(),live=[];const mounts=[];
+ const frame={get contentDocument(){return document;},addEventListener:(type,fn)=>frameListeners.set(type,fn),removeEventListener:(type)=>frameListeners.delete(type)};
+ const controller=new SameOriginFrameLocalizations({querySelectorAll:()=>live},(doc,locale)=>{const value={locale,closed:false,setLocale(next){this.locale=next;},close(){this.closed=true;}};mounts.push(value);return value;});
+ live=[frame];controller.sync('tr');assert.equal(mounts.length,1);assert.equal(mounts[0].locale,'tr');
+ controller.sync('en');assert.equal(mounts.length,1);assert.equal(mounts[0].locale,'en');
+ document={body:{},URL:'http://game.local/world/2'};frameListeners.get('load')();assert.equal(mounts[0].closed,true);assert.equal(mounts.length,2);
+ live=[];controller.sync('zh');assert.equal(mounts[1].closed,true);assert.equal(frameListeners.size,0);
+ document=null;live=[frame];controller.sync('zh');assert.equal(mounts.length,2);controller.close();assert.equal(frameListeners.size,0);
+});
+
+test('The Last Tour catalog contains localized case-card assets and stable actor/evidence names',()=>{
+ assert.equal(lexicon.translate('The Last Tour','tr'),'Son Tur');
+ assert.equal(lexicon.translate('I withdraw approval for this version.','tr'),'Bu sürüm için verdiğim onayı geri çekiyorum.');
+ assert.equal(lexicon.translate('I withdraw approval for this version.','zh'),'我撤回对这一版的批准。');
+ assert.deepEqual(Object.keys(catalog.display_assets['assets/investigation/chat-zh.svg']),['zh','en','tr']);
+ for(const source of ['assets/investigation/chat-zh.svg','assets/investigation/chat-en.svg'])for(const lang of ['zh','en','tr'])assert.equal(catalog.display_assets[source][lang],`assets/i18n/${lang}/chat.svg`);
+});
+
+
+test('compound 3D quality, view and short object labels never retain Chinese in Turkish mode',()=>{
+ assert.equal(lexicon.translate('畫面品質：低','tr'),'Görüntü kalitesi: Düşük');
+ assert.equal(lexicon.translate('畫面品質：標準','tr'),'Görüntü kalitesi: Standart');
+ assert.equal(lexicon.translate('場景 1','tr'),'Görünüm 1');
+ assert.doesNotMatch(lexicon.translate('05 · 電腦','tr'),/[\u3400-\u9fff]/u);
+});

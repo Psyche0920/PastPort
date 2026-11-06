@@ -16,11 +16,11 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Six player-map packages · unified downloads](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
 
-The Muradiye row now links to the 2026-11-07 three-language *The Last Two Sacks* release; other rows retain the 2026-11-06 delivery snapshots. Site names identify launch slots, not historical scene approval.
+The Forty Two Heilbronn and Muradiye rows now link to the 2026-11-07 trilingual The Last Tour and The Last Two Sacks releases; other rows retain the 2026-11-06 delivery snapshots. Site names identify launch slots, not historical scene approval.
 
 | Map site | Project / snapshot | Download |
 | --- | --- | --- |
-| Forty Two Heilbronn | wcheung · `0ecef2790ab7` | [player-42heilbronn.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-42heilbronn.tar.gz) |
+| Forty Two Heilbronn | wcheung · `839c304f27ec` · zh / en / tr | [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
 | Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
 | Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
 | I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
@@ -108,7 +108,7 @@ New photo jobs use a compact policy: two photos per batch, at most 12 new entiti
 3. **Prepare Story:** first check saved-story provenance, tasks, gameplay and spatial compatibility. A pass permits reuse. Introduction-only changes needing review require human confirmation; invalid critical evidence/task conditions cannot be bypassed. A new saved revision with identical content needs no confirmation. Alternatively, explicitly authorize SOL 6.1 High for a new story, without automatic retry. Both paths stop at Story readiness.
 4. **Build game:** once Story is ready, click Build game to prepare gameplay, bind presentation, assemble and check resources. Open the player preview from Progress & delivery. The environment and Story are not regenerated.
 
-Organizer interface selection translates controls without rewriting source evidence, descriptions or Story authoring content; it does not submit forms, call models or discard unsaved input. Organizer and the player map have a Simplified Chinese / English / Türkçe selector. The map passes the selected language to the game. This update localizes only the last timestamped published Muradiye game, The Last Two Sacks (walkable theatre): dialogue, tasks, scene signs, notes and endings. Historical evidence images and proper names remain original. Other games are unchanged; an existing open game must be closed and reopened from the map to load the new release. Earlier-release saves remain on that release. Target play time is a Story creative goal, not generation time or exact timed play.
+Organizer interface selection translates controls without rewriting source evidence, descriptions or Story authoring content; it does not submit forms, call models or discard unsaved input. Organizer and the player map have a Simplified Chinese / English / Türkçe selector. The map passes the selected language to the game. The localized games on this deployment now include Muradiye’s The Last Two Sacks (walkable theatre) and Forty Two Heilbronn’s The Last Tour (wcheung): dialogue, compiled task objectives, scene signs, notes, endings and fictional chat-card images. Historical evidence images and proper names remain original. Other games are unchanged; an existing open game must be closed and reopened from the map to load the new release. Earlier-release saves remain on that release. Target play time is a Story creative goal, not generation time or exact timed play.
 
 | Upload entry point | Environment-stage execution | Reused output |
 |---|---|---|

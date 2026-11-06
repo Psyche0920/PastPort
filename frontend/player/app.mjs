@@ -88,6 +88,8 @@ export const playerTurkish=Object.freeze({
 });
 export function playerText(zh,en,locale){if(locale==='zh')return zh;if(locale==='en')return en;if(locale!=='tr')throw new RangeError('Unsupported player language');if(!Object.hasOwn(playerTurkish,en))throw new Error('Missing Turkish UI text: '+en);return playerTurkish[en];}
 
+export function requestedGameLanguage(event,{source,origin,run}){if(!source||!run||event.source!==source||event.origin!==origin||event.data?.run!==run||event.data?.type!=='pastport:language-change'||!['zh','en','tr'].includes(event.data.locale))return null;return event.data.locale;}
+
 import {SaveSynchronizer} from './save-sync.mjs';
 import {sites} from './sites.mjs';
 import {illustration} from './illustrations.mjs';
@@ -468,6 +470,8 @@ $('#back').onclick=async()=>{
 };
 window.addEventListener('message',async event=>{
   if (!active || event.source!==frame.contentWindow || event.origin!==new URL(active.url).origin || event.data?.run!==active.run) return;
+  const requested=requestedGameLanguage(event,{source:frame.contentWindow,origin:new URL(active.url).origin,run:active.run});
+  if(requested){if(locale!==requested){$('#language').value=requested;$('#language').onchange();}return;}
   const launched=active;
   if(event.data.type==='pastport:save-ready' && active.save){
     frame.contentWindow.postMessage({type:'pastport:save-state',run:active.run,namespace:active.namespace,entries:active.save.entries},event.origin);
