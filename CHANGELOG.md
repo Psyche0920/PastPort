@@ -7,6 +7,8 @@
 - Resolve archived production jobs by ID without listing them, preserving references from retained packages. No local history archive/restore, private account data, game bundles or publication data is included in this commit.
 - Verified with isolated Organizer API regression tests, frontend controller and language tests, strict typing, lint and documentation checks. Browser testing against an isolated real API confirmed the unpublish dialog, immediate removal, persistence after refresh and retained package. This does not establish cross-device/tunnel or gameplay completion acceptance. Test services are stopped after verification.
 
+- Player platform claims account saves only when the entry page boots `app.mjs`, where the save bridge is injected. A package with a different entry module and a leftover `session.mjs` (the 42 Heilbronn "最后一段录音" snapshot) no longer stays on "restoring account progress" forever; it is labelled local-save only. Regression test added. Rehearsal: all six `player-map-six-2026-11-06-r1` packages imported, published and opened without page errors on a fresh isolated deployment; full playthrough stamps and two-device runs not repeated.
+
 ## 2026-11-05 — wcheung release candidate
 
 - Merge main `5805a76` into the wcheung working branch and rebuild the standalone disappearance-story demo with the shared completion bridge.
@@ -14,10 +16,6 @@
 - Candidate package: `wcheung-demo-2026-11-05-r1/wcheung.tar.gz`; original PDF, accounts, databases, grants and model traces are excluded.
 - Deterministic three-route/four-ending traversal and Node 22 game/platform checks pass. Fresh model-generation quality testing is paused; this saved-content replay does not establish new model quality or device FPS.
 
-
-## 2026-11-06
-
-- Player platform claims account saves only when the entry page boots `app.mjs`, where the save bridge is injected. A package with a different entry module and a leftover `session.mjs` (the 42 Heilbronn "最后一段录音" snapshot) no longer stays on "restoring account progress" forever; it is labelled local-save only. Regression test added. Rehearsal: all six `player-map-six-2026-11-06-r1` packages imported, published and opened without page errors on a fresh isolated deployment; full playthrough stamps and two-device runs not repeated.
 
 ## 2026-11-05
 
