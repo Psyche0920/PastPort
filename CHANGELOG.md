@@ -15,6 +15,10 @@
 - Deterministic three-route/four-ending traversal and Node 22 game/platform checks pass. Fresh model-generation quality testing is paused; this saved-content replay does not establish new model quality or device FPS.
 
 
+## 2026-11-06
+
+- Player platform claims account saves only when the entry page boots `app.mjs`, where the save bridge is injected. A package with a different entry module and a leftover `session.mjs` (the 42 Heilbronn "最后一段录音" snapshot) no longer stays on "restoring account progress" forever; it is labelled local-save only. Regression test added. Rehearsal: all six `player-map-six-2026-11-06-r1` packages imported, published and opened without page errors on a fresh isolated deployment; full playthrough stamps and two-device runs not repeated.
+
 ## 2026-11-05
 
 - Shared game-package platform (per `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`). Organizer packages are now immutable versions with a current pointer. Uploads go in resumable 16 MB chunks with progress; the original archive is downloadable, and a materials list marks what is missing. A new version must name the current version as its base (stale bases are refused with 409), and earlier versions can be restored. Map publication records history, refuses a stale expected version and supports rollback. Organizer lists and the player map refresh every 4 seconds.

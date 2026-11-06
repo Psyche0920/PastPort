@@ -96,7 +96,11 @@ async function startPublishedGame(publication) {
     const saveKeys=[];
     try {
       const sessionCode=await readFile(join(game,'session.mjs'),'utf8');
-      if (sessionCode.includes('export class GameSession') && sessionCode.includes('snapshot()')) {
+      // Claim account saves only when the entry page boots app.mjs, where the save bridge is injected;
+      // a package may carry an unused session.mjs next to a different entry module.
+      const entryPage=await readFile(join(game,'index.html'),'utf8').catch(()=>'');
+      const bootsApp=/<script[^>]+src=["'](?:\.\/)?app\.mjs(?:\?[^"']*)?["']/i.test(entryPage);
+      if (bootsApp && sessionCode.includes('export class GameSession') && sessionCode.includes('snapshot()')) {
         const presentation=JSON.parse(await readFile(join(game,'data/presentation.json'),'utf8'));
         saveKeys.push(presentation.saveKey ?? 'pastport:murat-story-demo:save:3d-v1');
         if (presentation.continuation) {

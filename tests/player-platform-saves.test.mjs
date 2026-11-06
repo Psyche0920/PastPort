@@ -185,7 +185,7 @@ test('continue keeps an earlier published release; latest opens a separate save;
   const jobs=['c'.repeat(32),'d'.repeat(32)];
   for(const job of jobs){
     const game=join(organizer,'jobs',job,'game');await mkdir(join(game,'data'),{recursive:true});
-    await writeFile(join(game,'index.html'),'<html></html>');
+    await writeFile(join(game,'index.html'),'<html><script type="module" src="app.mjs?rev=1"></script></html>');
     await writeFile(join(game,'session.mjs'),'export class GameSession {snapshot(){return {};}}');
     await writeFile(join(game,'app.mjs'),'document.title="fixture";');
     await writeFile(join(game,'data/presentation.json'),JSON.stringify({saveKey:'save'}));
@@ -236,4 +236,28 @@ test('continue keeps an earlier published release; latest opens a separate save;
     assert.equal(await start(),true);
     assert.equal((await options(alice.cookie)).saves.length,1);
   } finally {await stop();await rm(directory,{recursive:true,force:true});}
+});
+
+test('a package whose entry is not app.mjs never claims account saves from a leftover session.mjs',async()=>{
+  const directory=await mkdtemp(join(tmpdir(),'pastport-entry-'));
+  const organizer=join(directory,'organizer');const job='9'.repeat(32);const game=join(organizer,'jobs',job,'game');
+  await mkdir(join(game,'data'),{recursive:true});
+  await writeFile(join(game,'index.html'),'<html><script type="module" src="./recording.mjs"></script></html>');
+  await writeFile(join(game,'recording.mjs'),'document.title="recording fixture";');
+  await writeFile(join(game,'session.mjs'),'export class GameSession {snapshot(){return {};}}');
+  await writeFile(join(game,'app.mjs'),'document.title="unused";');
+  await writeFile(join(game,'data/presentation.json'),JSON.stringify({saveKey:'save'}));
+  await writeFile(join(game,'data/scene3d-input.json'),JSON.stringify({worlds:[]}));
+  const catalog=join(directory,'sites.json');await writeFile(catalog,JSON.stringify([{id:'site'}]));
+  await writeFile(join(organizer,'player-map-site.json'),JSON.stringify({site_id:'site',job_id:job,version:'7'.repeat(64),game_directory:`jobs/${job}/game`}));
+  const socket=createServer();socket.listen(0,'127.0.0.1');await once(socket,'listening');const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
+  const origin=`http://127.0.0.1:${port}`;
+  const child=spawn(process.execPath,[fileURLToPath(new URL('../frontend/player/server.mjs',import.meta.url))],{env:{PATH:process.env.PATH,PLAYER_PORT:String(port),PLAYER_DATA:join(directory,'players'),ORGANIZER_DATA:organizer,SITE_CATALOG:catalog},stdio:['ignore','pipe','pipe']});
+  try {
+    await once(child.stdout,'data');
+    const post=async(path,input,cookie='')=>{const r=await fetch(origin+'/api/'+path,{method:'POST',headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/json'},body:JSON.stringify(input)});return {value:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};};
+    const account=await post('register',{username:'dana',name:'D',password:'isolated-fixture-only'});
+    const launched=(await post('launch',{site_id:'site'},account.cookie)).value;
+    assert.equal(launched.save,null);assert.equal(launched.save_format,null);
+  } finally {const done=once(child,'exit');child.kill();await done;await rm(directory,{recursive:true,force:true});}
 });
