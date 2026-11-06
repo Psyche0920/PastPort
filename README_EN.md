@@ -16,7 +16,7 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Six player-map packages · unified downloads](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
 
-These are the six current local player-map publication snapshots. Site names identify launch slots, not historical scene approval.
+The Muradiye row now links to the 2026-11-07 three-language *The Last Two Sacks* release; other rows retain the 2026-11-06 delivery snapshots. Site names identify launch slots, not historical scene approval.
 
 | Map site | Project / snapshot | Download |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ These are the six current local player-map publication snapshots. Site names ide
 | Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
 | Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
 | I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
-| II. Murat Külliyesi | maslan · `39ed18e98b93` | [player-muradiye.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-muradiye.tar.gz) |
+| II. Murat Külliyesi | muradiye-ui-trial · `812d71853b4c` · zh / en / tr | [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
 | Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
 
 Download the desired `.tar.gz`, import it through Organizer → Progress & delivery → Import delivery, then publish it to the matching site above. The new computer creates its own delivery record; Git pull does not synchronize local history, accounts or saves.
@@ -108,7 +108,7 @@ New photo jobs use a compact policy: two photos per batch, at most 12 new entiti
 3. **Prepare Story:** first check saved-story provenance, tasks, gameplay and spatial compatibility. A pass permits reuse. Introduction-only changes needing review require human confirmation; invalid critical evidence/task conditions cannot be bypassed. A new saved revision with identical content needs no confirmation. Alternatively, explicitly authorize SOL 6.1 High for a new story, without automatic retry. Both paths stop at Story readiness.
 4. **Build game:** once Story is ready, click Build game to prepare gameplay, bind presentation, assemble and check resources. Open the player preview from Progress & delivery. The environment and Story are not regenerated.
 
-Switching interface language does not translate evidence/descriptions/stories, submit forms, call models or discard unsaved input. Target play time is a Story creative goal, not generation time or exact timed play.
+Organizer interface selection translates controls without rewriting source evidence, descriptions or Story authoring content; it does not submit forms, call models or discard unsaved input. Organizer and the player map have a Simplified Chinese / English / Türkçe selector. The map passes the selected language to the game. This update localizes only the last timestamped published Muradiye game, The Last Two Sacks (walkable theatre): dialogue, tasks, scene signs, notes and endings. Historical evidence images and proper names remain original. Other games are unchanged; an existing open game must be closed and reopened from the map to load the new release. Earlier-release saves remain on that release. Target play time is a Story creative goal, not generation time or exact timed play.
 
 | Upload entry point | Environment-stage execution | Reused output |
 |---|---|---|
@@ -155,7 +155,7 @@ Normally use each Organizer task's Open player preview button; main starts the r
 
 History identifies each project and offers Continue this project and View materials and review for saved results. The active selection is stored per authenticated operator in the local Organizer database and restored after refresh, login or service restart. Restoration connects saved environment, review and Story state without starting generation. The review project selector stays visible.
 
-Organizer supports single-admin login, four material starts, complete default reuse, automatic review handoff, saved-story compatibility, new Story, real progress and game access. Manual Chinese/English selection has been checked. Zero-call cache-to-game execution and new Story from registered environments have real run evidence. Fresh external Evidence/Marble execution for every material path has not been fully accepted.
+Organizer supports single-admin login, four material starts, complete default reuse, automatic review handoff, saved-story compatibility, new Story, real progress and game access. Manual Chinese/English/Turkish selection is supported. Zero-call cache-to-game execution and new Story from registered environments have real run evidence. Fresh external Evidence/Marble execution for every material path has not been fully accepted.
 
 New Story uses a fixed content plan; code generates IDs, states, rules and references. Valid structure does not mean engaging narrative or approved historical content. Stylization has an SDK, but Organizer can only reuse existing appearance results rather than request new ones. The player map now uses separate player accounts and SQLite saves. Devices sharing the same backend can restore progress for the same account, site and published release; see the startup and scope notes below. Current source is the baseline; old wheels require rebuilding to include later fixes.
 
@@ -254,6 +254,8 @@ PastPort/
 │   │   ├── <a href="frontend/player/cloud-saves.mjs">cloud-saves.mjs</a>  — SQLite saves scoped by player, site and release.
 │   │   ├── <a href="frontend/player/save-sync.mjs">save-sync.mjs</a>  — Coalesced ordered writes, conflicts and explicit retry.
 │   │   ├── <a href="frontend/player/game-save-bridge.mjs">game-save-bridge.mjs</a>  — Hydrates before game boot and bridges existing save points.
+│   │   ├── <a href="frontend/player/game-display-locale.mjs">game-display-locale.mjs</a>  — Game display localization without changing engine state.
+│   │   ├── <a href="frontend/player/game-display-locales.json">game-display-locales.json</a>  — Simplified Chinese, English and Turkish display catalog.
 │   │   ├── <a href="frontend/player/index.html">index.html</a>  — Player-platform HTML entry.
 │   │   ├── <a href="frontend/player/style.css">style.css</a>  — Map and passport styles.
 │   │   ├── <a href="frontend/player/sites.json">sites.json</a>  — Shared map-site catalog for Organizer publication targets.
@@ -262,7 +264,7 @@ PastPort/
 │   └── <a href="frontend/organizer/">organizer/</a>  — Organizer frontend: authentication, actual uploads, registered-material reuse/regeneration, progress and delivery
 │       ├── <a href="frontend/organizer/index.html">index.html</a>  — Actual production page served by main at /organizer/; requires the HTTP service and login.
 │       ├── <a href="frontend/organizer/app.mjs">app.mjs</a>  — Orchestrates materials/environment, existing review, Story, then gameplay/assembly; controls reuse and generation separately.
-│       ├── <a href="frontend/organizer/i18n.mjs">i18n.mjs</a>  — Organizer Chinese/English UI catalog, manual selection and in-place text binding; leaves source and form content unchanged.
+│       ├── <a href="frontend/organizer/i18n.mjs">i18n.mjs</a>  — Organizer Chinese/English/Turkish UI catalog, manual selection and in-place text binding; leaves source and form content unchanged.
 │       ├── <a href="frontend/organizer/review.mjs">review.mjs</a>  — Embeds the existing numbered-object review UI; handles save notifications, unsaved edits and input revision checks before Story.
 │       ├── <a href="frontend/organizer/app.css">app.css</a>  — Organizer layout, responsive styling and action states.
 │       └── <a href="frontend/organizer/sketch.html">sketch.html</a>  — Organizer design sketch: four material starts, corresponding review, reuse/progress/delivery; not connected to the backend.
@@ -517,7 +519,8 @@ PastPort/
 │   ├── <a href="tests/test_organizer_previews.py">test_organizer_previews.py</a>  — Actual Node preview session isolation, listener inheritance and cleanup checks.
 │   ├── <a href="tests/test_organizer_cache.py">test_organizer_cache.py</a>  — Complete caches, cross-PDF isolation, single-file changes and default-bundle integrity tests.
 │   ├── <a href="tests/test_organizer.py">test_organizer.py</a>  — Production API authorization, inputs, reuse/generation, deduplication and recovery tests.
-│   ├── <a href="tests/test_organizer_i18n.mjs">test_organizer_i18n.mjs</a>  — Manual Chinese/English selection, dynamic status and original-content preservation checks.
+│   ├── <a href="tests/test_organizer_i18n.mjs">test_organizer_i18n.mjs</a>  — Manual Chinese/English/Turkish selection, dynamic status and original-content preservation checks.
+│   ├── <a href="tests/player-i18n.test.mjs">player-i18n.test.mjs</a>  — Three-language coverage, dynamic labels and unchanged game identities.
 │   ├── <a href="tests/test_organizer_review.py">test_organizer_review.py</a>  — Original review UI integration, authorization, revision conflicts, history and pre-Story checks.
 │   ├── <a href="tests/test_organizer_accounts.py">test_organizer_accounts.py</a>  — Administrator password login, existing permissions and session-security tests.
 │   ├── <a href="tests/browser/">browser/</a>  — Workbench browser interaction tests

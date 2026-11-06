@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-07 — Organizer, map and selected game: zh / en / tr
+
+- Add Simplified Chinese, English and Turkish selectors to Organizer and the player map; retain unsaved Organizer inputs and refresh dynamic save/release messages when language changes.
+- Add a display-only localization layer for the selected Muradiye UI Trial / The Last Two Sacks walkable-theatre package, including dialogue, tasks, CSS signs, notes and endings. Keep original engine bytes, evidence IDs, decisions, source images and save format.
+- Publish it as a new immutable package version; preserve historical releases and release-specific saves. Other game packages are unchanged. Download/import links are in both READMEs and the team handoff.
+- Validation: 53 relevant JS tests passed on the exact staged source after integrating current main, plus 86-module syntax and repository/documentation checks. Earlier isolated browser opening, ledger-dialog and parent-language switching passed. The original engine is unchanged; all endings were not replayed in this localization run.
+
 ## 2026-11-06 — Organizer delivery organization and unpublish
 
 - Separate Game packages, Map publications and Production history into delivery tabs. Collapse technical paths, version submission and version history; add project/status search for production records.

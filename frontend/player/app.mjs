@@ -1,12 +1,106 @@
+export const playerTurkish=Object.freeze({
+  "Interface language": "Arayüz dili",
+  "PastPort · Bursa Heritage Map": "PastPort · Bursa Kültürel Miras Haritası",
+  "中文": "简体中文",
+  "Cleared": "Tamamlandı",
+  "Retry sync": "Eşitlemeyi yeniden dene",
+  "Export unsynced save": "Eşitlenmemiş kaydı indir",
+  "Load the newest save from the other device": "Diğer cihazdaki en yeni kaydı yükle",
+  "Save conflict: ": "Kayıt çakışması: ",
+  "Not synced: ": "Eşitlenmedi: ",
+  "Synced to your account": "Hesabınıza eşitlendi",
+  "Syncing…": "Eşitleniyor…",
+  "Loading the newest save discards this device’s unsynced progress. Export it first if needed. Continue?": "En yeni kayıt yüklenirse bu cihazın eşitlenmemiş ilerlemesi bırakılır. Gerekirse önce dışa aktarın. Devam edilsin mi?",
+  "You earned this place’s medal.": "Bu yerin madalyasını kazandınız.",
+  "Complete the game to earn this place’s medal.": "Bu yerin madalyasını kazanmak için oyunu tamamlayın.",
+  "This place can be explored on the map. Its game is not available yet.": "Bu yeri haritada keşfedebilirsiniz. Oyunu henüz açık değil.",
+  "Play game": "Oyunu oyna",
+  "Continue": "Devam et",
+  "A newer release is published. Your last progress belongs to the earlier release (saved ": "Yeni bir sürüm yayımlandı. Son ilerlemeniz önceki sürüme ait (kayıt zamanı: ",
+  ").": ").",
+  "Continue last progress (earlier release)": "Son ilerlemeye devam et (önceki sürüm)",
+  "Open the new-release save": "Yeni sürüm kaydını aç",
+  "Play the new release (new save; earlier progress kept)": "Yeni sürümü oyna (yeni kayıt; eski ilerleme korunur)",
+  "The release of your last progress is no longer available; you will start the current release.": "Son ilerlemenizin sürümü artık mevcut değil; geçerli sürüm başlayacak.",
+  "Start the current release": "Geçerli sürümü başlat",
+  "Loading rankings…": "Sıralama yükleniyor…",
+  "No traveler has earned a medal yet. Complete a published game to appear here.": "Henüz madalya kazanan gezgin yok. Burada görünmek için yayımlanmış bir oyunu tamamlayın.",
+  "The leaderboard is temporarily unavailable.": "Sıralama şu anda okunamıyor.",
+  "A newer release of this place is published. This run stays on its release; return to the map to try the new one.": "Bu yerin yeni sürümü yayımlandı. Bu oyun mevcut sürümde devam eder; yenisini denemek için haritaya dönün.",
+  "PASTPORT · TRAVEL PASSPORT": "PASTPORT · GEZGİN PASAPORTU",
+  "Complete a published game to earn its place’s stamp.": "Bir yerin damgasını kazanmak için yayımlanmış oyununu tamamlayın.",
+  "Sign out": "Çıkış yap",
+  "Display name": "Görünen ad",
+  "Username": "Kullanıcı adı",
+  "Password": "Parola",
+  "Create account": "Hesap oluştur",
+  "Sign in": "Giriş yap",
+  "Already have an account? Sign in": "Hesabınız var mı? Giriş yapın",
+  "New here? Create an account": "Yeni misiniz? Hesap oluşturun",
+  "Create your traveler profile": "Gezgin profilinizi oluşturun",
+  "Sign in to your passport": "Pasaportunuza giriş yapın",
+  "Connecting the remote game…": "Uzaktaki oyuna bağlanılıyor…",
+  "Remote access is not ready. Please retry shortly.": "Uzak erişim henüz hazır değil. Biraz sonra yeniden deneyin.",
+  "You are continuing an earlier-release save; the new release on the map does not affect this run.": "Önceki sürümdeki kaydınıza devam ediyorsunuz; haritadaki yeni sürüm bu oyunu etkilemez.",
+  "Restoring your account progress…": "Hesap ilerlemeniz geri yükleniyor…",
+  "This game only supports local saves": "Bu oyun yalnızca yerel kayıtları destekliyor",
+  "Progress is not synced. Export your unsynced save first. Return to the map and discard these unsynced changes?": "İlerleme eşitlenmedi. Önce eşitlenmemiş kaydınızı dışa aktarın. Haritaya dönüp bu eşitlenmemiş ilerlemeyi bırakmak istiyor musunuz?",
+  "Account progress restored": "Hesap ilerlemesi geri yüklendi",
+  "New game · Progress saves automatically": "Yeni oyun · İlerleme otomatik kaydedilir",
+  "Account save could not be loaded. Return to the map and retry.": "Hesap kaydı yüklenemedi. Haritaya dönüp yeniden deneyin.",
+  "Passport stamped": "Pasaport damgalandı",
+  "Menu": "Menü",
+  "Home": "Ana sayfa",
+  "Discover": "Keşfet",
+  "Leaderboard": "Sıralama",
+  "Heritage Travel Journal": "Kültürel Miras Gezi Defteri",
+  "My Passport": "Pasaportum",
+  "A HERITAGE TRAVEL JOURNAL": "KÜLTÜREL MİRAS GEZİ DEFTERİ",
+  "Follow the trail. Collect a stamp for every adventure you complete.": "Yolculuğu keşfedin. Tamamladığınız her macerada pasaportunuza bir damga ekleyin.",
+  "Start Passporting": "Pasaport Yolculuğuna Başla",
+  "A passport and travel stamp": "Bir pasaport ve gezi damgası",
+  "← Home": "← Ana sayfa",
+  "Travelers ranked by the stamps they earned by completing games.": "Gezginler, oyunları tamamlayarak kazandıkları damgalara göre sıralanır.",
+  "Silk Road · Bursa": "İpek Yolu · Bursa",
+  "Explore the old city and leave your mark in your passport.": "Eski şehri keşfedin ve pasaportunuzda izinizi bırakın.",
+  "Osmangazi heritage sites and standalone games": "Osmangazi miras alanları ve bağımsız oyunlar",
+  "Close": "Kapat",
+  "← Back to map": "← Haritaya dön",
+  "Forty Two Heilbronn game": "Forty Two Heilbronn oyunu",
+  "Not found.": "Bulunamadı.",
+  "Your save session expired. Return to the map and reopen the game.": "Kayıt oturumunuzun süresi doldu. Haritaya dönüp oyunu yeniden açın.",
+  "This game does not support account saves yet.": "Bu oyun henüz hesap kaydını desteklemiyor.",
+  "Another device has a newer save. Return to the map and reopen to avoid overwriting it.": "Başka bir cihazda daha yeni kayıt var. Üzerine yazmamak için haritaya dönüp yeniden açın.",
+  "This game snapshot could not be accepted.": "Bu oyunun kayıt biçimi kabul edilemedi.",
+  "This place does not have a published game yet.": "Bu yerin henüz yayımlanmış oyunu yok.",
+  "Request origin does not match.": "İstek kaynağı eşleşmiyor.",
+  "Remote game access could not connect. Check network/DNS and retry.": "Uzaktaki oyuna bağlanılamadı. Ağ ve DNS bağlantısını kontrol edip yeniden deneyin.",
+  "Use 3–32 letters, digits, underscores or hyphens for the username. Use at least 8 characters for the password.": "Kullanıcı adı 3–32 harf, rakam, alt çizgi veya kısa çizgiden oluşmalı. Parola en az 8 karakter olmalı.",
+  "That username is already taken.": "Bu kullanıcı adı zaten kullanılıyor.",
+  "Enter a display name between 1 and 40 characters.": "1–40 karakter arasında bir görünen ad girin.",
+  "Incorrect username or password.": "Kullanıcı adı veya parola yanlış.",
+  "Sign in to earn passport stamps.": "Pasaport damgası kazanmak için giriş yapın.",
+  "This completion receipt is invalid.": "Bu tamamlama makbuzu geçersiz.",
+  "The request could not be processed.": "İstek işlenemedi.",
+  "The release this save belongs to is no longer available.": "Bu kaydın ait olduğu sürüm artık mevcut değil.",
+  "en": "tr",
+  "Unknown error.": "Bilinmeyen hata."
+});
+export function playerText(zh,en,locale){if(locale==='zh')return zh;if(locale==='en')return en;if(locale!=='tr')throw new RangeError('Unsupported player language');if(!Object.hasOwn(playerTurkish,en))throw new Error('Missing Turkish UI text: '+en);return playerTurkish[en];}
+
 import {SaveSynchronizer} from './save-sync.mjs';
 import {sites} from './sites.mjs';
 import {illustration} from './illustrations.mjs';
 
 const $ = selector => document.querySelector(selector);
-let locale = localStorage.getItem('pastport:map-language') === 'en' ? 'en' : 'zh';
-const t = (zh,en) => locale === 'en' ? en : zh;
+const savedLocale=localStorage.getItem('pastport:map-language');
+let locale=['zh','en','tr'].includes(savedLocale)?savedLocale:'zh';
+const t = (zh,en) => playerText(zh,en,locale);
 const originalText = new Map([...document.querySelectorAll('[data-en], [data-en-label]')]
   .map(el => [el,el.hasAttribute('data-en') ? el.textContent : el.getAttribute(el.matches('iframe') ? 'title' : 'aria-label')]));
+let repaintGameStatus=null,repaintReleaseNote=null;
+function setGameStatus(zh,en){repaintGameStatus=()=>{$('#game-status').textContent=t(zh,en);};repaintGameStatus();}
+function setReleaseNote(zh,en){repaintReleaseNote=()=>{releaseNote.textContent=t(zh,en);};repaintReleaseNote();}
 const errors = {
   '未找到':'Not found.',
   '存档会话已失效，请返回地图重新打开游戏':'Your save session expired. Return to the map and reopen the game.',
@@ -28,13 +122,14 @@ const errors = {
 function renderLanguage() {
   document.documentElement.lang = t('zh-Hans','en');
   document.title = t('PastPort · Bursa 遗址地图','PastPort · Bursa Heritage Map');
-  $('#language').textContent = t('English','中文');
-  $('#language').lang = t('en','zh-Hans');
+  $('#language').value=locale;
   for (const [el,zh] of originalText) {
     if (el.hasAttribute('data-en')) el.textContent = t(zh,el.dataset.en);
     else el.setAttribute(el.matches('iframe') ? 'title' : 'aria-label',t(zh,el.dataset.enLabel));
   }
+  if(active?.url){frame.title=selectedSite?.name??'';frame.contentWindow?.postMessage({type:'pastport:language',locale},new URL(active.url).origin);}
   for (const stamp of document.querySelectorAll('.map-stamp')) stamp.textContent=t('通关','Cleared');
+  repaintGameStatus?.();repaintReleaseNote?.();
   retrySave.textContent=t('重试同步','Retry sync');
   exportSave.textContent=t('下载未同步存档','Export unsynced save');
   reloadSave.textContent=t('载入另一设备的最新存档','Load the newest save from the other device');
@@ -50,7 +145,7 @@ async function api(route, data) {
     method:'POST',keepalive:route==='save' && JSON.stringify(data).length<60000,headers:{'Content-Type':'application/json'},body:JSON.stringify(data),
   });
   const value = await response.json();
-  if (!response.ok) {const error=new Error(t(value.error,errors[value.error] ?? value.error));error.code=value.code;throw error;}
+  if (!response.ok) {const error=new Error(t(value.error,errors[value.error] ?? 'Unknown error.'));error.localized=[value.error,errors[value.error]??'Unknown error.'];error.code=value.code;throw error;}
   return value;
 }
 let current = null;
@@ -74,10 +169,10 @@ function saveStatus(state,error) {
   exportSave.hidden=state!=='failed';
   reloadSave.hidden=!conflict;
   $('#game-status').dataset.sync=conflict ? 'conflict' : state==='failed' ? 'unsynced' : state==='saved' ? 'synced' : 'syncing';
-  $('#game-status').textContent=conflict ? t('存档冲突：','Save conflict: ')+error.message
-    : state==='failed' ? t('未同步：','Not synced: ')+error.message
+  repaintGameStatus=()=>{$('#game-status').textContent=conflict ? t('存档冲突：','Save conflict: ')+(error.localized?t(...error.localized):error.message)
+    : state==='failed' ? t('未同步：','Not synced: ')+(error.localized?t(...error.localized):error.message)
     : state==='saved' ? t('已同步到账号','Synced to your account')
-    : t('正在同步…','Syncing…');
+    : t('正在同步…','Syncing…');};repaintGameStatus();
 }
 reloadSave.onclick=()=>{
   if(!active||!selectedSite)return;
@@ -210,7 +305,7 @@ async function refreshPublications() {
   if (active && selectedSite) {
     const live=published.find(publication=>publication.site_id===selectedSite.id);
     releaseNote.hidden=!live || live.version===active.version;
-    releaseNote.textContent=t('此地点已发布新版。本局继续当前版本；返回地图后可选择体验新版。','A newer release of this place is published. This run stays on its release; return to the map to try the new one.');
+    setReleaseNote('此地点已发布新版。本局继续当前版本；返回地图后可选择体验新版。','A newer release of this place is published. This run stays on its release; return to the map to try the new one.');
   }
   if (changed && placeShown && !active) void showPlace(placeShown);
 }
@@ -311,7 +406,7 @@ async function launch(site,options={mode:'continue'}) {
   if (!current) {pendingLaunch=site;showProfile();return;}
   try {
     $('#game strong').textContent=site.name;
-    $('#game-status').textContent=t('正在连接远程游戏入口…','Connecting the remote game…');
+    setGameStatus('正在连接远程游戏入口…','Connecting the remote game…');
     frame.src='about:blank';$('#game').hidden=false;
     let launch;
     for(let attempt=0;attempt<240;attempt++){
@@ -330,11 +425,11 @@ async function launch(site,options={mode:'continue'}) {
     retrySave.hidden=true;exportSave.hidden=true;reloadSave.hidden=true;
     delete $('#game-status').dataset.sync;
     releaseNote.hidden=active.latest!==false;
-    releaseNote.textContent=t('你正在继续旧版存档；地图上的新版不会影响这一局。','You are continuing an earlier-release save; the new release on the map does not affect this run.');
+    setReleaseNote('你正在继续旧版存档；地图上的新版不会影响这一局。','You are continuing an earlier-release save; the new release on the map does not affect this run.');
     $('#game strong').textContent=site.name;
     frame.title=site.name;
     if (modal.open) modal.close();
-    $('#game-status').textContent=active.save ? t('正在恢复账号进度…','Restoring your account progress…') : t('此游戏仅支持本机存档','This game only supports local saves');
+    if(active.save)setGameStatus('正在恢复账号进度…','Restoring your account progress…');else setGameStatus('此游戏仅支持本机存档','This game only supports local saves');
     const url = new URL(active.url);
     url.searchParams.set('lang',locale);
     frame.src=url.href;
@@ -349,11 +444,13 @@ async function launch(site,options={mode:'continue'}) {
 }
 renderLanguage();
 showPage();
-$('#language').onclick=()=>{
-  locale=t('en','zh');
+$('#language').onchange=()=>{
+  locale=$('#language').value;
   localStorage.setItem('pastport:map-language',locale);
   renderLanguage();
   if (!$('#leaderboard').hidden) void loadLeaderboard();
+  if ($('#place-dialog').open && placeShown) void showPlace(placeShown);
+  if (modal.open){const fields=[...modal.querySelectorAll('input')].map(input=>[input.name,input.value]);showProfile(modal.querySelector('input[name=name]')?'register':'login');for(const [name,value] of fields){const input=modal.querySelector('input[name="'+name+'"]');if(input)input.value=value;}}
 };
 $('#passport').onclick=()=>showProfile();
 modal.addEventListener('close',()=>{pendingLaunch=null;});
@@ -374,11 +471,11 @@ window.addEventListener('message',async event=>{
   const launched=active;
   if(event.data.type==='pastport:save-ready' && active.save){
     frame.contentWindow.postMessage({type:'pastport:save-state',run:active.run,namespace:active.namespace,entries:active.save.entries},event.origin);
-    $('#game-status').textContent=active.save.revision ? t('已恢复账号进度','Account progress restored') : t('新游戏 · 进度将自动保存','New game · Progress saves automatically');
+    if(active.save.revision)setGameStatus('已恢复账号进度','Account progress restored');else setGameStatus('新游戏 · 进度将自动保存','New game · Progress saves automatically');
     return;
   }
   if(event.data.type==='pastport:save-error'){
-    $('#game-status').textContent=t('账号进度载入失败，请返回地图重试','Account save could not be loaded. Return to the map and retry.');return;
+    setGameStatus('账号进度载入失败，请返回地图重试','Account save could not be loaded. Return to the map and retry.');return;
   }
   if(event.data.type==='pastport:save-change' && saveSync){
     const {key,value}=event.data;
@@ -398,7 +495,7 @@ async function claimEnding(launched) {
     current=await api('stamp',{run:launched.run});
     if(active!==launched)return;
     active.stamped=true;
-    $('#game-status').textContent=t('已在通关文书盖章','Passport stamped');
+    setGameStatus('已在通关文书盖章','Passport stamped');
     showProfile();
   } catch(error) {$('#game-status').textContent=error.message;}
   finally {claiming=false;}

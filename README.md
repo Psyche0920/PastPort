@@ -16,7 +16,7 @@
 
 [六个玩家端游戏包 · 统一下载](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
 
-以下为本机玩家地图当前六个发布快照；站点是平台入口标签，不代表历史场景认证。
+穆拉迪耶行已更新为 2026-11-07 的《最后两袋》三语版；其余行保留 2026-11-06 的交付快照。站点是平台入口标签，不代表历史场景认证。
 
 | 地图站点 | 项目 / 版本 | 下载 |
 | --- | --- | --- |
@@ -24,7 +24,7 @@
 | Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
 | Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
 | I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
-| II. Murat Külliyesi | maslan · `39ed18e98b93` | [player-muradiye.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-muradiye.tar.gz) |
+| II. Murat Külliyesi | muradiye-ui-trial · `812d71853b4c` · 简中 / 英 / 土 | [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
 | Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
 
 下载所需 `.tar.gz`，在 Organizer「制作进度与交付 → 导入交付包」导入，再选择上表对应站点发布。新电脑会创建自己的交付记录；Git pull 不会同步本机历史、账号或存档。
@@ -108,7 +108,7 @@ Organizer 的「制作进度与交付」分为「游戏包」「地图发布」�
 3. **准备故事**：旧故事先做来源、任务、玩法和空间兼容检查。通过即可复用；仅介绍发生待核对改动时需本人确认；关键依据或任务条件失效不能跳过。保存版本号变化而内容相同，不要求确认。也可明确授权SOL 6.1 High生成新故事，失败不自动重试。两种路径都在故事就绪后停下。
 4. **制作游戏**：故事就绪后点击“开始制作”，执行玩法准备、呈现绑定、组包与资源检查；在“制作进度与交付”打开玩家预览。不会再生成环境或故事。
 
-切换界面语言不翻译史料、介绍或故事，不保存表单或调用模型，也不丢弃未保存输入。体验目标时长是Story创作目标，不是制作耗时或精确游玩计时。
+Organizer 的语言选择只翻译操作界面，不改写史料、介绍或 Story 创作内容，不提交表单、调用模型或丢弃未保存输入。 Organizer 和玩家地图均可选简体中文 / English / Türkçe；从地图启动时把所选语言传给游戏。本次游戏范围仅为最后有发布时间的穆拉迪耶《最后两袋》可行走剧场：对白、任务、标牌、笔记和结局三语显示；史料原图与专名保留原样。其他游戏不变；已打开的游戏需退出后从地图重新打开新版。旧版存档继续对应旧版。体验目标时长是Story创作目标，不是制作耗时或精确游玩计时。
 
 | 上传起点 | 环境阶段执行内容 | 已有成果 |
 |---|---|---|
@@ -256,6 +256,8 @@ PastPort/
 │   │   ├── <a href="frontend/player/cloud-saves.mjs">cloud-saves.mjs</a>  — 按玩家、站点和版本隔离的 SQLite 存档仓储。
 │   │   ├── <a href="frontend/player/save-sync.mjs">save-sync.mjs</a>  — 合并写入、顺序保存、冲突与显式重试。
 │   │   ├── <a href="frontend/player/game-save-bridge.mjs">game-save-bridge.mjs</a>  — 游戏启动前恢复存档并桥接原有保存点。
+│   │   ├── <a href="frontend/player/game-display-locale.mjs">game-display-locale.mjs</a>  — 不改引擎状态的游戏三语显示层。
+│   │   ├── <a href="frontend/player/game-display-locales.json">game-display-locales.json</a>  — 简体中文、英文和土耳其语显示词库。
 │   │   ├── <a href="frontend/player/index.html">index.html</a>  — 玩家平台 HTML 入口。
 │   │   ├── <a href="frontend/player/style.css">style.css</a>  — 玩家地图和护照样式。
 │   │   ├── <a href="frontend/player/sites.json">sites.json</a>  — 与 Organizer 发布选择共享的地图站点目录。
@@ -519,7 +521,8 @@ PastPort/
 │   ├── <a href="tests/test_organizer_previews.py">test_organizer_previews.py</a>  — 真实Node预览的会话隔离、监听继承与资源关闭检查。
 │   ├── <a href="tests/test_organizer_cache.py">test_organizer_cache.py</a>  — 完整缓存、防跨PDF混用、单文件变化及默认项完整性回归。
 │   ├── <a href="tests/test_organizer.py">test_organizer.py</a>  — 制作API的权限、输入、缓存/新生成、去重与恢复测试。
-│   ├── <a href="tests/test_organizer_i18n.mjs">test_organizer_i18n.mjs</a>  — 中英文手动切换、动态状态和原始资料保护检查。
+│   ├── <a href="tests/test_organizer_i18n.mjs">test_organizer_i18n.mjs</a>  — 中英土手动切换、动态状态和原始资料保护检查。
+│   ├── <a href="tests/player-i18n.test.mjs">player-i18n.test.mjs</a>  — 三语覆盖、动态标签和游戏编号保持检查。
 │   ├── <a href="tests/test_organizer_review.py">test_organizer_review.py</a>  — 原审核页面接线、权限、版本冲突、审核历史和Story前确认回归。
 │   ├── <a href="tests/test_organizer_accounts.py">test_organizer_accounts.py</a>  — 管理员账号密码、既有权限和会话安全回归。
 │   ├── <a href="tests/browser/">browser/</a>  — 浏览器工作台交互测试

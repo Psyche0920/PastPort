@@ -220,7 +220,9 @@ Organizer’s delivery workspace separates Game packages, Map publications and P
 
 New photo jobs use a compact policy: two photos per batch, at most 12 new entities and 24 sightings, schema-bounded names/features/explanations, and a 120-second deadline or the shorter authorized timeout. Overflow is reported as incomplete and stops acceptance. Existing policies and paid receipts stay unchanged; failures are not automatically retried. These bounds have offline regression evidence, not fresh-model speed acceptance.
 
-The upper-right manual Chinese/English selector defaults to Chinese and stores a browser-local preference; it does not follow the browser locale. `frontend/organizer/i18n.mjs` localizes login, production, review wrapper and progress, including existing labels in the shared embedded review UI. It changes text in place without reload, form reconstruction/submission, model/Marble calls or review saves. PDF text, object names, descriptions, story, paths and input values retain their language; uncatalogued diagnostics retain original text. The module is bundled and included in resource fingerprints to avoid stale mixed scripts.
+The upper-right manual Simplified Chinese/English/Turkish selector defaults to Chinese and stores a browser-local preference; it does not follow the browser locale. `frontend/organizer/i18n.mjs` localizes login, production, review wrapper and progress, including existing labels in the shared embedded review UI. It changes text in place without reload, form reconstruction/submission, model/Marble calls or review saves. PDF text, object names, descriptions, story, paths and input values retain their language; uncatalogued diagnostics retain original text. The module is bundled and included in resource fingerprints to avoid stale mixed scripts.
+
+The player map also supports zh/en/tr and passes `lang` to the game. The selected latest Muradiye publication uses `frontend/player/game-display-locale.mjs` and its three-language catalog as a display layer, including CSS `data-label` signs and native dialog selectors. Parent language messages are accepted only from the actual parent origin. Engine bytes, chapter/source IDs, decision logs and task conditions are unchanged. Import and publish it as a new immutable version; retain prior files and publication history. Saves remain release-specific, without automatic migration. This does not localize every imported game or original source image.
 
 main serves `frontend/organizer/` at `/organizer/`, retaining roles/project scope. The static Sites sketch is not connected to this service. The player map has its own account/save database, separate from Organizer staff and review data.
 
@@ -791,7 +793,7 @@ Out of scope: rewriting stories, regenerating recognition/matching/environments,
 | `frontend/player/server.mjs` | Accounts, runs, saves, stamps, rankings | Central data, configurable origins, stable game URLs and session recovery |
 | `cloud-saves.mjs`, `save-sync.mjs`, `game-save-bridge.mjs` | Modern snapshots, revision locks, retry, hydration | Multi-device/offline tests, continuation policy and legacy format adapters |
 | `player-completion.mjs` | Pinned legacy ending bridge and local account namespaces | Backend saves for legacy UI Trial; stamping is not cloud-save acceptance |
-| `frontend/player/app.mjs` | Bilingual map/passport/leaderboard | Remote launch, visible syncing/synced/failed/conflict states, continue/latest choice |
+| `frontend/player/app.mjs` | Chinese/English/Turkish map/passport/leaderboard | Remote launch, visible syncing/synced/failed/conflict states, continue/latest choice |
 
 Equal GameSession class names do not imply equal schemas. Modern version-2 snapshots contain identity/sequence/engine/local/notebook/positions/shotState. Legacy UI Trial stores world/chapter versions, chapter ID, started, events and positions, replayed by its original engine. Never bypass validation or force both into one fake format.
 

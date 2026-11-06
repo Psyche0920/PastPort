@@ -229,7 +229,7 @@ $('refresh').addEventListener('click',()=>refreshJobs().catch(e=>message(e.messa
 // Shared delivery packages: chunked upload (tunnel-safe), immutable versions, CAS publish/restore.
 let deliveryState={packages:[],publications:[],sites:[]},deliveryBusy=0,deliverySignature='',jobSignature='',deliveryDeferred=false,deliveryEpoch=0;
 const megabytes=bytes=>(bytes/1024/1024).toFixed(1)+' MB';
-const timeText=value=>value?new Date(value).toLocaleString():'';
+const timeText=value=>value?new Date(value).toLocaleString(getLanguage()==='zh'?'zh-CN':getLanguage()):'';
 function uploadChunk(id,offset,blob,onProgress){
   return new Promise((resolve,reject)=>{
     const request=new XMLHttpRequest();
@@ -306,7 +306,7 @@ function renderPackages(){
     for(const v of [...item.versions].reverse()){
       const li=document.createElement('li');li.append(text('span','第 '+v.number+' 版 · '+timeText(v.submitted_at)+' · '+megabytes(v.size_bytes)+(v.note?' · '+v.note:'')));
       if(v.job_id===item.current_job_id)li.append(text('span','当前版本','badge'));
-      else{const restore=text('button','设为当前版本');restore.className='secondary';restore.onclick=async()=>{if(!confirm('把 '+item.name+' 的当前版本改为第 '+v.number+' 版？其他版本都会保留。'))return;deliveryBusy++;try{await api('packages/'+item.package_id+'/restore',{method:'POST',body:JSON.stringify({job_id:v.job_id,expected_revision:item.revision})});message(item.name+' 的当前版本已改为第 '+v.number+' 版；已发布的地图不变，需要时再发布。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};li.append(restore);}
+      else{const restore=text('button','设为当前版本');restore.className='secondary';restore.onclick=async()=>{if(!confirm(getLanguage()==='tr'?`${item.name} için geçerli sürüm ${v.number} olarak değiştirilsin mi? Diğer sürümler korunur.`:getLanguage()==='en'?`Make version ${v.number} current for ${item.name}? Other versions are retained.`:'把 '+item.name+' 的当前版本改为第 '+v.number+' 版？其他版本都会保留。'))return;deliveryBusy++;try{await api('packages/'+item.package_id+'/restore',{method:'POST',body:JSON.stringify({job_id:v.job_id,expected_revision:item.revision})});message(item.name+' 的当前版本已改为第 '+v.number+' 版；已发布的地图不变，需要时再发布。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};li.append(restore);}
       const link=text('a','下载');link.href='/organizer/api/jobs/'+v.job_id+'/download';link.setAttribute('download','');li.append(link);list.append(li);
     }
     const history=document.createElement('details');history.append(text('summary','版本历史（不会被覆盖或删除）：'),list);card.append(history);root.append(card);
@@ -320,7 +320,7 @@ function renderPublications(){
     article.append(text('h3',state.name),text('p','当前发布：'+versionLabel(state.current.job_id)+(state.current.published_at?' · '+timeText(state.current.published_at):'')));
     const unpublish=text('button','解除发布');unpublish.className='secondary unpublish-button';
     unpublish.onclick=async()=>{
-      const prompt=getLanguage()==='en'?`Unpublish “${state.name}”? The map node stays; the game package, saves and medals are retained.`:`解除「${state.name}」的游戏发布？地图节点保留，游戏包、存档和奖章均保留。`;
+      const prompt=getLanguage()==='tr'?`“${state.name}” oyununun yayını kaldırılsın mı? Harita noktası, oyun paketi, kayıtlar ve madalyalar korunur.`:getLanguage()==='en'?`Unpublish “${state.name}”? The map node stays; the game package, saves and medals are retained.`:`解除「${state.name}」的游戏发布？地图节点保留，游戏包、存档和奖章均保留。`;
       if(!confirm(prompt))return;
       let unpublished=false;unpublish.disabled=true;deliveryBusy++;
       try{
@@ -334,7 +334,7 @@ function renderPublications(){
       finally{deliveryBusy--;unpublish.disabled=false;await refreshDeliveries(true).catch(error=>{if(unpublished)message('已解除发布；列表刷新暂不可用，请稍后刷新。');});}
     };article.append(unpublish);
     const previous=[...state.history].reverse().find(entry=>entry.version!==state.current.version);
-    if(previous){const back=text('button','回退到上一次发布：'+versionLabel(previous.job_id));back.className='secondary';back.onclick=async()=>{if(!confirm('把「'+state.name+'」回退到 '+versionLabel(previous.job_id)+'？玩家存档和奖章不会删除。'))return;deliveryBusy++;try{await api('jobs/'+encodeURIComponent(previous.job_id)+'/publish-to-map',{method:'POST',body:JSON.stringify({site_id:state.site_id,expected_version:state.current.version})});message('已回退「'+state.name+'」。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};article.append(back);}
+    if(previous){const back=text('button','回退到上一次发布：'+versionLabel(previous.job_id));back.className='secondary';back.onclick=async()=>{if(!confirm(getLanguage()==='tr'?`${state.name}, ${versionLabel(previous.job_id)} sürümüne döndürülsün mü? Oyuncu kayıtları ve madalyalar korunur.`:getLanguage()==='en'?`Restore ${state.name} to ${versionLabel(previous.job_id)}? Player saves and medals are retained.`:'把「'+state.name+'」回退到 '+versionLabel(previous.job_id)+'？玩家存档和奖章不会删除。'))return;deliveryBusy++;try{await api('jobs/'+encodeURIComponent(previous.job_id)+'/publish-to-map',{method:'POST',body:JSON.stringify({site_id:state.site_id,expected_version:state.current.version})});message('已回退「'+state.name+'」。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};article.append(back);}
     root.append(article);
   }
 }
@@ -352,7 +352,7 @@ async function refreshDeliveries(force=false){
   if(!force&&signature===deliverySignature)return;
   if(!force&&interacting()){deliveryDeferred=true;$('delivery-sync').textContent='有新的更新，你完成当前操作后自动显示。';return;}
   deliverySignature=signature;deliveryDeferred=false;deliveryState={packages,publications,sites};
-  $('delivery-sync').textContent='同一后台的所有成员看到同一份游戏包、版本与发布；列表每 4 秒自动更新。上次更新 '+new Date().toLocaleTimeString()+'。';
+  $('delivery-sync').textContent='同一后台的所有成员看到同一份游戏包、版本与发布；列表每 4 秒自动更新。上次更新 '+new Date().toLocaleTimeString(getLanguage()==='zh'?'zh-CN':getLanguage())+'。';
   renderPackages();renderPublications();
 }
 // Other members' uploads, versions and publications appear without a manual refresh.

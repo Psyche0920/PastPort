@@ -80,3 +80,5 @@ header{background:#39121f;border-color:#976d47}
 #launch.unavailable .thumb{border-color:#664c39;box-shadow:0 4px 7px #3e332b73}
 /* The open game covers the page header and its menu, so "back to map" stays clickable. */
 #game{z-index:6}
+
+#language{font:inherit;max-width:9rem;padding:.5rem;border:1px solid var(--border);border-radius:.5rem;background:var(--paper);color:var(--ink)}

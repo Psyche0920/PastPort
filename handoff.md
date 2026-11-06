@@ -149,3 +149,10 @@ Temporary remote sharing: use the foreground remote.mjs entry in the host termin
 本版包括失聯故事、三條調查支線、四個結局與圖片找不同／時間線／場景搜尋／聊天截圖拼圖。可重用的 Story opening/activity design 與零模型組包已回到 SDK；已驗收 demo 原檔保留。模型新故事質素測試暫停，兩次未確認用量仍保留，未宣稱新模型故事或新裝置 FPS 驗收通過。原始 PDF 不提供玩家下載。
 
 Reusable preparation/compiler/plugin code belongs in Git. The generated game, images and scene assets belong in the release archive. `.runtime/`, `.agents/`, credentials, account stores and provider traces are not source or release inputs. The release includes saved-content automated verification; human acceptance of the revised story and performance on other devices remains separate.
+
+
+## 2026-11-07 · 三语试玩交付 / Trilingual game delivery
+
+Organizer 与玩家地图提供简体中文、English、Türkçe。本次只更新穆拉迪耶节点《最后两袋》可行走剧场（`muradiye-ui-trial`）的显示语言，其他游戏包保持原样。[下载三语游戏包](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) · [版本说明](https://github.com/Psyche0920/PastPort/releases/tag/muradiye-ui-trial-2026-11-07-trilingual)。下载保留原文件名，在 Organizer 的同名卡片「提交新版」，导入后仍需选择站点发布；拉取 main 只更新平台代码，不同步游戏文件或本机历史。旧存档继续旧发布版本，新版另存。原始史料图片和专名保留原文。启动和导入细节见 README。
+
+Organizer and the player map support Simplified Chinese, English and Turkish. Only the Muradiye *The Last Two Sacks* walkable-theatre bundle (`muradiye-ui-trial`) is localized in this update; other games are unchanged. [Download the trilingual game](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) · [Release notes](https://github.com/Psyche0920/PastPort/releases/tag/muradiye-ui-trial-2026-11-07-trilingual). Keep the filename, submit it as a new version on its same-name Organizer card, then explicitly publish to a chosen map site. Pulling main updates platform code, not game files or local history. Earlier saves continue on their earlier release; new releases use separate saves. Original evidence images and proper names retain their language. See README for startup and import steps.
