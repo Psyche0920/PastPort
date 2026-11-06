@@ -12,11 +12,24 @@ Turn original historical sources, matched museum environments and spatial inform
 
 [Shared online platform: Claude execution PRD](docs/TECHNICAL_PRD_EN.md#shared-online-platform)
 
-## Team playable handoff
+## Team playable deliveries
 
-- [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-05-r1/wcheung.tar.gz)
-- [maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)
-- [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz)
+[Six player-map packages · unified downloads](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
+
+These are the six current local player-map publication snapshots. Site names identify launch slots, not historical scene approval.
+
+| Map site | Project / snapshot | Download |
+| --- | --- | --- |
+| Forty Two Heilbronn | wcheung · `0ecef2790ab7` | [player-42heilbronn.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-42heilbronn.tar.gz) |
+| Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
+| Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
+| I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
+| II. Murat Külliyesi | maslan · `39ed18e98b93` | [player-muradiye.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-muradiye.tar.gz) |
+| Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
+
+Download the desired `.tar.gz`, import it through Organizer → Progress & delivery → Import delivery, then publish it to the matching site above. The new computer creates its own delivery record; Git pull does not synchronize local history, accounts or saves.
+
+The Orhan Bey package is the older director build currently published on the player map. The latest Maslan 3D build in Organizer has not been published to the map and is excluded from this six-package snapshot. Assets include `packages.json`, `SHA256SUMS` and import instructions, without account databases or original PDFs.
 
 ## Startup and use
 

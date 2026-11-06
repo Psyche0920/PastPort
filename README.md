@@ -14,9 +14,22 @@
 
 ## 团队试玩交付
 
-- [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-05-r1/wcheung.tar.gz)
-- [maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz)
-- [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz)
+[六个玩家端游戏包 · 统一下载](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
+
+以下为本机玩家地图当前六个发布快照；站点是平台入口标签，不代表历史场景认证。
+
+| 地图站点 | 项目 / 版本 | 下载 |
+| --- | --- | --- |
+| Forty Two Heilbronn | wcheung · `0ecef2790ab7` | [player-42heilbronn.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-42heilbronn.tar.gz) |
+| Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
+| Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
+| I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
+| II. Murat Külliyesi | maslan · `39ed18e98b93` | [player-muradiye.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-muradiye.tar.gz) |
+| Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
+
+下载所需 `.tar.gz`，在 Organizer「制作进度与交付 → 导入交付包」导入，再选择上表对应站点发布。新电脑会创建自己的交付记录；Git pull 不会同步本机历史、账号或存档。
+
+Orhan Bey 包是玩家地图已发布的旧导演版；Organizer 最近记录中的 Maslan 三维新版尚未发布到地图，因此不混入本次六包快照。发布附有 `packages.json`、`SHA256SUMS` 和导入说明，不包含账号数据库或原始 PDF。
 
 ## 启动与使用
 
