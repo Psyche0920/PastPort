@@ -159,3 +159,10 @@ Organizer and the player map support Simplified Chinese, English and Turkish. On
 
 
 《The Last Tour》后续修正 / Follow-up: 四二节点 `wcheung` 已接入三语对白、人物、编译后任务目标、3D导航与聊天线索图；游戏和地图语言双向同步，存档提示保持一致。原剧情、小游戏规则、runtime/presentation 身份和空间资源不变。旧存档继续旧发布版本；选择体验新版使用新发布版本。 [下载 wcheung 三语版](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) · [Release](https://github.com/Psyche0920/PastPort/releases/tag/wcheung-demo-2026-11-07-trilingual). The Last Tour now includes Chinese/English/Turkish dialogue, people, compiled task objectives, 3D navigation and fictional chat cards. Game/map language stays synchronized with frame/origin/run checks. Gameplay, runtime/presentation identity and scene assets are unchanged. Older saves remain on their release; select the new release to see this update.
+
+
+### 下载版本辨识 / Download identity
+
+原始 UI Trial（2D）、maslan《最后两袋》主试玩 r1、《最后两袋》三语可行走剧场，以及 wcheung《The Last Tour》是不同交付项。原始 UI Trial 的故事也叫《最后两袋》；三语剧场沿用 `muradiye-ui-trial.tar.gz` 文件名，不代表原始 2D 版。逐项下载见 [中文版对照表](README.md#游戏名称与版本对照) / [English build table](README_EN.md#game-titles-and-build-identities)。
+
+The original 2D UI Trial, maslan featured r1, The Last Two Sacks trilingual walkable theatre, and wcheung The Last Tour are separate deliveries. The original UI Trial also tells The Last Two Sacks; the retained theatre filename does not identify it as the original 2D build. Use the tables above to choose the exact release.

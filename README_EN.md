@@ -14,17 +14,30 @@ Turn original historical sources, matched museum environments and spatial inform
 
 ## Team playable deliveries
 
+### Game titles and build identities
+
+The original UI Trial also tells *The Last Two Sacks*. Distinguish the builds below by edition, not by archive filename alone. `muradiye-ui-trial` and `wcheung` are retained import project IDs, not titles for every build.
+
+| Game / edition | Contents | Complete playable download |
+| --- | --- | --- |
+| Original Muradiye UI Trial · The Last Two Sacks · historical 2D build | Original animated 2D trial, 2026-11-05 snapshot; not the later trilingual walkable theatre | [Original UI Trial · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz) |
+| maslan · The Last Two Sacks · featured r1 | Separate maslan delivery, 2026-11-05; not the UI Trial download or the trilingual walkable-theatre archive | [maslan featured r1 · maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) |
+| The Last Two Sacks · walkable theatre · trilingual | Current Muradiye Simplified Chinese / English / Turkish package; retains the `muradiye-ui-trial` import project ID | [The Last Two Sacks · trilingual walkable theatre · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
+| wcheung · The Last Tour · trilingual | A different game in the Forty Two scene, in Simplified Chinese / English / Turkish; distinct from The Last Two Sacks | [The Last Tour · trilingual · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
+
+Release tags in these URLs distinguish editions. Asset filenames remain unchanged for Organizer import compatibility. GitHub's automatic Source code archives are not playable packages. Import, then explicitly publish to a site; earlier saves remain on their earlier release.
+
 [Six player-map packages · unified downloads](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
 
 The Forty Two Heilbronn and Muradiye rows now link to the 2026-11-07 trilingual The Last Tour and The Last Two Sacks releases; other rows retain the 2026-11-06 delivery snapshots. Site names identify launch slots, not historical scene approval.
 
 | Map site | Project / snapshot | Download |
 | --- | --- | --- |
-| Forty Two Heilbronn | wcheung · `839c304f27ec` · zh / en / tr | [wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
+| Forty Two Heilbronn | The Last Tour · wcheung · `839c304f27ec` · zh / en / tr | [The Last Tour trilingual · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
 | Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
 | Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
 | I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
-| II. Murat Külliyesi | muradiye-ui-trial · `812d71853b4c` · zh / en / tr | [muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
+| II. Murat Külliyesi | The Last Two Sacks · walkable theatre · `812d71853b4c` · zh / en / tr | [The Last Two Sacks trilingual theatre · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
 | Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
 
 Download the desired `.tar.gz`, import it through Organizer → Progress & delivery → Import delivery, then publish it to the matching site above. The new computer creates its own delivery record; Git pull does not synchronize local history, accounts or saves.
@@ -673,7 +686,7 @@ Signing in and launching from the map automatically restores this account/site/p
 Existing `GameSession` snapshots and continuation saves are supported; the same game engine validates recovery. Incompatible custom bundles explicitly report local-only saves. The backend accepts structurally validated client snapshots, rather than providing cheat-resistant server-side action adjudication. Stamps and progress are separate records. Cross-device use requires the same backend/data directory; the default loopback launcher is local development, not an internet cloud deployment. Closing/reloading attempts synchronization and warns about pending writes; after forced closure or disconnection, only acknowledged saves are guaranteed to restore from the server.
 
 
-Organizer delivery import and map publication support both existing 3D bundles and static 2D bundles. A 2D bundle provides root `index.html` and `pastport-player.json` (`format: pastport-static-v1`, `entrypoint: a relative HTML path within the bundle`); the entry must exist and stay within the package. Previews reuse the trusted launcher, separate port and Organizer login gate without executing an imported server script. `muradiye-ui-trial` packages the original The Last Two Sacks from `demo-muradiye-ui-trial`, retaining 2D character animation, gameplay and assets; its delivery card can publish to a selected map site. This legacy version saves to the player account through its own adapter (`authored-adventure-v1`, identified by runtime-file hash): the full event log and positions are stored, and the original engine still validates and replays them on restore; it does not share the GameSession format. The platform now automatically adapts this pinned legacy runtime: its actual ending display sends the current player-run receipt, awards a passport stamp and updates the leaderboard. Ordinary reading awards nothing; repeating a site does not add another medal. Legacy detection uses runtime-file hashes without changing authored gameplay. New static games emit `pastport:completed` with a nonempty `endingId`; an unknown runtime cannot claim completion merely because it opens. Local caches remain scoped by account/site/release.
+Organizer delivery import and map publication support both existing 3D bundles and static 2D bundles. A 2D bundle provides root `index.html` and `pastport-player.json` (`format: pastport-static-v1`, `entrypoint: a relative HTML path within the bundle`); the entry must exist and stay within the package. Previews reuse the trusted launcher, separate port and Organizer login gate without executing an imported server script. The original `muradiye-ui-trial-2026-11-05-r1` download packages the 2D UI Trial of The Last Two Sacks from `demo-muradiye-ui-trial` (separate from the trilingual walkable theatre above), retaining 2D character animation, gameplay and assets; its delivery card can publish to a selected map site. This legacy version saves to the player account through its own adapter (`authored-adventure-v1`, identified by runtime-file hash): the full event log and positions are stored, and the original engine still validates and replays them on restore; it does not share the GameSession format. The platform now automatically adapts this pinned legacy runtime: its actual ending display sends the current player-run receipt, awards a passport stamp and updates the leaderboard. Ordinary reading awards nothing; repeating a site does not add another medal. Legacy detection uses runtime-file hashes without changing authored gameplay. New static games emit `pastport:completed` with a nonempty `endingId`; an unknown runtime cannot claim completion merely because it opens. Local caches remain scoped by account/site/release.
 
 
 ### Sharing game bundles, Organizer history and the player platform
