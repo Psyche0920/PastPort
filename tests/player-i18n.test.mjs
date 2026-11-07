@@ -73,3 +73,22 @@ test('compound 3D quality, view and short object labels never retain Chinese in 
  assert.equal(lexicon.translate('場景 1','tr'),'Görünüm 1');
  assert.doesNotMatch(lexicon.translate('05 · 電腦','tr'),/[\u3400-\u9fff]/u);
 });
+
+test('map game names use actual publication versions and preserve older-release identity',async()=>{
+ const source=await readFile(new URL('../frontend/player/app.mjs',import.meta.url),'utf8');
+ const module=await import('data:text/javascript;base64,'+Buffer.from(source.slice(0,source.indexOf('import {SaveSynchronizer}'))).toString('base64'));
+ const title=module.publishedGameTitle;
+ const tour='839c304f27ecc6f3496ba5a58aacb56f29c5d1bfc907e862823f91509d8b1358';
+ const sacks='812d71853b4c1c2f16ed80267b4b2d020f497f7bbf32600ffa83ab514c0233ce';
+ for(const lang of ['zh','en','tr']){
+  assert.match(title(tour,lang),/The Last Tour/);
+  assert.doesNotMatch(title(tour,lang),/Two Sacks|最后两袋|UI Trial/);
+  assert.match(title(sacks,lang),lang==='zh'?/最后两袋.*三语/:/The Last Two Sacks/);
+  if(lang!=='zh')assert.doesNotMatch(title(sacks,lang),/[\u3400-\u9fff]/u);
+ }
+ const old=title('1730505587e81ddfda0d6d64f8738c2f0c6fab34c629c58f04376cbba04ada1f','en');
+ assert.match(old,/archive/);assert.doesNotMatch(old,/Trilingual/);
+ assert.equal(title('unknown-release','en'),null);
+ assert.equal(title('42heilbronn','en'),null);
+ assert.throws(()=>title(tour,'de'),RangeError);
+});

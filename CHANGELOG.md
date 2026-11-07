@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 — Player-map game names and launch verification
+
+- Label map nodes and place details with the verified publication edition, keeping heritage place names. Game headers and iframe titles follow the actual launched release; older saves cannot borrow the current edition label. Simplified Chinese, English and Turkish update together.
+- Verify both actual published bundles through the map with an isolated player: Forty Two opens The Last Tour; Muradiye opens The Last Two Sacks walkable theatre. Sixteen localization tests and ten save/launch regressions passed. Test accounts are isolated; test services are stopped afterward. No publication bindings or game archives changed.
+
 ## 2026-11-07 — Consistent Organizer game edition names
 
 - Resolve verified delivery names by immutable archive SHA-256, not reused import IDs. Show the same edition in package cards, version history, publication choices, published listings and upload/restore feedback, in Chinese, English and Turkish. Unidentified archives retain their import ID with an explicit unidentified-edition label.

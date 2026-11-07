@@ -82,3 +82,7 @@ header{background:#39121f;border-color:#976d47}
 #game{z-index:6}
 
 #language{font:inherit;max-width:9rem;padding:.5rem;border:1px solid var(--border);border-radius:.5rem;background:var(--paper);color:var(--ink)}
+
+/* Keep place identity and the actually published game edition visually distinct. */
+.marker-game-title{font:600 clamp(8px,.85vw,11px)/1.25 Georgia,serif;color:#6d2332;background:#fff1d6e8;padding:.18rem .3rem;border-radius:.2rem;text-wrap:balance;max-width:155px}
+.marker-game-title[hidden]{display:none}.game-edition{font-weight:700;color:var(--red);text-wrap:balance}

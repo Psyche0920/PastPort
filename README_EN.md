@@ -27,6 +27,8 @@ The original UI Trial also tells *The Last Two Sacks*. Distinguish the builds be
 
 No separate download of the original standalone 2D UI Trial has been verified. Do not treat the historical theatre archive as that original 2D build. Organizer uses verified archive SHA-256 identities for consistent card, publication, version-history and published-list labels; unknown archives show their import ID and an unidentified-edition label rather than a guessed game title.
 
+The player map retains place names and labels verified published editions: Forty Two shows The Last Tour trilingual, and Muradiye shows The Last Two Sacks trilingual walkable theatre. Place details and game headers reflect the actually launched release, including earlier-release saves. Refresh the player page; no reimport or republication is needed.
+
 Release tags in these URLs distinguish editions. Asset filenames remain unchanged for Organizer import compatibility. GitHub's automatic Source code archives are not playable packages. Import, then explicitly publish to a site; earlier saves remain on their earlier release.
 
 [Six player-map packages · unified downloads](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)

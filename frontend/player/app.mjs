@@ -90,6 +90,34 @@ export function playerText(zh,en,locale){if(locale==='zh')return zh;if(locale===
 
 export function requestedGameLanguage(event,{source,origin,run}){if(!source||!run||event.source!==source||event.origin!==origin||event.data?.run!==run||event.data?.type!=='pastport:language-change'||!['zh','en','tr'].includes(event.data.locale))return null;return event.data.locale;}
 
+// Verified publication versions, not map slots or reused import IDs, identify games.
+const publishedTitles = Object.freeze({
+  "839c304f27ecc6f3496ba5a58aacb56f29c5d1bfc907e862823f91509d8b1358": {
+    "zh": "The Last Tour · 三语版",
+    "en": "The Last Tour · Trilingual",
+    "tr": "The Last Tour · Üç dilli"
+  },
+  "812d71853b4c1c2f16ed80267b4b2d020f497f7bbf32600ffa83ab514c0233ce": {
+    "zh": "最后两袋 · 三语可行走剧场",
+    "en": "The Last Two Sacks · Trilingual walkable theatre",
+    "tr": "The Last Two Sacks · Üç dilli yürünebilir tiyatro"
+  },
+  "1730505587e81ddfda0d6d64f8738c2f0c6fab34c629c58f04376cbba04ada1f": {
+    "zh": "最后两袋 · 剧场历史版（UI Trial 交付）",
+    "en": "The Last Two Sacks · Theatre archive (UI Trial delivery)",
+    "tr": "The Last Two Sacks · Tiyatro arşivi (UI Trial teslimi)"
+  },
+  "d566d46c89f45b6d36d7250a5b4c5427eb2826b46c3c5e190830fcf473bfbf0c": {
+    "zh": "The Last Tour · 历史版",
+    "en": "The Last Tour · Earlier release",
+    "tr": "The Last Tour · Önceki sürüm"
+  }
+});
+export function publishedGameTitle(version, language) {
+  if (!["zh","en","tr"].includes(language)) throw new RangeError("Unsupported player language");
+  return publishedTitles[version]?.[language] ?? null;
+}
+
 import {SaveSynchronizer} from './save-sync.mjs';
 import {sites} from './sites.mjs';
 import {illustration} from './illustrations.mjs';
@@ -129,7 +157,8 @@ function renderLanguage() {
     if (el.hasAttribute('data-en')) el.textContent = t(zh,el.dataset.en);
     else el.setAttribute(el.matches('iframe') ? 'title' : 'aria-label',t(zh,el.dataset.enLabel));
   }
-  if(active?.url){frame.title=selectedSite?.name??'';frame.contentWindow?.postMessage({type:'pastport:language',locale},new URL(active.url).origin);}
+  renderPublicationNames();
+  if(active?.url){$('#game strong').textContent=gameHeading(selectedSite,active.version);frame.title=gameHeading(selectedSite,active.version);frame.contentWindow?.postMessage({type:'pastport:language',locale},new URL(active.url).origin);}
   for (const stamp of document.querySelectorAll('.map-stamp')) stamp.textContent=t('通关','Cleared');
   repaintGameStatus?.();repaintReleaseNote?.();
   retrySave.textContent=t('重试同步','Retry sync');
@@ -207,12 +236,27 @@ function medalLabel(site) {
 }
 const when=value=>value ? new Date(value).toLocaleString(t('zh-CN','en')) : '';
 let placeShown=null;
+let livePublications=[];
+function gameHeading(site,version){const title=publishedGameTitle(version,locale);return title?site.name+' · '+title:site.name;}
+function renderPublicationNames(){
+  for(const site of sites){
+    const marker=document.querySelector('[data-site-id="'+site.id+'"]');
+    const version=livePublications.find(p=>p.site_id===site.id)?.version;
+    const title=publishedGameTitle(version,locale);
+    marker.querySelector('.marker-game-title').textContent=title??'';
+    marker.querySelector('.marker-game-title').hidden=!title;
+    marker.title=gameHeading(site,version);
+    marker.setAttribute('aria-label',marker.title);
+  }
+}
 async function showPlace(site) {
   placeShown=site;
   let available = false;
+  let publication=null;
   if (site.game) {
     try {
-      available = (await api('publications')).some(publication=>publication.site_id===site.game);
+      publication=(await api('publications')).find(entry=>entry.site_id===site.game)??null;
+      available=!!publication;
     } catch (error) {
       console.error(error.message);
     }
@@ -230,6 +274,8 @@ async function showPlace(site) {
     earned ? t('已获得此地点的奖章。','You earned this place’s medal.')
     : available ? t('完成试玩即可获得此地点的奖章。','Complete the game to earn this place’s medal.')
     : t('此地点暂未开放试玩。','This place can be explored on the map. Its game is not available yet.')));
+  const gameTitle=publishedGameTitle(publication?.version,locale);
+  if(gameTitle)content.append(node('p',gameTitle,'game-edition'));
   const button=(label,launchOptions,className)=>{
     const play=node('button',label,className);
     play.onclick=()=>{dialog.close();void launch(site,launchOptions);};
@@ -242,7 +288,7 @@ async function showPlace(site) {
     else if (latestSave.available) {
       // A newer release never silently replaces an unfinished run on an older one.
       content.append(node('p',t('此地点已发布新版。你上次的进度属于旧版（保存于 ','A newer release is published. Your last progress belongs to the earlier release (saved ')+when(latestSave.updated)+t('）。',').'),'muted'));
-      button(t('继续上次进度（旧版）','Continue last progress (earlier release)'),{mode:'continue',version:latestSave.version});
+      button(t('继续上次进度（旧版）','Continue last progress (earlier release)')+(publishedGameTitle(latestSave.version,locale)?' · '+publishedGameTitle(latestSave.version,locale):''),{mode:'continue',version:latestSave.version});
       const hasNew=options.saves.some(save=>save.current);
       button(hasNew ? t('打开新版存档','Open the new-release save') : t('体验新版（另开新存档，旧进度保留）','Play the new release (new save; earlier progress kept)'),{mode:'latest'},'secondary');
     } else {
@@ -297,6 +343,8 @@ function syncStamps() {
 let publicationState='';
 async function refreshPublications() {
   const published=await api('publications');
+  livePublications=published;
+  renderPublicationNames();
   for (const site of sites) {
     document.querySelector('[data-site-id="'+site.id+'"]').classList.toggle('unavailable',
       !published.some(publication=>publication.site_id===site.id));
@@ -330,7 +378,8 @@ mapPoints.forEach(({site,index,mobileX,mobileY}) => {
   marker.title = site.id==='42heilbronn' ? 'Heilbronn · Deutschland' : site.name;
   const thumb = node('span','','thumb');
   thumb.innerHTML = illustration(site.art,index);
-  marker.append(node('span',site.name,'marker-label'),thumb);
+  const gameTitle=node('span','','marker-game-title');gameTitle.hidden=true;
+  marker.append(node('span',site.name,'marker-label'),gameTitle,thumb);
   marker.dataset.siteId=site.id;
   {
     if (site.id==='42heilbronn') marker.id='launch';
@@ -407,7 +456,7 @@ async function launch(site,options={mode:'continue'}) {
   selectedSite=site;
   if (!current) {pendingLaunch=site;showProfile();return;}
   try {
-    $('#game strong').textContent=site.name;
+    $('#game strong').textContent=gameHeading(site,livePublications.find(p=>p.site_id===site.id)?.version);
     setGameStatus('正在连接远程游戏入口…','Connecting the remote game…');
     frame.src='about:blank';$('#game').hidden=false;
     let launch;
@@ -428,8 +477,8 @@ async function launch(site,options={mode:'continue'}) {
     delete $('#game-status').dataset.sync;
     releaseNote.hidden=active.latest!==false;
     setReleaseNote('你正在继续旧版存档；地图上的新版不会影响这一局。','You are continuing an earlier-release save; the new release on the map does not affect this run.');
-    $('#game strong').textContent=site.name;
-    frame.title=site.name;
+    $('#game strong').textContent=gameHeading(site,active.version);
+    frame.title=gameHeading(site,active.version);
     if (modal.open) modal.close();
     if(active.save)setGameStatus('正在恢复账号进度…','Restoring your account progress…');else setGameStatus('此游戏仅支持本机存档','This game only supports local saves');
     const url = new URL(active.url);
