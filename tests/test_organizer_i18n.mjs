@@ -32,3 +32,22 @@ test('delivery sections and actions translate without changing package names',()
   assert.equal(translate('已解除发布；列表刷新暂不可用，请稍后刷新。','en'),
     'Unpublished. The list could not refresh; try refreshing later.');
 });
+
+test('delivery titles follow archive identity, not a reused import name', async()=>{
+  const {deliveryTitle}=await import('../frontend/organizer/i18n.mjs');
+  const theatre='7c085b62015702d075745ddb314cfa0a5d6629be0648d22449e14836ca735769';
+  const tour='84840328abea9ad99250592167a7fe67142c64cb90e1a669ecab86dbac6ae21e';
+  assert.equal(deliveryTitle('muradiye-ui-trial',theatre,'en'),'The Last Two Sacks · trilingual walkable theatre');
+  assert.equal(deliveryTitle('renamed-import',tour,'en'),'The Last Tour · wcheung trilingual');
+  assert.match(deliveryTitle('muradiye-ui-trial','unknown','en'),/edition not identified/);
+  assert.doesNotMatch(deliveryTitle('wcheung','unknown','en'),/The Last Tour/);
+});
+
+test('historical theatre and Dead Cast a Vote are not mislabeled as current games',async()=>{
+  const {deliveryTitle}=await import('../frontend/organizer/i18n.mjs');
+  assert.match(deliveryTitle('muradiye-ui-trial','566defd8f77a08daa6d28b390d5a466641ca8c61392bba5bb76ce59bd9d3e375','en'),/walkable-theatre archive/);
+  assert.match(deliveryTitle('wcheung','ff6138490a47e74d86d49872354df870c5448615bd3809c4d349b7e1bbe6a8ba','en'),/The Dead Cast a Vote/);
+  const sha='7c085b62015702d075745ddb314cfa0a5d6629be0648d22449e14836ca735769';
+  assert.match(deliveryTitle('muradiye-ui-trial',sha,'zh'),/三语版/);
+  assert.match(deliveryTitle('muradiye-ui-trial',sha,'tr'),/üç dilli/);
+});

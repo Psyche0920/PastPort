@@ -782,3 +782,55 @@ export function mountLocalization(doc, {exactOnly = false, protectedSelector = '
   mounted.add(render); render();
   return () => {observer.disconnect();mounted.delete(render);};
 }
+
+// Verified immutable archive identities. Import IDs and filenames remain unchanged.
+const deliveryTitles = Object.freeze({
+  "ff6138490a47e74d86d49872354df870c5448615bd3809c4d349b7e1bbe6a8ba": {
+    "zh": "死者正在投票 · wcheung 历史版",
+    "en": "The Dead Cast a Vote · wcheung archive",
+    "tr": "The Dead Cast a Vote · wcheung arşivi"
+  },
+  "0f728de76feb9dc3f93303a0a8a78922c4446c29069cc2b9df5f6a1dff375851": {
+    "zh": "The Last Tour · wcheung 历史版",
+    "en": "The Last Tour · wcheung archive",
+    "tr": "The Last Tour · wcheung arşivi"
+  },
+  "84840328abea9ad99250592167a7fe67142c64cb90e1a669ecab86dbac6ae21e": {
+    "zh": "The Last Tour · wcheung 三语版",
+    "en": "The Last Tour · wcheung trilingual",
+    "tr": "The Last Tour · wcheung üç dilli"
+  },
+  "0af4fab50cd9e11ab756bb5575443ee7faa4c92f5687e0ddd902f401e9783126": {
+    "zh": "The Last Tour · 三语修正中间版",
+    "en": "The Last Tour · intermediate localization",
+    "tr": "The Last Tour · ara yerelleştirme"
+  },
+  "787be2275684b63e8a45b7ed24adef826084e46669e04ab02bf9eba4dcf646d6": {
+    "zh": "The Last Tour · 三语修正中间版",
+    "en": "The Last Tour · intermediate localization",
+    "tr": "The Last Tour · ara yerelleştirme"
+  },
+  "0f0c6d50a1640e6cc0c9a3a4f983816ed9534759f200292b63ea3f36ec788d56": {
+    "zh": "最后两袋 · maslan 主试玩 r1",
+    "en": "The Last Two Sacks · maslan featured r1",
+    "tr": "The Last Two Sacks · maslan ana oyun r1"
+  },
+  "566defd8f77a08daa6d28b390d5a466641ca8c61392bba5bb76ce59bd9d3e375": {
+    "zh": "最后两袋 · 可行走剧场历史版（UI Trial 交付）",
+    "en": "The Last Two Sacks · walkable-theatre archive (UI Trial delivery)",
+    "tr": "The Last Two Sacks · yürünebilir tiyatro arşivi (UI Trial teslimi)"
+  },
+  "7c085b62015702d075745ddb314cfa0a5d6629be0648d22449e14836ca735769": {
+    "zh": "最后两袋 · 可行走剧场三语版",
+    "en": "The Last Two Sacks · trilingual walkable theatre",
+    "tr": "The Last Two Sacks · üç dilli yürünebilir tiyatro"
+  }
+});
+
+export function deliveryTitle(projectId, archiveSha256, language = getLanguage()) {
+  const labels = deliveryTitles[archiveSha256];
+  if (labels) return labels[language] || labels.en;
+  // A reused import ID is insufficient evidence of a game title or edition.
+  const unknown = {zh: "版本未标注", en: "edition not identified", tr: "sürüm tanımlanmadı"};
+  return projectId + " · " + (unknown[language] || unknown.en);
+}

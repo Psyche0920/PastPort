@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 — Consistent Organizer game edition names
+
+- Resolve verified delivery names by immutable archive SHA-256, not reused import IDs. Show the same edition in package cards, version history, publication choices, published listings and upload/restore feedback, in Chinese, English and Turkish. Unidentified archives retain their import ID with an explicit unidentified-edition label.
+- Distinguish maslan featured r1, The Last Two Sacks trilingual walkable theatre, The Last Tour, and historical The Dead Cast a Vote. Inspection found the 2026-11-05 UI Trial archive already contains the walkable-theatre entry; correct README, handoff and Release labels instead of claiming a verified standalone original 2D download.
+- Keep package IDs, archive filenames, game bytes, publication bindings and saves unchanged. Eleven frontend tests and three-language DOM rendering checks passed; existing Organizer serves updated assets. No test service was started.
+
 ## 2026-11-07 — Organizer, map and selected games: zh / en / tr
 
 - Add Simplified Chinese, English and Turkish selectors to Organizer and the player map; retain unsaved Organizer inputs and refresh dynamic save/release messages when language changes.

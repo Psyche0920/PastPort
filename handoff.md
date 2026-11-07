@@ -163,6 +163,6 @@ Organizer and the player map support Simplified Chinese, English and Turkish. On
 
 ### 下载版本辨识 / Download identity
 
-原始 UI Trial（2D）、maslan《最后两袋》主试玩 r1、《最后两袋》三语可行走剧场，以及 wcheung《The Last Tour》是不同交付项。原始 UI Trial 的故事也叫《最后两袋》；三语剧场沿用 `muradiye-ui-trial.tar.gz` 文件名，不代表原始 2D 版。逐项下载见 [中文版对照表](README.md#游戏名称与版本对照) / [English build table](README_EN.md#game-titles-and-build-identities)。
+UI Trial 历史交付（包内为可行走剧场）、maslan《最后两袋》主试玩 r1、《最后两袋》三语可行走剧场，以及 wcheung《The Last Tour》是不同交付项。原始 UI Trial 的故事也叫《最后两袋》；三语剧场沿用 `muradiye-ui-trial.tar.gz` 文件名，不代表已验证的原始 2D 版。逐项下载见 [中文版对照表](README.md#游戏名称与版本对照) / [English build table](README_EN.md#game-titles-and-build-identities)。
 
-The original 2D UI Trial, maslan featured r1, The Last Two Sacks trilingual walkable theatre, and wcheung The Last Tour are separate deliveries. The original UI Trial also tells The Last Two Sacks; the retained theatre filename does not identify it as the original 2D build. Use the tables above to choose the exact release.
+The historical UI Trial delivery (containing the walkable theatre), maslan featured r1, The Last Two Sacks trilingual walkable theatre, and wcheung The Last Tour are separate deliveries. The original UI Trial also tells The Last Two Sacks; the retained theatre filename does not establish that it is the original 2D build. Use the tables above to choose the exact release.

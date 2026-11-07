@@ -1,4 +1,4 @@
-import {mountLocalization, setLanguage, getLanguage} from './i18n.mjs';
+import {mountLocalization, setLanguage, getLanguage, deliveryTitle} from './i18n.mjs';
 let compatibilityBusy=false;let defaultSourcesLoaded=false;let sourceCatalogLoaded=false;const compatibilityAttempts=new Set();
 import {ReviewWorkbench,environmentActionState,restoredWorkflow} from './review.mjs';
 const $ = id => document.getElementById(id);
@@ -177,7 +177,7 @@ async function refreshJobs(){
   else if(story){$('story-status').textContent=story.message;if(!['queued','running','awaiting_external'].includes(story.status)){storyJob=null;sessionStorage.removeItem('organizer-story-job');}}
   if(needsSources)await refreshSources();storyChoice();drawReviewProjects();
   const packaged=new Set(deliveryState.packages.flatMap(item=>item.versions.map(v=>v.job_id)));
-  for(const job of jobs){if(packaged.has(job.job_id))continue;const article=document.createElement('article');article.dataset.jobId=job.job_id;article.dataset.search=(job.project_id+' '+job.status+' '+states[job.status]).toLocaleLowerCase();article.append(text('h2',job.project_id+' · '+(job.mode==='reuse'?'缓存复用':'重新生成')+' · '+states[job.status]),text('p',job.message),text('p','本次新增模型调用：'+(job.new_model_calls===null?'等待真实回执确认':job.new_model_calls)),text('p','已保存步骤：'+(job.completed_stages.map(s=>stageLabels[s]||s).join(' → ')||'暂无阶段完成回执')));
+  for(const job of jobs){if(packaged.has(job.job_id))continue;const article=document.createElement('article');article.dataset.jobId=job.job_id;article.dataset.search=(deliveryTitle(job.project_id,job.input_sha256)+' '+job.project_id+' '+job.status+' '+states[job.status]).toLocaleLowerCase();article.append(text('h2',deliveryTitle(job.project_id,job.input_sha256)+' · '+(job.mode==='reuse'?'缓存复用':'重新生成')+' · '+states[job.status]),text('p',job.message),text('p','本次新增模型调用：'+(job.new_model_calls===null?'等待真实回执确认':job.new_model_calls)),text('p','已保存步骤：'+(job.completed_stages.map(s=>stageLabels[s]||s).join(' → ')||'暂无阶段完成回执')));
     if(job.prepared_source_id){
       const continueProject=text('button','继续此项目');continueProject.dataset.selectSource=job.prepared_source_id;
       continueProject.addEventListener('click',async()=>{continueProject.disabled=true;try{await selectProjectSource(job.prepared_source_id,'make');}catch(error){message(error.message);}finally{continueProject.disabled=false;}});
@@ -263,14 +263,15 @@ async function runUpload(file,submission,button){
   try{
     show(0);const result=await uploadDelivery(file,submission,show);
     const version=result.delivery.package.versions.find(v=>v.job_id===result.job_id);
-    label.textContent=(result.delivery.created?'上传成功：':'内容与已有版本相同，未重复保存：')+result.project_id+' 第 '+version.number+' 版。';
+    label.textContent=(result.delivery.created?'上传成功：':'内容与已有版本相同，未重复保存：')+deliveryTitle(result.project_id,version.archive_sha256)+' · '+translateVersion(version.number)+'。';
     message(label.textContent);
   }catch(error){label.textContent='上传失败：'+error.message+'（原有版本未受影响）';message(label.textContent);}
   finally{deliveryBusy--;button.disabled=false;await refreshDeliveries(true).catch(e=>message(e.message));}
 }
 $('import-delivery').addEventListener('click',()=>{const input=$('delivery-file');void runUpload(input.files[0],{base_job_id:null,note:''},$('import-delivery')).then(()=>{input.value='';});});
+function translateVersion(number){return getLanguage()==='tr'?'Sürüm '+number:getLanguage()==='en'?'Version '+number:'第 '+number+' 版';}
 function versionLabel(jobId){
-  for(const item of deliveryState.packages){const version=item.versions.find(v=>v.job_id===jobId);if(version)return item.name+' 第 '+version.number+' 版';}
+  for(const item of deliveryState.packages){const version=item.versions.find(v=>v.job_id===jobId);if(version)return deliveryTitle(item.name,version.archive_sha256)+' · '+translateVersion(version.number);}
   return '其他制作记录 '+jobId.slice(0,8);
 }
 function renderPackages(){
@@ -279,7 +280,7 @@ function renderPackages(){
   for(const item of deliveryState.packages){
     const current=item.versions.find(v=>v.job_id===item.current_job_id);
     const card=document.createElement('article');card.className='package-card';card.dataset.packageId=item.package_id;
-    card.append(text('h3',item.name+' · 当前第 '+current.number+' 版'),text('p','提交于 '+timeText(current.submitted_at)+' · '+megabytes(current.size_bytes)+(current.note?' · '+current.note:'')));
+    card.append(text('h3',versionLabel(current.job_id)),text('p',getLanguage()==='tr'?'İçe aktarma kimliği / dosya: '+item.name+' / '+item.name+'.tar.gz':getLanguage()==='en'?'Import ID / file: '+item.name+' / '+item.name+'.tar.gz':'导入标识 / 文件：'+item.name+' / '+item.name+'.tar.gz'),text('p','提交于 '+timeText(current.submitted_at)+' · '+megabytes(current.size_bytes)+(current.note?' · '+current.note:'')));
     const actions=document.createElement('div');actions.className='row';
     const download=text('a','下载当前版');download.href='/organizer/api/jobs/'+current.job_id+'/download';download.setAttribute('download','');
     const preview=text('a','打开独立玩家预览 ↗');preview.href='/organizer/api/jobs/'+current.job_id+'/open';preview.target='_blank';preview.rel='noopener';
@@ -291,7 +292,7 @@ function renderPackages(){
     const site=document.createElement('select');site.setAttribute('aria-label','发布站点');const none=text('option','选择地图站点');none.value='';site.append(none);
     for(const entry of deliveryState.sites){const option=text('option',entry.name);option.value=entry.id;site.append(option);}
     const version=document.createElement('select');version.setAttribute('aria-label','发布版本');
-    for(const v of [...item.versions].reverse()){const option=text('option','第 '+v.number+' 版'+(v.job_id===item.current_job_id?'（当前）':''));option.value=v.job_id;version.append(option);}
+    for(const v of [...item.versions].reverse()){const option=text('option',versionLabel(v.job_id)+(v.job_id===item.current_job_id?'（当前）':''));option.value=v.job_id;version.append(option);}
     version.value=item.current_job_id;
     const go=text('button','发布到玩家地图');go.disabled=true;site.onchange=()=>{go.disabled=!site.value;};
     go.onclick=async()=>{const state=deliveryState.publications.find(p=>p.site_id===site.value);go.disabled=true;deliveryBusy++;try{await api('jobs/'+encodeURIComponent(version.value)+'/publish-to-map',{method:'POST',body:JSON.stringify({site_id:site.value,expected_version:state?.current?.version??'none'})});message('已发布到玩家地图：'+site.selectedOptions[0].textContent+' · '+versionLabel(version.value)+'。玩家地图会在几秒内自动更新。');}catch(e){message(e.message);}finally{deliveryBusy--;go.disabled=false;await refreshDeliveries(true).catch(e=>message(e.message));}};
@@ -304,9 +305,9 @@ function renderPackages(){
     submit.append(file,note,send);const editing=document.createElement('details');editing.append(text('summary','提交新版'),submit);card.append(editing);
     const list=document.createElement('ol');list.className='version-list';
     for(const v of [...item.versions].reverse()){
-      const li=document.createElement('li');li.append(text('span','第 '+v.number+' 版 · '+timeText(v.submitted_at)+' · '+megabytes(v.size_bytes)+(v.note?' · '+v.note:'')));
+      const li=document.createElement('li');li.append(text('span',versionLabel(v.job_id)+' · '+timeText(v.submitted_at)+' · '+megabytes(v.size_bytes)+(v.note?' · '+v.note:'')));
       if(v.job_id===item.current_job_id)li.append(text('span','当前版本','badge'));
-      else{const restore=text('button','设为当前版本');restore.className='secondary';restore.onclick=async()=>{if(!confirm(getLanguage()==='tr'?`${item.name} için geçerli sürüm ${v.number} olarak değiştirilsin mi? Diğer sürümler korunur.`:getLanguage()==='en'?`Make version ${v.number} current for ${item.name}? Other versions are retained.`:'把 '+item.name+' 的当前版本改为第 '+v.number+' 版？其他版本都会保留。'))return;deliveryBusy++;try{await api('packages/'+item.package_id+'/restore',{method:'POST',body:JSON.stringify({job_id:v.job_id,expected_revision:item.revision})});message(item.name+' 的当前版本已改为第 '+v.number+' 版；已发布的地图不变，需要时再发布。');}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};li.append(restore);}
+      else{const restore=text('button','设为当前版本');restore.className='secondary';restore.onclick=async()=>{if(!confirm(getLanguage()==='tr'?`${versionLabel(v.job_id)} geçerli sürüm yapılsın mı? Diğer sürümler korunur.`:getLanguage()==='en'?`Make ${versionLabel(v.job_id)} current? Other versions are retained.`:'设为当前版本：'+versionLabel(v.job_id)+'？其他版本都会保留。'))return;deliveryBusy++;try{await api('packages/'+item.package_id+'/restore',{method:'POST',body:JSON.stringify({job_id:v.job_id,expected_revision:item.revision})});message(versionLabel(v.job_id)+' · '+(getLanguage()==='tr'?'Geçerli sürüm değişti; harita yayını değişmedi.':getLanguage()==='en'?'Current version changed; map publication is unchanged.':'已设为当前版本；已发布的地图不变，需要时再发布。'));}catch(e){message(e.message);}finally{deliveryBusy--;await refreshDeliveries(true).catch(e=>message(e.message));}};li.append(restore);}
       const link=text('a','下载');link.href='/organizer/api/jobs/'+v.job_id+'/download';link.setAttribute('download','');li.append(link);list.append(li);
     }
     const history=document.createElement('details');history.append(text('summary','版本历史（不会被覆盖或删除）：'),list);card.append(history);root.append(card);
@@ -402,4 +403,4 @@ async function checkStoryCompatibility(source){compatibilityBusy=true;compatibil
 $('confirm-story-reuse').addEventListener('click',async()=>{const source=sources.find(s=>s.source_id===environmentSource);if(!source?.reuse_confirmation_sha256)return;compatibilityBusy=true;storyChoice();try{const result=await api('sources/'+encodeURIComponent(source.source_id)+'/confirm-story-reuse',{method:'POST',body:JSON.stringify({report_sha256:source.reuse_confirmation_sha256,confirm_unchanged_story:true})});if(environmentSource!==source.source_id){message('确认已保存；你已切换项目，当前选择保持不变。');return;}await adoptEnvironmentSource(result.source_id);message('已记录你的确认，可以勾选沿用旧故事；没有调用模型。');}catch(error){message(error.message);}finally{compatibilityBusy=false;storyChoice();}});
 
 mountLocalization(document);
-document.getElementById('interface-language').addEventListener('change', event => setLanguage(event.target.value));
+document.getElementById('interface-language').addEventListener('change', async event => {setLanguage(event.target.value);renderPackages();renderPublications();if(polling)await refreshJobs().catch(error=>message(error.message));});

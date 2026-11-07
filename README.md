@@ -20,10 +20,12 @@
 
 | 游戏 / 版本 | 对应内容 | 完整游戏包下载 |
 | --- | --- | --- |
-| 原始 Muradiye UI Trial ·《最后两袋》· 2D 历史版 | 原始二维人物动画试玩，2026-11-05 快照；不是后来的可行走剧场三语版 | [原始 UI Trial · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz) |
+| UI Trial 历史交付 ·《最后两袋》可行走剧场 | 2026-11-05 历史附件；包内入口已为可行走剧场，外层保留 UI Trial 名称；不是三语版 | [UI Trial 剧场历史包 · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz) |
 | maslan ·《最后两袋》· 主试玩 r1 | 独立 maslan 交付，2026-11-05；不是 UI Trial 下载项，也不是三语可行走剧场包 | [maslan 主试玩 r1 · maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) |
 | 《最后两袋》· 可行走剧场 · 三语版 | 当前穆拉迪耶三语包，简体中文 / English / Türkçe；沿用 `muradiye-ui-trial` 导入项目名 | [《最后两袋》可行走剧场三语版 · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
 | wcheung · The Last Tour · 三语版 | 四二场景的另一款游戏，简体中文 / English / Türkçe；与《最后两袋》不同 | [The Last Tour 三语版 · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
+
+原始独立 2D UI Trial 暂无单独核实的下载项；不要将上述历史剧场附件当作原始 2D 包。后台按已核实的附件 SHA-256 显示游戏与版本名称，卡片、发布选择、历史和已发布列表使用同一名称；未知附件只显示导入标识与“版本未标注”，不猜测标题。
 
 下载链接中的 Release 标签区分版本。为兼容 Organizer 导入，附件文件名保持不变；不要把 GitHub 自动生成的 Source code 当成游戏包。导入后仍需选择站点发布，旧存档继续旧版本。
 
@@ -688,7 +690,7 @@ Admin制作流程已按用户授权取消累计token用量停机阈值，照片/
 当前支持已有 `GameSession` 格式的游戏及其续幕存档，仍由同一个游戏引擎校验恢复内容；不兼容的自定义包明确显示仅本机存档。后端接收经过格式校验的客户端快照，并非防作弊的服务端动作裁定。通关印章与进度是独立记录。跨设备必须访问同一后端与同一数据目录；默认 loopback 启动是本机开发模式，并未部署互联网云服务。关闭/刷新时会尝试同步并提示未保存；强制关闭、断网时只有已确认保存的进度保证能从服务器恢复。
 
 
-Organizer 交付导入和地图发布同时支持现有 3D 包及静态二维包。二维包在根目录提供 `index.html` 与 `pastport-player.json`（`format: pastport-static-v1`、`entrypoint: 包内相对 HTML 路径`）；入口必须存在且不能越出包目录。预览沿用可信启动器、独立端口及后台登录校验，不运行导入包里的服务端脚本。原始 `muradiye-ui-trial-2026-11-05-r1` 下载包来自 `demo-muradiye-ui-trial` 的二维 UI Trial《最后两袋》（与上方可行走剧场三语版分开），保留二维人物动画、玩法与素材，可在交付卡片选择地图站点发布。该旧版通过独立适配器（`authored-adventure-v1`，按运行时文件摘要识别）保存到玩家账号：保存完整事件流与位置，恢复时仍由原引擎按版本校验并重放，不与 `GameSession` 共用格式；平台已自动适配这份原版的结局显示：实际出现结局后发送当前玩家运行回执，护照发章并计入排行榜；普通阅读不会发章，同一站点重复完成不重复计分。已知旧版按运行时文件摘要识别，不修改原始剧情；新静态游戏通过 `pastport:completed` 事件提供非空 `endingId`。未知运行时不能仅凭“能打开”冒充已通关。本机缓存仍按玩家/站点/发布版本分开。
+Organizer 交付导入和地图发布同时支持现有 3D 包及静态二维包。二维包在根目录提供 `index.html` 与 `pastport-player.json`（`format: pastport-static-v1`、`entrypoint: 包内相对 HTML 路径`）；入口必须存在且不能越出包目录。预览沿用可信启动器、独立端口及后台登录校验，不运行导入包里的服务端脚本。原始 `muradiye-ui-trial-2026-11-05-r1` 下载包来自 `demo-muradiye-ui-trial` 的 UI Trial 历史交付，包内入口已为《最后两袋》可行走剧场（与上方三语版分开），保留人物动画、玩法与素材，可在交付卡片选择地图站点发布。该旧版通过独立适配器（`authored-adventure-v1`，按运行时文件摘要识别）保存到玩家账号：保存完整事件流与位置，恢复时仍由原引擎按版本校验并重放，不与 `GameSession` 共用格式；平台已自动适配这份原版的结局显示：实际出现结局后发送当前玩家运行回执，护照发章并计入排行榜；普通阅读不会发章，同一站点重复完成不重复计分。已知旧版按运行时文件摘要识别，不修改原始剧情；新静态游戏通过 `pastport:completed` 事件提供非空 `endingId`。未知运行时不能仅凭“能打开”冒充已通关。本机缓存仍按玩家/站点/发布版本分开。
 
 
 ### 游戏包、后台历史与玩家平台如何共享
