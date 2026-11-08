@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08 — Separate Şeker Han map node
+
+- Add **Şeker Han** (`sekerhan`) to the shared player/Admin site catalog, using the existing interpretive house motif in the lower map row. Name checked against the Istanbul Encyclopedia’s Hobyar street record.
+- Leave the node unpublished for the user to connect from Admin; preserve every existing site ID and game binding. Player processes load the catalog at startup and need a restart after this data change.
+- Verified on local port 18851 after restart: 17 rendered sites; `sekerhan` and Turkish-name search; unpublished EN/ZH/TR cards without a launch button; playable-only filtering; desktop/mobile rendering and zero browser page errors. Existing sites/publications are unchanged. The Admin publisher reads the new option; an authenticated Admin UI click was not performed. Existing remote sharing remains running with its startup catalog until its owner restarts it.
+
 ## 2026-11-08 — Eyne Bey: The Twelve Rooms r2 delivery
 
 - Deliver the independently polished `eyne-bey-seker-han` bundle as [eyne-bey-seker-han-demo-2026-11-08-r2](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r2); retain r1. Editable game/authoring code, the scan and assets are Release content, outside the source commit and generic Main/SDK generation path.

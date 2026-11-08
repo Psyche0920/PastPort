@@ -126,5 +126,13 @@
     "art": "heilbronn",
     "game": "42heilbronn",
     "id": "42heilbronn"
+  },
+  {
+    "name": "Şeker Han",
+    "x": 72,
+    "y": 78,
+    "art": "house",
+    "game": "sekerhan",
+    "id": "sekerhan"
   }
 ]
