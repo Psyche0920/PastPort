@@ -8,15 +8,9 @@ export class CompletionRejected extends Error {
     super(message,options);this.name='CompletionRejected';
   }
 }
-export function hasEndingSave(entries) {
-  return Object.values(entries).some(raw=>{
+export function hasEndingSave(entries, key) {
+  return (key ? [entries[key]] : Object.values(entries)).some(raw=>{
     try {return typeof JSON.parse(raw)?.engine?.ending_id==='string';}
-    catch {return false;}
-  });
-}
-export function hasUnfinishedSave(entries) {
-  return Object.values(entries).some(raw=>{
-    try {const snapshot=JSON.parse(raw);return snapshot?.version===2&&snapshot.engine?.ending_id===null;}
     catch {return false;}
   });
 }

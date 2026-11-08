@@ -1,4 +1,4 @@
-import {CompletionRejected,GameSessionCompletionVerifier,hasEndingSave,hasUnfinishedSave} from './completion-verifier.mjs';
+import {CompletionRejected,GameSessionCompletionVerifier,hasEndingSave} from './completion-verifier.mjs';
 import {browserOrigin,QuickTunnel,stopProcess} from './network.mjs';
 import {PlayerSaveRepository, SaveConflict, InvalidSave} from './cloud-saves.mjs';
 import {completionAdapter} from '../../tools/game-package/player-completion.mjs';
@@ -323,9 +323,11 @@ const server = createServer(async (req,res) => {
       const {url,saveKeys,saveFormat,verifyCompletion} = await pending;
       const run = opaque();
       for (const [key, entry] of runs) if (entry.expires < Date.now()) runs.delete(key);
-      const save=saveKeys.length ? saves.read(account.id,publication.site_id,publication.version) : null;
-      const requiresFreshStart=Boolean(verifyCompletion&&hasEndingSave(save?.entries??{})&&!db.prepare('SELECT 1 FROM stamp WHERE player=? AND game=?').get(account.id,publication.site_id));
-      runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,saveFormat,verifyCompletion,requiresFreshStart,expires:runEnds()});
+      let save=saveKeys.length ? saves.read(account.id,publication.site_id,publication.version) : null;
+      if(verifyCompletion&&hasEndingSave(save?.entries??{},saveKeys[0])&&!db.prepare('SELECT 1 FROM stamp WHERE player=? AND game=?').get(account.id,publication.site_id)){
+        save=saves.archiveAndReset(account.id,publication.site_id,publication.version,save.revision);
+      }
+      runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,saveFormat,verifyCompletion,expires:runEnds()});
       const namespace=createHash('sha256').update(JSON.stringify([account.id,publication.site_id,publication.version])).digest('hex');
       return send(res,200,{url:`${url}/?scene=3d&passportRun=${run}&passportScope=${namespace}`,run,version:publication.version,
         current_version:current.version,latest:publication.version===current.version,save_format:saveFormat,save,namespace});
@@ -336,7 +338,6 @@ const server = createServer(async (req,res) => {
       if (!issued.saveKeys.length) return send(res,409,{error:'此游戏尚未支持账号存档'});
       try {
         const saved=saves.write(account.id,issued.siteId,issued.version,input,issued.saveKeys,issued.saveFormat);
-        if(issued.requiresFreshStart&&hasUnfinishedSave(saved.entries))issued.requiresFreshStart=false;
         return send(res,200,{revision:saved.revision,updated:saved.updated});
       } catch(error) {
         if(error instanceof SaveConflict)return send(res,409,{error:'另一设备已更新存档，请返回地图重新打开，避免覆盖',code:'SAVE_CONFLICT'});
@@ -348,7 +349,6 @@ const server = createServer(async (req,res) => {
       const issued = runs.get(input.run);
       if (!issued || issued.token !== token || issued.expires < Date.now()) return send(res,403,{error:'本次通关回执无效'});
       if(typeof input.ending_id!=='string'||!input.ending_id.trim()||input.ending_id.length>200)return send(res,409,{error:'本局尚未达到已验证的结局。',code:'COMPLETION_REQUIRED'});
-      if(issued.requiresFreshStart)return send(res,409,{error:'请重新开始游戏，通关后再次领取印章。',code:'FRESH_COMPLETION_REQUIRED'});
       if(issued.verifyCompletion){
         const saved=saves.read(account.id,issued.siteId,issued.version);
         try {await issued.verifyCompletion(saved.entries,input.ending_id);}

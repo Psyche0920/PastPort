@@ -52,7 +52,7 @@ test('shared engine rejects early/forged endings, missing tasks and foreign save
  const foreign=complete.snapshot();foreign.identity='0'.repeat(64);
  assert.throws(()=>verifier.verify({[f.presentation.saveKey]:JSON.stringify(foreign)},complete.state.ending_id),CompletionRejected);
 });
-test('HTTP stamp requires completed saved progress; a retracted old ending needs a fresh playthrough',async()=>{
+test('HTTP stamp requires completed progress; reopening after retraction automatically starts fresh',async()=>{
  const f=await fixture(),directory=await mkdtemp(join(tmpdir(),'pastport-completion-'));
  const organizer=join(directory,'organizer'),job='c'.repeat(32),game=join(organizer,'jobs',job,'game'),data=join(directory,'players');
  let child;
@@ -86,11 +86,31 @@ test('HTTP stamp requires completed saved progress; a retracted old ending needs
   const database=new DatabaseSync(join(data,'players.sqlite'));
   try {database.prepare('DELETE FROM stamp WHERE game=?').run('site');}finally{database.close();}
   const restored=(await post('launch',{site_id:'site'},alice.cookie)).value;
-  assert.equal((await stamp(restored.run)).value.code,'FRESH_COMPLETION_REQUIRED');
-  await save(restored.run,await f.create());
+  assert.deepEqual(restored.save.entries,{},'one launch returns the first-play state without a restart click');
+  assert.equal(restored.save.revision,revision+1);
+  const archive=new DatabaseSync(join(data,'players.sqlite'));
+  try {
+    const previous=archive.prepare('SELECT payload FROM game_save_archive WHERE site=?').all('site');
+    assert.equal(previous.length,1);
+    assert.equal(JSON.parse(previous[0].payload)['completion-save'],complete.serialize());
+  } finally {archive.close();}
   assert.equal((await stamp(restored.run)).status,409);
-  await save(restored.run,await finish(await f.create()));
+  assert.equal((await stamp(active.run)).status,409,'an old run cannot reclaim from the reset save');
+  const stale=await post('save',{run:active.run,revision,operation:crypto.randomUUID(),changes:{'completion-save':complete.serialize()}},alice.cookie);
+  assert.equal(stale.value.code,'SAVE_CONFLICT');
+  revision=restored.save.revision;
+  const openedAgain=(await post('launch',{site_id:'site'},alice.cookie)).value;
+  assert.equal(openedAgain.save.revision,revision,'an empty new attempt is not reset twice');
+  await save(restored.run,await f.create());
+  const unfinished=(await post('launch',{site_id:'site'},alice.cookie)).value;
+  assert.equal(unfinished.save.revision,revision,'unfinished progress resumes normally');
+  assert.equal(unfinished.save.entries['completion-save'],(await f.create()).serialize());
+  assert.equal((await stamp(restored.run)).status,409);
+  const replayed=await finish(await f.create());
+  await save(restored.run,replayed);
   assert.equal((await stamp(restored.run)).value.stamps.length,1);
+  const earned=(await post('launch',{site_id:'site'},alice.cookie)).value;
+  assert.equal(earned.save.entries['completion-save'],replayed.serialize(),'completed progress with a medal is preserved');
  }finally{
   if(child&&child.exitCode===null){const stopped=once(child,'exit');child.kill();await stopped;}
   await rm(directory,{recursive:true,force:true});

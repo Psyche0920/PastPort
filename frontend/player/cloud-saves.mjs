@@ -1,3 +1,4 @@
+import {randomUUID} from 'node:crypto';
 /** Account/site/release scoped snapshots; the game engine still validates gameplay. */
 export class SaveConflict extends Error {}
 export class InvalidSave extends Error {}
@@ -25,7 +26,11 @@ export class PlayerSaveRepository {
     database.exec(`CREATE TABLE IF NOT EXISTS game_save (
       player TEXT NOT NULL REFERENCES player(id), site TEXT NOT NULL, version TEXT NOT NULL,
       payload TEXT NOT NULL, revision INTEGER NOT NULL, updated TEXT NOT NULL,
-      operation TEXT NOT NULL, PRIMARY KEY(player,site,version));`);
+      operation TEXT NOT NULL, PRIMARY KEY(player,site,version));
+    CREATE TABLE IF NOT EXISTS game_save_archive (
+      player TEXT NOT NULL REFERENCES player(id), site TEXT NOT NULL, version TEXT NOT NULL,
+      payload TEXT NOT NULL, revision INTEGER NOT NULL, updated TEXT NOT NULL,
+      operation TEXT NOT NULL, archived TEXT NOT NULL, PRIMARY KEY(player,site,version,revision));`);
   }
   read(player, site, version) {
     const row = this.database.prepare('SELECT payload,revision,updated FROM game_save WHERE player=? AND site=? AND version=?').get(player,site,version);
@@ -33,6 +38,24 @@ export class PlayerSaveRepository {
   }
   list(player, site) {
     return this.database.prepare('SELECT version,revision,updated FROM game_save WHERE player=? AND site=? AND revision>0 ORDER BY updated DESC, version').all(player,site);
+  }
+  /** Preserve the prior attempt and advance CAS so old tabs cannot overwrite the fresh game. */
+  archiveAndReset(player, site, version, expectedRevision) {
+    this.database.exec('BEGIN IMMEDIATE');
+    try {
+      const previous=this.database.prepare('SELECT payload,revision,updated,operation FROM game_save WHERE player=? AND site=? AND version=?').get(player,site,version);
+      if(!previous || previous.revision!==expectedRevision)throw new SaveConflict('A newer save exists');
+      const updated=new Date().toISOString();
+      this.database.prepare('INSERT INTO game_save_archive VALUES (?,?,?,?,?,?,?,?)')
+        .run(player,site,version,previous.payload,previous.revision,previous.updated,previous.operation,updated);
+      this.database.prepare('UPDATE game_save SET payload=?,revision=?,updated=?,operation=? WHERE player=? AND site=? AND version=?')
+        .run('{}',previous.revision+1,updated,randomUUID(),player,site,version);
+      this.database.exec('COMMIT');
+      return {entries:{},revision:previous.revision+1,updated};
+    } catch(error) {
+      this.database.exec('ROLLBACK');
+      throw error;
+    }
   }
   write(player, site, version, input, allowedKeys, format = 'gamesession-v2') {
     const valid = formats[format];

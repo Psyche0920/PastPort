@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08 — Automatically reopen cleared attempts from the beginning
+
+- After a stamp is retracted, opening a completed GameSession level now starts at the first-play opening without a restart button. Archive the original save unchanged and clear its active entries in one transaction; increment the revision to reject old-tab writes.
+- Preserve unfinished new attempts, completed saves whose medal remains earned, other players/sites/releases, and the verified-completion requirement. This supersedes the earlier manual-restart flow.
+- Verified: 53 player tests; isolated browser sequence completion → retract → reopen at first page without restart → complete and earn again; stale local cache cleared before boot. The current local Şeker Han package also opens its welcome with “Start game”, no restart click/dialog, an empty active save and no page errors. Local 18851 is updated; other saves, medals and map publications are preserved. Existing remote sharing still requires its own restart.
+
 ## 2026-11-08 — Require verified GameSession completion before Cleared
 
 - Stamp requests require a nonempty ending ID. GameSession deliveries must sync and pass trusted shared-engine restoration, required-route/task checks and ending-rule/table validation; a valid launch run alone is insufficient. Imported server scripts are never executed.

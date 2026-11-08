@@ -1,7 +1,6 @@
 export const playerTurkish=Object.freeze({
   "This run has not reached a verified ending.": "Bu oyun doğrulanmış bir sona ulaşmadı.",
   "This game cannot provide a verified completion record.": "Bu oyun doğrulanmış bir tamamlama kaydı sağlayamıyor.",
-  "Start a new game to earn this cleared stamp again.": "Bu tamamlama damgasını yeniden kazanmak için yeni bir oyun başlatın.",
   "Search places or games…": "Yer veya oyun ara…",
   "Search the map": "Haritada ara",
   "Playable only": "Yalnızca oynanabilir",
@@ -181,7 +180,6 @@ const errors = {
   '存档格式不符合此游戏要求':'This game snapshot could not be accepted.',
   '本局尚未达到已验证的结局。':'This run has not reached a verified ending.',
   '此游戏暂不能提供可验证的通关记录。':'This game cannot provide a verified completion record.',
-  '请重新开始游戏，通关后再次领取印章。':'Start a new game to earn this cleared stamp again.',
   '此地点尚未发布试玩。':'This place does not have a published game yet.',
   '来源不符':'Request origin does not match.',
   '远程游戏入口尚未连通，请检查网络或 DNS 后重试。':'Remote game access could not connect. Check network/DNS and retry.',
@@ -788,7 +786,7 @@ window.addEventListener('message',async event=>{
   const launched=active;
   if(event.data.type==='pastport:save-ready' && active.save){
     frame.contentWindow.postMessage({type:'pastport:save-state',run:active.run,namespace:active.namespace,entries:active.save.entries},event.origin);
-    if(active.save.revision)setGameStatus('已恢复账号进度','Account progress restored');else setGameStatus('新游戏 · 进度将自动保存','New game · Progress saves automatically');
+    if(Object.keys(active.save.entries).length)setGameStatus('已恢复账号进度','Account progress restored');else setGameStatus('新游戏 · 进度将自动保存','New game · Progress saves automatically');
     return;
   }
   if(event.data.type==='pastport:save-error'){
