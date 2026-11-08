@@ -64,7 +64,7 @@ Orhan Bey 包是玩家地图已发布的旧导演版；Organizer 最近记录中
 
 ## 启动与使用
 
-需要 Git、uv、Node.js 22+ 和支持 WebGL 的浏览器。以下命令用于 macOS、Linux；Windows 请使用 WSL2 的 Ubuntu 终端。在仓库根目录运行；仓库可以放在任意目录。
+需要 Git、uv、Node.js 22.13+ 和支持 WebGL 的浏览器。以下命令用于 macOS、Linux；Windows 请使用 WSL2 的 Ubuntu 终端。在仓库根目录运行；仓库可以放在任意目录。
 
 首次使用这台电脑：
 
@@ -85,6 +85,37 @@ uv run python -m pastport organizer
 
 打开 [Organizer 后台](http://127.0.0.1:18840/organizer/)，使用管理员账号登录。服务在当前终端前台运行，保持终端打开，按 Ctrl+C 停止。端口占用时检查已有服务；也可以用 `uv run python -m pastport organizer --port 18841`，并打开相应端口。
 
+
+### 三个入口的关系
+
+Main 是 Python 核心程序与工作流，Organizer 是 Main 提供的制作／审核界面，不需要另起第三个 Main 服务。玩家平台是独立 Node.js 服务。正常本机演示使用两个终端；需要公网访问时，再开第三个终端运行共享入口。
+
+### 更新已有安装
+
+先在仓库根目录运行 `git status`，保留自己的修改，再更新代码及 Python 依赖：
+
+```sh
+git pull --ff-only origin main
+uv sync --extra authoring --extra game-making
+```
+
+拉取后应由服务持有人在对应终端按 Ctrl+C，再按下文重启需要更新的服务；刷新网页不能替换运行中的 Python／Node.js 后端。已有安装不必反复运行 `organizer-init`，也不要为更新代码删除数据目录。Git 仅同步源码，不会传输上传文件、游戏包、账号或存档。
+
+### 本机玩家端：第二个终端
+
+保持 Organizer 运行，另开终端，在同一个仓库根目录执行：
+
+```sh
+node frontend/player/server.mjs
+```
+
+打开 [玩家平台](http://127.0.0.1:18851/)。玩家自行注册／登录；玩家账号不是 Organizer 管理员账号。地图只启动已发布版本，导入游戏包后仍需在 Organizer 选择站点并发布。玩家端端口占用时，可使用 `PLAYER_PORT=18861 node frontend/player/server.mjs`。Node.js 需要支持内置 `node:sqlite`（建议 Node.js 22.13+ 或更新的 LTS）。
+
+### 数据保存在哪里
+
+默认 Organizer 数据位于 `var/organizer-integration/server/organizer/`，玩家账号、印章和已同步存档位于 `frontend/player/.local/players.sqlite`，上传资源和游戏包另存为文件。浏览器仍有本地运行状态／缓存；只有服务端确认后，才算账号进度已同步。分别在不同电脑启动 Organizer／玩家服务，会形成各自独立的数据，不会自动合并。
+
+Cloudflare Tunnel 只将公网请求转发到本机，不是把程序或数据库部署到云端。其他人通过同一个 STAFF 入口上传的材料、通过 PLAYER 入口成功同步的账号进度，均保存在主机的相应数据目录。主机须保持运行和联网。
 
 ### 不同 Wi-Fi：临时共享本机服务
 

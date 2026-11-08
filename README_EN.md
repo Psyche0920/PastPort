@@ -64,7 +64,7 @@ The Orhan Bey package is the older director build currently published on the pla
 
 ## Startup and use
 
-Requires Git, uv, Node.js 22+ and a WebGL browser. Run these commands from the repository root on macOS or Linux; on Windows use an Ubuntu terminal in WSL2. The checkout can live in any directory.
+Requires Git, uv, Node.js 22.13+ and a WebGL browser. Run these commands from the repository root on macOS or Linux; on Windows use an Ubuntu terminal in WSL2. The checkout can live in any directory.
 
 First setup on this computer:
 
@@ -85,6 +85,37 @@ uv run python -m pastport organizer
 
 Open [Organizer](http://127.0.0.1:18840/organizer/) and sign in. The service runs in your terminal; keep it open and stop with Ctrl+C. If the port is occupied, check the existing service or run `uv run python -m pastport organizer --port 18841` and open that port.
 
+
+### How the three entry points relate
+
+Main is the Python core and workflow. Organizer is the authoring/review interface served by Main, not a third separately launched Main service. The player platform is a separate Node.js service. Local demonstrations use two terminals; public sharing adds a third terminal.
+
+### Update an existing installation
+
+Run `git status` in the repository root and preserve your own edits before updating source and Python dependencies:
+
+```sh
+git pull --ff-only origin main
+uv sync --extra authoring --extra game-making
+```
+
+After updating, the service owner should press Ctrl+C in the relevant terminal and restart the affected services with the commands below. A browser refresh cannot replace a running Python/Node.js backend. Existing installations do not need repeated `organizer-init`; do not delete data directories to update code. Git synchronizes source, not uploaded files, game bundles, accounts or saves.
+
+### Local player platform: second terminal
+
+Keep Organizer running. Open another terminal in the same repository root:
+
+```sh
+node frontend/player/server.mjs
+```
+
+Open the [player platform](http://127.0.0.1:18851/). Players register/sign in separately from the Organizer administrator. Map entries launch published releases only: after importing a game bundle, select a site and publish it in Organizer. For another port, use `PLAYER_PORT=18861 node frontend/player/server.mjs`. Node.js must support built-in `node:sqlite` (Node.js 22.13+ or a newer LTS is recommended).
+
+### Where data is saved
+
+Organizer defaults to `var/organizer-integration/server/organizer/`; player accounts, stamps and synchronized saves live in `frontend/player/.local/players.sqlite`. Uploaded assets and game bundles are separate files. Browsers retain local runtime state/cache; account progress is synchronized only after server acknowledgement. Independently starting services on different computers creates separate data stores, without automatic merging.
+
+Cloudflare Tunnel forwards public requests to the host; it does not deploy the application or database to the cloud. Materials uploaded through the same STAFF entry and account progress successfully synchronized through PLAYER are stored in the host's corresponding data directories. The host must stay running and connected.
 
 ### Different Wi-Fi networks: temporarily share this computer
 

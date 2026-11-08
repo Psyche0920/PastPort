@@ -175,3 +175,7 @@
 - 中英文 README、技术 PRD 和团队交接明确区分同一后台的一次导入/站点发布，与独立电脑通过 Release 下载后导入；Git 不同步制作历史、游戏资产或玩家数据库。当前仍为本机开发模式，统一云部署尚未执行。
 - 合并后全量 Python 测试通过；所选 JS 检查45项通过、1项私有包夹具跳过，另有真实 UI Trial 五幕通关证据。Ruff、相关 strict mypy、仓库/文档/JS 检查通过。
 - 离线 wheel 构建成功，安装资源含玩家端源码、16个站点目录和通关适配依赖；未包含账号文件、数据库或游戏压缩包。本轮没有上传新游戏包或发布新 wheel。
+
+## 2026-11-08 — Startup documentation audit
+
+- Compared local source with fetched origin/main (no divergence). Clarify Main/Organizer versus the separate Node player service, add the missing local player launch command and existing-install update/restart steps, and distinguish host-side data from browser cache and Cloudflare forwarding. Update both README languages. No running services restarted, model calls made, or deployment changes performed.
