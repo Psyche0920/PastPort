@@ -148,6 +148,11 @@ const publishedTitles = Object.freeze({
     "en": "The Last Two Sacks · Theatre archive (UI Trial delivery)",
     "tr": "The Last Two Sacks · Tiyatro arşivi (UI Trial teslimi)"
   },
+  "3981c5342d2dae1f900f91dbf3b8fb0e1479281b3d7cce5cf7ba0a186f0872f1": {
+    "zh": "艾内贝伊·苏巴舍经学院（谢克尔商馆演示）",
+    "en": "Eyne Bey Subaşı Madrasa (Şeker Han Demo)",
+    "tr": "Eyne Bey Subaşı Medresesi (Şeker Han Demo)"
+  },
   "d566d46c89f45b6d36d7250a5b4c5427eb2826b46c3c5e190830fcf473bfbf0c": {
     "zh": "The Last Tour · 历史版",
     "en": "The Last Tour · Earlier release",

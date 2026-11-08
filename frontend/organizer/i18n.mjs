@@ -1409,6 +1409,11 @@ const deliveryTitles = Object.freeze({
     "en": "The Last Tour · intermediate localization",
     "tr": "The Last Tour · ara yerelleştirme"
   },
+  "b3c62d93e594604d5a1cf88a83e83a3e3fa70ef55ea2c91f61efcbb0c611a72f": {
+    "zh": "艾内贝伊·苏巴舍经学院（谢克尔商馆演示）· 三语 r1",
+    "en": "Eyne Bey Subaşı Madrasa (Şeker Han Demo) · trilingual r1",
+    "tr": "Eyne Bey Subaşı Medresesi (Şeker Han Demo) · üç dilli r1"
+  },
   "0f0c6d50a1640e6cc0c9a3a4f983816ed9534759f200292b63ea3f36ec788d56": {
     "zh": "最后两袋 · maslan 主试玩 r1",
     "en": "The Last Two Sacks · maslan featured r1",
