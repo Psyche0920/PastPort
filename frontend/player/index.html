@@ -1,77 +1,527 @@
 <!doctype html>
-<html lang="zh-Hans">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PastPort · Bursa 遗址地图</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.mjs"></script></head>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PastPort · Bursa Heritage Map</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.mjs"></script></head>
 <body>
-<header><details class="site-menu"><summary><span aria-hidden="true">☰</span><span data-en="Menu">菜单</span></summary><nav>
-<a href="#" data-en="Home">首页</a><a href="#map" data-en="Discover">探索</a><a href="#leaderboard" data-en="Leaderboard">排行榜</a>
-</nav></details><a href="/" class="wordmark">Past<span>Port</span></a><span class="tag" data-en="Heritage Travel Journal">文化遗产旅行手记</span><div class="header-actions"><select id="language" aria-label="界面语言" data-en-label="Interface language"><option value="zh">简体中文</option><option value="en">English</option><option value="tr">Türkçe</option></select><button id="passport" data-en="My Passport">我的通关文书</button></div></header>
+<header>
+  <div class="header-spacer" aria-hidden="true"></div>
+  <a href="/" class="wordmark"><span class="wordmark-past">Past</span><span class="wordmark-port">Port</span></a>
+  <div class="header-actions">
+    <select id="language" aria-label="Interface language" data-zh-label="界面语言" data-en-label="Interface language">
+      <option value="en" selected>English</option>
+      <option value="zh">简体中文</option>
+      <option value="tr">Türkçe</option>
+    </select>
+    <button id="passport" data-zh="我的通关文书" data-en="My Passport">My Passport</button>
+  </div>
+</header>
 <main>
 <section id="home" class="home">
-  <div>
-    <p class="eyebrow" data-en="A HERITAGE TRAVEL JOURNAL">文化遗产旅行手记</p>
-    <h1>PastPort</h1>
-    <p class="home-lead" data-en="Follow the trail. Collect a stamp for every adventure you complete.">沿着旅路探索，每完成一段旅程，就为你的通关文书添一枚印章。</p>
-    <div class="home-actions">
-      <a class="primary-link" href="#map" data-en="Start Passporting">开启护照之旅</a>
-      <a class="outline-link" href="#leaderboard" data-en="Leaderboard">排行榜</a>
+  <div class="spatial-stage">
+    <svg class="passport-art" viewBox="0 0 580 390" role="img" aria-label="A nostalgic passport and travel stamp" data-zh-label="护照与印章" data-en-label="A passport and travel stamp">
+      <defs>
+        <radialGradient id="ambient-glow" cx="50%" cy="46%" r="54%">
+          <stop offset="0%" stop-color="#f8d993" stop-opacity="0.38"/>
+          <stop offset="50%" stop-color="#cf9442" stop-opacity="0.14"/>
+          <stop offset="100%" stop-color="#1c0912" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="celestial-halo" cx="50%" cy="40%" r="58%">
+          <stop offset="0%" stop-color="#ffd980" stop-opacity="0.22"/>
+          <stop offset="60%" stop-color="#994d22" stop-opacity="0.06"/>
+          <stop offset="100%" stop-color="#15060e" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="leather-cover" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#4a1122"/>
+          <stop offset="35%" stop-color="#722138"/>
+          <stop offset="70%" stop-color="#551425"/>
+          <stop offset="100%" stop-color="#320814"/>
+        </linearGradient>
+        <linearGradient id="gold-leaf" x1="0%" y1="0%" x2="100%" y2="80%">
+          <stop offset="0%" stop-color="#fdf3cf"/>
+          <stop offset="25%" stop-color="#ecc779"/>
+          <stop offset="50%" stop-color="#cda350"/>
+          <stop offset="75%" stop-color="#f7df9b"/>
+          <stop offset="100%" stop-color="#aa7c2c"/>
+        </linearGradient>
+        <linearGradient id="pages-edge" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#f6ebd2"/>
+          <stop offset="50%" stop-color="#dec08f"/>
+          <stop offset="100%" stop-color="#b8935c"/>
+        </linearGradient>
+        <linearGradient id="boarding-slip" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#faf2de"/>
+          <stop offset="50%" stop-color="#ebd8b1"/>
+          <stop offset="100%" stop-color="#d9bd8d"/>
+        </linearGradient>
+        <radialGradient id="wax-body" cx="35%" cy="32%" r="68%">
+          <stop offset="0%" stop-color="#d44038"/>
+          <stop offset="45%" stop-color="#982525"/>
+          <stop offset="85%" stop-color="#641014"/>
+          <stop offset="100%" stop-color="#3c0609"/>
+        </radialGradient>
+        <linearGradient id="brass-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fae39d"/>
+          <stop offset="35%" stop-color="#c99849"/>
+          <stop offset="70%" stop-color="#7e5420"/>
+          <stop offset="100%" stop-color="#42290d"/>
+        </linearGradient>
+        <radialGradient id="compass-glass" cx="40%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+          <stop offset="50%" stop-color="#fbf4dd" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#554425" stop-opacity="0.4"/>
+        </radialGradient>
+        <filter id="shadow-blur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="16"/>
+        </filter>
+        <filter id="antique-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="24" stdDeviation="18" flood-color="#040103" flood-opacity="0.82"/>
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#140409" flood-opacity="0.5"/>
+        </filter>
+        <filter id="soft-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+      </defs>
+
+      <!-- Layer 0: Infinite Distance - Atmospheric Ambient & Celestial Halo -->
+      <circle cx="290" cy="190" r="230" fill="url(#ambient-glow)"/>
+      <circle cx="290" cy="180" r="185" fill="url(#celestial-halo)"/>
+
+      <!-- Layer 1: Mid Distance - Ancient Nautical Chart & Navigation Graticule -->
+      <g class="chart-backdrop" opacity="0.34" stroke="#dcb46a" stroke-width="1" fill="none">
+        <circle cx="290" cy="185" r="175" stroke-dasharray="2 5"/>
+        <circle cx="290" cy="185" r="120" stroke-dasharray="1 6"/>
+        <line x1="30" y1="185" x2="550" y2="185" stroke-dasharray="3 7"/>
+        <line x1="290" y1="10" x2="290" y2="360" stroke-dasharray="3 7"/>
+        <path d="M80 50 L290 185 L500 320 M80 320 L290 185 L500 50" stroke-dasharray="4 8" stroke-width="0.8"/>
+      </g>
+
+      <!-- Faded Overland Silk Route Trail -->
+      <path class="route-trail" d="M40 330 C120 280 180 290 270 240 S390 195 520 100" fill="none" stroke="#e8ba6c" stroke-width="2" stroke-dasharray="4 7" opacity="0.5"/>
+
+      <!-- Dynamic Optical Drop Shadow Beneath Floating Passport (Eye-Trick of Suspension) -->
+      <ellipse id="passport-shadow" cx="260" cy="335" rx="145" ry="24" fill="#030102" filter="url(#shadow-blur)"/>
+
+      <!-- Layer 2: Focal Distance - Antique Boarding Permit (Protruding Behind Journal) -->
+      <g class="permit-slip" transform="rotate(-15 230 145)" filter="url(#antique-shadow)">
+        <rect x="125" y="30" width="170" height="220" rx="4" fill="url(#boarding-slip)" stroke="#9c7849" stroke-width="1.2"/>
+        <rect x="131" y="36" width="158" height="208" rx="2" fill="none" stroke="#bda072" stroke-dasharray="2 3"/>
+        <line x1="131" y1="62" x2="289" y2="62" stroke="#9c7849" stroke-width="1"/>
+        <text x="210" y="52" text-anchor="middle" fill="#693b22" font-family="Georgia,serif" font-size="8.5" font-weight="bold" letter-spacing="2">PASSAGE PERMIT</text>
+        <text x="142" y="77" fill="#805634" font-family="Georgia,serif" font-size="7">ORIGIN: PRESENT</text>
+        <text x="142" y="89" fill="#805634" font-family="Georgia,serif" font-size="7">DEST: BURSA · 1326</text>
+        <text x="142" y="101" fill="#805634" font-family="Georgia,serif" font-size="7">BERTH: OSMANGAZİ</text>
+        <g fill="#7e5330" opacity="0.65">
+          <rect x="142" y="112" width="2" height="18"/><rect x="146" y="112" width="4" height="18"/>
+          <rect x="152" y="112" width="1" height="18"/><rect x="155" y="112" width="3" height="18"/>
+          <rect x="160" y="112" width="5" height="18"/><rect x="167" y="112" width="2" height="18"/>
+          <rect x="171" y="112" width="3" height="18"/>
+        </g>
+        <text x="210" y="125" text-anchor="middle" fill="#9f3a33" font-family="Georgia,serif" font-size="10" font-weight="bold" letter-spacing="1" opacity="0.85">№ 1326-B</text>
+        <circle cx="275" cy="46" r="4" fill="#240c15"/>
+      </g>
+
+      <!-- The Main Floating Travel Journal / PastPort (Focal 3D Levitation Artifact) -->
+      <g class="cover-float" filter="url(#antique-shadow)">
+        <g transform="rotate(-7 255 190)">
+          <!-- Page Layers Depth / Edge Gilding -->
+          <rect x="148" y="56" width="196" height="260" rx="12" fill="url(#pages-edge)"/>
+          <path d="M342 62 L346 66 L346 312 L342 308 Z" fill="#9c7847"/>
+          <path d="M156 312 L160 316 L346 316 L342 312 Z" fill="#7d5d34"/>
+
+          <!-- Rich Leather Binding -->
+          <rect x="140" y="50" width="200" height="260" rx="11" fill="url(#leather-cover)" stroke="#d9b165" stroke-width="2"/>
+          <!-- Spine Shadow & Binding Crease -->
+          <rect x="140" y="50" width="16" height="260" rx="11" fill="#260811" opacity="0.45"/>
+          <line x1="156" y1="50" x2="156" y2="308" stroke="#1c050c" stroke-width="1.8"/>
+
+          <!-- Decorative Gold-Foil Border -->
+          <rect x="162" y="66" width="164" height="228" rx="6" fill="none" stroke="url(#gold-leaf)" stroke-width="1.6"/>
+          <rect x="166" y="70" width="156" height="220" rx="4" fill="none" stroke="#7e5927" stroke-width="0.8" stroke-dasharray="3 2"/>
+
+          <!-- Filigree Corner Brackets -->
+          <g fill="url(#gold-leaf)">
+            <path d="M164 68 q12 2 14 14 q-2 -12 -14 -14z"/>
+            <path d="M324 68 q-12 2 -14 14 q2 -12 14 -14z"/>
+            <path d="M164 292 q12 -2 14 -14 q-2 12 -14 14z"/>
+            <path d="M324 292 q-12 -2 -14 -14 q2 12 14 14z"/>
+          </g>
+
+          <!-- Top Heading -->
+          <text x="248" y="102" text-anchor="middle" fill="url(#gold-leaf)" font-family="Georgia,serif" font-size="16" font-weight="bold" letter-spacing="4">TÜRKİYE</text>
+
+          <!-- Canonical Turkish Crescent & Star National Emblem (Türk Bayrağı Ay-Yıldız) -->
+          <g transform="translate(248 166) scale(0.18)">
+            <!-- Embossed Inset Shadow -->
+            <g transform="translate(-351.6 -298)" fill="#18040b" opacity="0.55">
+              <path d="M 426.754 219.785 A 150 150 0 1 0 426.754 380.215 A 120 120 0 1 1 426.754 219.785 Z"/>
+              <polygon points="417.504,300 469.328,283.161 469.328,228.671 501.357,272.755 553.18,255.916 521.151,300 553.18,344.084 501.357,327.245 469.328,371.329 469.328,316.839"/>
+            </g>
+            <!-- Gold Leaf Foil Emblem -->
+            <g transform="translate(-351.6 -300)" fill="url(#gold-leaf)">
+              <path d="M 426.754 219.785 A 150 150 0 1 0 426.754 380.215 A 120 120 0 1 1 426.754 219.785 Z"/>
+              <polygon points="417.504,300 469.328,283.161 469.328,228.671 501.357,272.755 553.18,255.916 521.151,300 553.18,344.084 501.357,327.245 469.328,371.329 469.328,316.839"/>
+            </g>
+          </g>
+
+          <!-- Embossed "PASTPORT" Title on Folio Cover -->
+          <text x="248" y="237.2" text-anchor="middle" fill="#18040b" font-family="'Cormorant Garamond',Georgia,serif" font-size="14" font-weight="bold" letter-spacing="4.5" opacity="0.6">PASTPORT</text>
+          <text x="248" y="236" text-anchor="middle" fill="url(#gold-leaf)" font-family="'Cormorant Garamond',Georgia,serif" font-size="14" font-weight="bold" letter-spacing="4.5">PASTPORT</text>
+          <line x1="216" y1="244" x2="280" y2="244" stroke="url(#gold-leaf)" stroke-width="1" opacity="0.75"/>
+        </g>
+      </g>
+
+      <!-- Antique Brass Pocket Stopwatch (Floating Upper Left, No Shadow) -->
+      <g transform="translate(36 125)">
+        <g class="stopwatch-float">
+          <!-- Top Crown & Bow Ring -->
+          <path d="M30 11 A7 7 0 0 1 42 11" fill="none" stroke="url(#brass-rim)" stroke-width="1.8"/>
+          <rect x="33" y="6" width="6" height="5" rx="1.2" fill="url(#brass-rim)" stroke="#3f270e" stroke-width="0.7"/>
+          <rect x="18" y="14" width="4" height="4" rx="1" transform="rotate(-30 20 16)" fill="url(#brass-rim)" stroke="#3f270e" stroke-width="0.6"/>
+          <!-- Stopwatch Body -->
+          <circle cx="36" cy="44" r="32" fill="url(#brass-rim)" stroke="#3f270e" stroke-width="2"/>
+          <circle cx="36" cy="44" r="28" fill="#2e1d0d" stroke="#fae39d" stroke-width="0.8"/>
+          <circle cx="36" cy="44" r="25" fill="#fcf6e6"/>
+          <!-- Chronograph Second Track & Numbers -->
+          <circle cx="36" cy="44" r="22" fill="none" stroke="#7e5a2b" stroke-width="0.5" stroke-dasharray="1 2"/>
+          <text x="36" y="27" text-anchor="middle" fill="#8f2c25" font-family="Georgia,serif" font-size="5" font-weight="bold">60</text>
+          <text x="53" y="46" text-anchor="middle" fill="#583f1d" font-family="Georgia,serif" font-size="4.5">15</text>
+          <text x="36" y="64" text-anchor="middle" fill="#583f1d" font-family="Georgia,serif" font-size="4.5">30</text>
+          <text x="19" y="46" text-anchor="middle" fill="#583f1d" font-family="Georgia,serif" font-size="4.5">45</text>
+          <!-- Sub-Dial (Chronograph Register) -->
+          <g stroke="#916c37" stroke-width="0.5" opacity="0.8">
+            <circle cx="36" cy="35" r="5.5" fill="none" stroke-dasharray="1 1"/>
+            <line x1="36" y1="35" x2="38.5" y2="33" stroke="#233b47" stroke-width="0.7" stroke-linecap="round"/>
+            <circle cx="36" cy="35" r="0.8" fill="#233b47"/>
+          </g>
+          <!-- Blued Steel Stopwatch Needle Hand -->
+          <g transform="rotate(72 36 44)">
+            <line x1="36" y1="44" x2="36" y2="24" stroke="#1f3745" stroke-width="1" stroke-linecap="round"/>
+            <circle cx="36" cy="48" r="1.3" fill="#1f3745"/>
+            <circle cx="36" cy="44" r="2" fill="url(#brass-rim)" stroke="#3f270e" stroke-width="0.6"/>
+          </g>
+          <!-- Domed Crystal Glass Highlight -->
+          <circle cx="36" cy="44" r="25" fill="url(#compass-glass)"/>
+        </g>
+      </g>
+
+      <!-- Antique Brass Pocket Compass (Resting on Lower Left, No Shadow) -->
+      <g transform="translate(64 250)">
+        <g class="compass-float">
+          <circle cx="44" cy="44" r="38" fill="url(#brass-rim)" stroke="#3f270e" stroke-width="2"/>
+          <circle cx="44" cy="44" r="34" fill="#301f0e" stroke="#fae39d" stroke-width="1"/>
+          <circle cx="44" cy="44" r="30" fill="#fcf6e6"/>
+          <g stroke="#916c37" stroke-width="0.7" opacity="0.75">
+            <line x1="44" y1="16" x2="44" y2="72"/>
+            <line x1="16" y1="44" x2="72" y2="44"/>
+            <circle cx="44" cy="44" r="22" fill="none" stroke-dasharray="1.5 2"/>
+          </g>
+          <text x="44" y="24" text-anchor="middle" fill="#9b2d28" font-family="Georgia,serif" font-size="7" font-weight="bold">N</text>
+          <text x="44" y="70" text-anchor="middle" fill="#583f1d" font-family="Georgia,serif" font-size="6.5">S</text>
+          <text x="68" y="46" text-anchor="middle" fill="#583f1d" font-family="Georgia,serif" font-size="6.5">E</text>
+          <text x="20" y="46" text-anchor="middle" fill="#583f1d" font-family="Georgia,serif" font-size="6.5">W</text>
+          <g transform="rotate(32 44 44)">
+            <polygon points="44,20 48,44 44,41 40,44" fill="#ab2925" stroke="#681512" stroke-width="0.6"/>
+            <polygon points="44,68 48,44 44,47 40,44" fill="#2d424b" stroke="#17242a" stroke-width="0.6"/>
+            <circle cx="44" cy="44" r="3.5" fill="url(#brass-rim)" stroke="#3f270e" stroke-width="1"/>
+          </g>
+          <circle cx="44" cy="44" r="30" fill="url(#compass-glass)"/>
+        </g>
+      </g>
+
+      <!-- Wax Seal with Ribbon (Bottom Right) -->
+      <g class="seal-group" transform="translate(320 235)" filter="url(#antique-shadow)">
+        <path d="M38 32 L46 95 L56 86 L66 94 L54 32 Z" fill="#78191f" stroke="#480c10" stroke-width="0.8"/>
+        <path d="M48 32 L68 98 L78 90 L88 96 L64 32 Z" fill="#9a262d" stroke="#5a1116" stroke-width="0.8"/>
+        <line x1="46" y1="94" x2="66" y2="93" stroke="#f0ce7f" stroke-width="1.8"/>
+        <line x1="68" y1="97" x2="88" y2="95" stroke="#f0ce7f" stroke-width="1.8"/>
+        <circle cx="48" cy="36" r="28" fill="url(#wax-body)" stroke="#490c0f" stroke-width="1.5"/>
+        <circle cx="48" cy="36" r="23" fill="none" stroke="#e0726d" stroke-width="0.8" opacity="0.6"/>
+        <g transform="translate(48 36)" stroke="#f59c98" stroke-width="1.3" fill="none" stroke-linecap="round">
+          <path d="M-6 -10 h12 L6 -8 L-6 8 L6 10 h-12"/>
+          <line x1="0" y1="-8" x2="0" y2="8"/>
+          <path d="M-9 2 q9 10 18 0"/>
+        </g>
+      </g>
+
+      <!-- Nostalgic Postal Cancellation Stamp (Floating Over Top Right) -->
+      <g class="stamp-float">
+        <g transform="rotate(13 425 145)" fill="none" stroke="#ad3e33" filter="url(#soft-glow)">
+          <circle cx="425" cy="145" r="54" stroke-width="2.2" stroke-dasharray="180 0"/>
+          <circle cx="425" cy="145" r="47" stroke-width="1" stroke-dasharray="3 3"/>
+          <path id="stamp-path-top" d="M377 145 a48 48 0 0 1 96 0" fill="none"/>
+          <path id="stamp-path-bottom" d="M473 145 a48 48 0 0 1 -96 0" fill="none"/>
+          <text font-size="7.8" font-family="Georgia,serif" font-weight="bold" fill="#ad3e33" letter-spacing="1.8">
+            <textPath href="#stamp-path-top" startOffset="50%" text-anchor="middle">PASTPORT · TRANSIT</textPath>
+          </text>
+          <text font-size="7.5" font-family="Georgia,serif" font-weight="bold" fill="#ad3e33" letter-spacing="2">
+            <textPath href="#stamp-path-bottom" startOffset="50%" text-anchor="middle">★ BURSA 1326 ★</textPath>
+          </text>
+          <g transform="translate(425 145)" fill="#ad3e33" stroke="none">
+            <path d="M-18 6 v-10 h36 v10 Z"/>
+            <path d="M-14 -4 q7 -14 14 0 Z"/>
+            <path d="M0 -4 q7 -14 14 0 Z"/>
+            <rect x="-18" y="-14" width="2" height="10"/>
+            <rect x="16" y="-14" width="2" height="10"/>
+          </g>
+          <text x="425" y="162" text-anchor="middle" fill="#993328" stroke="none" font-family="Georgia,serif" font-size="8.5" font-weight="bold" letter-spacing="1.5">OSMANGAZİ</text>
+          <path d="M483 135 q14 -9 28 0 t28 0 M483 145 q14 -9 28 0 t28 0 M483 155 q14 -9 28 0 t28 0" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- Layer 4: Near Distance - Floating Stardust Memory Motes -->
+      <g class="memory-motes" fill="#fadb8f">
+        <circle class="mote mote-1" cx="260" cy="90" r="2" opacity="0.75"/>
+        <circle class="mote mote-2" cx="380" cy="230" r="1.5" opacity="0.6"/>
+        <circle class="mote mote-3" cx="180" cy="180" r="1.3" opacity="0.55"/>
+        <circle class="mote mote-4" cx="320" cy="300" r="1.7" opacity="0.7"/>
+        <circle class="mote mote-5" cx="460" cy="80" r="1.4" opacity="0.6"/>
+      </g>
+    </svg>
+    <div class="spatial-caption">
+      <p class="home-lead" data-zh="沿着旅路探索，每完成一段旅程，就为你的通关文书添一枚印章。" data-en="Follow the trail. Collect a stamp for every adventure you complete.">Follow the trail. Collect a stamp for every adventure you complete.</p>
+      <div class="home-actions">
+        <a class="primary-link" href="#map" data-zh="开启旅程" data-en="Starts Journey">Starts Journey <span class="action-arrow" aria-hidden="true">→</span></a>
+        <a class="outline-link" href="#leaderboard" data-zh="排行榜" data-en="Leaderboard">Leaderboard</a>
+      </div>
     </div>
   </div>
-  <svg class="passport-art" viewBox="0 0 340 270" role="img" aria-label="护照与印章" data-en-label="A passport and travel stamp">
-    <path d="M25 235c56-30 134-38 277-15M22 63c82-43 179-44 284-12" fill="none" stroke="#c99858" stroke-dasharray="3 8" opacity=".55"/>
-    <g class="cover-float"><g transform="rotate(-11 138 133)">
-      <rect x="64" y="35" width="156" height="204" rx="12" fill="#dec18a"/>
-      <rect x="58" y="29" width="157" height="203" rx="11" fill="#721e34" stroke="#e1bb6b" stroke-width="2"/>
-      <rect x="68" y="40" width="137" height="181" rx="7" fill="none" stroke="#bd985b"/>
-      <text x="136" y="76" text-anchor="middle" fill="#f1d79c" font-size="20" letter-spacing="3">TÜRKİYE</text>
-      <path d="M150 112a25 25 0 1 0 0 38a21 21 0 1 1 0-38Z" fill="#f0ca7e"/>
-      <path d="m153 119 3 8 9 1-7 5 2 9-7-5-7 5 2-9-7-5 9-1Z" fill="#f0ca7e"/>
-      <text x="136" y="187" text-anchor="middle" fill="#f1d79c" font-size="13" letter-spacing="2">PASTPORT</text>
-      <path d="M115 200h42" stroke="#d9ad66"/>
-    </g></g>
-    <g class="stamp-float"><g transform="rotate(13 254 171)" fill="none" stroke="#9f4639">
-      <circle cx="254" cy="171" r="42" fill="#e5c78d" stroke-width="2"/>
-      <circle cx="254" cy="171" r="35" stroke-dasharray="2 2"/>
-      <path d="M233 179h42m-37 0v-13h32v13m-27-13q11-21 22 0m-27 0v-12m32 12v-12" stroke-width="2"/>
-      <text x="254" y="191" text-anchor="middle" fill="#913c33" stroke="none" font-size="10" letter-spacing="2">BURSA</text>
-    </g></g>
-  </svg>
 </section>
+
+<!-- Leaderboard Section: Victorious Hall of Champions -->
 <section id="leaderboard" class="board" hidden>
-  <a href="#" data-en="← Home">← 首页</a>
-  <h1 data-en="Leaderboard">排行榜</h1>
-  <p data-en="Travelers ranked by the stamps they earned by completing games.">按旅人完成游戏获得的印章数排名。</p>
+  <div class="board-top-bar">
+    <a href="#" class="back-link" data-zh="← 返回" data-en="← Back">← Back</a>
+  </div>
+  <div class="board-header">
+    <h1 data-zh="排行榜" data-en="Leaderboard">Leaderboard</h1>
+    <p class="board-lead" data-zh="结识同行于漫漫旅途的旅人。" data-en="Meet other travelers on the same journey.">Meet other travelers on the same journey.</p>
+  </div>
   <div id="rankings" aria-live="polite"></div>
 </section>
-<div id="map" hidden>
-<a href="#" data-en="← Home">← 首页</a>
-<section class="intro"><p class="eyebrow">TÜRKİYE / BURSA / OSMANGAZİ</p><h1 data-en="Silk Road · Bursa">丝路 · 布尔萨</h1><p data-en="Explore the old city and leave your mark in your passport.">沿着古城的旅路探索，在通关文书留下你的印记。</p></section>
-<section class="atlas" aria-label="Osmangazi 遗址与独立试玩节点" data-en-label="Osmangazi heritage sites and standalone games">
-<div class="map-scroll"><div class="map-sheet">
-<svg class="landscape" viewBox="0 0 1200 690" preserveAspectRatio="none" aria-hidden="true">
-<defs>
-<linearGradient id="paper" x2=".65" y2="1"><stop stop-color="#f4dda1"/><stop offset=".55" stop-color="#d8ae77"/><stop offset="1" stop-color="#bc7e55"/></linearGradient>
-<linearGradient id="jade" x2=".2" y2="1"><stop stop-color="#668a6d"/><stop offset="1" stop-color="#304f47"/></linearGradient>
-<pattern id="grain" width="11" height="13" patternUnits="userSpaceOnUse"><path d="M1 3h2m3 6h1m3 3h1" stroke="#68452d" opacity=".18"/></pattern>
-</defs>
-<rect width="1200" height="690" fill="url(#paper)"/>
-<circle cx="1036" cy="106" r="67" fill="#cb694e" opacity=".68"/>
-<path d="M0 203Q76 92 142 165L244 79Q312 51 381 145L445 109 540 188 680 135 777 210 880 151 982 180 1100 113 1200 176V0H0Z" fill="#a68769" opacity=".46"/>
-<path d="M0 190 105 104 174 148 251 57 285 92 319 74 393 173 449 137 507 186 597 153 650 213Q469 158 333 223T0 257Z" fill="url(#jade)" opacity=".9"/>
-<path d="M0 190 105 104 174 148 251 57 285 92 319 74 393 173 M66 205l78-62 31 19 80-87 36 40m-45-13-42 68m110-67 50 62" fill="none" stroke="#ebc683" stroke-opacity=".55" stroke-width="2"/>
-<path d="M0 555Q111 455 236 546T457 546Q522 519 661 584T924 566Q1082 499 1200 532V690H0Z" fill="#788668" opacity=".65"/>
-<path d="M0 613Q123 546 241 620T438 630Q574 568 704 635T936 611Q1066 569 1200 616V690H0Z" fill="url(#jade)"/>
-<path d="M1230 256C961 212 925 319 799 330S669 311 598 348 515 407 416 414 145 370-30 507" fill="none" stroke="#507e73" stroke-width="22" opacity=".57"/>
-<path class="water" d="M1230 253C961 209 925 316 799 327S669 308 598 345 515 404 416 411 145 367-30 504" fill="none" stroke="#f5deb0" stroke-width="3" stroke-dasharray="9 23" opacity=".8"/>
 
-<rect width="1200" height="690" fill="url(#grain)"/>
-<g class="clouds" fill="none" stroke="#fbefc2" opacity=".74" stroke-width="3"><path d="M32 68h134q40-18-15-22 0-31-51-17-28-13-49 9H20m760 72h130q38-14-10-20-8-32-51-16-35-11-50 9h-42m224 465h145q30-13-18-18-8-25-51-14-27-12-46 10h-54"/></g>
-</svg>
-<div class="map-label">OSMANGAZİ <span>•</span> BURSA</div>
-<div id="markers"></div>
-</div></div>
-</section>
-</div></main>
-<dialog id="place-dialog"><form method="dialog"><button class="close" aria-label="关闭" data-en-label="Close">×</button></form><div id="place-content"></div></dialog>
-<dialog id="profile-dialog"><form method="dialog"><button class="close" aria-label="关闭" data-en-label="Close">×</button></form><div id="profile-content"></div><p id="notice" role="status"></p></dialog>
-<section id="game" hidden><div><button id="back" data-en="← Back to map">← 返回地图</button><strong>Forty Two Heilbronn</strong><span id="game-status" role="status"></span></div><iframe title="42 Heilbronn 试玩" data-en-label="Forty Two Heilbronn game"></iframe></section>
+<!-- Road Map Section: Bursa Osmangazi Silk Road Panorama -->
+<div id="map" hidden>
+  <div class="map-top-bar">
+    <button type="button" id="map-back-btn" class="back-link" data-zh="← 返回" data-en="← Back">← Back</button>
+  </div>
+
+  <section class="intro intro-compact">
+    <h1 data-zh="丝路 · 布尔萨" data-en="Silk Road · Bursa">Silk Road · Bursa</h1>
+    <div class="panoramic-guide" aria-label="Panoramic journey scroll navigation">
+      <span class="panoramic-hint" data-zh="↔ 水平滑动以探索横长丝绸之路画卷" data-en="↔ Scroll horizontally to explore the Silk Road trail">↔ Scroll horizontally to explore the Silk Road trail</span>
+    </div>
+  </section>
+  <section class="atlas" aria-label="Osmangazi heritage sites and standalone games" data-zh-label="Osmangazi 遗址与独立试玩节点" data-en-label="Osmangazi heritage sites and standalone games">
+    <div class="map-scroll" id="journey-scroll"><div class="map-sheet panoramic-sheet">
+        <!-- Antique Topographical Cartography Background for Osmangazi Bursa Panorama -->
+        <svg class="landscape" viewBox="0 0 2880 700" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="antique-vellum" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f8efe0"/>
+              <stop offset="35%" stop-color="#f0dfc3"/>
+              <stop offset="70%" stop-color="#e7cca6"/>
+              <stop offset="100%" stop-color="#d9b689"/>
+            </linearGradient>
+            <radialGradient id="antique-vignette" cx="50%" cy="50%" r="65%">
+              <stop offset="60%" stop-color="#70441e" stop-opacity="0"/>
+              <stop offset="85%" stop-color="#5a3313" stop-opacity="0.12"/>
+              <stop offset="100%" stop-color="#3c1e08" stop-opacity="0.28"/>
+            </radialGradient>
+            <linearGradient id="caravan-glow" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#e5b460" stop-opacity="0.2"/>
+              <stop offset="50%" stop-color="#ffd782" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="#d49335" stop-opacity="0.25"/>
+            </linearGradient>
+            <!-- Mountain Hatch Pattern -->
+            <pattern id="hatch" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#754b2d" stroke-width="1.2" opacity="0.45"/>
+            </pattern>
+          </defs>
+
+          <!-- Aged Vellum Paper Base & Vignette -->
+          <rect width="2880" height="700" fill="url(#antique-vellum)"/>
+          <rect width="2880" height="700" fill="url(#antique-vignette)"/>
+
+          <!-- Cartographic Latitude & Longitude Coordinate Grid Lines -->
+          <g stroke="#9c7849" stroke-width="0.75" stroke-dasharray="4 8" opacity="0.32">
+            <line x1="0" y1="140" x2="2880" y2="140"/>
+            <line x1="0" y1="280" x2="2880" y2="280"/>
+            <line x1="0" y1="420" x2="2880" y2="420"/>
+            <line x1="0" y1="560" x2="2880" y2="560"/>
+            <line x1="360" y1="0" x2="360" y2="700"/>
+            <line x1="720" y1="0" x2="720" y2="700"/>
+            <line x1="1080" y1="0" x2="1080" y2="700"/>
+            <line x1="1440" y1="0" x2="1440" y2="700"/>
+            <line x1="1800" y1="0" x2="1800" y2="700"/>
+            <line x1="2160" y1="0" x2="2160" y2="700"/>
+            <line x1="2520" y1="0" x2="2520" y2="700"/>
+          </g>
+
+          <!-- Grand Antique Cartographic Compass Rose at Center Horizon -->
+          <g transform="translate(1440, 110)" opacity="0.42">
+            <!-- Radiating Rhumb Navigation Lines -->
+            <g stroke="#8c6536" stroke-width="0.8" stroke-dasharray="2 6">
+              <line x1="-1400" y1="0" x2="1400" y2="0"/>
+              <line x1="-1200" y1="-260" x2="1200" y2="260"/>
+              <line x1="-1200" y1="260" x2="1200" y2="-260"/>
+              <line x1="-600" y1="-450" x2="600" y2="450"/>
+              <line x1="-600" y1="450" x2="600" y2="-450"/>
+            </g>
+            <!-- Compass Medallion -->
+            <circle cx="0" cy="0" r="44" fill="none" stroke="#6e4620" stroke-width="1.8"/>
+            <circle cx="0" cy="0" r="40" fill="none" stroke="#a07542" stroke-width="0.8" stroke-dasharray="2 3"/>
+            <circle cx="0" cy="0" r="26" fill="none" stroke="#6e4620" stroke-width="1"/>
+            <!-- 8-Point Compass Points -->
+            <polygon points="0,-44 7,-16 0,-8 -7,-16" fill="#823826"/>
+            <polygon points="0,44 7,16 0,8 -7,16" fill="#5c381e"/>
+            <polygon points="-44,0 -16,7 -8,0 -16,-7" fill="#5c381e"/>
+            <polygon points="44,0 16,7 8,0 16,-7" fill="#5c381e"/>
+            <polygon points="-31,-31 -11,-16 -6,-6 -16,-11" fill="#7a4f2b"/>
+            <polygon points="31,-31 11,-16 6,-6 16,-11" fill="#7a4f2b"/>
+            <polygon points="-31,31 -11,16 -6,6 -16,11" fill="#7a4f2b"/>
+            <polygon points="31,31 11,16 6,6 16,11" fill="#7a4f2b"/>
+            <circle cx="0" cy="0" r="4.5" fill="#c9954a"/>
+            <!-- Compass Cardinal Labels -->
+            <text x="0" y="-50" fill="#5c381e" font-family="Georgia,serif" font-size="11" font-weight="bold" text-anchor="middle">N</text>
+            <text x="0" y="58" fill="#5c381e" font-family="Georgia,serif" font-size="10" text-anchor="middle">S</text>
+            <text x="54" y="4" fill="#5c381e" font-family="Georgia,serif" font-size="10" text-anchor="start">E</text>
+            <text x="-54" y="4" fill="#5c381e" font-family="Georgia,serif" font-size="10" text-anchor="end">W</text>
+          </g>
+
+          <!-- Vintage Cartouche Labels in Upper Corners -->
+          <g font-family="'Cormorant Garamond',Georgia,serif" opacity="0.65">
+            <!-- West Header -->
+            <text x="80" y="55" fill="#694121" font-size="16" font-weight="bold" letter-spacing="3">BITHYNIA · PROVINCIA ANATOLIA</text>
+            <text x="80" y="74" fill="#8c5f34" font-size="12" font-style="italic" letter-spacing="1.5">Tabula Itineraria ad Prusam et Viam Sericam</text>
+            <line x1="80" y1="82" x2="340" y2="82" stroke="#9e7344" stroke-width="1.2"/>
+            <!-- East Header -->
+            <text x="2800" y="55" fill="#694121" font-size="16" font-weight="bold" letter-spacing="3" text-anchor="end">ORIENTALIS CARAVAN SERAI</text>
+            <text x="2800" y="74" fill="#8c5f34" font-size="12" font-style="italic" letter-spacing="1.5" text-anchor="end">Porta Orientis · Ad Montes et Mare</text>
+            <line x1="2540" y1="82" x2="2800" y2="82" stroke="#9e7344" stroke-width="1.2"/>
+          </g>
+
+          <!-- Topographic Elevation Contour Lines Across Panorama -->
+          <g fill="none" stroke="#ab804d" stroke-linecap="round" opacity="0.38">
+            <!-- High Contour (Ridge line ~ 1200m) -->
+            <path d="M 0,195 Q 260,160 540,190 T 1100,165 T 1660,185 T 2240,160 T 2880,180" stroke-width="1.4"/>
+            <path d="M 0,225 Q 280,190 580,220 T 1140,195 T 1720,215 T 2300,190 T 2880,210" stroke-width="1"/>
+            <!-- Mid-High Contour (~ 750m) -->
+            <path d="M 0,270 Q 320,240 680,275 T 1320,250 T 1940,270 T 2520,245 T 2880,265" stroke-width="1.2"/>
+            <path d="M 0,315 Q 360,285 740,310 T 1420,295 T 2040,315 T 2600,290 T 2880,305" stroke-width="0.9"/>
+            <!-- Valley & Terrace Contours (~ 500m) -->
+            <path d="M 0,380 Q 400,340 820,375 T 1540,350 T 2180,370 T 2680,345 T 2880,360" stroke-width="1.2"/>
+            <path d="M 0,440 Q 440,410 900,435 T 1680,415 T 2300,435 T 2760,410 T 2880,425" stroke-width="0.9"/>
+            <!-- Lower Plains & Foothill Contours (~ 250m) -->
+            <path d="M 0,510 Q 480,480 980,515 T 1780,490 T 2400,515 T 2800,490 T 2880,505" stroke-width="1.2"/>
+            <path d="M 0,590 Q 520,560 1060,595 T 1880,570 T 2500,595 T 2840,570 T 2880,580" stroke-width="0.9"/>
+            <path d="M 0,650 Q 560,625 1140,655 T 1980,635 T 2600,655 T 2880,640" stroke-width="1"/>
+          </g>
+
+          <!-- Topographic Elevation Markers in Classical Roman Numerals & Heights -->
+          <g fill="#7d552c" font-family="'Cormorant Garamond',Georgia,serif" font-size="10.5" font-style="italic" opacity="0.6">
+            <text x="320" y="190">elev. 1200 m</text>
+            <text x="960" y="265">elev. 750 m</text>
+            <text x="1740" y="345">elev. 500 m</text>
+            <text x="2380" y="430">elev. 250 m</text>
+            <text x="780" y="505">valle prusensis</text>
+            <text x="2100" y="585">campi bythiniae</text>
+          </g>
+
+          <!-- Hand-Drawn Engraved Mountain Ridges of Mt. Uludağ (Mysian Olympus) -->
+          <g stroke="#452712" stroke-linejoin="round" stroke-linecap="round">
+            <!-- Mountain Massif Base Wash -->
+            <path d="M 40,240 L 120,135 L 200,185 L 290,110 L 380,175 L 480,95 L 590,165 L 700,90 L 820,170 L 940,115 L 1060,190 L 1180,130 L 1300,200 L 1420,145 L 1540,210 L 1680,155 L 1800,225 L 1800,270 L 40,270 Z" fill="#eed9ba" opacity="0.85"/>
+            <!-- Mountain Hatch Shading on East Slopes -->
+            <path d="M 120,135 L 200,185 L 290,110 L 380,175 L 480,95 L 590,165 L 700,90 L 820,170 L 940,115 L 1060,190 L 1180,130 L 1300,200 L 1420,145 L 1540,210 L 1680,155 L 1800,225 L 1800,270 L 40,270 Z" fill="url(#hatch)" opacity="0.45"/>
+            <!-- Engraved Ridge Contours & Peaks -->
+            <g fill="none" stroke="#503017" stroke-width="1.8">
+              <!-- Peak 1 -->
+              <path d="M 50,240 L 120,135 L 190,210 M 120,135 L 145,225"/>
+              <!-- Peak 2 -->
+              <path d="M 190,210 L 290,110 L 370,200 M 290,110 L 325,210"/>
+              <!-- Grand Summit: Mt. Uludağ Peak 2543m -->
+              <path d="M 370,200 L 480,95 L 580,190 M 480,95 L 520,215"/>
+              <!-- Peak 4 -->
+              <path d="M 580,190 L 700,90 L 810,195 M 700,90 L 745,215"/>
+              <!-- Peak 5 -->
+              <path d="M 810,195 L 940,115 L 1050,210 M 940,115 L 985,225"/>
+              <!-- Peak 6 -->
+              <path d="M 1050,210 L 1180,130 L 1290,220 M 1180,130 L 1225,230"/>
+              <!-- Peak 7 -->
+              <path d="M 1290,220 L 1420,145 L 1530,225 M 1420,145 L 1465,235"/>
+              <!-- East Ridge Tail -->
+              <path d="M 1530,225 L 1680,155 L 1800,230 M 1680,155 L 1720,240"/>
+            </g>
+            <!-- Hand-Drawn Hachure Hatch Lines along Ridges -->
+            <g stroke="#6e4620" stroke-width="0.9" opacity="0.65" fill="none">
+              <line x1="120" y1="145" x2="135" y2="175"/><line x1="126" y1="155" x2="142" y2="185"/><line x1="132" y1="165" x2="150" y2="195"/>
+              <line x1="290" y1="125" x2="310" y2="160"/><line x1="298" y1="135" x2="318" y2="170"/><line x1="306" y1="145" x2="328" y2="185"/>
+              <line x1="480" y1="110" x2="505" y2="155"/><line x1="490" y1="125" x2="515" y2="170"/><line x1="500" y1="140" x2="525" y2="185"/>
+              <line x1="700" y1="105" x2="725" y2="150"/><line x1="710" y1="120" x2="735" y2="165"/><line x1="720" y1="135" x2="745" y2="180"/>
+              <line x1="940" y1="130" x2="965" y2="170"/><line x1="950" y1="145" x2="975" y2="185"/>
+              <line x1="1180" y1="145" x2="1205" y2="185"/><line x1="1190" y1="160" x2="1215" y2="200"/>
+              <line x1="1420" y1="160" x2="1445" y2="200"/><line x1="1430" y1="175" x2="1455" y2="215"/>
+            </g>
+            <!-- Mountain Summit Title Callout -->
+            <g transform="translate(480, 72)">
+              <text x="0" y="0" fill="#4a2a14" font-family="'Cormorant Garamond',Georgia,serif" font-size="14" font-weight="bold" letter-spacing="4" text-anchor="middle">MONS OLYMPUS MYSIA · MT. ULUDAĞ</text>
+              <text x="0" y="14" fill="#7a4f2b" font-family="'Cormorant Garamond',Georgia,serif" font-size="10.5" font-style="italic" text-anchor="middle">Culmen 2,543 m · Bithynian Ridge</text>
+            </g>
+          </g>
+
+          <!-- Authentic Illuminated Golden Caravan Trail (İpek Yolu · Via Serica) -->
+          <!-- Ambient Golden Caravan Trail Radiance -->
+          <path d="M -40,540 C 320,400 950,445 1200,435 S 1420,365 1580,325 S 1900,345 2200,335 S 2360,225 2920,280" fill="none" stroke="url(#caravan-glow)" stroke-width="26" stroke-linecap="round"/>
+          <!-- Outer Worn Trail Edges -->
+          <path d="M -40,540 C 320,400 950,445 1200,435 S 1420,365 1580,325 S 1900,345 2200,335 S 2360,225 2920,280" fill="none" stroke="#b08447" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+          <!-- Inner Warm Sepia Caravan Track -->
+          <path d="M -40,540 C 320,400 950,445 1200,435 S 1420,365 1580,325 S 1900,345 2200,335 S 2360,225 2920,280" fill="none" stroke="#5d391c" stroke-width="3" stroke-linecap="round"/>
+          <!-- Gilded Dotted Stepping Stones of the Ancient Trade Caravan -->
+          <path class="water" d="M -40,540 C 320,400 950,445 1200,435 S 1420,365 1580,325 S 1900,345 2200,335 S 2360,225 2920,280" fill="none" stroke="#ffd982" stroke-width="3.2" stroke-dasharray="7 12" stroke-linecap="round"/>
+
+          <!-- Trail Annotation Ribbons Along Way -->
+          <g fill="#70441d" font-family="'Cormorant Garamond',Georgia,serif" font-size="11" font-weight="bold" letter-spacing="2" opacity="0.75">
+            <text x="360" y="445" transform="rotate(-15 360 445)">← AD OCCIDENTEM (WESTERN PASS)</text>
+            <text x="1260" y="415" transform="rotate(-6 1260 415)">VIA SERICA · İPEK YOLU (SILK ROAD TRUNK)</text>
+            <text x="2160" y="325" transform="rotate(-2 2160 325)">AD PORTAM ORIENTALEM (EASTERN GATES) →</text>
+          </g>
+
+          <!-- Antique Double Border with Precision Cartographic Minute Hash Marks -->
+          <rect x="12" y="12" width="2856" height="676" rx="10" fill="none" stroke="#68421d" stroke-width="2.5"/>
+          <rect x="18" y="18" width="2844" height="664" rx="8" fill="none" stroke="#9e7544" stroke-width="1.2" stroke-dasharray="10 6"/>
+          <rect x="23" y="23" width="2834" height="654" rx="6" fill="none" stroke="#68421d" stroke-width="0.8"/>
+
+          <!-- Four Ornate Antique Brass Corner Filigrees -->
+          <!-- Top Left -->
+          <g stroke="#68421d" stroke-width="1.4" fill="none" transform="translate(18, 18)">
+            <path d="M 0,36 C 18,36 36,18 36,0 M 0,24 C 12,24 24,12 24,0 M 8,8 L 18,18"/>
+            <circle cx="8" cy="8" r="3" fill="#9e7544"/>
+          </g>
+          <!-- Top Right -->
+          <g stroke="#68421d" stroke-width="1.4" fill="none" transform="translate(2862, 18)">
+            <path d="M 0,36 C -18,36 -36,18 -36,0 M 0,24 C -12,24 -24,12 -24,0 M -8,8 L -18,18"/>
+            <circle cx="-8" cy="8" r="3" fill="#9e7544"/>
+          </g>
+          <!-- Bottom Left -->
+          <g stroke="#68421d" stroke-width="1.4" fill="none" transform="translate(18, 682)">
+            <path d="M 0,-36 C 18,-36 36,-18 36,0 M 0,-24 C 12,-24 24,-12 24,0 M 8,-8 L 18,-18"/>
+            <circle cx="8" cy="-8" r="3" fill="#9e7544"/>
+          </g>
+          <!-- Bottom Right -->
+          <g stroke="#68421d" stroke-width="1.4" fill="none" transform="translate(2862, 682)">
+            <path d="M 0,-36 C -18,-36 -36,-18 -36,0 M 0,-24 C -12,-24 -24,-12 -24,0 M -8,-8 L -18,-18"/>
+            <circle cx="-8" cy="-8" r="3" fill="#9e7544"/>
+          </g>
+        </svg>
+
+        <div id="markers"></div>
+        <!-- In-Situ Floating Transit Permit Card Anchored Directly to Selected Waypoint -->
+        <div id="in-situ-card" class="in-situ-card" hidden aria-live="polite"></div>
+      </div></div>
+    </section>
+  </div>
+</main>
+<dialog id="place-dialog"><form method="dialog"><button class="close" aria-label="Close" data-zh-label="关闭" data-en-label="Close">×</button></form><div id="place-content"></div></dialog>
+<dialog id="profile-dialog"><form method="dialog"><button class="close" aria-label="Close" data-zh-label="关闭" data-en-label="Close">×</button></form><div id="profile-content"></div><p id="notice" role="status"></p></dialog>
+<section id="game" hidden><div><button id="back" data-zh="← 返回地图" data-en="← Back to map">← Back to map</button><strong>Forty Two Heilbronn</strong><span id="game-status" role="status"></span></div><iframe title="Forty Two Heilbronn game" data-zh-label="42 Heilbronn 试玩" data-en-label="Forty Two Heilbronn game"></iframe></section>
 </body></html>

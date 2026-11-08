@@ -53,11 +53,45 @@ export const playerTurkish=Object.freeze({
   "Home": "Ana sayfa",
   "Discover": "Keşfet",
   "Leaderboard": "Sıralama",
+  "Meet other travelers on the same journey.": "Aynı yolculuktaki diğer gezginlerle tanışın.",
   "Heritage Travel Journal": "Kültürel Miras Gezi Defteri",
   "My Passport": "Pasaportum",
   "A HERITAGE TRAVEL JOURNAL": "KÜLTÜREL MİRAS GEZİ DEFTERİ",
+  "A PORTAL THROUGH TIME · HERITAGE TRAVEL JOURNAL": "ZAMANDA BİR GEÇİT · KÜLTÜREL MİRAS GEZİ DEFTERİ",
+  "“Where the past drops anchor and memories unfurl.”": "“Geçmişin demir attığı ve anıların açıldığı yer.”",
+  "Harbour of Memories": "Anılar Limanı",
+  "A nostalgic passport, transit permit and compass to the past": "Geçmişe açılan nostaljik bir pasaport, geçiş izni ve pusula",
   "Follow the trail. Collect a stamp for every adventure you complete.": "Yolculuğu keşfedin. Tamamladığınız her macerada pasaportunuza bir damga ekleyin.",
   "Start Passporting": "Pasaport Yolculuğuna Başla",
+  "Starts Journey": "Yolculuğa Başla",
+  "← Back": "← Geri",
+  "← Back to Türkiye Map": "← Türkiye Haritasına Dön",
+  "← Back to Mosaic Puzzle": "← Mozaik Tablosuna Dön",
+  "TÜRKİYE HERITAGE ROUTE": "TÜRKİYE KÜLTÜREL MİRAS ROTASI",
+  "Türkiye Heritage Route": "Türkiye Kültürel Miras Rotası",
+  "Turkey Heritage Route": "Türkiye Kültürel Miras Rotası",
+  "TÜRKİYE MOSAIC PUZZLE": "TÜRKİYE MOZAİK BULMACASI",
+  "Anatolian Heritage Tiles": "Anadolu Kültürel Miras Çinileri",
+  "Assemble the historical provinces of Turkey. Bursa is currently unlocked.": "Türkiye'nin tarihi illerini bir araya getirin. Bursa şu anda açıktır.",
+  "UNLOCKED · EXPLORE": "AÇIK · KEŞFET",
+  "16 Heritage Sites · Enter Province →": "16 Miras Alanı · İli Ziyaret Et →",
+  "Locked Puzzle Tile": "Kilitli Mozaik Çini",
+  "Türkiye · Realm of Civilizations": "Türkiye · Medeniyetler Ülkesi",
+  "Select an unlocked historical province to explore. Bursa is currently open for exploration.": "Keşfetmek için kilidi açılmış tarihi bir ili seçin. Bursa şu anda keşfe açıktır.",
+  "HALL OF VICTORIOUS TRAVELERS": "ZAFER KAZANAN GEZGİNLER SALONU",
+  "Hall of Champions · Leaderboard": "Şampiyonlar Salonu · Sıralama",
+  "Travelers ranked by the stamps they earned by completing games. Honoring those who unravel the chronicles of time!": "Gezginler, oyunları tamamlayarak kazandıkları damgalara göre sıralanır. Zamanın gizemlerini çözenlere saygıyla!",
+  "BURSA (OSMANGAZİ) · UNLOCKED": "BURSA (OSMANGAZİ) · AÇIK",
+  "16 Heritage Sites · Explore Province →": "16 Miras Alanı · İli Keşfet →",
+  "Candidate province · Locked": "Aday il · Kilitli",
+  "LOCKED": "KİLİTLİ",
+  "Tile Pattern: ": "Çini Motifi: ",
+  "↔ Scroll horizontally to explore the Silk Road trail": "↔ İpek Yolu rotasını keşfetmek için yatay kaydırın",
+  "Western Terraces (West)": "Batı Terasları (Batı)",
+  "Historical Center (Center)": "Tarihi Merkez (Merkez)",
+  "Eastern Gates (East)": "Doğu Kapıları (Doğu)",
+  "WAYPOINT · ": "MİRAS DURAĞI · ",
+  "Exploring on Map": "Haritada Keşif",
   "A passport and travel stamp": "Bir pasaport ve gezi damgası",
   "← Home": "← Ana sayfa",
   "Travelers ranked by the stamps they earned by completing games.": "Gezginler, oyunları tamamlayarak kazandıkları damgalara göre sıralanır.",
@@ -124,10 +158,10 @@ import {illustration} from './illustrations.mjs';
 
 const $ = selector => document.querySelector(selector);
 const savedLocale=localStorage.getItem('pastport:map-language');
-let locale=['zh','en','tr'].includes(savedLocale)?savedLocale:'zh';
+let locale=['zh','en','tr'].includes(savedLocale)?savedLocale:'en';
 const t = (zh,en) => playerText(zh,en,locale);
 const originalText = new Map([...document.querySelectorAll('[data-en], [data-en-label]')]
-  .map(el => [el,el.hasAttribute('data-en') ? el.textContent : el.getAttribute(el.matches('iframe') ? 'title' : 'aria-label')]));
+  .map(el => [el,el.dataset.zh || (el.hasAttribute('data-en') ? el.textContent : el.getAttribute(el.matches('iframe') ? 'title' : 'aria-label'))]));
 let repaintGameStatus=null,repaintReleaseNote=null;
 function setGameStatus(zh,en){repaintGameStatus=()=>{$('#game-status').textContent=t(zh,en);};repaintGameStatus();}
 function setReleaseNote(zh,en){repaintReleaseNote=()=>{releaseNote.textContent=t(zh,en);};repaintReleaseNote();}
@@ -231,7 +265,11 @@ function medal(site) {
 }
 function medalLabel(site) {
   const item = node('span','','rank-medal');
-  item.append(medal(site),node('span',site.name));
+  item.dataset.tooltip = site.name;
+  item.title = site.name;
+  item.setAttribute('aria-label', site.name);
+  item.setAttribute('tabindex', '0');
+  item.append(medal(site));
   return item;
 }
 const when=value=>value ? new Date(value).toLocaleString(t('zh-CN','en')) : '';
@@ -249,91 +287,257 @@ function renderPublicationNames(){
     marker.setAttribute('aria-label',marker.title);
   }
 }
+export function closeInSituCard() {
+  const card = $('#in-situ-card');
+  if (card) card.hidden = true;
+  for (const m of document.querySelectorAll('.marker.selected')) m.classList.remove('selected');
+  placeShown = null;
+}
+
+function renderInSituCard(site, publication, options) {
+  const card = $('#in-situ-card');
+  if (!card) return;
+
+  for (const m of document.querySelectorAll('.marker.selected')) m.classList.remove('selected');
+  const activeMarker = document.querySelector(`[data-site-id="${site.id}"]`);
+  activeMarker?.classList.add('selected');
+
+  const earned = current?.stamps.some(stamp => stamp.game === site.game);
+  const available = !!publication;
+  const gameTitle = publishedGameTitle(publication?.version, locale);
+  const statusText = earned ? t('已获得此地点的奖章。', 'You earned this place’s medal.')
+    : available ? t('完成试玩即可获得此地点的奖章。', 'Complete the game to earn this place’s medal.')
+    : t('此地点暂未开放试玩。', 'This place can be explored on the map. Its game is not available yet.');
+
+  card.style.setProperty('--x', site.x + '%');
+  card.style.setProperty('--y', site.y + '%');
+  card.dataset.side = site.x > 50 ? 'left' : 'right';
+  card.dataset.vertical = site.y > 65 ? 'top' : site.y < 35 ? 'bottom' : 'center';
+
+  const cardHeader = node('div', '', 'permit-card-header');
+  const waypointTag = node('span', t('遗址路标 · ', 'WAYPOINT · ') + site.name, 'permit-waypoint-tag');
+  const closeBtn = node('button', '×', 'permit-close-btn');
+  closeBtn.type = 'button';
+  closeBtn.setAttribute('aria-label', t('关闭', 'Close'));
+  closeBtn.onclick = e => { e.stopPropagation(); closeInSituCard(); };
+  cardHeader.append(waypointTag, closeBtn);
+
+  const cardBody = node('div', '', 'permit-card-body');
+  const medalEl = medal(site);
+  const titleEl = node('h3', site.name, 'permit-title');
+  const statusEl = node('p', statusText, 'permit-status');
+  cardBody.append(medalEl, titleEl, statusEl);
+
+  if (gameTitle) cardBody.append(node('div', gameTitle, 'permit-game-edition'));
+
+  const cardActions = node('div', '', 'permit-card-actions');
+  const addCardButton = (label, launchOptions, className = 'permit-btn-primary') => {
+    const btn = node('button', label, className);
+    btn.type = 'button';
+    btn.onclick = () => { closeInSituCard(); void launch(site, launchOptions); };
+    cardActions.append(btn);
+  };
+
+  if (available) {
+    const latestSave = options?.saves?.[0];
+    if (!latestSave) addCardButton(t('进入试玩', 'Play game') + ' →', { mode: 'latest' });
+    else if (latestSave.current) addCardButton(t('继续游戏', 'Continue') + ' →', { mode: 'continue' });
+    else if (latestSave.available) {
+      cardBody.append(node('p', t('此地点已发布新版。你上次的进度属于旧版（保存于 ', 'A newer release is published. Your last progress belongs to the earlier release (saved ') + when(latestSave.updated) + t('）。', ').'), 'muted'));
+      addCardButton(t('继续上次进度（旧版）', 'Continue last progress (earlier release)') + (publishedGameTitle(latestSave.version, locale) ? ' · ' + publishedGameTitle(latestSave.version, locale) : ''), { mode: 'continue', version: latestSave.version });
+      const hasNew = options.saves.some(save => save.current);
+      addCardButton(hasNew ? t('打开新版存档', 'Open the new-release save') : t('体验新版（另开新存档，旧进度保留）', 'Play the new release (new save; earlier progress kept)'), { mode: 'latest' }, 'permit-btn-secondary');
+    } else {
+      cardBody.append(node('p', t('上次进度所属的版本已不可用；进入后将开始当前版本。', 'The release of your last progress is no longer available; you will start the current release.'), 'muted'));
+      addCardButton(t('开始当前版本', 'Start the current release') + ' →', { mode: 'latest' });
+    }
+  } else {
+    const exploreNotice = node('button', t('地图漫游中', 'Exploring on Map'), 'permit-btn-muted');
+    exploreNotice.type = 'button';
+    exploreNotice.disabled = true;
+    cardActions.append(exploreNotice);
+  }
+
+  card.replaceChildren(cardHeader, cardBody, cardActions);
+  card.hidden = false;
+
+  const content = $('#place-content');
+  if (content) {
+    content.replaceChildren(medal(site), node('h2', site.name), node('p', statusText));
+    if (gameTitle) content.append(node('p', gameTitle, 'game-edition'));
+  }
+}
+
 async function showPlace(site) {
-  placeShown=site;
-  let available = false;
-  let publication=null;
+  placeShown = site;
+  // 1. Immediately and synchronously render in-situ card using in-memory livePublications
+  let publication = site.game ? (livePublications.find(entry => entry.site_id === site.game) ?? null) : null;
+  renderInSituCard(site, publication, null);
+
+  // 2. Fetch latest publications and options in background to refresh actions
   if (site.game) {
     try {
-      publication=(await api('publications')).find(entry=>entry.site_id===site.game)??null;
-      available=!!publication;
+      const pubs = await api('publications');
+      livePublications = pubs;
+      publication = pubs.find(entry => entry.site_id === site.game) ?? null;
     } catch (error) {
       console.error(error.message);
     }
   }
-  let options=null;
-  if (available && current) {
-    try {options=await api('launch-options?site_id='+encodeURIComponent(site.id));}
-    catch(error){console.error(error.message);}
+  let options = null;
+  if (publication && current) {
+    try { options = await api('launch-options?site_id=' + encodeURIComponent(site.id)); }
+    catch (error) { console.error(error.message); }
   }
-  if (placeShown!==site) return;
-  const dialog = $('#place-dialog');
-  const content = $('#place-content');
-  const earned = current?.stamps.some(stamp=>stamp.game===site.game);
-  content.replaceChildren(medal(site),node('h2',site.name),node('p',
-    earned ? t('已获得此地点的奖章。','You earned this place’s medal.')
-    : available ? t('完成试玩即可获得此地点的奖章。','Complete the game to earn this place’s medal.')
-    : t('此地点暂未开放试玩。','This place can be explored on the map. Its game is not available yet.')));
-  const gameTitle=publishedGameTitle(publication?.version,locale);
-  if(gameTitle)content.append(node('p',gameTitle,'game-edition'));
-  const button=(label,launchOptions,className)=>{
-    const play=node('button',label,className);
-    play.onclick=()=>{dialog.close();void launch(site,launchOptions);};
-    content.append(play);
-  };
-  if (available) {
-    const latestSave=options?.saves[0];
-    if (!latestSave) button(t('进入试玩','Play game'),{mode:'latest'});
-    else if (latestSave.current) button(t('继续游戏','Continue'),{mode:'continue'});
-    else if (latestSave.available) {
-      // A newer release never silently replaces an unfinished run on an older one.
-      content.append(node('p',t('此地点已发布新版。你上次的进度属于旧版（保存于 ','A newer release is published. Your last progress belongs to the earlier release (saved ')+when(latestSave.updated)+t('）。',').'),'muted'));
-      button(t('继续上次进度（旧版）','Continue last progress (earlier release)')+(publishedGameTitle(latestSave.version,locale)?' · '+publishedGameTitle(latestSave.version,locale):''),{mode:'continue',version:latestSave.version});
-      const hasNew=options.saves.some(save=>save.current);
-      button(hasNew ? t('打开新版存档','Open the new-release save') : t('体验新版（另开新存档，旧进度保留）','Play the new release (new save; earlier progress kept)'),{mode:'latest'},'secondary');
-    } else {
-      content.append(node('p',t('上次进度所属的版本已不可用；进入后将开始当前版本。','The release of your last progress is no longer available; you will start the current release.'),'muted'));
-      button(t('开始当前版本','Start the current release'),{mode:'latest'});
-    }
+  if (placeShown === site) {
+    renderInSituCard(site, publication, options);
   }
-  if (!dialog.open) dialog.showModal();
 }
-$('#place-dialog').addEventListener('close',()=>{placeShown=null;});
+$('#place-dialog').addEventListener('close',()=>{closeInSituCard();});
 let boardRequest = 0;
 async function loadLeaderboard({quiet=false}={}) {
   const request = ++boardRequest;
   const list = $('#rankings');
   if (!quiet) list.replaceChildren(node('p',t('正在读取排名…','Loading rankings…')));
   try {
-    const entries = await api('leaderboard');
+    let entries = [];
+    try {
+      entries = await api('leaderboard');
+    } catch {
+      entries = [];
+    }
     if (request !== boardRequest) return;
-    // Only real account medals are ranked; no fictional sample rows.
-    if (!entries.length) {list.replaceChildren(node('p',t('还没有玩家获得奖章。完成已开放地点的游戏即可上榜。','No traveler has earned a medal yet. Complete a published game to appear here.')));return;}
+    if (!entries || !entries.length) {
+      if (request === boardRequest) {
+        list.replaceChildren(node('p', t('尚无旅人获得印章。完成已开放地点的游戏即可上榜。', 'No traveler has earned a medal yet. Complete a published game to appear here.')));
+      }
+      return;
+    }
     const rows = entries.map(entry=>({
       ...entry,places:entry.games.map(game=>sites.find(place=>place.game===game)).filter(Boolean),
     }));
-    const ranking = node('ol','','rank-list');
-    for (const entry of rows) {
-      const row = node('li','','rank-row');
-      const medals = node('div','','rank-medals');
-      for (const site of entry.places) medals.append(medalLabel(site));
-      row.append(node('strong',String(entry.rank)),node('span',entry.name),medals);
-      ranking.append(row);
+    const top1 = rows[0] || null;
+    const top2 = rows[1] || null;
+    const top3 = rows[2] || null;
+    const rest = rows.slice(3);
+
+    const boardWrapper = node('div','','leaderboard-display');
+    const podiumStage = node('div','','podium-stage');
+
+    const makeTraveler = (entry, rank, badge, tierClass) => {
+      const col = node('div','',`podium-traveler-col col-${rank} ${tierClass}${entry ? '' : ' traveler-vacant'}`);
+      const crown = node('div',badge,'podium-badge');
+      const name = node('div',entry ? entry.name : '—','podium-name');
+      const medals = node('div','','podium-medals');
+      if (entry) {
+        for (const site of entry.places) medals.append(medalLabel(site));
+      }
+      col.append(crown, name, medals);
+      return col;
+    };
+
+    const travelersRow = node('div','','podium-travelers');
+    // 2nd on left, 1st in center, 3rd on right
+    travelersRow.append(
+      makeTraveler(top2, 2, '🥈', 'traveler-silver'),
+      makeTraveler(top1, 1, '👑', 'traveler-gold'),
+      makeTraveler(top3, 3, '🥉', 'traveler-bronze')
+    );
+
+    const monolith = node('div','','podium-monolith');
+    monolith.innerHTML = `
+      <svg viewBox="0 0 600 320" class="podium-monolith-svg" aria-label="3D Stepped Podium" preserveAspectRatio="xMidYMid meet">
+        <!-- 3D Depth Top & Side Walls -->
+        <!-- Step 1 (Center) 3D Top Plane -->
+        <polygon points="215,65 385,65 440,30 270,30" fill="#3595c5" stroke="#101010" stroke-width="4.5" stroke-linejoin="round"/>
+        <!-- Step 1 Right Side Depth Wall -->
+        <polygon points="385,65 440,30 440,145 385,180" fill="#1c6891" stroke="#101010" stroke-width="4.5" stroke-linejoin="round"/>
+
+        <!-- Step 2 (Left) 3D Top Plane -->
+        <polygon points="45,165 215,165 270,130 100,130" fill="#3595c5" stroke="#101010" stroke-width="4.5" stroke-linejoin="round"/>
+
+        <!-- Step 3 (Right) 3D Top Plane -->
+        <polygon points="385,175 535,175 590,140 440,140" fill="#3595c5" stroke="#101010" stroke-width="4.5" stroke-linejoin="round"/>
+        <!-- Step 3 Far-Right Depth Wall -->
+        <polygon points="535,175 590,140 590,265 535,300" fill="#1c6891" stroke="#101010" stroke-width="4.5" stroke-linejoin="round"/>
+
+        <!-- Front Faces of the 3 Rounded Blocks -->
+        <!-- Step 2 Front Face (Left, Mid-height) -->
+        <rect x="45" y="165" width="170" height="135" rx="18" ry="18" fill="#6dc4f1" stroke="#101010" stroke-width="4.5"/>
+
+        <!-- Step 3 Front Face (Right, Lowest) -->
+        <rect x="385" y="175" width="150" height="125" rx="18" ry="18" fill="#6dc4f1" stroke="#101010" stroke-width="4.5"/>
+
+        <!-- Step 1 Front Face (Center, Tallest foreground block) -->
+        <rect x="210" y="65" width="180" height="235" rx="20" ry="20" fill="#6dc4f1" stroke="#101010" stroke-width="4.5"/>
+
+        <!-- Hand-drawn Outlined Stars on Step 1 (Matching Image Reference) -->
+        <!-- Upper Star -->
+        <polygon points="356,86 359,94 368,94 361,99 363,107 356,102 349,107 351,99 344,94 353,94" fill="none" stroke="#101010" stroke-width="3.5" stroke-linejoin="round"/>
+        <!-- Lower Star -->
+        <polygon points="336,122 338,128 345,128 340,132 342,138 336,134 330,138 332,132 327,128 334,128" fill="none" stroke="#101010" stroke-width="3" stroke-linejoin="round"/>
+
+        <!-- Bold Friendly Cartoon Numbers 1, 2, 3 -->
+        <text x="300" y="180" text-anchor="middle" font-family="'Comic Sans MS', 'Patrick Hand', 'Chalkboard SE', 'Caveat', cursive, sans-serif" font-size="94" font-weight="bold" fill="#101010">1</text>
+        <text x="130" y="255" text-anchor="middle" font-family="'Comic Sans MS', 'Patrick Hand', 'Chalkboard SE', 'Caveat', cursive, sans-serif" font-size="78" font-weight="bold" fill="#101010">2</text>
+        <text x="460" y="260" text-anchor="middle" font-family="'Comic Sans MS', 'Patrick Hand', 'Chalkboard SE', 'Caveat', cursive, sans-serif" font-size="74" font-weight="bold" fill="#101010">3</text>
+
+        <!-- Playful Cartoon Sketch Specks & Ticks Matching Reference Image -->
+        <line x1="222" y1="94" x2="225" y2="102" stroke="#101010" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="228" cy="120" r="1.5" fill="#101010"/>
+        <circle cx="224" cy="142" r="1.5" fill="#101010"/>
+        <line x1="348" y1="202" x2="352" y2="204" stroke="#101010" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="358" cy="216" r="1.5" fill="#101010"/>
+        <circle cx="366" cy="282" r="1.5" fill="#101010"/>
+        <line x1="68" y1="192" x2="72" y2="192" stroke="#101010" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="64" cy="214" r="1.5" fill="#101010"/>
+        <line x1="530" y1="204" x2="534" y2="212" stroke="#101010" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="512" cy="226" r="1.5" fill="#101010"/>
+      </svg>
+    `;
+
+    monolith.append(travelersRow);
+    podiumStage.append(monolith);
+    boardWrapper.append(podiumStage);
+
+    if (rest.length > 0) {
+      const restList = node('ol','','rank-list rank-list-rest');
+      restList.setAttribute('start', '4');
+      for (const entry of rest) {
+        const row = node('li','','rank-row');
+        const medals = node('div','','rank-medals');
+        for (const site of entry.places) medals.append(medalLabel(site));
+        row.append(node('strong',String(entry.rank)),node('span',entry.name),medals);
+        restList.append(row);
+      }
+      boardWrapper.append(restList);
     }
-    if (request === boardRequest) list.replaceChildren(ranking);
+    if (request === boardRequest) list.replaceChildren(boardWrapper);
   } catch {
     if (request === boardRequest) list.replaceChildren(node('p',t('暂时无法读取排行榜。','The leaderboard is temporarily unavailable.')));
   }
 }
 function showPage() {
   const page = ['#map','#leaderboard'].includes(location.hash) ? location.hash.slice(1) : 'home';
-  for (const id of ['home','map','leaderboard']) document.getElementById(id).hidden=id!==page;
-  $('.site-menu').open = false;
-  if (page==='map') void refreshPublications().catch(console.error);
+  for (const id of ['home','map','leaderboard']) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = id !== page;
+  }
+  if ($('.site-menu')) $('.site-menu').open = false;
+  if (page==='map') {
+    closeInSituCard();
+    void refreshPublications().catch(console.error);
+  } else {
+    closeInSituCard();
+  }
   if (page==='leaderboard') void loadLeaderboard();
 }
 window.addEventListener('hashchange',showPage);
-$('.site-menu nav').addEventListener('click',()=>{$('.site-menu').open=false;});
+$('.site-menu nav')?.addEventListener('click',()=>{$('.site-menu').open=false;});
+$('#map-back-btn')?.addEventListener('click', () => {
+  closeInSituCard();
+  location.hash = '';
+});
 function syncStamps() {
   for (const site of sites) {
     const marker=document.querySelector('[data-site-id="'+site.id+'"]');
@@ -388,9 +592,36 @@ mapPoints.forEach(({site,index,mobileX,mobileY}) => {
     marker.append(stamp);
   }
   marker.classList.add('unavailable');
-  marker.onclick=()=>showPlace(site);
+  marker.addEventListener('click', e => {
+    e.stopPropagation();
+    void showPlace(site);
+  });
   $('#markers').append(marker);
 });
+$('.map-sheet')?.addEventListener('click', e => {
+  if (!e.target.closest('.marker') && !e.target.closest('#in-situ-card')) {
+    closeInSituCard();
+  }
+});
+const journeyScroll = $('#journey-scroll');
+if (journeyScroll) {
+  let isDown = false, startX = 0, scrollLeft = 0;
+  journeyScroll.addEventListener('mousedown', e => {
+    if (e.target.closest('.marker') || e.target.closest('#in-situ-card') || e.target.closest('button')) return;
+    isDown = true;
+    journeyScroll.classList.add('active-pan');
+    startX = e.pageX - journeyScroll.offsetLeft;
+    scrollLeft = journeyScroll.scrollLeft;
+  });
+  window.addEventListener('mouseup', () => { isDown = false; journeyScroll?.classList.remove('active-pan'); });
+  journeyScroll.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - journeyScroll.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    journeyScroll.scrollLeft = scrollLeft - walk;
+  });
+}
 function showProfile(mode='login') {
   syncStamps();
   const content = $('#profile-content');
@@ -554,3 +785,26 @@ async function claimEnding(launched) {
   finally {claiming=false;}
 }
 try {current=await api('profile');syncStamps();await refreshPublications();} catch (error) {console.error(error.message);}
+
+const stage = $('.spatial-stage');
+const art = $('.passport-art');
+if (stage && art) {
+  window.addEventListener('mousemove', event => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = stage.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (event.clientX - cx) / (window.innerWidth / 2 || 1);
+    const dy = (event.clientY - cy) / (window.innerHeight / 2 || 1);
+    art.style.setProperty('--tilt-x', `${-dy * 9}deg`);
+    art.style.setProperty('--tilt-y', `${dx * 12}deg`);
+    art.style.setProperty('--shift-x', `${dx * 14}px`);
+    art.style.setProperty('--shift-y', `${dy * 10}px`);
+  });
+  window.addEventListener('mouseleave', () => {
+    art.style.setProperty('--tilt-x', '0deg');
+    art.style.setProperty('--tilt-y', '0deg');
+    art.style.setProperty('--shift-x', '0px');
+    art.style.setProperty('--shift-y', '0px');
+  });
+}
