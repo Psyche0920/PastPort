@@ -179,3 +179,8 @@
 ## 2026-11-08 — Startup documentation audit
 
 - Compared local source with fetched origin/main (no divergence). Clarify Main/Organizer versus the separate Node player service, add the missing local player launch command and existing-install update/restart steps, and distinguish host-side data from browser cache and Cloudflare forwarding. Update both README languages. No running services restarted, model calls made, or deployment changes performed.
+
+## 2026-11-08 — README file inventory reconciliation
+
+- Reconcile both README inventories with tracked Main/shared files, adding 60 missing descriptions for review translation, completion verification, remote sharing, branch investigations, CLI/data protection, schemas, skills and regression fixtures. SDK internals remain in each SDK README.
+- Clarify LangGraph orchestration and review-language responsibilities; remove the stale game-host phase note. Verify bilingual path parity, unique/resolvable links and complete tracked Main/shared-file coverage. Documentation/repository checks and whitespace validation pass; no code, services, model calls or private runtime data changed.
