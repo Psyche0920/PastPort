@@ -173,3 +173,7 @@ The historical UI Trial delivery (containing the walkable theatre), maslan featu
 正式 Organizer 的 IDML 入口目前仍为“场景物件识别 → IDML 图文匹配 → 独立复核 → 环境定位与挂载”。“IDML 文字 → 对应配图目标 → 定向场景查找”已在独立本机副本验证，尚未接入正式入口；移动取景也未接入。Şeker Han 同材料副本选出9个文字目标、7项图文匹配、6项定位，原流程为30项识别、9项匹配及定位。两者目标清单不同，不作为准确率对比；副本3D附加仍待校准和人工验收，未生成故事。这些运行材料和私有数据库不进入Git，拉取main不会获得本机任务或试玩产物。
 
 The production Organizer IDML entry still runs scene-object recognition → IDML image/text matching → independent audit → localization and attachment. The text-first sequence (IDML text → corresponding image subject → directed scene search) has been exercised only in an isolated local prototype and is not wired into production; moved-camera review is also not integrated. With the same Şeker Han material, the prototype selected 9 text-bound targets, matched 7 and localized 6; the production run recognized 30 scene candidates, matched and localized 9. Different target populations make these counts unsuitable as an accuracy comparison. Prototype 3D attachment remains pending alignment and manual acceptance; no Story was generated. Run material and private databases are excluded from Git, and pulling main does not transfer local jobs or playable artifacts.
+
+审核页新增独立显示译文缓存：英文／土耳其语跟随界面切换，悬停保留原文；不会覆盖原审核数据或重新识别。旧后台需重启加载接口。用户已明确授权向当前 Codex 订阅服务发送审核文本，333 的 136 段与 444 的 112 段均已生成英／土译文；共 9 次纯文本翻译调用、245 段独立缓存，当前审核来源缺失为零。两份权威审核数据前后 SHA-256 一致，识别与故事调用均为零；未重启用户的后台。
+
+新上传 SDK 任务现已自动准备英／土审核译文（额外最多 8 次文本调用，授权面板披露），在 environment_ready 前完成；原文与审核记录不变。提供离线成功／中断回归，当前任务未重新运行真实识别、未生成故事或重启用户服务。

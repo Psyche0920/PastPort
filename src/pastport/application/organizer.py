@@ -528,8 +528,11 @@ class OrganizerService:
             if job.input_kind == "uploads" and self.input_preparer is not None
             else 0
         )
-        if native_calls is None:
+        if native_calls is None or (self.directory(job.job_id) / "display-translation.pending").is_file():
             return None
+        display_receipt = self.directory(job.job_id) / "display-translation-calls.txt"
+        if display_receipt.is_file():
+            native_calls += int(display_receipt.read_text())
         path = self.directory(job.job_id) / "fresh-story/budget.json"
         if not path.is_file():
             return (
@@ -910,6 +913,27 @@ class OrganizerService:
                 prepared_source = self.register_prepared_source(
                     job, native / "prepared-request.json", "已准备环境，可生成故事", unique=True
                 )
+                if prepared_source is not None and self.reviews is not None and request.options.authorize_model:
+                    receipt = output / "display-translation-calls.txt"
+                    pending = output / "display-translation.pending"
+                    if not receipt.is_file():
+                        registered = self.store.get("native_source", prepared_source, RegisteredNativeSource)
+                        source = OrganizerSource(
+                            source_id=registered.source_id, project_id=registered.project_id,
+                            title=registered.title, request_file=registered.request_file,
+                            review_binding_file=registered.review_binding_file,
+                        )
+                        # Uncertain dispatch is visible in usage; the executor refuses implicit retry.
+                        pending.write_text(prepared_source)
+                        self.store.save("job", job.job_id, job.model_copy(update={
+                            "message": "正在生成审核内容的英文和土耳其语显示译文；原文与审核记录保留。",
+                        }))
+                        calls = await asyncio.to_thread(
+                            self.reviews.prepare_display_locales, source,
+                            self.store.directory / "review-display-locales", job.job_id,
+                        )
+                        receipt.write_text(str(calls))
+                        pending.unlink(missing_ok=True)
                 if request.options.stop_after == "environment":
                     if prepared_source is None:
                         raise ServiceError("ENVIRONMENT_HANDOFF_MISSING", "环境交接文件缺失。", 409)

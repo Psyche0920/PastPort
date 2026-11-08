@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-08 — Automatic review translations
+
+- Main handoff validation: 69 focused Python regressions, 16 frontend localization tests, strict typing for six affected Python files, repository/documentation contracts and whitespace checks passed. Runtime translation caches and review databases remain local, outside the source commit. No fresh recognition, Story call, public deployment or production restart was performed during the push task.
+
+- New authorized upload SDK jobs prepare English/Turkish review translations before environment-ready, preserving original records and cache identities. Disclose separate bounded translation budget, record cumulative calls and stop safely on uncertain dispatch. Success/failure paths verified with synthetic execution; no fresh recognition, Story generation or production restart.
+
+## 2026-11-08 — Review display translations
+
+- Move display markers into the SDK review template for subsequent exports; localize candidate state and 3D review links without modifying persisted enum values. Live port 18840 returned 404 for the display-locales endpoint, confirming it still requires a server restart. Newly authored free text needs its own explicit translation operation; opening a page does not incur model calls.
+
+- Add source-bound English/Turkish display caches for names, identifying features and judgment notes; language switching preserves originals, IDs, editor values and review authority. Translation is an explicit bounded text-only operation, separate from recognition.
+- After explicit authorization following the initial approval rejection, translated all 136 review passages in 333 and 112 in 444 through the current Codex subscription (9 text-only calls; 245 unique cached passages). Both authoritative datasets retained identical before/after SHA-256 hashes; current reuse-source caches have zero missing entries. No recognition, Story call or production restart.
+
+## 2026-11-08 — Admin English and Turkish system messages
+
+- Translate backend compatibility errors, native preparation progress, legacy completion messages and IDML review labels in English and Turkish.
+- Preserve source prose, object names, editable fields and captured task IDs. Remove single-character fragment substitution so unknown sentences cannot become mixed text such as None法 or Yok法.
+- Format environment counts and missing object numbers as complete localized notifications. New regression cases use actual observed backend messages and exact-only embedded review labels.
+- Interface assets only; no story generation, source/review data changes or workflow policy changes.
+
 ## 2026-11-08 — Native source preparation, pinned visual policy and Story contracts
 
 - Unify normal PDF text extraction with page/line provenance and targeted local OCR for scanned or garbled pages. Preserve originals and pass verified evidence directly to native environment preparation; remove the label-layout-specific path.

@@ -412,6 +412,38 @@ class OrganizerRoutes:
                 value, media_type="application/json", headers={"Cache-Control": "no-store"}
             )
 
+        @router.get("/api/review/{source_id}/display-locales")
+        async def review_display_locales(source_id: str, request: Request) -> JSONResponse:
+            actor = self.actor(request)
+            source = self.service.source(source_id, actor)
+            gateway = self.service.reviews
+            if gateway is None:
+                raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
+            from pastport.adapters.review_display_locales import ReviewDisplayLocales
+            raw = await asyncio.to_thread(gateway.workbench_data, self.service.bound_review_source(source, actor))
+            catalog = ReviewDisplayLocales(self.service.store.directory / "review-display-locales")
+            texts = catalog.collect(raw)
+            result = await asyncio.to_thread(catalog.read, texts)
+            return JSONResponse(result.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+
+        @router.post("/api/review/{source_id}/display-locales")
+        async def translate_review_display(source_id: str, request: Request) -> JSONResponse:
+            from pastport.adapters.review_display_locales import ReviewDisplayLocales, TranslateDisplayRequest
+            body = await read_body(request, TranslateDisplayRequest)
+            actor = self.actor(request)
+            source = self.service.source(source_id, actor)
+            gateway = self.service.reviews
+            if gateway is None:
+                raise ServiceError("REVIEW_UNAVAILABLE", "审核接线尚未配置。", 503)
+            raw = await asyncio.to_thread(gateway.workbench_data, self.service.bound_review_source(source, actor))
+            catalog = ReviewDisplayLocales(self.service.store.directory / "review-display-locales")
+            texts = catalog.collect(raw)
+            try:
+                result = await asyncio.to_thread(catalog.translate, source.project_id, source.source_id, texts, body)
+            except ValueError as error:
+                raise ServiceError("REVIEW_DISPLAY_INVALID", str(error), 409) from error
+            return JSONResponse(result.model_dump(mode="json"), headers={"Cache-Control": "no-store"})
+
         @router.post("/api/review/{source_id}/workbench/save-review")
         async def native_review_save(source_id: str, request: Request) -> JSONResponse:
             body = await read_body(request, NativeReviewWrite)

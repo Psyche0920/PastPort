@@ -26,6 +26,7 @@ class ExecutionInput(DomainModel):
         "pdf_matching",
         "idml_mapping",
         "photo_inspection",
+        "review_display_translation",
     ]
     prompt_version: str
     policy_version: str

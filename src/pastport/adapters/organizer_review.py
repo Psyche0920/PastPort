@@ -290,9 +290,9 @@ class SDKOrganizerReview:
         images = {"object_image": "实物配图候选", "context_image": "背景参考图", "text_evidence": "无已确认实物照"}
         def render_row(row: _IDMLReviewRow) -> str:
             return (
-                f"<li><strong>{row.number:02d} · {escape(row.name)}</strong> · {states[row.status]}"
-                f"<div>{escape(row.historical_name or '暂无对应历史对象')} · {images[row.image_role]}</div>"
-                f"<p>{escape(row.reason)}</p></li>"
+                f"<li><strong>{row.number:02d} · <span data-review-display>{escape(row.name)}</span></strong> · {states[row.status]}"
+                f"<div><span data-review-display>{escape(row.historical_name or '暂无对应历史对象')}</span> · {images[row.image_role]}</div>"
+                f"<p data-review-display>{escape(row.reason)}</p></li>"
             )
 
         ordered = sorted(rows, key=lambda item: item.number)
@@ -354,6 +354,24 @@ class SDKOrganizerReview:
         html += "<script>document.addEventListener('input',event=>{if(['vr-content','vr-editor','image','text','reviewer','note'].includes(event.target.id))window.parent.postMessage({type:'pastport-review-dirty'},location.origin);});</script>"
         return html
 
+    def prepare_display_locales(self, source: OrganizerSource, directory: Path, operation_id: str) -> int:
+        """Generate derived display prose once, preserving review authority and receipts."""
+        from pastport.adapters.review_display_locales import ReviewDisplayLocales, TranslateDisplayRequest
+
+        catalog = ReviewDisplayLocales(directory)
+        texts = catalog.collect(self.workbench_data(source))
+        catalog.translate(source.project_id, source.source_id, texts,
+            TranslateDisplayRequest(authorize_model=True, operation_id=operation_id,
+                                    source_digest=catalog.digest(texts)))
+        operation = hashlib.sha256((source.project_id + source.source_id + operation_id).encode()).hexdigest()
+        ledger = directory / "operations" / operation / "executions.sqlite3"
+        if not ledger.is_file():
+            return 0
+        # Include earlier completed batches after a resume, not just this invocation.
+        with sqlite3.connect("file:" + str(ledger) + "?mode=ro", uri=True) as connection:
+            row = connection.execute("SELECT COUNT(*) FROM executions").fetchone()
+        return int(row[0])
+
     def workbench_data(self, source: OrganizerSource) -> str:
         from pastport_matched_environment.application.review_repository import ReviewRepository
         binding, _, _ = self._dataset(source)
@@ -370,6 +388,7 @@ class SDKOrganizerReview:
             for photo in photos:
                 if isinstance(photo, dict):
                     photo.pop("original_path", None)
+        payload["display_inventory"] = [row.model_dump(mode="json") for row in self._idml_inventory(source)]
         return json.dumps(payload, ensure_ascii=False)
 
     def workbench_media(self, source: OrganizerSource, relative: str) -> Path:

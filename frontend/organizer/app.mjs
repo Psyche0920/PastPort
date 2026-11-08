@@ -118,7 +118,7 @@ $('review-current').addEventListener('click',async()=>{if(!environmentSource)ret
 $('load-project').addEventListener('click',async()=>{const value=$('material-project').value;if(value.startsWith('source:'))await selectProjectSource(value.slice(7),'review');else if(value.startsWith('upload:')){loadedProject=value.slice(7);try{await reviewProject();}catch(e){message(e.message);}}});
 function generationOptions(parent, needs3d, resume=false, evidenceDefault=8){
   const box=document.createElement('fieldset');box.append(text('legend','本次生成授权'));
-  const model=document.createElement('input');model.type='checkbox';const ml=text('label',' 允许本次模型调用（资料与匹配：SOL 6.1 Medium；故事：SOL 6.1 High）；失败不自动重试');ml.prepend(model);box.append(ml);
+  const model=document.createElement('input');model.type='checkbox';const ml=text('label',' 允许本次模型调用（资料与匹配：SOL 6.1 Medium；故事：SOL 6.1 High）；失败不自动重试');ml.prepend(model);box.append(ml);box.append(text('p','环境准备自动生成英文和土耳其语审核译文（额外最多8次文本调用、200000 tokens）；原文与审核记录保留。'));
   const evidence=document.createElement('input');evidence.type='number';evidence.min='1';evidence.max='100';evidence.value=String(evidenceDefault);const el=text('label','证据模型调用上限（1–100，照片、PDF及史料核验共用）');el.append(evidence);box.append(el);const matching=document.createElement('input');matching.type='number';matching.min='1';matching.max='40';matching.value='20';const gl=text('label','环境匹配模型调用上限（1–40）');gl.append(matching);box.append(gl);
   const marble=document.createElement('input');marble.type='checkbox';
   const budget=document.createElement('input');budget.type='number';budget.min='1500';budget.max='100000';budget.value='1500';
