@@ -288,14 +288,22 @@ class SDKOrganizerReview:
             return ""
         states = {"matched": "史料候选", "unmatched": "未匹配", "requires_review": "待复核"}
         images = {"object_image": "实物配图候选", "context_image": "背景参考图", "text_evidence": "无已确认实物照"}
-        items = []
-        for row in sorted(rows, key=lambda item: item.number):
-            items.append(
+        def render_row(row: _IDMLReviewRow) -> str:
+            return (
                 f"<li><strong>{row.number:02d} · {escape(row.name)}</strong> · {states[row.status]}"
                 f"<div>{escape(row.historical_name or '暂无对应历史对象')} · {images[row.image_role]}</div>"
                 f"<p>{escape(row.reason)}</p></li>"
             )
-        return f"<details><summary>全部识别物件（{len(rows)} 项）</summary><ol>{''.join(items)}</ol></details>"
+
+        ordered = sorted(rows, key=lambda item: item.number)
+        pending = [render_row(row) for row in ordered if row.status == "requires_review"]
+        pending_section = (
+            f"<section><h2>待确认候选（{len(pending)} 项）</h2>"
+            f"<p>这些候选尚未确认，请核对物体及位置。</p><ol>{''.join(pending)}</ol></section>"
+            if pending else ""
+        )
+        items = ''.join(render_row(row) for row in ordered)
+        return pending_section + f"<details><summary>全部识别物件（{len(rows)} 项）</summary><ol>{items}</ol></details>"
 
     def workbench(self, source: OrganizerSource, request: GameMakingRequest, actor_id: str, prefix: str) -> str:
         self.read(source, request)
@@ -409,6 +417,10 @@ class SDKOrganizerReview:
             current = current and old.scene_binding == payload.binding and old.calibration.version == payload.alignment.version and old.calibration.confirmed == payload.alignment.confirmed
             anchors = {anchor.id: anchor for anchor in payload.objects}
             candidates = {candidate.object_id: candidate.point_json for candidate in payload.candidates}
+            registered = {item.object_number for item in snapshot.objects}
+            saved = {anchor.id for anchor in payload.objects
+                     if anchor.id in registered and anchor.point_json and anchor.version > 0}
+            current = current and saved <= {location.object_number for location in old.objects}
             for location in old.objects:
                 anchor = anchors.get(location.object_number)
                 if anchor is None:

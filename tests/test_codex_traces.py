@@ -31,7 +31,7 @@ def test_trace_is_saved_before_waiting_and_known_usage_survives_cleanup_timeout(
     phase: str,
 ) -> None:
     sdk = pytest.importorskip("openai_codex")
-    from openai_codex.generated.v2_all import TurnStatus
+    from openai_codex.generated.v2_all import TurnStatus, TokenUsageBreakdown
 
     store = CodexTraceStore(tmp_path)
     calls = []
@@ -48,7 +48,10 @@ def test_trace_is_saved_before_waiting_and_known_usage_survives_cleanup_timeout(
                 id=self.id,
                 status=TurnStatus.completed,
                 final_response='{"story":"candidate"}',
-                usage=SimpleNamespace(total=SimpleNamespace(input_tokens=12, output_tokens=8)),
+                usage=SimpleNamespace(total=TokenUsageBreakdown(
+                    input_tokens=12, output_tokens=8, total_tokens=20,
+                    cached_input_tokens=4, reasoning_output_tokens=3,
+                )),
             )
 
     class Thread:
@@ -90,6 +93,7 @@ def test_trace_is_saved_before_waiting_and_known_usage_survives_cleanup_timeout(
     else:
         result = asyncio.run(provider.respond(request(), 0.05))
         assert result.input_tokens == 12 and result.output_tokens == 8
+        assert json.loads(result.raw_json)["usage"]["reasoning_output_tokens"] == 3
         assert result.output_text == '{"story":"candidate"}'
         assert provider.recorded_response(request().request_key) == result
         assert asyncio.run(provider.respond(request(), 0.05)) == result

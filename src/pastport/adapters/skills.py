@@ -53,3 +53,26 @@ class SkillLoader:
         if not entry.startswith("---\nname: " + name + "\n") or version is None:
             raise ServiceError("SKILL_INVALID", "Skill identity and version are required")
         return SkillBundle(name=name, version=version[1], files=tuple(files))
+
+
+    @staticmethod
+    def restore(bundles: tuple[SkillBundle, ...], destination: Path) -> Path:
+        """Materialize the original trusted snapshots so replay never adopts edited Skills."""
+        for bundle in bundles:
+            for item in bundle.files:
+                parts = item.path.split("/")
+                if parts[0] != bundle.name or any(part in ("", ".", "..") for part in parts) or "\\" in item.path:
+                    raise ServiceError("SKILL_PATH_INVALID", "Pinned Skill path is invalid")
+                data = item.text.encode()
+                if hashlib.sha256(data).hexdigest() != item.sha256:
+                    raise ServiceError("SKILL_INVALID", "Pinned Skill content changed")
+                path = destination.joinpath(*parts)
+                if path.is_symlink() or not path.resolve().is_relative_to(destination.resolve()):
+                    raise ServiceError("SKILL_PATH_INVALID", "Pinned Skill leaves its destination")
+                if path.exists():
+                    if path.is_symlink() or path.read_bytes() != data:
+                        raise ServiceError("SKILL_INVALID", "Materialized Skill content changed")
+                else:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(data)
+        return destination

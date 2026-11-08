@@ -220,7 +220,7 @@ def test_upload_persists_and_rejects_wrong_branch_and_origin(tmp_path: Path) -> 
         report = client.get(base + "/fixture-project").json()
         assert report["plan"]["stages"][0] == "environment.environment_build"
         assert report["plan"]["missing_roles"] == ["mapping_pdf", "tour"]
-        assert not report["plan"]["generation_connected"]
+        assert report["plan"]["generation_connected"]
         assert not production.calls
     with TestClient(create_app(settings, organizer_production=production)) as client:
         assert (
@@ -625,3 +625,24 @@ def test_workspace_selection_survives_new_session_and_service_restart(tmp_path: 
         assert client.post("/organizer/api/session", headers=headers()).status_code == 200
         assert client.get("/organizer/api/workspace").json() == selected.json()
         assert production.calls == []
+
+
+def test_story_unknown_outcome_message_reaches_organizer(tmp_path: Path) -> None:
+    class UnknownProduction(Production):
+        async def run(
+            self, request: GameMakingRequest, start: OrganizerStart, output: Path,
+            *, resume: bool = False,
+        ) -> None:
+            raise ServiceError("STORY_OUTCOME_UNKNOWN", "等待上限 900 秒；结果和用量未能确认。")
+
+    settings, _ = setup(tmp_path)
+    with TestClient(create_app(settings, organizer_production=UnknownProduction())) as client:
+        response = client.post(
+            "/organizer/api/jobs",
+            json={"source_id": "fixture", "mode": "regenerate", "authorize_model": True},
+            headers=headers(),
+        )
+        job = await_job(client, response.json()["job_id"])
+        assert job["status"] == "recovery_required"
+        assert job["error_code"] == "STORY_OUTCOME_UNKNOWN"
+        assert job["message"] == "等待上限 900 秒；结果和用量未能确认。"

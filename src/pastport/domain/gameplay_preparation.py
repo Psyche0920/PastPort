@@ -18,8 +18,15 @@ from pastport.domain.story_inputs import SpatialNavigationLink, SpatialPoint
 
 
 class LocalizedCopy(Contract):
-    zh: Text
+    zh: Text | None = None
     en: Text
+    tr: Text | None = None
+
+    @model_validator(mode="after")
+    def complete_language_pair(self) -> Self:
+        if not self.zh and not self.tr:
+            raise ValueError("English requires Turkish or legacy Chinese copy")
+        return self
 
 
 class SourceReading(Contract):

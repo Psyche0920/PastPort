@@ -5,8 +5,8 @@ export function storyPresentation(draft,tasks,fallback){
   const prefix='presentation.';
   if(!keys.has(prefix+'opening_v1'))return fallback;
   const fail=message=>{throw new Error('STORY_OPENING_INVALID: '+message);};
-  const read=key=>{const result={};for(const locale of ['zh','en']){const value=tables.get(locale)?.get(key);if(typeof value!=='string'||!value.trim())fail('Missing bilingual '+key);result[locale]=value;}return result;};
-  const version=read(prefix+'opening_v1');if(version.zh!=='opening-context/1'||version.en!=='opening-context/1')fail('Unsupported opening profile');
+  const read=key=>{const result={};for(const locale of tables.keys()){const value=tables.get(locale)?.get(key);if(typeof value!=='string'||!value.trim())fail('Missing bilingual '+key);result[locale]=value;}return result;};
+  const version=read(prefix+'opening_v1');if(Object.values(version).some(value=>value!=='opening-context/1'))fail('Unsupported opening profile');
   const title=read(prefix+'title'),setting=read(prefix+'setting'),situation=read(prefix+'situation'),role=read(prefix+'player_role'),question=read(prefix+'question');
   const hero=game.characters?.find(person=>person.character_id===game.protagonist);
   if(!hero)fail('Missing protagonist');
@@ -20,5 +20,5 @@ export function storyPresentation(draft,tasks,fallback){
   const stationRecords=[...assets].map(asset=>({number:Number(asset.slice(7)),title:read(prefix+'station.'+asset+'.title'),body:read(prefix+'station.'+asset+'.purpose')}));
   // No raw-source URLs, future scene bodies, endings or NPC goals are exposed here.
   return {...fallback,title,intro:situation,startupPreparation:'none',speakerNames,characterProfiles,stationRecords,
-    briefing:{title,sections:[{heading:{zh:'時間與地點',en:'When and where'},body:setting},{heading:{zh:'發生緊乜',en:'What is happening'},body:situation},{heading:{zh:'你嘅立場',en:'Your role'},body:role},{heading:{zh:'你要查清楚嘅問題',en:'Your question'},body:question}],closing:{zh:'先認識人物，再查看工作站。原始來源同虛構劇情分開閱讀。',en:'Meet the people, then inspect the stations. Keep original sources distinct from fictional events.'}}};
+    briefing:{title,sections:[{heading:{zh:'時間與地點',en:'When and where',tr:'Zaman ve yer'},body:setting},{heading:{zh:'發生緊乜',en:'What is happening',tr:'Neler oluyor'},body:situation},{heading:{zh:'你嘅立場',en:'Your role',tr:'Rolünüz'},body:role},{heading:{zh:'你要查清楚嘅問題',en:'Your question',tr:'Araştırma sorunuz'},body:question}],closing:{zh:'先認識人物，再查看工作站。原始來源同虛構劇情分開閱讀。',en:'Meet the people, then inspect the stations. Keep original sources distinct from fictional events.',tr:'Kişileri tanıyın, ardından istasyonları inceleyin. Özgün kaynakları kurgusal olaylardan ayrı değerlendirin.'}}};
 }

@@ -24,7 +24,7 @@ export class Activity {
       this.solution=solveCoverage(config);
       if(config.source_gate){
         entries(config.source_gate.options,'source choice options');
-        ensure(config.source_gate.options.every(item=>item.text&&['zh','en'].every(locale=>typeof item.text[locale]==='string'&&item.text[locale].length>0)),'Source choice text is missing');
+        ensure(config.source_gate.options.every(item=>item.text&&['en',item.text.tr?'tr':'zh'].every(locale=>typeof item.text[locale]==='string'&&item.text[locale].length>0)),'Source choice text is missing');
         ensure(config.source_gate.options.length<=gameplayCatalog.profiles.find(item=>item.kind==='tiling').max_items&&config.source_gate.options.some(item=>item.id===config.source_gate.target_claim_id),'Invalid source choice');
       }
     }

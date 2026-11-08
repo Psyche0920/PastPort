@@ -461,8 +461,9 @@ def test_unknown_transport_exits_promptly_exports_receipt_and_never_retries(tmp_
         structure_profile="authored_graph",
     )
     before = time.monotonic()
-    with pytest.raises(ServiceError, match="inspect saved receipts"):
+    with pytest.raises(ServiceError, match="结果或用量未能确认") as stopped:
         asyncio.run(runner.run())
+    assert stopped.value.code == "STORY_OUTCOME_UNKNOWN"
     assert time.monotonic() - before < 10
     assert provider.calls == 1
     assert (output / "budget.json").exists()
@@ -534,3 +535,98 @@ def test_environment_bytes_remain_locked_across_noncanonical_json_and_replay(
     assert json.loads((output / "environment-serialization-receipt.json").read_text())[
         "semantic_content_unchanged"
     ]
+
+
+def test_unknown_model_outcome_is_visible_and_never_redispatched(tmp_path: Path) -> None:
+    class UnknownProvider:
+        calls = 0
+
+        async def respond(
+            self, request: ProviderRequest, timeout_seconds: float
+        ) -> ProviderResponse:
+            self.calls += 1
+            assert timeout_seconds > 300
+            return ProviderResponse(
+                raw_json="{}", output_text="", provider_request_id="unknown-turn",
+                input_tokens=None, output_tokens=None, error_code="OUTCOME_UNKNOWN",
+            )
+
+    provider = UnknownProvider()
+    output = tmp_path / "out"
+    runner = StoryAutomationWorkflow(
+        material_fixture(tmp_path / "inputs"), output, ROOT / "skills",
+        "Synthetic unknown outcome", provider, structure_profile="authored_graph",
+    )
+    for _ in range(2):
+        with pytest.raises(ServiceError) as stopped:
+            asyncio.run(runner.run())
+        assert stopped.value.code == "STORY_OUTCOME_UNKNOWN"
+        assert "900" in str(stopped.value)
+    assert provider.calls == 1
+    assert json.loads((output / "story-stop.json").read_text())["code"] == "OUTCOME_UNKNOWN"
+    budget = json.loads((output / "budget.json").read_text())
+    assert budget["held"]["model_requests"] == 1
+    assert budget["used"]["model_requests"] == 0
+    run = json.loads((output / "run-result.json").read_text())
+    assert run["budget_policy"]["max_active_seconds"] == 960
+
+
+def test_saved_story_keeps_original_timeout_after_default_changes(tmp_path: Path) -> None:
+    materials = material_fixture(tmp_path / "inputs")
+    output = tmp_path / "out"
+    provider = ModelCounterpart()
+    runner = StoryAutomationWorkflow(
+        materials, output, ROOT / "skills", "Synthetic scope only", provider,
+        structure_profile="authored_graph",
+    )
+    asyncio.run(runner.run())
+    original = (output / "input-lock.json").read_bytes()
+    import pastport.adapters.story_workflow as workflow_module
+
+    previous = workflow_module.STORY_CODEX_TIMEOUT_SECONDS
+    try:
+        workflow_module.STORY_CODEX_TIMEOUT_SECONDS = previous + 60
+        asyncio.run(runner.run())
+    finally:
+        workflow_module.STORY_CODEX_TIMEOUT_SECONDS = previous
+    assert (output / "input-lock.json").read_bytes() == original
+    assert provider.calls == 1
+
+
+def test_replay_restores_original_skill_snapshot_after_source_skill_changes(tmp_path: Path) -> None:
+    import shutil
+    skills = tmp_path / "skills"
+    shutil.copytree(ROOT / "skills/narrative", skills / "narrative")
+    materials = material_fixture(tmp_path / "inputs")
+    provider = ModelCounterpart()
+    output = tmp_path / "out"
+    asyncio.run(StoryAutomationWorkflow(materials, output, skills, "Pinned skill", provider,
+                                       structure_profile="authored_graph").run())
+    names = ("input-lock.json", "narrative-draft.json", "receipts/00.json")
+    before = {name: (output / name).read_bytes() for name in names}
+    entry = skills / "narrative/SKILL.md"
+    entry.write_text(entry.read_text() + "\nChanged live Skill after the paid run.\n")
+    asyncio.run(StoryAutomationWorkflow(materials, output, skills, "Pinned skill", provider,
+            revalidate_saved_response=True, structure_profile="authored_graph").run())
+    assert provider.calls == 1
+    for name, data in before.items():
+        assert (output / name).read_bytes() == data
+
+
+def test_compiled_prompt_uses_only_its_contract_and_keeps_full_source_text(tmp_path: Path) -> None:
+    class Capture:
+        request: ProviderRequest | None = None
+        async def respond(self, request: ProviderRequest, timeout_seconds: float) -> ProviderResponse:
+            self.request = request
+            raise ServiceError("CAPTURE_ONLY", "Offline request measurement")
+    capture = Capture()
+    with pytest.raises(ServiceError):
+        asyncio.run(StoryAutomationWorkflow(material_fixture(tmp_path / "inputs"),
+            tmp_path / "out", ROOT / "skills", "Measure compiled request", capture).run())
+    assert capture.request is not None
+    envelope = json.loads(capture.request.input_text)
+    assert envelope["documents"] == []
+    assert "The synthetic hatch is associated with the kitchen." in capture.request.input_text
+    assert "Declare all variables and locale keys" not in capture.request.instructions
+    assert len(capture.request.instructions) < 6000
+    assert capture.request.maximum_output_tokens == 32768

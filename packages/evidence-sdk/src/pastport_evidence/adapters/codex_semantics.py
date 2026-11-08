@@ -150,7 +150,7 @@ class CodexSemanticGateway:
             "pdf_matching",
             request,
             PDFMatchPayload,
-            tuple(page.image for page in request.pages)
+            tuple(page.image for page in request.pages if page.image is not None)
             + tuple(sheet.image for sheet in request.reference_sheets),
             request.grant.grant_ref,
             request.grant.model_id,
@@ -168,6 +168,10 @@ class CodexSemanticGateway:
             if not match.region and (not match.passage_ids):
                 raise ValueError("PDF mapping has no image or textual evidence")
             page = pages[match.page_index]
+            if match.region and page.image is None:
+                raise ValueError("Text-only PDF evidence cannot declare an image crop")
+            if page.image is None and match.source_image_role != "text_evidence":
+                raise ValueError("Text-only PDF evidence must retain its text_evidence role")
             if match.region and (
                 match.region.bottom_right.x > page.width
                 or match.region.bottom_right.y > page.height

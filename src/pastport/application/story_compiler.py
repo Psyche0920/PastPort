@@ -124,6 +124,7 @@ class StoryPlanCompiler:
     ) -> NarrativeDraft:
         """Shared content compilation; callers must validate their final graph."""
         translations: dict[str, StoryText] = {}
+        secondary = "tr" if plan.protagonist_name.tr is not None else "zh"
 
         def text(key: str, value: StoryText) -> str:
             if key in translations:
@@ -229,7 +230,7 @@ class StoryPlanCompiler:
                     character_goal="protagonist",
                     effect_ids=(rule_id,),
                     consequence_read_scene_id=next_scene,
-                    observable_feedback=task.feedback.zh,
+                    observable_feedback=task.feedback.localized(secondary),
                     **task.reasoning.model_dump(),
                 )
             )
@@ -291,7 +292,7 @@ class StoryPlanCompiler:
         opening = plan.opening_context
         if opening is not None:
             text(
-                "presentation.opening_v1", StoryText(en="opening-context/1", zh="opening-context/1")
+                "presentation.opening_v1", StoryText(en="opening-context/1", **{secondary: "opening-context/1"})
             )
             for key, value in (
                 ("title", opening.title),
@@ -308,7 +309,22 @@ class StoryPlanCompiler:
             for station in opening.stations:
                 prefix = f"presentation.station.{station.asset_id}."
                 text(prefix + "title", station.title)
-                text(prefix + "purpose", station.purpose)
+                documents = [material for material in plan.fictional_materials if any(
+                    tasks[position - 1].asset_id == station.asset_id
+                    for position in material.task_positions
+                )]
+                if documents:
+                    purpose = StoryText(**{
+                        locale: station.purpose.localized(locale) + "\n\n" + "\n\n".join(
+                            ("虚构材料改编" if locale == "zh" else "Uyarlanmış kurgu" if locale == "tr" else "Adapted fictional material")
+                            + f" · {material.section_id} / {material.material_id}\n"
+                            + material.title.localized(locale) + "\n" + material.body.localized(locale)
+                            for material in documents
+                        ) for locale in ("en", secondary)
+                    })
+                else:
+                    purpose = station.purpose
+                text(prefix + "purpose", purpose)
 
         design = plan.activity_design
         if design is not None:
@@ -332,16 +348,16 @@ class StoryPlanCompiler:
             chunks = [encoded[start : start + 8000] for start in range(0, len(encoded), 8000)]
             text(
                 "preparation.investigation_v1",
-                StoryText(en="investigation-blueprint/1", zh="investigation-blueprint/1"),
+                StoryText(en="investigation-blueprint/1", **{secondary: "investigation-blueprint/1"}),
             )
             text(
                 "preparation.investigation_parts",
-                StoryText(en=str(len(chunks)), zh=str(len(chunks))),
+                StoryText(en=str(len(chunks)), **{secondary: str(len(chunks))}),
             )
             for index, chunk in enumerate(chunks, 1):
-                text(f"preparation.investigation_part.{index}", StoryText(en=chunk, zh=chunk))
+                text(f"preparation.investigation_part.{index}", StoryText(en=chunk, **{secondary: chunk}))
 
-        locales: tuple[Locale, ...] = ("en", "zh")
+        locales: tuple[Locale, ...] = ("en", "tr" if secondary == "tr" else "zh")
         game = GameContent(
             chapter_id="chapter-1",
             protagonist="protagonist",
@@ -365,7 +381,7 @@ class StoryPlanCompiler:
                 LocaleTable(
                     locale=locale,
                     entries=tuple(
-                        Translation(key=key, text=getattr(value, locale))
+                        Translation(key=key, text=value.localized(locale))
                         for key, value in translations.items()
                     ),
                 )

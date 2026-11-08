@@ -153,6 +153,59 @@
       "title": "DifferenceDesign",
       "type": "object"
     },
+    "FictionalMaterial": {
+      "additionalProperties": false,
+      "description": "Source-bound adaptation, separate from archaeological or historical claims.",
+      "properties": {
+        "body": {
+          "$ref": "#/$defs/StoryText"
+        },
+        "material_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Material Id",
+          "type": "string"
+        },
+        "section_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$",
+          "title": "Section Id",
+          "type": "string"
+        },
+        "source_quote": {
+          "maxLength": 10000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Source Quote",
+          "type": "string"
+        },
+        "task_positions": {
+          "items": {
+            "maximum": 18,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Task Positions",
+          "type": "array"
+        },
+        "title": {
+          "$ref": "#/$defs/StoryText"
+        }
+      },
+      "required": [
+        "section_id",
+        "material_id",
+        "source_quote",
+        "title",
+        "body",
+        "task_positions"
+      ],
+      "title": "FictionalMaterial",
+      "type": "object"
+    },
     "ImageDifference": {
       "additionalProperties": false,
       "properties": {
@@ -485,16 +538,38 @@
           "title": "En",
           "type": "string"
         },
+        "tr": {
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tr"
+        },
         "zh": {
-          "maxLength": 10000,
-          "minLength": 1,
-          "pattern": "\\S",
-          "title": "Zh",
-          "type": "string"
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zh"
         }
       },
       "required": [
-        "zh",
         "en"
       ],
       "title": "LocalizedCopy",
@@ -549,14 +624,34 @@
           "title": "En",
           "type": "string"
         },
+        "tr": {
+          "anyOf": [
+            {
+              "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tr"
+        },
         "zh": {
-          "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
-          "title": "Zh",
-          "type": "string"
+          "anyOf": [
+            {
+              "pattern": "^assets/[a-zA-Z0-9_./-]+\\.(svg|png|jpg|jpeg|webp)$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zh"
         }
       },
       "required": [
-        "zh",
         "en"
       ],
       "title": "PuzzleImages",
@@ -775,6 +870,15 @@
           "title": "Fiction Notice",
           "type": "string"
         },
+        "fictional_materials": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FictionalMaterial"
+          },
+          "maxItems": 32,
+          "title": "Fictional Materials",
+          "type": "array"
+        },
         "opening_context": {
           "anyOf": [
             {
@@ -946,17 +1050,39 @@
           "title": "En",
           "type": "string"
         },
+        "tr": {
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tr"
+        },
         "zh": {
-          "maxLength": 10000,
-          "minLength": 1,
-          "pattern": "\\S",
-          "title": "Zh",
-          "type": "string"
+          "anyOf": [
+            {
+              "maxLength": 10000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Zh"
         }
       },
       "required": [
-        "en",
-        "zh"
+        "en"
       ],
       "title": "StoryText",
       "type": "object"

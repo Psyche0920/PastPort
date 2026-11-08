@@ -301,6 +301,8 @@ class CandidateBuilder:
         )
         shutil.copy2(self.pdf, self.output / ("mapping-demo.idml" if self.source.kind == "idml" else "mapping-demo.pdf"))
         shutil.copy2(self.source.path, self.output / self.source.filename)
+        if (self.upstream / "source-text.json").is_file():
+            shutil.copy2(self.upstream / "source-text.json", self.output / "source-text.json")
         if self.source.kind == "idml":
             shutil.copy2(self.upstream / "source-units.json", self.output / "source-units.json")
             for name in ("idml-document.json", "idml-matches.json", "idml-review-inventory.json"):
@@ -589,7 +591,8 @@ class CandidateBuilder:
                         "upstream English-column normalized context; original full page retained",
                     ),
                 )
-                self.source.render(page, self.output / f"media/source-page-{page:02d}.png")
+                if not (self.upstream / "source-text.json").is_file():
+                    self.source.render(page, self.output / f"media/source-page-{page:02d}.png")
             # Text-only evidence still needs a portable source image, never an invented
             # historical-object photograph. Existing upstream crops remain unchanged.
             for obj in entities:

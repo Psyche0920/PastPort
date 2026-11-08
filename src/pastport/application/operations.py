@@ -38,11 +38,19 @@ class UsageReconciliation(Contract):
     recovered_receipt: ExecutionReceipt | None
 
 
+class RecordedUsageAcceptance(Contract):
+    """Accept one already-settled response without authorizing another dispatch."""
+
+    operation_id: Identifier
+    receipt_sha256: Sha256
+
+
 class AmendBudget(Contract):
     expected_revision: NonNegative
     budget_hash: Sha256
     budget_policy: BudgetPolicy
     reason: Text
+    accepted_recorded_usage: tuple[RecordedUsageAcceptance, ...] = ()
 
 
 class BudgetAmendment(Contract):

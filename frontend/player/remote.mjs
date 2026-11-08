@@ -7,7 +7,7 @@ import {join} from 'node:path';
 import {access} from 'node:fs/promises';
 import {parseArgs} from 'node:util';
 import {QuickTunnel,stopProcess} from './network.mjs';
-import {OrganizerGateway} from './organizer-gateway.mjs';
+import {OrganizerGateway,verifyOrganizerReady} from './organizer-gateway.mjs';
 const {values}=parseArgs({options:{port:{type:'string',default:'18852'},'organizer-port':{type:'string',default:'18840'},'share-organizer':{type:'boolean',default:false}}});
 const port=Number(values.port),organizerPort=Number(values['organizer-port']);
 for(const value of [port,organizerPort])if(!Number.isSafeInteger(value)||value<1||value>65535)throw new Error('Use a port between 1 and 65535.');
@@ -25,6 +25,8 @@ try {
   // Sharing must never initialize an empty deployment by a path typo.
   await access(join(data,'players.sqlite'));
   await access(organizer);
+  const local='http://127.0.0.1:'+organizerPort;
+  if(values['share-organizer'])await verifyOrganizerReady(local);
   const check=createServer();check.listen(port,'127.0.0.1');await once(check,'listening');
   await new Promise(resolve=>check.close(resolve));
   if(stopped)throw new Error('Sharing cancelled.');
@@ -51,9 +53,7 @@ try {
   await platform.waitReady({signal:lifecycle.signal});
   console.log('\nPLAYER / 玩家入口: '+platform.url);
   if(values['share-organizer']){
-    const local='http://127.0.0.1:'+organizerPort;
-    const response=await fetch(local+'/organizer/api/access',{signal:AbortSignal.timeout(5000)});
-    if(!response.ok || (await response.json()).setup_required)throw new Error('Start Organizer and complete local admin setup before sharing it.');
+    await verifyOrganizerReady(local);
     const gateway=new OrganizerGateway(local);owned.push(gateway);
     const target=await gateway.listen();
     const staff=await QuickTunnel.open(target,{onExit:lost,signal:lifecycle.signal});owned.push(staff);

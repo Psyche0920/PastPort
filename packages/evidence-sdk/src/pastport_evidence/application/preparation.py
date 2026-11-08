@@ -36,7 +36,7 @@ from pastport_evidence.domain.evidence import (
 from pastport_evidence.domain.execution import SubscriptionGrant
 from pastport_evidence.domain.mapping import MappedObject, SourceEvidence
 from pastport_evidence.domain.models import DomainModel, ProjectAssetRef
-from pastport_evidence.domain.pdf import PDFRegion, RegisteredPDF
+from pastport_evidence.domain.pdf import PDFExtractionStatus, PDFRegion, RegisteredPDF
 from pastport_evidence.domain.photos import PhotoInventory
 from pastport_evidence.domain.recognition import RecognitionResult, SceneEntity
 from pastport_evidence.workflow.graph import (
@@ -94,7 +94,7 @@ class MappingPreparation:
     def _photo_reference_sheets(
         self, entities: tuple[SceneEntity, ...]
     ) -> tuple[ObjectReferenceSheet, ...]:
-        if self.mapping_prompt_version not in ("v2", "v3"):
+        if self.mapping_prompt_version not in ("v2", "v3", "text-v1"):
             return ()
         inventory = PhotoInventory.model_validate_json(
             (self.artifacts / "photo-inventory.json").read_bytes()
@@ -160,29 +160,27 @@ class MappingPreparation:
             gaps.extend(plan.gaps)
             gaps.append("candidate_page_scope:not_exhaustive_source_scan")
         for page in selected_pages:
-            with Image.open(self.assets.resolve_path(page.rendered_page)) as raw:
-                image = raw.convert("RGB")
-                image.thumbnail((1536, 1536))
-                encoded = io.BytesIO()
-                image.save(encoded, format="JPEG", quality=85)
-                (width, height) = image.size
-                image.close()
-            reference = self.assets.register_bytes(
-                self.grant.project_id, encoded.getvalue(), "image/jpeg", 4 * 1024 * 1024
-            )
             passages = tuple(p for p in corpus.passages if p.page_index == page.page_index)
             if len(passages) > 10:
                 gaps.append(f"pdf_mapping_text_truncated:page:{page.page_index + 1}")
+            # Only old saved runs may reuse their already-rendered evidence images.
+            image_ref = page.rendered_page if self.mapping_prompt_version != "text-v1" else None
+            width, height = round(page.page_width), round(page.page_height)
+            if image_ref is not None:
+                with Image.open(self.assets.resolve_path(image_ref)) as saved:
+                    width, height = saved.size
+            elif self.mapping_prompt_version != "text-v1":
+                raise ValueError("Saved visual-PDF policy lacks cached images; start a new text-first job")
             pages.append(
                 PDFMatchPage(
                     page_index=page.page_index,
-                    image=reference.reference,
+                    image=image_ref,
                     width=width,
                     height=height,
                     passages=passages,
                 )
             )
-            if not page.original_text.strip():
+            if page.extraction_status == PDFExtractionStatus.OCR_NEEDED:
                 gaps.append(f"ocr_needed:page:{page.page_index + 1}")
         matches: list[PDFObjectMatch] = []
         receipts: list[str] = []
@@ -191,13 +189,15 @@ class MappingPreparation:
         if not recognition.entities:
             gaps.append("no_recognized_scene_objects")
         else:
-            for start in range(0, len(pages), 3):
+            # Text-only pages do not consume the visual request's image slots.
+            page_batch_size = 12 if self.mapping_prompt_version == "text-v1" else 3
+            for start in range(0, len(pages), page_batch_size):
                 if self.executor.remaining_calls() < 1:
                     gaps.append(f"pdf_mapping_budget_exhausted:from_page:{start + 1}")
                     break
                 batch = tuple(
                     page.model_copy(update={"passages": page.passages[:10]})
-                    for page in pages[start : start + 3]
+                    for page in pages[start : start + page_batch_size]
                 )
                 for offset in range(0, len(recognition.entities), 100):
                     if self.executor.remaining_calls() < 1:
@@ -208,7 +208,7 @@ class MappingPreparation:
                             mode=self.mode,
                             prompt_version=self.mapping_prompt_version,
                             policy_version="narrative-proxy-v1"
-                            if self.mapping_prompt_version in ("v2", "v3")
+                            if self.mapping_prompt_version in ("v2", "v3", "text-v1")
                             else "pdf-object-mapping-v1",
                             objects=recognition.entities[offset : offset + 100],
                             reference_sheets=self._photo_reference_sheets(
@@ -282,7 +282,7 @@ class MappingPreparation:
         ranks = {"same_object": 0, "same_kind": 1, "functional_analogy": 2, "substitution": 3}
         for object_id, candidates in by_object.items():
             pool = candidates
-            if self.mapping_prompt_version in ("v2", "v3"):
+            if self.mapping_prompt_version in ("v2", "v3", "text-v1"):
                 documented = [c for c in candidates if c.story_support == "documented_activity"]
                 pool = documented or candidates
             rank = min(ranks[c.relationship] for c in pool)
@@ -312,7 +312,7 @@ class MappingPreparation:
             crop_ref: ProjectAssetRef | None = None
             observation: SourceImageObservation | None = None
             bindings: tuple[EvidenceImageBinding, ...] = ()
-            if candidate.region:
+            if candidate.region and selected_page.image is not None:
                 region = candidate.region
                 with Image.open(self.assets.resolve_path(selected_page.image)) as raw:
                     with raw.crop(

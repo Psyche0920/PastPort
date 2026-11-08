@@ -96,7 +96,7 @@ class IDMLObjectMatch(DomainModel):
     object_id: str
     status: Literal['matched','unmatched']
     historical_name: str | None
-    relationship: Literal['same_kind','functional_analogy','substitution'] | None
+    relationship: Literal['same_kind','functional_analogy','substitution','same_object'] | None
     image_id: str | None
     image_role: Literal['object_image','context_image','text_evidence']
     claims: Annotated[tuple[IDMLHistoricalClaim, ...], Field(max_length=4)]
@@ -105,7 +105,7 @@ class IDMLObjectMatch(DomainModel):
 
     @model_validator(mode='after')
     def source_required(self) -> IDMLObjectMatch:
-        if self.status=='matched' and (not self.historical_name or not self.claims or not self.relationship):
+        if self.status=='matched' and (not self.claims or not self.relationship):
             raise ValueError('A match requires historical identity and cited introduction')
         if self.status=='unmatched' and (self.claims or self.historical_name or self.image_id or self.relationship):
             raise ValueError('Unmatched objects cannot carry accepted historical content')
@@ -139,7 +139,7 @@ class IDMLCompiledObject(DomainModel):
     object_id: str
     status: Literal['matched','unmatched','requires_review']
     historical_name: str | None
-    relationship: Literal['same_kind','functional_analogy','substitution'] | None
+    relationship: Literal['same_kind','functional_analogy','substitution','same_object'] | None
     image_id: str | None
     image_role: Literal['object_image','context_image','text_evidence']
     introduction: str

@@ -1,5 +1,16 @@
 # PastPort
 
+The production Organizer IDML entry still runs scene-object recognition → IDML image/text matching → independent audit → localization and attachment. The text-first sequence (IDML text → corresponding image subject → directed scene search) has been exercised only in an isolated local prototype and is not wired into production; moved-camera review is also not integrated. With the same Şeker Han material, the prototype selected 9 text-bound targets, matched 7 and localized 6; the production run recognized 30 scene candidates, matched and localized 9. Different target populations make these counts unsuitable as an accuracy comparison. Prototype 3D attachment remains pending alignment and manual acceptance; no Story was generated. Run material and private databases are excluded from Git, and pulling main does not transfer local jobs or playable artifacts.
+
+New runs share a calibrated visual identity threshold: recognizable overall appearance and scene context permit model confirmation despite unclear small marks, stickers or textures, which remain limitations. Unrecognizable objects, unsupported points and defining structural contradictions remain gaps. Model confirmation is not human approval. IDML uses v4 and the environment skill uses a v2 snapshot; this update adds no camera movement, review rounds or functional analogies. Existing runs retain pinned versions.
+
+New IDML scene runs count only source-backed same-object visual identity; functional analogies are not output or counted. Existing runs retain their original policy.
+
+New environment model requests include a pinned localization and review skill snapshot; existing runs retain their original policies and receipts.
+
+The native `idmlscene3d` entry requires only IDML, SPZ and PLY; Links is optional, and no field-photo upload is required. The pipeline derives observations from the hash-bound scene and records their provenance, then reuses native IDML matching, independent audit, localization and attachment. Missing linked graphics remain explicit gaps and are excluded from image evidence; source text and exact citations remain usable. The existing photo-based `idml3d` entry stays separate. Environment preparation stops at `environment_ready`, before Story.
+
+
 [中文](README.md) · English
 
 Turn original historical sources, matched museum environments and spatial information into heritage games that can be explored and completed through tasks.
@@ -74,6 +85,8 @@ Open [Organizer](http://127.0.0.1:18840/organizer/) and sign in. The service run
 
 ### Different Wi-Fi networks: temporarily share this computer
 
+With `--share-organizer`, keep Organizer running in a separate terminal first. The sharing command checks its local port and admin setup before creating tunnels; an unreachable or wrong port gives a specific startup instruction. If sharing exits with an error, its printed temporary links are closed: fix the error and rerun to get new links. For Organizer on 18841, use `node frontend/player/remote.mjs --share-organizer --organizer-port 18841`.
+
 Start Organizer in your own terminal as above, and run the player platform at least once to create its data directory. Install [cloudflared](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) first; on macOS use `brew install cloudflared`. Open another terminal at the repository root:
 
 ```sh
@@ -111,12 +124,14 @@ Download a team delivery, select its `.tar.gz` under Progress & delivery, and im
 
 Accounts, uploads, cache and delivery history persist under `var/organizer-integration/` in this checkout after shutdown. Import team packages or upload original materials on another computer. Account configuration and databases contain private data and need a separate backup.
 
-Use `--directory` for another local configuration directory, with the same path for initialization and startup. An existing `catalog.json` is read automatically. A new machine can import game packages directly. Creating games from source materials requires supplying those materials and authorizing models through the interface. Shared player assets can be passed explicitly with `--player-assets /path/to/assets`. Material paths stored in historical projects must also exist on the current computer.
+Use `--directory` for another local configuration directory, with the same path for initialization and startup. An existing `catalog.json` is read automatically. A new machine can import game packages directly. Creating games from source materials requires supplying those materials and authorizing models through the interface. Additional player assets are optional. Without an explicit path, the server creates an empty `organizer/player-assets` directory under its data directory, allowing material/environment preparation. Pass custom assets with `--player-assets /path/to/assets`. Material paths stored in historical projects must also exist on the current computer.
 
 Existing-3D uploads: select “Original PDF + photos + existing SPZ / PLY scene”, leave defaults unchecked, enter a new project ID and upload all four inputs. Save, review the finite call budgets, then prepare the environment. Continue through review → Story → game build. Recognition/Story calls require explicit consent; Marble calls are zero. Photos accept images or ZIP; PLY must be a binary little-endian triangle mesh. Local Chrome and Node.js are required for capture. An insufficient Evidence budget stops before dispatch: 44 photos and 62 PDF pages require at least 43 first-pass calls, plus per-object verification. The old eight-call default is not a full-set budget. Wiring/simulated execution and a real single-object handoff have been checked; a fresh full-set model run remains upload-test acceptance.
 
 
 New photo jobs use a compact policy: two photos per batch, at most 12 new entities and 24 sightings, schema-bounded names/features/explanations, and a 120-second deadline or the shorter authorized timeout. Overflow is reported as incomplete and stops acceptance. Existing policies and paid receipts stay unchanged; failures are not automatically retried. These bounds have offline regression evidence, not fresh-model speed acceptance.
+
+PDF ingestion extracts every page's text and line numbers without rendering every page. Only scans/detectably garbled pages use temporary rendering and local Tesseract OCR. Original files, PDF page order, page-local line ranges and exact quotes are retained, with lines pinned to the extraction version. OCR requires Tesseract and language data; `PASTPORT_OCR_LANGUAGES` selects installed languages. Environment preparation still stops before Story.
 
 ### Production workflow
 
@@ -129,11 +144,11 @@ Organizer interface selection translates controls without rewriting source evide
 
 | Upload entry point | Environment-stage execution | Reused output |
 |---|---|---|
+| General PDF or exhibit catalog + same-scene SPZ + triangular PLY | One path for every PDF: rendered 3D observations → Evidence recognition, source association and quotation checks → attachment/handoff | Choose the PDF + SPZ and PLY entry, prepare the environment, review materials, then separately prepare Story and build the game. No full-pipeline shortcut, extra photos or Marble |
 | Original historical PDF + site object photos + optional 360° tour | Evidence mapping → environment matching → 3D | Without a tour, save mapping, add the tour and review the recovery summary before continuing |
 | Original PDF + mapping PDF + 360° tour | Environment matching → 3D | Mapping PDF |
 | Original PDF + native matched-VR archive | Validate/import → 3D | VR bindings, review and navigation |
 | Original PDF + native mounted two-view 3D archive | Validate/import | 3D, objects, review, positions/navigation; no Marble calls |
-| Two-column exhibit PDF + matching SPZ and triangular PLY | Read exhibit identifiers and reference photos → locate the same physical objects → 3D review and Story input | In Admin, select the exhibit PDF entry and prepare the environment. Open the preview or continue the project from its history record. |
 
 Defaults use a complete registered same-source PDF/photo/mapping/VR/3D set; Story is selected separately. Changed files, mixed PDFs, missing data or inconsistent provenance stop execution without cache substitution. Uploaded packages are data, not executable code. **An ordinary panorama is not matched VR; a raw model is not a mounted environment.** The new PDF + photos + SPZ/PLY upload path prepares a mounted, reviewable environment before Story; the raw model alone is still not a mounted environment.
 
@@ -707,3 +722,5 @@ Within one deployment the flow is: **game bundle → Organizer import/production
 `git push/pull` synchronizes source and documentation, not game files, Organizer history, uploaded sources, player databases or passwords. GitHub Releases distribute team deliverables and support moves between computers; players on an existing deployment do not repeatedly download Releases.
 
 Sharing runs on the host computer plus temporary tunnels (see “Different Wi-Fi networks” above), not a cloud deployment with a stable domain. `PLAYER_DATA` persists player accounts, saves and stamps separately from Organizer staff accounts/production history. Serving multiple real devices requires a unified deployment and client-reachable game-resource routes instead of the current loopback game URLs. Copying the webpage or exposing a `127.0.0.1` port alone does not provide cross-device access. No public deployment was performed in this task.
+
+New games target English / Türkçe. Story, tasks, opening and endings compile into corresponding locale tables. Original source quotations retain their source text. Existing English/Chinese saves remain bound to their original releases.

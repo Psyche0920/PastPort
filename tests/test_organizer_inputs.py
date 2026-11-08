@@ -57,9 +57,12 @@ class NativePreparation:
         pass
 
 
-def app_inputs(tmp_path: Path, wait: bool = False) -> tuple[FastAPI, Production, NativePreparation]:
+def app_inputs(
+    tmp_path: Path, wait: bool = False, *, custom_assets: bool = True,
+) -> tuple[FastAPI, Production, NativePreparation]:
     settings, production = setup(tmp_path)
-    settings = replace(settings, organizer_player_assets=tmp_path / "material/museum")
+    if custom_assets:
+        settings = replace(settings, organizer_player_assets=tmp_path / "material/museum")
     request = GameMakingRequest.model_validate_json((tmp_path / "request.json").read_bytes())
     preparation = NativePreparation(request, wait)
     return (
@@ -101,6 +104,7 @@ def upload(client: TestClient, level: str, roles: tuple[str, ...]) -> None:
         ("vr", ("original_pdf", "matched_vr")),
         ("3d", ("original_pdf", "mounted_3d")),
         ("raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh")),
+        ("idmlscene3d", ("original_idml", "scene_splat", "scene_mesh")),
         ("idml3d", ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh")),
         ("catalog3d", ("original_pdf", "scene_splat", "scene_mesh")),
     ],
@@ -116,16 +120,12 @@ def test_all_http_branches_dispatch_exact_input_snapshot(
         response = client.post(url, headers=headers(), json={"authorize_model": True})
         assert response.status_code == 202, response.text
         job = await_job(client, response.json()["job_id"])
-        assert job["status"] == ("environment_ready" if level == "catalog3d" else "completed"), job
+        assert job["status"] == "completed", job
         assert preparation.calls[0].entry_level == level
         assert {asset.role for asset in preparation.calls[0].files} == set(roles)
         assert all(asset.path.name == asset.file_id for asset in preparation.calls[0].files)
-        if level == "catalog3d":
-            assert preparation.calls[0].options.stop_after == "environment"
-            assert job["prepared_source_id"]
-            assert not production.calls
-        else:
-            assert production.calls == [("regenerate", False)]
+        assert preparation.calls[0].options.stop_after == "game"
+        assert production.calls == [("regenerate", False)]
         repeat = client.post(url, headers=headers(), json={"authorize_model": True})
         assert repeat.json()["job_id"] == job["job_id"]
         assert len(preparation.calls) == 1
@@ -205,7 +205,9 @@ def test_uploaded_program_not_executed_and_active_database_rejected(tmp_path: Pa
         ("mapping", ("environment-build", "scene3d-generate", "scene3d-generate")),
         ("vr", ("scene3d-generate", "scene3d-generate")),
         ("3d", ()),
-        ("raw3d", ("raw-scene-import", "evidence", "environment-build", "scene3d-attach")),
+        ("raw3d", ("raw-scene-import", "evidence", "environment-handoff", "scene3d-attach")),
+        ("catalog3d", ("raw-scene-import", "evidence", "environment-handoff", "scene3d-attach")),
+        ("idmlscene3d", ("raw-scene-import", "idml-evidence", "idml-environment", "scene3d-attach")),
         ("idml3d", ("raw-scene-import", "idml-evidence", "idml-environment", "scene3d-attach")),
     ],
 )
@@ -228,6 +230,8 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
     entries: dict[NativeEntryLevel, tuple[UploadRole, ...]] = {
         "raw": ("original_pdf", "photos", "tour"),
         "raw3d": ("original_pdf", "photos", "scene_splat", "scene_mesh"),
+        "catalog3d": ("original_pdf", "scene_splat", "scene_mesh"),
+        "idmlscene3d": ("original_idml", "scene_splat", "scene_mesh"),
         "idml3d": ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"),
         "mapping": ("original_pdf", "mapping_pdf", "tour"),
         "vr": ("original_pdf", "matched_vr"),
@@ -251,7 +255,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
             if role == "scene_mesh"
             else ".zip"
         )
-        if role == "original_pdf" and level == "raw3d":
+        if role == "original_pdf" and level in ("raw3d", "catalog3d"):
             from pypdf import PdfWriter
 
             writer = PdfWriter()
@@ -279,8 +283,8 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
         files=tuple(assets),
         options=UploadedProductionStart(
             authorize_model=True,
-            authorize_marble=level != "raw3d",
-            marble_credit_budget=1500 if level != "raw3d" else 0,
+            authorize_marble=level not in ("raw3d", "catalog3d", "idml3d", "idmlscene3d"),
+            marble_credit_budget=0 if level in ("raw3d", "catalog3d", "idml3d", "idmlscene3d") else 1500,
         ),
         shared_player_assets=tmp_path / "material/museum",
     )
@@ -308,10 +312,15 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                 command = "evidence"
                 pdf = workspace / "mapping.pdf"
                 pdf.write_bytes(b"%PDF-fixture")
+                handoff = workspace / "native-handoff"
+                handoff.mkdir()
+                (handoff / "objects.json").write_text("{}")
+                (handoff / ".integrity.json").write_text(json.dumps({
+                    "objects.json": hashlib.sha256((handoff / "objects.json").read_bytes()).hexdigest(),
+                }))
                 (workspace / "result.json").write_text(
-                    json.dumps(
-                        {"pdf": str(pdf), "idml": "unused", "status": "completed", "gaps": []}
-                    )
+                    json.dumps({"pdf": str(pdf), "idml": "unused", "status": "completed",
+                                "gaps": [], "environment_handoff": str(handoff)})
                 )
                 (workspace / "result-budget-0.json").write_text(
                     (workspace / "result.json").read_text()
@@ -331,6 +340,10 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
                     assert "--local-scene" in args
                     (workspace / "delivery.json").write_text("{}")
                     (workspace / "result").mkdir()
+                elif command == "environment-handoff":
+                    result = workspace / "runs" / args[args.index("--run-id") + 1] / "result"
+                    result.mkdir(parents=True)
+                    (result / "import-manifest.json").write_text("{}")
                 elif command == "environment-build":
                     pointer = workspace / "runs" / args[args.index("--run-id") + 1]
                     pointer.mkdir(parents=True)
@@ -364,9 +377,13 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
         '{"firstSceneId":"one","scenes":[{"id":"one"},{"id":"two"}]}'
     )
     monkeypatch.setenv("WORLDLABS_API_KEY", "synthetic-not-dispatched")
-    if level in ("raw3d", "idml3d"):
+    if level in ("raw3d", "idml3d", "idmlscene3d", "catalog3d"):
         monkeypatch.delenv("WORLDLABS_API_KEY", raising=False)
         tour = native._Tour.model_validate_json('{"firstSceneId":"one","scenes":[{"id":"one"}]}')
+    if level in ("catalog3d", "idmlscene3d"):
+        derived = tmp_path / "derived-observations"
+        derived.mkdir()
+        monkeypatch.setattr(preparer, "_scene_observations", lambda imported, output: derived)
     monkeypatch.setattr(preparer, "_tour_preflight", lambda request, path, output: path)
     monkeypatch.setattr(preparer.admission, "tour", lambda root: tour)
     monkeypatch.setattr(preparer.admission, "matched_vr", lambda archive, output: source)
@@ -397,6 +414,7 @@ def test_native_preparer_uses_correct_sdk_commands_and_resumes_without_redispatc
         ("vr", ("original_pdf", "matched_vr")),
         ("3d", ("original_pdf", "mounted_3d")),
         ("raw3d", ("original_pdf", "photos", "scene_splat", "scene_mesh")),
+        ("idmlscene3d", ("original_idml", "scene_splat", "scene_mesh")),
     ],
 )
 def test_native_environment_stage_stops_before_story(
@@ -545,3 +563,16 @@ def test_native_failure_reason_uses_safe_code_and_preserves_legacy_ledger(tmp_pa
     assert result is not None and result[0] == "NATIVE_MODEL_TIMEOUT"
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT state FROM executions").fetchone() == ("recovery_required",)
+
+
+@pytest.mark.parametrize("linked", [False, True])
+def test_invalid_explicit_player_assets_fail_before_jobs(tmp_path: Path, linked: bool) -> None:
+    settings, production = setup(tmp_path)
+    assets = tmp_path / "invalid-assets"
+    if linked:
+        assets.symlink_to(tmp_path / "material/museum", target_is_directory=True)
+    settings = replace(settings, organizer_player_assets=assets)
+    with pytest.raises(ServiceError) as stopped:
+        create_app(settings, organizer_production=production)
+    assert stopped.value.code == "PLAYER_ASSETS_UNAVAILABLE"
+    assert not production.calls

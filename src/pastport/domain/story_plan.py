@@ -4,7 +4,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
-from pastport.domain.common import Contract, Identifier, Sha256, Text
+from pastport.domain.common import Contract, Identifier, Sha256, SourceLocator, Text
 from pastport.domain.investigation_plan import InvestigationDesign
 from pastport.domain.mechanics import CoverageProblem, SourceChoiceRequirement
 
@@ -13,7 +13,43 @@ StoryStructure = Literal["authored_graph", "compiled_plan_v1", "compiled_branch_
 
 class StoryText(Contract):
     en: Text
-    zh: Text
+    zh: Text | None = None
+    tr: Text | None = None
+
+    @model_validator(mode="after")
+    def supported_pair(self) -> Self:
+        if (self.zh is None) == (self.tr is None):
+            raise ValueError("Provide English and exactly one of Turkish or legacy Chinese")
+        return self
+
+    def localized(self, locale: str) -> str:
+        value = getattr(self, locale, None)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"Missing localized content: {locale}")
+        return value
+
+
+class CatalogFictionSection(Contract):
+    section_id: Identifier
+    material_ids: tuple[Identifier, ...]
+    locator: SourceLocator
+    content_kind: Literal["original_fiction"] = "original_fiction"
+
+
+class CatalogFictionInput(Contract):
+    profile: Literal["catalog-fiction/1"] = "catalog-fiction/1"
+    sections: tuple[CatalogFictionSection, ...]
+
+
+class FictionalMaterial(Contract):
+    """Source-bound adaptation, separate from archaeological or historical claims."""
+
+    section_id: Identifier
+    material_id: Identifier
+    source_quote: Text
+    title: StoryText
+    body: StoryText
+    task_positions: tuple[Annotated[int, Field(ge=1, le=18)], ...] = Field(min_length=1)
 
 
 class OpeningPerson(Contract):
@@ -44,8 +80,8 @@ class StoryOpening(Contract):
     def unique_entries(self) -> Self:
         if len({station.asset_id for station in self.stations}) != len(self.stations):
             raise ValueError("Opening station identities must be unique")
-        for locale in ("en", "zh"):
-            names = [getattr(person.name, locale).casefold() for person in self.people]
+        for locale in ("en", "tr" if self.title.tr is not None else "zh"):
+            names = [person.name.localized(locale).casefold() for person in self.people]
             if len(set(names)) != len(names):
                 raise ValueError("Opening people need distinct localized names")
         return self
@@ -110,9 +146,11 @@ class StoryPlan(Contract):
     unresolved_items: tuple[Text, ...]
     opening_context: StoryOpening | None = None
     activity_design: InvestigationDesign | None = None
+    fictional_materials: tuple[FictionalMaterial, ...] = Field(default=(), max_length=32)
 
     @model_validator(mode="after")
     def opening_coverage(self) -> Self:
+        validate_fictional_materials(self.fictional_materials, self.tasks, self.opening_context)
         validate_opening_assets(self.opening_context, {task.asset_id for task in self.tasks})
         validate_activity_design(self.activity_design, self.tasks, {len(self.tasks)})
         return self
@@ -155,6 +193,7 @@ class BranchStoryPlan(Contract):
     unresolved_items: tuple[Text, ...]
     opening_context: StoryOpening | None = None
     activity_design: InvestigationDesign | None = None
+    fictional_materials: tuple[FictionalMaterial, ...] = Field(default=(), max_length=32)
 
     @model_validator(mode="after")
     def consequence_coverage(self) -> Self:
@@ -163,6 +202,7 @@ class BranchStoryPlan(Contract):
             *(task for route in self.investigations for task in route.tasks),
             *self.reunion,
         )
+        validate_fictional_materials(self.fictional_materials, tasks, self.opening_context)
         validate_opening_assets(self.opening_context, {task.asset_id for task in tasks})
         validate_activity_design(self.activity_design, tasks, {len(self.opening), len(tasks)})
         if any(
@@ -204,3 +244,22 @@ def validate_activity_design(
         }
         if row.source_object not in available or not set(row.required_sources) <= available:
             raise ValueError("Investigation sources need registered selections in the anchor view")
+
+
+def validate_fictional_materials(
+    materials: tuple[FictionalMaterial, ...],
+    tasks: tuple[StoryPlanTask, ...],
+    opening: StoryOpening | None,
+) -> None:
+    if not materials:
+        return
+    if opening is None:
+        raise ValueError("Fictional materials need opening context and readable source stations")
+    keys = [(m.section_id, m.material_id) for m in materials]
+    if len(set(keys)) != len(keys):
+        raise ValueError("Fictional material identities must be unique within a section")
+    for material in materials:
+        if len(set(material.task_positions)) != len(material.task_positions) or any(
+            position > len(tasks) for position in material.task_positions
+        ):
+            raise ValueError("Fictional material refers to an absent or duplicated task position")

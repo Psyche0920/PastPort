@@ -1459,7 +1459,8 @@
         "locale": {
           "enum": [
             "en",
-            "zh"
+            "zh",
+            "tr"
           ],
           "title": "Locale",
           "type": "string"
@@ -2321,7 +2322,8 @@
           "items": {
             "enum": [
               "en",
-              "zh"
+              "zh",
+              "tr"
             ],
             "type": "string"
           },

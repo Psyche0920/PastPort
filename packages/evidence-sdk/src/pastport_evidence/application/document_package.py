@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Literal
 
 from pastport_evidence.adapters.document_export import IDMLRenderer, PDFRenderer
 from pastport_evidence.adapters.report_layout import ReportLayout, font_path
+from pydantic import Field
+
 from pastport_evidence.domain.models import DomainModel
 from pastport_evidence.domain.pdf import RegisteredPDF
 from pastport_evidence.ports.assets import AssetStore
@@ -24,6 +26,7 @@ class OutputPaths(DomainModel):
     idml: str
     status: Literal["completed", "completed_with_gaps"]
     gaps: tuple[str, ...]
+    environment_handoff: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 def digest(path: Path) -> str:
@@ -40,8 +43,17 @@ class DocumentPackageExporter:
 
     def write(self, root: Path, bundle: PreparedDocuments, source: RegisteredPDF) -> Path:
         root.mkdir(parents=True, exist_ok=True)
+        text_first = source.extractor_version.startswith("text-lines-v2")
+        layout_version = (
+            "document-layout-v5-text-lines:" if text_first else "document-layout-v4-linked-jpeg:"
+        )
         fingerprint = hashlib.sha256(
-            ("document-layout-v4-linked-jpeg:" + digest(font_path()) + bundle.model_dump_json()).encode()
+            (
+                layout_version
+                + digest(font_path())
+                + bundle.model_dump_json()
+                + (source.model_dump_json() if text_first else "")
+            ).encode()
         ).hexdigest()
         target = root / fingerprint
         if target.exists():
@@ -54,6 +66,10 @@ class DocumentPackageExporter:
             PDFRenderer().write(staging / "mapping.pdf", report)
             IDMLRenderer().write(staging / "mapping.idml", report)
             shutil.copyfile(self.assets.resolve_path(source.source), staging / "source.pdf")
+            if text_first:
+                (staging / "source-text.json").write_text(
+                    source.model_dump_json(indent=2), encoding="utf-8"
+                )
             license_source = Path(__file__).parents[1] / "fonts" / "OFL.txt"
             if license_source.exists():
                 shutil.copyfile(license_source, staging / "Document fonts" / "OFL.txt")

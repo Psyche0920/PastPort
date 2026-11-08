@@ -123,3 +123,43 @@ def test_same_historical_name_keeps_distinct_objects_and_pending_inventory(tmp_p
     coverage = json.loads((output / "mapping-coverage.json").read_text())
     assert coverage["matched"] == 2 and coverage["requires_review"] == 1
     assert coverage["saved_3d_anchors"] == 0 and coverage["mounting_complete"] is False
+
+
+def test_optional_graphics_remain_gaps_and_never_enter_image_evidence(tmp_path: Path) -> None:
+    from unittest.mock import Mock
+    from pastport_evidence.domain.idml import IDMLImage
+
+    assets, photos = material(tmp_path)
+    missing = IDMLImage(image_id='missing-image', link_id='missing-link', filename='absent.jpg',
+        spread='Spreads/one.xml', group_id=None, bounds=None, page_id=None,
+        link_state='missing', sha256=None)
+    document = IDMLDocument(source_filename='source.idml', source_sha256='a' * 64,
+        stories=(), pages=(), frames=(), images=(missing,), associations=(),
+        warnings=('graphic_missing:absent.jpg',))
+    entity = SceneEntity(object_id='object-1', display_number=1, label='Fixture chair',
+        category='fixture', distinguishing_features=('Fixture only',))
+    inventory = PhotoInventory(photos=photos, entities=(entity,), observations=())
+    result = IDMLMatchResult(source_sha256=document.source_sha256, objects=(), receipt_refs=())
+    transport = Mock()
+    with patch('pastport_evidence.application.idml_workflow.IDMLDocumentReader.read', return_value=document):
+        with pytest.raises(ValueError, match='graphic references must be complete'):
+            IDMLPhotoWorkflow(transport).run(tmp_path / 'source.idml', None, tmp_path,
+                tmp_path / 'strict', SubscriptionGrant(project_id='fixture', grant_ref='strict'))
+        with (
+            patch('pastport_evidence.application.idml_workflow.SubscriptionExecutor'),
+            patch('pastport_evidence.application.idml_workflow.PhotoRecognitionService.run', return_value=inventory),
+            patch.object(IDMLPhotoWorkflow, '_modern_sheets', return_value=(tmp_path / 'sheet.jpg',)),
+            patch('pastport_evidence.application.idml_workflow.IDMLMatchingService.run', return_value=result) as mapping,
+        ):
+            workspace = tmp_path / 'native-scene'
+            IDMLPhotoWorkflow(transport).run(tmp_path / 'source.idml', None, tmp_path,
+                workspace, SubscriptionGrant(project_id='fixture', grant_ref='scene'),
+                allow_missing_graphics=True)
+            request = mapping.call_args.args[0]
+            assert request.source.images == ()
+            assert request.source.source_sha256 == document.source_sha256
+            saved = next((workspace / 'runs').glob('*/idml-document.json'))
+            retained = IDMLDocument.model_validate_json(saved.read_bytes())
+            assert retained.images == (missing,)
+            assert retained.warnings == document.warnings
+    transport.execute.assert_not_called()

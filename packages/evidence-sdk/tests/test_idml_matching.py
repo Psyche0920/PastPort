@@ -75,3 +75,87 @@ def test_invalid_proposal_stops_before_spending_independent_audit(tmp_path: Path
     gateway=Gateway()
     with pytest.raises(ValueError):IDMLMatchingService(gateway).run(request(),(),tmp_path,lambda p,t:p.write_text(t))
     assert gateway.audit_calls==0
+
+
+def test_new_identity_policy_excludes_analogy_and_requires_visual_source() -> None:
+    from pastport_evidence.domain.idml import IDMLImage
+
+    compiler = IDMLMatchCompiler(strict_identity=True)
+    legacy_proposal = batch()
+    result = compiler.compile(request(), legacy_proposal, reviews(), ())
+    assert result.objects[0].status == 'unmatched'
+    assert result.objects[0].historical_name is None
+    assert result.objects[0].relationship is None
+    assert result.objects[0].introduction == ''
+    same = legacy_proposal.objects[0].model_copy(update={'relationship': 'same_object'})
+    pending = compiler.compile(request(), legacy_proposal.model_copy(update={'objects': (same,)}), reviews(), ())
+    assert pending.objects[0].status == 'requires_review'
+    image = IDMLImage(image_id='image-1', link_id='link-1', filename='chair.png', spread='spread',
+        group_id=None, bounds=None, page_id=None, link_state='available', sha256='b' * 64)
+    actual = request().model_copy(update={'source': request().source.model_copy(update={'images': (image,)})})
+    same_with_image = same.model_copy(update={'image_id': 'image-1', 'image_role': 'object_image'})
+    proposal = legacy_proposal.model_copy(update={'objects': (same_with_image,)})
+    assert compiler.compile(actual, proposal, reviews(), ()).objects[0].status == 'matched'
+    assert compiler.compile(actual, proposal, reviews('uncertain'), ()).objects[0].status == 'requires_review'
+
+
+def test_new_and_legacy_gateway_send_separate_policies_and_identity_schema() -> None:
+    import json
+    from types import SimpleNamespace
+    from pastport_evidence.adapters.idml_matching import MeteredIDMLMatchGateway
+    from pastport_evidence.domain.execution import SubscriptionGrant
+
+    class Executor:
+        grant = SubscriptionGrant(project_id='fixture', grant_ref='fixture', max_calls=4)
+        def __init__(self): self.requests = []
+        def remaining_calls(self): return 4
+        def execute(self, request):
+            self.requests.append(request)
+            return SimpleNamespace(payload_json=batch().model_dump_json(), receipt_ref='receipt')
+
+    old = Executor()
+    MeteredIDMLMatchGateway(old, policy='v1').propose(request(), ())
+    current = Executor()
+    MeteredIDMLMatchGateway(current, policy='v2').propose(request(), ())
+    old_request, new_request = old.requests[0], current.requests[0]
+    assert old_request.prompt_version == 'idml_mapping_v1'
+    assert new_request.prompt_version == 'idml_mapping_v2'
+    assert 'functional' in old_request.instructions
+    assert 'same_object' in new_request.instructions
+    old_schema, new_schema = json.loads(old_request.output_schema_json), json.loads(new_request.output_schema_json)
+    def relationship_values(schema):
+        return schema['$defs']['IDMLObjectMatch']['properties']['relationship']['anyOf'][0]['enum']
+    assert 'same_object' not in relationship_values(old_schema)
+    assert relationship_values(new_schema) == ['same_object']
+    tolerant = Executor()
+    MeteredIDMLMatchGateway(tolerant, policy='v3').propose(request(), ())
+    tolerant_request = tolerant.requests[0]
+    assert tolerant_request.prompt_version == 'idml_mapping_v3'
+    assert relationship_values(json.loads(tolerant_request.output_schema_json)) == ['same_object']
+    assert 'minor detail' in tolerant_request.instructions
+    calibrated = Executor()
+    MeteredIDMLMatchGateway(calibrated, policy='v4').propose(request(), ())
+    calibrated_request = calibrated.requests[0]
+    assert calibrated_request.prompt_version == 'idml_mapping_v4'
+    assert relationship_values(json.loads(calibrated_request.output_schema_json)) == ['same_object']
+
+
+def test_unmatched_without_image_does_not_fail_identity_preflight() -> None:
+    obj = batch().objects[0].model_copy(update={
+        'status': 'unmatched', 'historical_name': None, 'relationship': None,
+        'claims': (), 'image_id': None, 'image_role': 'object_image',
+    })
+    result = IDMLMatchCompiler(strict_identity=True).compile(
+        request(), IDMLMatchBatch(objects=(obj,)), reviews('uncertain'), ())
+    assert result.objects[0].status == 'unmatched'
+    assert result.objects[0].image_role == 'text_evidence'
+    assert result.objects[0].image_id is None
+
+
+def test_matched_object_image_still_requires_an_image_id() -> None:
+    obj = batch().objects[0].model_copy(update={
+        'relationship': 'same_object', 'image_id': None, 'image_role': 'object_image',
+    })
+    with pytest.raises(ValueError, match='photograph cannot be invented'):
+        IDMLMatchCompiler(strict_identity=True).compile(
+            request(), IDMLMatchBatch(objects=(obj,)), reviews(), ())

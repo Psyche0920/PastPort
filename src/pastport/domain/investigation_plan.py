@@ -91,8 +91,9 @@ class TimelineDesign(InvestigationCopy):
 
 
 class PuzzleImages(Contract):
-    zh: ImagePath
+    zh: ImagePath | None = None
     en: ImagePath
+    tr: ImagePath | None = None
 
 
 class PuzzlePiece(Contract):
@@ -178,7 +179,10 @@ class InvestigationDesign(Contract):
             if isinstance(row.plugin, DifferenceDesign):
                 requested.update((row.plugin.left_image, row.plugin.right_image))
             elif isinstance(row.plugin, ImagePuzzleDesign):
-                requested.update((row.plugin.image.zh, row.plugin.image.en))
+                requested.add(row.plugin.image.en)
+                second = row.plugin.image.tr or row.plugin.image.zh
+                if second is not None:
+                    requested.add(second)
         if requested != paths:
             raise ValueError("Investigation manifest must cover exactly its requested images")
         if len(json.dumps(self.model_dump(mode="json"), ensure_ascii=True)) > 120000:

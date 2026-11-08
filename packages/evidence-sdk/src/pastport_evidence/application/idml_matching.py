@@ -27,6 +27,9 @@ class IDMLMatchPort(Protocol):
 class IDMLMatchCompiler:
     """Semantic approval cannot override missing identities or nonexistent quotations."""
 
+    def __init__(self, *, strict_identity: bool = False) -> None:
+        self.strict_identity = strict_identity
+
     def compile(self, request: IDMLMatchRequest, proposals: IDMLMatchBatch,
                 reviews: IDMLMatchReviews, receipts: tuple[str,...]) -> IDMLMatchResult:
         expected={obj.object_id for obj in request.objects}
@@ -38,8 +41,15 @@ class IDMLMatchCompiler:
         stories={story.story_id:story for story in request.source.stories}
         images={image.image_id:image for image in request.source.images}
         verdicts={review.object_id:review for review in reviews.objects}
+        entities={entity.object_id:entity for entity in request.objects}
         compiled=[]
         for proposal in proposals.objects:
+            if self.strict_identity and proposal.status == 'matched' and proposal.relationship != 'same_object':
+                compiled.append(IDMLCompiledObject(object_id=proposal.object_id, status='unmatched',
+                    historical_name=None, relationship=None, image_id=None, image_role='text_evidence',
+                    introduction='', citations=(), rationale='Same-object identity not established.',
+                    limitations=(), review_reason='未确认是同一物体。'))
+                continue
             citations=[]
             for claim in proposal.claims:
                 for selected in claim.citations:
@@ -56,14 +66,25 @@ class IDMLMatchCompiler:
                 image=images.get(proposal.image_id)
                 if image is None or image.link_state!='available':
                     raise ValueError('Historical image was not supplied and fingerprinted')
-            if proposal.image_role=='object_image' and proposal.image_id is None:
+            if proposal.status == 'matched' and proposal.image_role=='object_image' and proposal.image_id is None:
                 raise ValueError('Historical object photograph cannot be invented')
             verdict=verdicts[proposal.object_id]
-            status: Literal['unmatched','matched','requires_review']='unmatched' if proposal.status=='unmatched' else 'matched' if verdict.verdict=='confirmed' else 'requires_review'
+            name=proposal.historical_name
+            if not name and proposal.relationship == 'same_object' and proposal.image_id and citations:
+                name=entities[proposal.object_id].label
+            status: Literal['unmatched','matched','requires_review']
+            if proposal.status == 'unmatched':
+                status = 'unmatched'
+            elif not name:
+                status = 'requires_review'
+            elif self.strict_identity and (proposal.relationship != 'same_object' or proposal.image_id is None or proposal.image_role != 'object_image'):
+                status = 'requires_review'
+            else:
+                status = 'matched' if verdict.verdict == 'confirmed' else 'requires_review'
             compiled.append(IDMLCompiledObject(
                 object_id=proposal.object_id,status=status,
-                historical_name=proposal.historical_name,relationship=proposal.relationship,
-                image_id=proposal.image_id,image_role=proposal.image_role,
+                historical_name=name,relationship=proposal.relationship,
+                image_id=proposal.image_id,image_role='text_evidence' if proposal.status == 'unmatched' else proposal.image_role,
                 introduction='\n\n'.join(claim.text for claim in proposal.claims),
                 citations=tuple(citations),rationale=proposal.rationale,
                 limitations=proposal.limitations,review_reason=verdict.reason,
@@ -73,8 +94,9 @@ class IDMLMatchCompiler:
 
 
 class IDMLMatchingService:
-    def __init__(self, gateway: IDMLMatchPort) -> None:
+    def __init__(self, gateway: IDMLMatchPort, *, strict_identity: bool = False) -> None:
         self.gateway=gateway
+        self.strict_identity = strict_identity
 
     def run(self, request: IDMLMatchRequest, images: tuple[Path,...], output: Path,
             persist: Callable[[Path,str], None]) -> IDMLMatchResult:
@@ -102,7 +124,7 @@ class IDMLMatchingService:
         preflight=IDMLMatchReviews(objects=tuple(
             IDMLMatchReview(object_id=obj.object_id,verdict='uncertain',reason='preflight')
             for obj in request.objects))
-        IDMLMatchCompiler().compile(request,proposals,preflight,())
+        IDMLMatchCompiler(strict_identity=self.strict_identity).compile(request,proposals,preflight,())
         if review_file.exists():
             reviews=IDMLMatchReviews.model_validate_json(review_file.read_bytes())
             receipts.append((output/'idml-review-receipt.txt').read_text())
@@ -110,6 +132,6 @@ class IDMLMatchingService:
             reviews,receipt=self.gateway.audit(request.model_copy(update={'proposals':proposals}),images)
             persist(review_file,reviews.model_dump_json())
             persist(output/'idml-review-receipt.txt',receipt);receipts.append(receipt)
-        result=IDMLMatchCompiler().compile(request,proposals,reviews,tuple(receipts))
+        result=IDMLMatchCompiler(strict_identity=self.strict_identity).compile(request,proposals,reviews,tuple(receipts))
         persist(output/'idml-matches.json',result.model_dump_json(indent=2))
         return result

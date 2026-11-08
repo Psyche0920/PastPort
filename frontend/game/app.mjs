@@ -1,3 +1,4 @@
+import {gameDisplayText} from './game-locale.mjs';
 import {renderInvestigation} from './investigation-view.mjs';
 import {isInvestigation} from '../../gameplay/plugins/investigation.mjs';
 import {continueCompletedSlice} from './slice-continuation.mjs';
@@ -11,14 +12,14 @@ import {Scene3DView} from './scene3d-view.mjs';
 const use3D=new URLSearchParams(location.search).get('scene')==='3d';
 const $=selector=>document.querySelector(selector);
 const element=(tag,attributes={},children=[])=>{const node=document.createElement(tag);for(const[key,value]of Object.entries(attributes)){if(key==='text')node.textContent=value;else if(key==='class')node.className=value;else if(key.startsWith('on'))node.addEventListener(key.slice(2),value);else if(typeof value==='boolean'){if(value)node.setAttribute(key,'');}else node.setAttribute(key,String(value));}for(const child of children)node.append(typeof child==='string'?document.createTextNode(child):child);return node;};
-let preferredLocale='zh';try{if(localStorage.getItem('pastport:ui-locale')==='en')preferredLocale='en';}catch{}
+let preferredLocale='en';try{const saved=localStorage.getItem('pastport:ui-locale');if(['en','tr','zh'].includes(saved))preferredLocale=saved;}catch{}
 let locale=preferredLocale,session,busy=false,walking=false,frameReady=false,walker=null,pendingTalk=false,encounterOpen=true,selectedPiece=0,rotated=false,lastFeedback='',hintOpen=false;
 let toastTimer,restoring=false,cinematic=null,dialogue=null,skipTaskResume=0,startupPhase='idle',startupTimer=null,startupAt=0,hasResumed=false,continuationPending=null;
 const keys=new Set();const directions={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
-const t=(zh,en)=>locale==='zh'?zh:en;
+const t=(zh,en)=>locale==='zh'?zh:locale==='tr'?gameDisplayText(en,'tr'):en;
 const text=value=>typeof value==='string'?value:value?.[locale]??'';
 function notify(message){const box=$('#toast');box.textContent=message;box.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>box.hidden=true,6000);}
-function controlText(){if($('#story-panel'))$('#story-panel').setAttribute('aria-label',t('調查與決定','Investigation and decisions'));if($('#stage'))$('#stage').setAttribute('aria-label',t('探索場景','Explore the scene'));if($('#close-task'))$('#close-task').setAttribute('aria-label',t('返回房間','Back to the room'));if($('#quest-title'))$('#quest-title').setAttribute('aria-label',t('打開目前任務','Open current task'));if($('#dialogue'))$('#dialogue').setAttribute('aria-label',t('人物對話','Character dialogue'));document.documentElement.lang=locale==='zh'?'zh-Hant':'en';for(const n of document.querySelectorAll('[data-zh]'))n.textContent=n.dataset[locale];$('#language').textContent=locale==='zh'?'EN':'中文';if($('#characters-button'))$('#characters-button').textContent=t('人物與關係','People & relationships');if($('#welcome-characters'))$('#welcome-characters').textContent=t('先認識人物','Meet the characters');$('#pause').textContent=session?.paused?t('继续','Resume'):t('暂停','Pause');$('#intro').textContent=text(session?.presentation.intro);$('#stage').dataset.pause=t('已暂停','PAUSED');if(session?.presentation.profile==='story-3d-0.1.0'){const title=text(session.presentation.title);document.title=title;$('.identity h1').textContent=title;$('.identity p').textContent=text(session.presentation.sourceTitle);$('#welcome h2').textContent=title;$('#welcome .eyebrow').textContent='PASTPORT';$('.stage-footer>span:last-child').textContent=t(`${session.presentation.objects.length} 个史料入口`,`${session.presentation.objects.length} source entries`);$('#notebook-dialog h2').textContent=t('調查筆記','Case notebook');$('#notebook-dialog .eyebrow').textContent='PASTPORT';$('#museum').title=title;if(session.presentation.startLabel)$('#start').textContent=text(session.presentation.startLabel);if(session.presentation.instructions)$('#welcome .muted').textContent=text(session.presentation.instructions);else if(session.presentation.spatialContext)$('#welcome .muted').textContent=t('在两个点位间按导航切换，查看资料、整理线索，再决定如何交稿。','Follow navigation between two viewpoints, inspect sources, sort clues, and decide what to deliver.');}cinematic?.setLocale?.(locale);refreshStartupText();if($('#briefing-dialog').open)openBriefing();}
+function controlText(){if($('#story-panel'))$('#story-panel').setAttribute('aria-label',t('調查與決定','Investigation and decisions'));if($('#stage'))$('#stage').setAttribute('aria-label',t('探索場景','Explore the scene'));if($('#close-task'))$('#close-task').setAttribute('aria-label',t('返回房間','Back to the room'));if($('#quest-title'))$('#quest-title').setAttribute('aria-label',t('打開目前任務','Open current task'));if($('#dialogue'))$('#dialogue').setAttribute('aria-label',t('人物對話','Character dialogue'));document.documentElement.lang=locale==='zh'?'zh-Hant':locale;for(const n of document.querySelectorAll('[data-zh]'))n.textContent=n.dataset[locale]??gameDisplayText(n.dataset.en??n.textContent,locale);$('#language').textContent=locale==='en'?(session?.context.game.locales.some(t=>t.locale==='tr')?'Türkçe':'中文'):'English';if($('#characters-button'))$('#characters-button').textContent=t('人物與關係','People & relationships');if($('#welcome-characters'))$('#welcome-characters').textContent=t('先認識人物','Meet the characters');$('#pause').textContent=session?.paused?t('继续','Resume'):t('暂停','Pause');$('#intro').textContent=text(session?.presentation.intro);$('#stage').dataset.pause=t('已暂停','PAUSED');if(session?.presentation.profile==='story-3d-0.1.0'){const title=text(session.presentation.title);document.title=title;$('.identity h1').textContent=title;$('.identity p').textContent=text(session.presentation.sourceTitle);$('#welcome h2').textContent=title;$('#welcome .eyebrow').textContent='PASTPORT';$('.stage-footer>span:last-child').textContent=t(`${session.presentation.objects.length} 个史料入口`,`${session.presentation.objects.length} source entries`);$('#notebook-dialog h2').textContent=t('調查筆記','Case notebook');$('#notebook-dialog .eyebrow').textContent='PASTPORT';$('#museum').title=title;if(session.presentation.startLabel)$('#start').textContent=text(session.presentation.startLabel);if(session.presentation.instructions)$('#welcome .muted').textContent=text(session.presentation.instructions);else if(session.presentation.spatialContext)$('#welcome .muted').textContent=t('在已开放的场景中查看资料、整理线索，再决定如何交稿。','Inspect sources in the available scenes, sort clues, and decide what to deliver.');}cinematic?.setLocale?.(locale);refreshStartupText();if($('#briefing-dialog').open)openBriefing();}
 function messageToFrame(message){$('#museum').contentWindow?.postMessage(message,location.origin);}
 function stopWalker(){cinematic?.cancelMotion();}
 function savePosition(){cinematic?.remember();}
@@ -29,7 +30,7 @@ function startupEnabled(){return use3D;}
 function refreshStartupText(){
   if(startupEnabled())document.body.dataset.playerStartup=startupPhase;else delete document.body.dataset.playerStartup;
   const preparing=startupPhase==='preparing';
-  if($('#welcome-language'))$('#welcome-language').textContent=locale==='zh'?'English':'中文';
+  if($('#welcome-language'))$('#welcome-language').textContent=locale==='en'?(session?.context.game.locales.some(t=>t.locale==='tr')?'Türkçe':'中文'):'English';
   if(!startupEnabled())return;
   $('#start').disabled=preparing;
   $('#start').textContent=preparing?t('正在準備場景…','Preparing the room…'):startupPhase==='error'?t('重試準備 →','Retry preparation →'):hasResumed?t('繼續遊戲 →','Continue game →'):t('開始遊戲 →','Start game →');
@@ -39,7 +40,7 @@ function refreshStartupText(){
   if($('#briefing-menu'))$('#briefing-menu').textContent=t('故事背景','Story background');
   if($('#player-info-tools'))$('#player-info-tools').hidden=startupPhase!=='playing';
 }
-function changeLanguage(){locale=locale==='zh'?'en':'zh';try{localStorage.setItem('pastport:ui-locale',locale);}catch{}const talking=dialogue?.active;if(talking)dialogue.close();render();if(talking)openEncounter();}
+function changeLanguage(){locale=locale==='en'?(session?.context.game.locales.some(t=>t.locale==='tr')?'tr':'zh'):'en';try{localStorage.setItem('pastport:ui-locale',locale);}catch{}const talking=dialogue?.active;if(talking)dialogue.close();render();if(talking)openEncounter();}
 function enterInvestigation(){
   startupPhase='playing';$('#character-dialog').close();$('#welcome').close();
   try{session.persist();}catch(error){notify(error.message);}render();
@@ -247,7 +248,7 @@ async function loadJson(url){const response=await fetch(url,{cache:'no-store'});
 async function boot(){
   try{
     const[pkg,reference,presentation]=await Promise.all(['data/runtime.json','data/reference.json','data/presentation.json'].map(loadJson));
-    validateNavigation(presentation);session=await GameSession.create(pkg,reference,presentation,localStorage);if(use3D&&!presentation.saveKey)session.key='pastport:murat-story-demo:save:3d-v1';let resumed=false;
+    validateNavigation(presentation);session=await GameSession.create(pkg,reference,presentation,localStorage);if(!session.context.game.locales.some(t=>t.locale===locale))locale='en';if(use3D&&!presentation.saveKey)session.key='pastport:murat-story-demo:save:3d-v1';let resumed=false;
     try{resumed=session.load();if(!resumed&&presentation.continuation){
       const manifest=await loadJson(presentation.continuation.manifest);const previousRaw=localStorage.getItem(manifest.previous.presentation.saveKey);
       if(previousRaw){const previous=await GameSession.create(manifest.previous.runtime,manifest.previous.reference,manifest.previous.presentation);previous.restore(previousRaw);if(previous.state.ending_id){session=await continueCompletedSlice(manifest,{runtime:pkg,reference,presentation},previousRaw);session.storage=localStorage;session.persist();resumed=true;}else{previous.storage=localStorage;previous.lastSavedRaw=previousRaw;session=previous;resumed=true;continuationPending={manifest,nextBundle:{runtime:pkg,reference,presentation}};}}

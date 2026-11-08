@@ -20,7 +20,8 @@ UploadRole = Literal[
     "original_idml",
     "historical_links",
 ]
-NativeEntryLevel = Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"]
+# catalog3d is the persisted PDF + SPZ + PLY entry ID, not a catalog parser.
+NativeEntryLevel = Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "idmlscene3d", "catalog3d"]
 
 
 class UploadedProductionStart(Contract):
@@ -34,9 +35,12 @@ class UploadedProductionStart(Contract):
     max_recorded_tokens: int = Field(default=250000, ge=1000, le=1000000)
     target_minutes: int = Field(default=10, ge=3, le=60)
     brief: Text = (
-        "Create an original concise heritage story with explicit task"
-        "s, spatial intents and supported gameplay intents from these"
-        " registered inputs."
+        "Create a concise heritage investigation grounded in the registered PDF, "
+        "with explicit tasks, spatial intents and supported gameplay intents. "
+        "Use inspect/source reading at registered reachable stations when objects "
+        "lack a verified approach. Require physical travel only on validated routes. "
+        "Keep uncertain object identity and historical attribution explicit; "
+        "do not invent a path or require viewing obstructed details."
     )
 
 

@@ -1,7 +1,7 @@
 import {formatCaseFile} from '../../frontend/game/dialogue.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ScenePreparation,prepareRenderer} from '../../frontend/game/scene-preparation.mjs';
+import {ScenePreparation,prepareRenderer,SparkScenePreparation} from '../../frontend/game/scene-preparation.mjs';
 import {DialoguePlayer} from '../../frontend/game/dialogue.mjs';
 
 test('preparation is user-started, single-flight and nonce-bound; progress is not success',async()=>{
@@ -53,10 +53,40 @@ test('case-file formatting separates notices and limitations without changing di
   let calls=0,originalCalls=0;const renderer={prepare:async()=>{calls++;},prepareWithoutLod:async()=>{originalCalls++;},getQuality:()=> 'standard'};
   assert.equal(await prepareRenderer(renderer,false),'standard');assert.equal(calls,0);assert.equal(originalCalls,1);
   assert.equal(await prepareRenderer(renderer,true),'standard');assert.equal(calls,1);
-  assert.equal(await prepareRenderer(undefined,false),null);
+  await assert.rejects(prepareRenderer(undefined,false),/readiness is unavailable/);
   await assert.rejects(prepareRenderer(undefined,true),/unavailable/);
   const gate=new ScenePreparation({id:()=> 'off'});let sent;
   const waiting=gate.start(message=>{sent=message;},{buildLod:false});
   assert.equal(sent.buildLod,false);assert.equal(gate.phase,'preparing');
   gate.accept({type:'story3d:prepared',request:'off'});await waiting;
  });
+
+
+test('bundled Spark adapter waits for assets, builds LOD once and keeps quality independent',async()=>{
+ let loaded,builds=0,updates=0;
+ const ready=new Promise(resolve=>{loaded=resolve;});
+ const splat={initialized:ready,packedSplats:{},async createLodSplats(){builds++;this.packedSplats.lodSplats={};}};
+ const spark={enableLod:true,async update(){updates++;}};
+ const ratios=[];
+ const adapter=new SparkScenePreparation({splat,spark,renderer:{setPixelRatio:x=>ratios.push(x)},scene:{},camera:{},pixelRatio:()=>2});
+ const pending=prepareRenderer(adapter,false);
+ await Promise.resolve();assert.equal(updates,0);assert.equal(builds,0);
+ loaded();assert.equal(await pending,'low');
+ assert.equal(splat.enableLod,false);assert.equal(spark.enableLod,false);assert.equal(spark.enableDriveLod,false);
+ adapter.setQuality('standard');assert.equal(spark.enableLod,false);assert.equal(ratios.at(-1),1.5);
+ await Promise.all([prepareRenderer(adapter,true),prepareRenderer(adapter,true)]);
+ assert.equal(builds,1);assert.equal(splat.enableLod,true);assert.equal(spark.enableLod,true);assert.equal(spark.enableDriveLod,true);
+ assert.equal(adapter.getQuality(),'standard');
+ await prepareRenderer(adapter,false);assert.equal(builds,1);assert.equal(spark.enableLod,false);
+});
+
+test('Spark adapter propagates asset and LOD failures instead of reporting ready',async()=>{
+ const make=splat=>new SparkScenePreparation({splat,spark:{async update(){}},renderer:{setPixelRatio(){}},scene:{},camera:{}});
+ const broken=make({initialized:Promise.reject(new Error('Asset failed')),async createLodSplats(){}});
+ await assert.rejects(prepareRenderer(broken,false),/Asset failed/);
+ const absent=make({initialized:Promise.resolve(),async createLodSplats(){}});
+ await assert.rejects(prepareRenderer(absent,true),/did not produce/);
+ const failed=make({initialized:Promise.resolve(),async createLodSplats(){throw new Error('LOD failed');}});
+ await assert.rejects(prepareRenderer(failed,true),/LOD failed/);
+ assert.throws(()=>make(undefined),/unavailable/);
+});

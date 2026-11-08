@@ -145,9 +145,31 @@ pastport-story \
 ```
 
 One generation request is budgeted. Same-run retries never silently spend again.
-Model waiting is bounded at four minutes. Original response, invocation identity,
+New model calls are bounded at fifteen minutes, with one minute for local completion. Saved runs retain their original timeout. Unknown outcomes and input review failures retain a structured stop receipt and show their specific cause in Organizer. Original response, invocation identity,
 actual usage or unresolved usage, local normalization and validation are retained.
 A changed input/Skill/execution setting requires a new output directory.
+
+## Recorded usage recovery and prompt scope
+
+`--revalidate-saved-response --accept-recorded-usage` explicitly accepts a settled
+response that exceeded its original token reservation. The operator amendment is
+bound to that exact receipt hash, preserves the old reservation and actual usage,
+and does not authorize another model request. Unknown usage cannot take this path.
+The Python workflow requires `revalidate_saved_response=True` with
+`accept_recorded_usage=True`. Replay restores original Skill files, model settings
+and host constraints from the execution snapshot, so later Skill edits do not
+reinterpret an old response or require regeneration.
+
+New compiled plans load the compact shared Skill plus `references/compiled-plan.md`.
+Legacy graph modes load `references/legacy-graph.md`; the two output protocols are
+not mixed. New plan requests omit duplicate evidence documents already present in
+the typed parent and retain complete PDF text with compact page identity records.
+Their output reservation is 32,768 tokens, an accounting limit rather than a
+provider-enforced output cap. Concise dialogue, short binding quotes and nonrepeated
+fictional materials reduce requested prose without truncating source evidence.
+Future provider receipts retain reasoning/cache usage details. The retained real
+request shrank from 126,228 to 91,370 characters in offline measurement (27.6%);
+no fresh latency or token-consumption improvement was measured for this change.
 
 ## Python
 
@@ -264,3 +286,24 @@ emits versioned preparation metadata without changing NarrativeDraft's wire fiel
 a new game/blueprint/receipt. This is a separate typed post-generation design path;
 base reading/coverage intents are unchanged. Supply actual images and hashes in the
 brief; the design cannot create missing images. Existing plans need no edits.
+
+### Explicit catalogue fiction
+
+New compiled runs recognise the bounded English `ID / FICTION` heading profile
+and numbered `MATERIAL ID` headings across page-text chunks. The runtime exports
+`catalog-fiction-input.json`, retaining source file hashes and page locators, and
+pins its digest in the Story lock. These records are separate from historical
+claims and object identity/review data. Other layouts remain in complete page text;
+this profile does not guess their semantics.
+
+The generated plan must adapt every recognised section and material through typed
+`fictional_materials`: an exact source quote, bilingual document text and valid
+one-based task positions. Missing coverage, invented material IDs/quotes and
+invalid task positions stop handoff after metering, without automatic retries.
+The compiler adds these readable fictional documents to existing station cards,
+separate from original physical-source records. `story-plan.json` preserves the
+model's plan and adaptation references. These checks prove traceable material
+coverage, not character fidelity, dramatic quality or human acceptance. Previous
+runs and receipts are not rewritten.
+
+New authoring requests target English and Turkish (en/tr). Content plans and the shared compiler support complete en/tr tables while reading legacy en/zh plans. Source quotations preserve original evidence text.

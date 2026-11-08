@@ -2021,7 +2021,8 @@ export const schemas = {
           "locale": {
             "enum": [
               "en",
-              "zh"
+              "zh",
+              "tr"
             ],
             "title": "Locale",
             "type": "string"
@@ -2789,7 +2790,8 @@ export const schemas = {
             "items": {
               "enum": [
                 "en",
-                "zh"
+                "zh",
+                "tr"
               ],
               "type": "string"
             },
@@ -5434,7 +5436,8 @@ export const schemas = {
           "locale": {
             "enum": [
               "en",
-              "zh"
+              "zh",
+              "tr"
             ],
             "title": "Locale",
             "type": "string"
@@ -6202,7 +6205,8 @@ export const schemas = {
             "items": {
               "enum": [
                 "en",
-                "zh"
+                "zh",
+                "tr"
               ],
               "type": "string"
             },

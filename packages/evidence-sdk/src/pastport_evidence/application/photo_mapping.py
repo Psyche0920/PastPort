@@ -97,6 +97,8 @@ class PhotoMappingWorkflow:
         if full_photo_scan:
             profile = profile.model_copy(update={"photo": "v2"})
         digest = hashlib.sha256(b"photo-documents-v1")
+        if profile.mapping == "text-v1":
+            digest.update(self.reader.version.encode())
         for prompt in (
             load_semantic_prompt("photo_inspection", profile.photo),
             load_semantic_prompt("pdf_matching", profile.mapping),
@@ -219,7 +221,7 @@ class PhotoMappingWorkflow:
             atomic_write(artifacts / "recognition.json", recognized.model_dump_json())
             return StageOutput(references=("artifact:photo-inventory",), gaps=tuple(gaps))
 
-        def export() -> StageOutput:
+        def export_inputs() -> tuple[PreparedDocuments, RegisteredPDF]:
             draft = DocumentDraft.model_validate_json(
                 (artifacts / "review-draft.json").read_bytes()
             )
@@ -245,20 +247,22 @@ class PhotoMappingWorkflow:
                 objects=objects,
                 gaps=draft.gaps,
             )
-            destination = DocumentPackageExporter(assets).write(
-                workspace / "exports", bundle, document
-            )
+            return bundle, document
+
+        def export() -> StageOutput:
+            bundle, document = export_inputs()
+            destination = DocumentPackageExporter(assets).write(workspace / "exports", bundle, document)
             atomic_write(
                 artifacts / "export-result.json",
                 OutputPaths(
                     pdf=str(destination / "mapping.pdf"),
                     idml=str(destination / "mapping.idml"),
-                    status="completed_with_gaps" if draft.gaps else "completed",
-                    gaps=draft.gaps,
+                    status="completed_with_gaps" if bundle.gaps else "completed",
+                    gaps=bundle.gaps,
                 ).model_dump_json(),
             )
             return StageOutput(
-                references=("artifact:mapping-pdf", "artifact:mapping-idml"), gaps=draft.gaps
+                references=("artifact:mapping-pdf", "artifact:mapping-idml"), gaps=bundle.gaps
             )
 
         def tracked(name: str, action: Callable[[], StageOutput]) -> Callable[[], StageOutput]:
@@ -286,5 +290,10 @@ class PhotoMappingWorkflow:
         result_path = artifacts / "export-result.json"
         output = OutputPaths.model_validate_json(result_path.read_bytes())
         DocumentPackageExporter.validate(Path(output.pdf).parent)
+        if profile.mapping == "text-v1":
+            from pastport_evidence.adapters.environment_handoff import EvidenceEnvironmentHandoff
+            bundle, document = export_inputs()
+            handoff = EvidenceEnvironmentHandoff(assets).export(workspace / "native-handoffs", bundle, document)
+            output = output.model_copy(update={"environment_handoff": str(handoff)})
         atomic_write(workspace / (f"result-indexed-{revision}-linked-pdf.json" if indexed else f"result-budget-{revision}.json" if revision is not None else "result.json"), output.model_dump_json())
         return results

@@ -3,7 +3,7 @@ import {readFile, writeFile, mkdir, lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const frontend = ['index.html','app.mjs','app.css','dialogue.mjs','session.mjs',
+const frontend = ['index.html','game-locale.mjs','app.mjs','app.css','dialogue.mjs','session.mjs',
   'investigation-view.mjs','slice-continuation.mjs','navigation.mjs','walkmesh.mjs','interaction.mjs','cinematic-view.mjs',
   'scene3d-view.mjs','scene-preparation.mjs','startup-options.mjs','room-minimap.mjs','scene3d-runtime.js','scene3d-navigation.mjs','scene3d-bridge.mjs'];
 const plugins = ['plugins.mjs','investigation.mjs','coverage.mjs','gameplay-catalog.mjs'];
@@ -11,6 +11,8 @@ const engine = ['actions.mjs','context.mjs','errors.mjs','generated-schemas.mjs'
   'rules.mjs','runtime.mjs','validation.mjs'];
 
 export const runtimeAssets = Object.freeze([
+  {source:'frontend/player/game-display-locale.mjs',destination:'game-display-locale.mjs'},
+  {source:'frontend/player/game-display-locales.json',destination:'game-display-locales.json'},
   ...frontend.map(name => ({source:`frontend/game/${name}`,destination:name})),
   ...plugins.map(name => ({source:`gameplay/plugins/${name}`,destination:name})),
   {source:'gameplay/gameplay.mjs',destination:'gameplay.mjs'},

@@ -688,7 +688,7 @@ class OrganizerRoutes:
             job = self.service.job(job_id, self.actor(request))
             relative = (
                 "native/scene3d-1/result"
-                if job.entry_level == "catalog3d"
+                if job.entry_level in ("catalog3d", "idmlscene3d")
                 else "mounted-review/scene"
             )
             root = self.service.directory(job.job_id) / relative
@@ -889,6 +889,7 @@ class OrganizerRoutes:
                         "scene_splat",
                         "scene_mesh",
                     },
+                    "idmlscene3d": {"original_idml", "historical_links", "scene_splat", "scene_mesh"},
                     "catalog3d": {"original_pdf", "scene_splat", "scene_mesh"},
                     "raw3d": {"original_pdf", "photos", "scene_splat", "scene_mesh"},
                 }[material.entry_level]
@@ -904,7 +905,7 @@ class OrganizerRoutes:
                     raise ServiceError("ORGANIZER_FILE_LIMIT", "项目文件数量超过限制。", 413)
                 total = sum(item.size_bytes for item in material.files)
                 maximum = min(
-                    (6 if material.entry_level == "idml3d" else 4) * 1024**3 - total,
+                    (6 if material.entry_level in ("idml3d", "idmlscene3d") else 4) * 1024**3 - total,
                     (
                         32
                         if role == "original_idml"

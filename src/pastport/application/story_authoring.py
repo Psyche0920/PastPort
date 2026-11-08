@@ -17,6 +17,7 @@ class StoryInputLock(Contract):
         "authored_graph"
     )
     compiler_sha256: Sha256 | None = None
+    catalog_fiction_sha256: Sha256 | None = None
     project_id: Identifier
     original_pdf_sha256: Sha256
     source_document_sha256: Sha256
@@ -299,26 +300,26 @@ class StoryDraftInspector:
         return tuple(issues)
 
     def readable(self, draft: NarrativeDraft) -> str:
-        table = next(locale for locale in draft.package.game.locales if locale.locale == "zh")
+        table = next(locale for locale in draft.package.game.locales if locale.locale == "en")
         text = {entry.key: entry.text for entry in table.entries}
         game = draft.package.game
-        lines = ["# 故事与任务", "", "私有候选稿；史料、映射和空间原有状态保留。", ""]
+        lines = ["# Story and tasks", "", "Private draft. Source review and spatial approval remain pending.", ""]
         for index, scene in enumerate(game.scenes, 1):
             lines.extend((f"## {index}. {text[scene.title_key]}", "", text[scene.body_key], ""))
             for task in scene.tasks:
                 lines.extend(
                     (
-                        f"**玩家要做：** {text[task.objective_key]}",
-                        f"**完成反馈：** {text[task.feedback_key]}",
+                        f"**Player action:** {text[task.objective_key]}",
+                        f"**Feedback:** {text[task.feedback_key]}",
                         "",
                     )
                 )
             if scene.decision_id is not None:
                 decision = next(d for d in game.decisions if d.decision_id == scene.decision_id)
-                lines.extend(("**玩家选择：**", ""))
+                lines.extend(("**Player choices:**", ""))
                 lines.extend(f"- {text[option.text_key]}" for option in decision.options)
                 lines.append("")
-        lines.extend(("## 结局", ""))
+        lines.extend(("## Endings", ""))
         for group in game.endings:
             for ending in group.endings:
                 for outcome in ending.outcomes:

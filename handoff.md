@@ -166,3 +166,10 @@ Organizer and the player map support Simplified Chinese, English and Turkish. On
 UI Trial 历史交付（包内为可行走剧场）、maslan《最后两袋》主试玩 r1、《最后两袋》三语可行走剧场，以及 wcheung《The Last Tour》是不同交付项。原始 UI Trial 的故事也叫《最后两袋》；三语剧场沿用 `muradiye-ui-trial.tar.gz` 文件名，不代表已验证的原始 2D 版。逐项下载见 [中文版对照表](README.md#游戏名称与版本对照) / [English build table](README_EN.md#game-titles-and-build-identities)。
 
 The historical UI Trial delivery (containing the walkable theatre), maslan featured r1, The Last Two Sacks trilingual walkable theatre, and wcheung The Last Tour are separate deliveries. The original UI Trial also tells The Last Two Sacks; the retained theatre filename does not establish that it is the original 2D build. Use the tables above to choose the exact release.
+
+
+### 2026-11-08 — IDML matching handoff boundary / IDML 匹配交接边界
+
+正式 Organizer 的 IDML 入口目前仍为“场景物件识别 → IDML 图文匹配 → 独立复核 → 环境定位与挂载”。“IDML 文字 → 对应配图目标 → 定向场景查找”已在独立本机副本验证，尚未接入正式入口；移动取景也未接入。Şeker Han 同材料副本选出9个文字目标、7项图文匹配、6项定位，原流程为30项识别、9项匹配及定位。两者目标清单不同，不作为准确率对比；副本3D附加仍待校准和人工验收，未生成故事。这些运行材料和私有数据库不进入Git，拉取main不会获得本机任务或试玩产物。
+
+The production Organizer IDML entry still runs scene-object recognition → IDML image/text matching → independent audit → localization and attachment. The text-first sequence (IDML text → corresponding image subject → directed scene search) has been exercised only in an isolated local prototype and is not wired into production; moved-camera review is also not integrated. With the same Şeker Han material, the prototype selected 9 text-bound targets, matched 7 and localized 6; the production run recognized 30 scene candidates, matched and localized 9. Different target populations make these counts unsuitable as an accuracy comparison. Prototype 3D attachment remains pending alignment and manual acceptance; no Story was generated. Run material and private databases are excluded from Git, and pulling main does not transfer local jobs or playable artifacts.

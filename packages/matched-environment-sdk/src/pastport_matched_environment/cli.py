@@ -62,6 +62,10 @@ def main() -> None:
         attach.add_argument("--" + name, type=Path, required=True)
     attach.add_argument("--source-scene", default="")
     attach.add_argument("--local-scene", action="store_true")
+    native_environment = subcommands.add_parser("environment-handoff", help="Localize verified source-native evidence without reparsing a layout PDF")
+    for name in ("handoff", "tour", "workspace", "grant"):
+        native_environment.add_argument("--"+name,type=Path,required=True)
+    native_environment.add_argument("--run-id",required=True)
     raw_scene = subcommands.add_parser("raw-scene-import", help="Validate existing SPZ/PLY and render local observation views; no generation")
     for name in ("spz", "mesh", "workspace"):
         raw_scene.add_argument("--" + name, type=Path, required=True)
@@ -77,6 +81,14 @@ def main() -> None:
     generate3d.add_argument("--credit-budget", type=int, required=True)
     generate3d.add_argument("--authorize-marble", action="store_true")
     arguments = parser.parse_args()
+    if arguments.command == "environment-handoff":
+        from pastport_matched_environment.application.idml_environment import IDMLEnvironmentWorkflow
+        from pastport_matched_environment.adapters.codex_sdk import CodexSDKTransport
+        from pastport_matched_environment.domain.execution import SubscriptionGrant
+        grant = SubscriptionGrant.model_validate_json(arguments.grant.read_bytes())
+        print(IDMLEnvironmentWorkflow(CodexSDKTransport(grant.effort)).run(
+            arguments.handoff, arguments.tour, arguments.workspace, arguments.run_id, grant))
+        return
     if arguments.command == "raw-scene-import":
         from pastport_matched_environment.application.raw_scene import RawScenePreparation
 

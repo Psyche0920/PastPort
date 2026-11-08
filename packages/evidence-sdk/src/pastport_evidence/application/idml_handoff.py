@@ -61,7 +61,7 @@ class IDMLEnvironmentHandoff:
                     overlaps.setdefault(right.object_id, set()).add(entities[left.object_id].display_number)
         return overlaps
 
-    def write(self, source: Path, links: Path, document: IDMLDocument,
+    def write(self, source: Path, links: Path | None, document: IDMLDocument,
               result: IDMLMatchResult, inventory: PhotoInventory,
               assets: LocalAssetStore, output: Path,
               identity_reviews: tuple[DistinctIdentityReview, ...] = ()) -> None:
@@ -92,7 +92,7 @@ class IDMLEnvironmentHandoff:
             entity=entities[match.object_id]
             row = {
                 'number': entity.display_number, 'name': entity.label,
-                'historical_name': match.historical_name, 'status': match.status,
+                'historical_name': match.historical_name, 'status': match.status, 'relationship': match.relationship,
                 'reason': match.review_reason, 'image_role': match.image_role,
             }
             review_rows.append(row)

@@ -185,6 +185,10 @@ class SdkEnvironmentSpatialReader:
                     raise ServiceError("ENVIRONMENT_INPUT_CHANGED", "Registered collider changed")
                 candidates = {item.object_id: item.point_json for item in payload.candidates}
                 occurrences = {item.object_id for item in payload.source_hotspots}
+                registered = {item.object_number for item in snapshot.objects}
+                # A reviewed surface placement can establish a 3D occurrence without a VR hotspot.
+                occurrences.update(item.id for item in payload.objects
+                                   if item.id in registered and item.point_json and item.version > 0)
                 objects = []
                 for item in payload.objects:
                     if item.id not in occurrences:

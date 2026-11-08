@@ -312,6 +312,8 @@ class RuntimeCapabilities(Contract):
         }
         for name, values in expected.items():
             actual = getattr(self, name)
+            if name == "locales" and set(actual) == {"en", "tr"} and len(actual) == 2:
+                continue
             if set(actual) != values or len(actual) != len(values):
                 raise ValueError(f"Profile capability mismatch: {name}")
         if (self.max_events_per_action, self.max_effects_per_action, self.max_condition_depth) != (
@@ -442,7 +444,7 @@ class GameContent(Contract):
                         keys.add(variant.text_key)
                         self.check_condition(variant.guard)
         unique((x.locale for x in self.locales), "locales")
-        if {x.locale for x in self.locales} != {"en", "zh"}:
+        if {x.locale for x in self.locales} not in ({"en", "zh"}, {"en", "tr"}):
             raise ValueError("Both locales are required")
         key_sets = []
         for locale in self.locales:

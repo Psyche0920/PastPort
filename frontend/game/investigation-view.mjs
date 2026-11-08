@@ -1,6 +1,7 @@
+import {gameDisplayText} from './game-locale.mjs';
 /** DOM-only activities: no additional 3D assets, render loops or Story mutation. */
 export function renderInvestigation(root,c,state,{locale='zh',send,verifiedSources=[],feedback='',review=()=>{},explore=()=>{}}){
- const t=(zh,en)=>locale==='en'?en:zh,copy=v=>v?.[locale]??v??'';
+ const t=(zh,en)=>locale==='zh'?zh:locale==='tr'?gameDisplayText(en,'tr'):en,copy=v=>v?.[locale]??v??'';
  const el=(tag,attrs={},children=[])=>{const n=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k.startsWith('on'))n[k]=v;else if(k==='text')n.textContent=v;else if(k==='class')n.className=v;else if(k==='disabled')n.disabled=v;else n.setAttribute(k,v);}for(const child of children)n.append(child);return n;};
  root.classList.add('investigation-activity');
  root.append(el('h3',{text:copy(c.prompt)}));

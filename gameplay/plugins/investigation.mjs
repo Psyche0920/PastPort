@@ -3,7 +3,7 @@ export const investigationKinds=Object.freeze(['spot-difference','timeline','ima
 export const isInvestigation=kind=>investigationKinds.includes(kind);
 const check=(test,message)=>{if(!test)throw new TypeError('Investigation: '+message);};
 const ids=items=>Array.isArray(items)&&items.length>0&&items.length<=12&&new Set(items.map(i=>i.id)).size===items.length&&items.every(i=>typeof i.id==='string'&&/^[a-z0-9-]{1,64}$/.test(i.id));
-const text=v=>v&&['zh','en'].every(l=>typeof v[l]==='string'&&v[l].trim());
+const text=v=>v&&['en',v.tr?'tr':'zh'].every(l=>typeof v[l]==='string'&&v[l].trim());
 const asset=v=>typeof v==='string'&&/^[a-zA-Z0-9_./-]+\.(svg|png|jpg|jpeg|webp)$/.test(v)&&!v.startsWith('/')&&!v.split('/').includes('..');
 const region=r=>Array.isArray(r)&&r.length===4&&r.every(Number.isInteger)&&r[0]>=0&&r[1]>=0&&r[2]>0&&r[3]>0&&r[0]+r[2]<=10000&&r[1]+r[3]<=10000;
 export function validateInvestigationConfig(c){
@@ -11,7 +11,7 @@ export function validateInvestigationConfig(c){
  check(c.content_kind==='original_fiction'||c.content_kind==='source_attributed','content provenance missing');
  if(c.kind==='spot-difference')check(asset(c.left_image)&&asset(c.right_image)&&ids(c.differences)&&c.differences.length<=6&&c.differences.every(d=>region(d.left)&&region(d.right)&&text(d.label)),'invalid image pair/regions');
  if(c.kind==='timeline'){check(ids(c.cards)&&ids(c.slots)&&c.cards.length===c.slots.length&&c.cards.every(i=>text(i.text)&&c.slots.some(s=>s.id===i.target_slot))&&c.slots.every(s=>text(s.label))&&new Set(c.cards.map(i=>i.target_slot)).size===c.cards.length,'invalid timeline mapping');}
- if(c.kind==='image-puzzle')check(Number.isInteger(c.columns)&&c.columns>=2&&c.columns<=4&&Number.isInteger(c.rows)&&c.rows>=2&&c.rows<=3&&ids(c.pieces)&&c.pieces.length===c.columns*c.rows&&c.pieces.every(i=>Number.isInteger(i.target_slot)&&i.target_slot>=0&&i.target_slot<c.pieces.length)&&new Set(c.pieces.map(i=>i.target_slot)).size===c.pieces.length&&['zh','en'].every(l=>asset(c.image?.[l])),'invalid image tile mapping');
+ if(c.kind==='image-puzzle')check(Number.isInteger(c.columns)&&c.columns>=2&&c.columns<=4&&Number.isInteger(c.rows)&&c.rows>=2&&c.rows<=3&&ids(c.pieces)&&c.pieces.length===c.columns*c.rows&&c.pieces.every(i=>Number.isInteger(i.target_slot)&&i.target_slot>=0&&i.target_slot<c.pieces.length)&&new Set(c.pieces.map(i=>i.target_slot)).size===c.pieces.length&&['en',c.image?.tr?'tr':'zh'].every(l=>asset(c.image?.[l])),'invalid image tile mapping');
  if(c.kind==='scene-search')check(Array.isArray(c.targets)&&c.targets.length>=2&&c.targets.length<=8&&new Set(c.targets.map(t=>t.number)).size===c.targets.length&&c.targets.every(t=>Number.isSafeInteger(t.number)&&t.number>0&&text(t.clue)),'invalid search targets');
 }
 function arranged(c,s){const items=c.kind==='timeline'?c.cards:c.pieces;return items.every(i=>s.placements.some(p=>p.id===i.id&&p.slot===i.target_slot));}

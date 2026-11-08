@@ -502,7 +502,14 @@ class OrganizerService:
                         "status": "failed"
                         if issues or start.mode == "reuse"
                         else "recovery_required",
-                        "message": "制作停止，已保留结果和回执；请查看恢复摘要，系统不会自动重试模型。",
+                        "message": (
+                            str(error)
+                            if isinstance(error, ServiceError)
+                            and error.code in {
+                                "STORY_OUTCOME_UNKNOWN", "STORY_INPUT_REVIEW_REQUIRED"
+                            }
+                            else "制作停止，已保留结果和回执；请查看恢复摘要，系统不会自动重试模型。"
+                        ),
                         "new_model_calls": self.model_calls(job),
                     }
                 ),
@@ -649,8 +656,15 @@ class OrganizerService:
             "catalog3d": (
                 ("original_pdf", "scene_splat", "scene_mesh"),
                 ("scene_splat", "scene_mesh"),
-                ("local_scene_import", "catalog_extraction", "catalog_localization", "input_handoff"),
-                ("展签原文", "同一实物的外观证据", "3D候选落点", "交接到故事入口"),
+                ("local_scene_import", "pdf_analysis", "matched_environment", "input_handoff",
+                 "story", "gameplay", "presentation", "assembly"),
+                ("PDF原文与页码", "3D派生观察图", "物件与史料关联", "3D候选落点", "不调用Marble"),
+            ),
+            "idmlscene3d": (
+                ("original_idml", "scene_splat", "scene_mesh"),
+                ("scene_splat", "scene_mesh"),
+                ("local_scene_import", "scene_observations", "evidence.idml_mapping", "environment.idml_mount", "input_handoff", "story", "gameplay", "presentation", "assembly"),
+                ("IDML原文与精确引用", "3D派生观察图", "可选Links配图", "3D候选落点", "不调用Marble"),
             ),
             "idml3d": (
                 ("original_idml", "historical_links", "photos", "scene_splat", "scene_mesh"),
@@ -757,8 +771,6 @@ class OrganizerService:
         self, actor: Actor, project_id: str, options: UploadedProductionStart, key: str
     ) -> OrganizerJob:
         material = self.materials(actor, project_id)
-        if material.entry_level == "catalog3d":
-            options = options.model_copy(update={"stop_after": "environment"})
         if not self.uploads_enabled:
             raise ServiceError(
                 "UPLOAD_PRODUCTION_UNAVAILABLE", "原生制作所需的服务器资源尚未配置。", 503
@@ -903,7 +915,7 @@ class OrganizerService:
                         raise ServiceError("ENVIRONMENT_HANDOFF_MISSING", "环境交接文件缺失。", 409)
                     self.store.save("job", job.job_id, job.model_copy(update={
                         "status": "environment_ready", "prepared_source_id": prepared_source,
-                        "mounted_preview_ready": request.entry_level == "catalog3d" and (
+                        "mounted_preview_ready": request.entry_level in ("catalog3d", "idmlscene3d") and (
                             native / "scene3d-1/result/scene3d/attachment.json"
                         ).is_file(),
                         "message": result.message + " 尚未调用Story或组包。",

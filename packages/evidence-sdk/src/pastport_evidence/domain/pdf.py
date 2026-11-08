@@ -13,10 +13,12 @@ PageCoordinate = Annotated[float, Field(allow_inf_nan=False)]
 
 
 class PDFExtractionStatus(StrEnum):
-    """Whether native text was found or the page needs a separate OCR stage."""
+    """Distinguish native/OCR/empty pages without concealing text-recovery provenance."""
 
     TEXT_EXTRACTED = "text_extracted"
-    OCR_NEEDED = "ocr_needed"
+    OCR_NEEDED = "ocr_needed"  # Historical saved records only.
+    OCR_EXTRACTED = "ocr_extracted"
+    EMPTY_PAGE = "empty_page"
 
 
 class PDFRegion(DomainModel):
@@ -51,7 +53,7 @@ class PDFImageRegion(DomainModel):
 
 
 class PDFPageDraft(DomainModel):
-    """Transient page data; rendered bytes are persisted immediately by the application."""
+    """Located page text; optional rendered bytes support historical injected readers."""
 
     page_index: Annotated[int, Field(ge=0)]
     page_width: Annotated[float, Field(gt=0, allow_inf_nan=False)]
@@ -61,7 +63,12 @@ class PDFPageDraft(DomainModel):
     text_lines: tuple[PDFTextLine, ...]
     image_regions: tuple[PDFImageRegion, ...]
     extraction_status: PDFExtractionStatus
-    rendered_jpeg: Annotated[bytes, Field(min_length=1)]
+    rendered_jpeg: Annotated[bytes, Field(min_length=1)] | None = None  # Legacy readers only.
+    native_text: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_engine: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_languages: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_confidence: float | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_reason: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class PDFPageContent(DomainModel):
@@ -75,7 +82,12 @@ class PDFPageContent(DomainModel):
     text_lines: tuple[PDFTextLine, ...]
     image_regions: tuple[PDFImageRegion, ...]
     extraction_status: PDFExtractionStatus
-    rendered_page: ProjectAssetRef
+    rendered_page: ProjectAssetRef | None = None  # Historical records remain readable.
+    native_text: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_engine: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_languages: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_confidence: float | None = Field(default=None, exclude_if=lambda value: value is None)
+    ocr_reason: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class RegisteredPDF(DomainModel):
@@ -85,6 +97,7 @@ class RegisteredPDF(DomainModel):
     page_count: Annotated[int, Field(ge=1)]
     pages: tuple[PDFPageContent, ...]
     extractor_version: Annotated[str, Field(min_length=1)]
+    original_filename: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def validate_page_sequence(self) -> RegisteredPDF:
@@ -92,8 +105,10 @@ class RegisteredPDF(DomainModel):
             raise ValueError("page records must cover the declared PDF page count")
         if any(page.page_index != index for index, page in enumerate(self.pages)):
             raise ValueError("PDF pages must use a complete zero-based page sequence")
-        if self.source.project_id != self.pages[0].rendered_page.project_id:
-            raise ValueError("rendered pages must belong to the source PDF project")
-        if any(page.rendered_page.project_id != self.source.project_id for page in self.pages):
+        if any(
+            page.rendered_page is not None
+            and page.rendered_page.project_id != self.source.project_id
+            for page in self.pages
+        ):
             raise ValueError("rendered pages must belong to the source PDF project")
         return self

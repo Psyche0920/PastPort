@@ -26,9 +26,15 @@ class ExactPassage(DomainModel):
     start: Annotated[int, Field(ge=0)]
     end: Annotated[int, Field(gt=0)]
     quote: Annotated[str, Field(min_length=1, max_length=8000)]
+    line_start: Annotated[int, Field(ge=1)] | None = Field(default=None, exclude_if=lambda value: value is None)
+    line_end: Annotated[int, Field(ge=1)] | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def validate_selector(self) -> ExactPassage:
+        if (self.line_start is None) != (self.line_end is None):
+            raise ValueError("Line selectors need both start and end")
+        if self.line_start is not None and self.line_end is not None and self.line_end < self.line_start:
+            raise ValueError("Line selector bounds are inverted")
         if self.end - self.start != len(self.quote):
             raise ValueError("Exact quote and character selector disagree")
         return self

@@ -2,7 +2,7 @@
 name: evidence-review
 description: Prepare and audit sourced heritage records, image mappings, rights evidence and spatial claims for PastPort. Use for indexing, targeted research or claim review before narrative generation; not for SQL tuning, story writing or granting human approval.
 metadata:
-  version: "0.3.1"
+  version: "0.3.2"
   owner: Weng
 ---
 
@@ -65,3 +65,11 @@ Each finding distinguishes inspected sources from leads. Do not emit human appro
 Can a reviewer reopen the exact source? Does it support the same entity, time and use? Are image identity and permission independently visible? Does a modern photograph get misused as historical proof? Narrow the finding or report a blocker when needed.
 
 Return changed records and necessary original excerpts, not a full essay or archive. This skill is an initial authored policy, not a validated historical expert system.
+
+## IDML and 3D visual identity
+
+For new IDML scene runs, count a candidate when the source and scene appear to show the same physical object based on overall visual features and spatial context, even if minor details are obscured. Similar category or function alone does not establish identity. Do not output functional analogies. Note uncertain details and preserve existing run policies and receipts; candidates remain pending human review.
+
+## Visible identity decision threshold
+
+Recognize identity from the combination of overall shape, proportions, material/color and surrounding scene context. Missing visibility of a small mark, sticker, logo, accessory or fine texture is not a contradiction and must not alone cause uncertain or rejected identity. Confirm an otherwise recognizable same object and list these details as limitations. Reserve uncertainty for ambiguity about the object itself, inadequate visible geometry or insufficient support for a location; reject visible contradictions in defining shape or structure. Context supports visible appearance but never replaces it. Never infer an unseen object or substitute shared function. Model confirmation is a visual finding, not human approval or permission to publish. Do not request additional views, retries or functional matching under this policy.

@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createServer,request} from 'node:http';
 import {once} from 'node:events';
-import {spawn} from 'node:child_process';
+import {spawn,spawnSync} from 'node:child_process';
 import {mkdtemp,writeFile,rm,access,mkdir,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {browserOrigin,QuickTunnel} from '../frontend/player/network.mjs';
-import {OrganizerGateway} from '../frontend/player/organizer-gateway.mjs';
+import {OrganizerGateway,verifyOrganizerReady} from '../frontend/player/organizer-gateway.mjs';
 
 test('public origins reject credentials, paths, insecure remote origins and HTML injection',()=>{
   for(const value of ['http://example.com','https://a.test/path','https://u:p@a.test','https://a.test/','https://a.test?q=x','https://a.test#x','javascript:alert(1)'])assert.throws(()=>browserOrigin(value));
@@ -146,4 +146,26 @@ test('cancelling tunnel startup stops the connector immediately',async()=>{
   }});
   await assert.rejects(pending,/cancelled/);
   assert.ok(child.exitCode!==null || child.signalCode!==null);
+});
+
+test('Organizer preflight distinguishes offline, setup, wrong service and ready',async()=>{
+ const target='http://127.0.0.1:18841';
+ await assert.rejects(verifyOrganizerReady(target,{request:async()=>{throw new TypeError('fetch failed');}}),/organizer --port 18841/);
+ await assert.rejects(verifyOrganizerReady(target,{request:async()=>new Response('bad',{status:503})}),/HTTP 503/);
+ await assert.rejects(verifyOrganizerReady(target,{request:async()=>new Response('not JSON')}),/access information/);
+ await assert.rejects(verifyOrganizerReady(target,{request:async()=>Response.json({})}),/recognized Organizer/);
+ await assert.rejects(verifyOrganizerReady(target,{request:async()=>Response.json({setup_required:true})}),/admin setup/);
+ await verifyOrganizerReady(target,{request:async(url)=>{assert.equal(url,target+'/organizer/api/access');return Response.json({setup_required:false});}});
+});
+test('remote sharing fails before launching tunnels when Organizer is offline',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'remote-preflight-'));
+ const socket=createServer();socket.listen(0,'127.0.0.1');await once(socket,'listening');
+ const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
+ try{
+  await writeFile(join(directory,'players.sqlite'),'preflight-only fixture');
+  const result=spawnSync(process.execPath,['frontend/player/remote.mjs','--share-organizer','--organizer-port',String(port)],{cwd:new URL('../',import.meta.url),env:{...process.env,PLAYER_DATA:directory,ORGANIZER_DATA:directory},encoding:'utf8',timeout:10000});
+  assert.equal(result.status,1,result.stderr);assert.match(result.stderr,/Cannot reach Organizer/);
+  assert.ok(!result.stdout.includes('Connecting temporary player access'));
+  assert.ok(!result.stdout.includes('PLAYER /'));
+ }finally{await rm(directory,{recursive:true,force:true});}
 });

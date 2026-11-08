@@ -10,7 +10,7 @@ from pastport_evidence.domain.pdf import PDFPageDraft
 
 
 class PDFDocumentReader(Protocol):
-    """Read and render pages incrementally to keep memory bounded."""
+    """Extract every page incrementally; rendering is reserved for OCR recovery."""
 
     @property
     def version(self) -> str: ...

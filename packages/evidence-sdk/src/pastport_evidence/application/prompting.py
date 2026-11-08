@@ -18,7 +18,7 @@ def load_semantic_prompt(
 ) -> str:
     profiles = {
         "photo_inspection": ("v1", "v2", "v3"),
-        "pdf_matching": ("v2", "v3", "index-v1"),
+        "pdf_matching": ("v2", "v3", "text-v1", "index-v1"),
         "evidence_association": ("v2", "v3"),
     }
     if version not in profiles[kind]:
@@ -34,7 +34,7 @@ class SemanticPromptProfile(DomainModel):
     """Pin new historical-content policy without changing existing run receipts."""
 
     photo: Literal["v1", "v2", "v3"] = "v1"
-    mapping: Literal["v2", "v3"] = "v2"
+    mapping: Literal["v2", "v3", "text-v1"] = "v2"
     evidence: Literal["v2", "v3"] = "v3"
 
 
@@ -45,7 +45,7 @@ def resolve_prompt_profile(workspace: Path) -> SemanticPromptProfile:
     legacy = (workspace / "codex-executions.sqlite3").exists() or (
         (workspace / "runs").is_dir() and any((workspace / "runs").iterdir())
     )
-    profile = SemanticPromptProfile(photo="v1" if legacy else "v3", mapping="v2" if legacy else "v3", evidence="v2" if legacy else "v3")
+    profile = SemanticPromptProfile(photo="v1" if legacy else "v3", mapping="v2" if legacy else "text-v1", evidence="v2" if legacy else "v3")
     workspace.mkdir(parents=True, exist_ok=True)
     atomic_write(path, profile.model_dump_json())
     return profile

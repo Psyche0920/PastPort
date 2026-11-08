@@ -37,7 +37,9 @@ try{
  if(!Array.isArray(faces)||faces.length!==6)throw Error('Expected six rendered cube faces');
  const records=[];
  for(let i=0;i<faces.length;i++){const face=faces[i];const image=Buffer.from(face.image.split(',')[1],'base64');if(image.length>8*1024**2)throw Error('Capture image exceeds profile');await writeFile(path.join(root,'face-'+i+'.png'),image);records.push({file:'face-'+i+'.png',matrix:face.matrix});}
- await writeFile(path.join(root,'capture.json'),JSON.stringify({schema:'pastport.raw-capture/1',origin:[0,1.6,0],faces:records}),{flag:'wx'});
+ const origin=records[0].matrix.slice(12,15);
+ if(origin.length!==3||!origin.every(Number.isFinite)||!records.every(face=>face.matrix.slice(12,15).every((value,i)=>value===origin[i])))throw Error('Capture camera origins must be finite and consistent');
+ await writeFile(path.join(root,'capture.json'),JSON.stringify({schema:'pastport.raw-capture/1',origin,faces:records}),{flag:'wx'});
  console.log('CAPTURE_COMPLETE',new Date().toISOString());await pipe.send('Browser.close');
 }catch(error){if(child)child.kill('SIGTERM');throw error;}finally{
  server.closeAllConnections();await new Promise(resolve=>server.close(resolve));

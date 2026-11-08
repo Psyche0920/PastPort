@@ -47,7 +47,7 @@ class BranchStoryPlanCompiler:
             for locale, table in tables.items():
                 if key in table:
                     raise ValueError("Compiler locale key collision")
-                table[key] = value.en if locale == "en" else value.zh
+                table[key] = value.localized(locale)
             return key
 
         pivot = len(plan.opening)

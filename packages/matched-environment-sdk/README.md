@@ -1,5 +1,10 @@
 # PastPort Matched Environment SDK
 
+The isolated source-first trial reuses this SDK for localization and 3D attachment; that does not integrate text-first selection into Organizer. Attachment remains pending alignment and manual acceptance. New environment runs pin the v2 packaged localization and review skill snapshot into model requests and input bindings. Existing runs retain their original policy and receipts.
+
+The native `idmlscene3d` entry requires only IDML, SPZ and PLY; Links is optional, and no field-photo upload is required. The pipeline derives observations from the hash-bound scene and records their provenance, then reuses native IDML matching, independent audit, localization and attachment. Missing linked graphics remain explicit gaps and are excluded from image evidence; source text and exact citations remain usable. The existing photo-based `idml3d` entry stays separate. Environment preparation stops at `environment_ready`, before Story.
+
+
 ## Current integration contract
 
 | Item | Current behavior |
@@ -213,7 +218,8 @@ matched-environment-sdk/
 │       │   ├── execution.py  # Transport boundary keeps the SDK outside domain/application services.
 │       │   └── pdf.py  # PDF processing contract independent of the chosen extraction/render libraries.
 │       ├── prompts/
-│       │   └── environment_policy_v1.txt  # 环境生成/准备阶段的模型策略与输出约束。
+│       │   ├── environment_policy_v1.txt  # 环境生成/准备阶段的模型策略与输出约束。
+│       │   └── environment_skill_v1.txt  # 新任务使用的环境定位与审核 skill 版本快照。
 │       ├── reference_environment/
 │       │   ├── PROVENANCE.md  # 参考资源的来源与归属记录。
 │       │   ├── landing.html  # 参考环境的导览入口页。
@@ -296,8 +302,12 @@ environment input, without rerunning models/Marble or overwriting an old game pa
 
 ### Existing SPZ / PLY import
 
-`raw-scene-import --spz SCENE.spz --mesh SCENE.ply --workspace OUTPUT` imports an existing scene locally; it never calls Marble. PLY must be a binary little-endian triangle mesh. Local Chrome, Node.js and hardware WebGL render six derived observations, await actual scene rendering, and record camera matrices and input hashes. Uniform/blank views fail rather than enter matching. The output contains `scene/scene.json`, `raw-scene.json`, `capture.json` and `tour.html`; `scene3d-attach --local-scene` attaches a matched single-scene environment. Derived observations are not original photographs, and automatic positions/scale remain unapproved until reviewed. Organizer owns Evidence/matching authorization and downstream handoff.
+`raw-scene-import --spz SCENE.spz --mesh SCENE.ply --workspace OUTPUT` imports an existing scene locally; it never calls Marble. PLY must be a binary little-endian triangle mesh. Local Chrome, Node.js and hardware WebGL render six derived observations, await actual scene rendering, and record camera matrices and input hashes. A blank direction is preserved unchanged in the panorama when other directions contain texture; it is never filled with neighbouring content. An entirely uniform/blank capture still fails before matching. `scene/capture-quality.json` records each face hash, contrast and informative/blank status, bound to the capture manifest. Saved six-face captures can resume locally without rerendering or new model calls. The output contains `scene/scene.json`, `raw-scene.json`, `capture.json` and `tour.html`; `scene3d-attach --local-scene` attaches a matched single-scene environment. Derived observations are not original photographs, and automatic positions/scale remain unapproved until reviewed. Organizer owns Evidence/matching authorization and downstream handoff.
 
+
+Organizer uses one PDF + SPZ + PLY route for every PDF: verified scene renders → shared Evidence recognition, PDF source association and quotation checks → verified structured handoff → environment-handoff → scene3d-attach. The human-layout mapping PDF is not reread by a model. The source-text snapshot is bound to the unchanged original PDF hash and all page/line records; import uses that canonical extraction, including OCR pages, without PDF text/render subprocesses. Review images for text evidence are labelled text-preview cards, not original page renders or historical object photos. There is no catalog-layout classifier, special numbered-entry parser or fixed photo crop. The `catalog3d` entry ID and old saved quote-order marker remain compatibility data only. Derived views retain SPZ/PLY/capture provenance and are never labeled original field photographs. Environment-only requests stop before Story and assembly. Source PDF ingestion extracts every page as text; only scans/garbled pages use temporary rendering and local Tesseract OCR. Normal pages are not rendered; quotations retain original source/page/line selectors. Scene capture and the generated mapping-document transport remain separate environment artifacts. Missing OCR/language data, low-confidence recovery, corrupt input and unsupported evidence remain explicit diagnostics; a unified route is not a guarantee of a match.
+
+Local capture chooses a horizontal triangle near the lower floor of the registered collision mesh, nearest the area-weighted floor centre, and places the camera at the existing provisional eye-height assumption. It falls back to the provider origin when no floor is available. The actual camera translation is recorded from all six matrices and checked for consistency; it is never hard-coded to a global height. This remains candidate calibration, not measured or human-approved placement. Existing capture receipts are retained; a changed camera requires a fresh generation run and does not reset prior usage.
 New implementation files: [raw_scene.py](src/pastport_matched_environment/application/raw_scene.py) (bounded geometry import and injected capture lifecycle), [raw_scene_render.mjs](src/pastport_matched_environment/scene3d_assets/raw_scene_render.mjs) (owned local capture process), [raw_scene_capture.html](src/pastport_matched_environment/scene3d_assets/raw_scene_capture.html) (awaited GPU rendering), [test_raw_scene.py](tests/test_raw_scene.py) (offline format/capture/source-change boundaries).
 
 Admin writes an explicit workspace token-policy marker to disable cumulative recorded-token stops. Remaining token allowance is then None; actual execution usage remains persisted, and call limits/timeouts/recovery checks remain active. Standalone workspaces without the marker retain their grant threshold.

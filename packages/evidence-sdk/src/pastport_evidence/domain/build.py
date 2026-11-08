@@ -12,7 +12,7 @@ from pastport_evidence.domain.recognition import PixelRegion, SceneEntity
 
 class PDFMatchPage(DomainModel):
     page_index: int
-    image: ProjectAssetRef
+    image: ProjectAssetRef | None = None
     width: int
     height: int
     passages: tuple[ExactPassage, ...]

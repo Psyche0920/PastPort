@@ -46,6 +46,20 @@ class _Native(BaseModel):
     model_config = ConfigDict(extra="ignore", strict=True, frozen=True)
 
 
+class _DerivedScenePhoto(_Native):
+    filename: str
+    sha256: str
+
+
+class _DerivedScenePhotos(_Native):
+    schema_version: Literal["pastport.derived-scene-photos/1"] = "pastport.derived-scene-photos/1"
+    origin: Literal["rendered_3d_not_field_photographs"] = "rendered_3d_not_field_photographs"
+    source_splat_sha256: str
+    source_mesh_sha256: str
+    capture_sha256: str
+    photos: tuple[_DerivedScenePhoto, ...]
+
+
 class _View(_Native):
     id: str
     name: str = ""
@@ -217,6 +231,17 @@ class NativeInputAdmission:
 
 
 class NativeGameInputExporter:
+    @staticmethod
+    def object_scene_ids(snapshot: EnvironmentSnapshot, number: int) -> tuple[str, ...]:
+        views = {position.view_id for position in snapshot.positions if position.object_number == number}
+        if snapshot.metric_spatial is not None:
+            views.update(
+                world.view_id for world in snapshot.metric_spatial.worlds
+                if any(location.object_number == number and location.point is not None
+                       for location in world.objects)
+            )
+        return tuple(view.view_id for view in snapshot.views if view.view_id in views)
+
     def export(
         self, request: NativeInputRequest, worlds: NativeWorldSet, original_pdf: Path, output: Path,
         *, lightweight_review: bool = False,
@@ -246,7 +271,6 @@ class NativeGameInputExporter:
         ).model_dump_json())
         document_file = output / "source-document.json"
         is_idml = original_pdf.suffix.lower() == ".idml"
-        direct_catalog = request.entry_level == "catalog3d"
         document: RegisteredPDF | None = None
         if is_idml:
             from pastport_evidence.adapters.idml import IDMLDocumentReader
@@ -266,14 +290,17 @@ class NativeGameInputExporter:
                 if document.source.asset.sha256 != BoundedNativeArchive.digest(original_pdf):
                     raise ServiceError("ORIGINAL_SOURCE_CHANGED", "原始史料PDF已改变。", 409)
             else:
-                executable = shutil.which("pdftoppm")
-                if executable is None:
-                    raise ServiceError("PDF_READER_UNAVAILABLE", "读取原始史料需要Poppler。", 503)
                 document = PDFIngestionService(
-                    LocalAssetStore(output / "source-assets"), PopplerPDFReader(Path(executable))
+                    LocalAssetStore(output / "source-assets"), PopplerPDFReader()
                 ).register_and_extract(
                     request.project_id, original_pdf, ProcessingLimits(pdf_max_bytes=512 * 1024**2)
                 )
+                document = document.model_copy(update={
+                    "original_filename": next(
+                        (asset.filename for asset in request.files if asset.role == "original_pdf"),
+                        original_pdf.name,
+                    ),
+                })
                 document_file.write_text(document.model_dump_json())
             original_source_hash = document.source.asset.sha256
         native_tour = NativeInputAdmission.tour(worlds.authority)
@@ -460,14 +487,7 @@ class NativeGameInputExporter:
                             "number": item.id,
                             "stable_id": item.stable_id,
                             "name": item.name,
-                            "scene_ids": [
-                                v.view_id
-                                for v in snapshot.views
-                                if any(
-                                    p.object_number == item.id and p.view_id == v.view_id
-                                    for p in snapshot.positions
-                                )
-                            ],
+                            "scene_ids": [scene_id for scene_id in self.object_scene_ids(snapshot, item.id)],
                             "historical_id": item.historical_id,
                             "historical_title": item.historical_title or item.name,
                             "pairing_version": item.pairing_version,
@@ -531,7 +551,7 @@ class NativeGameInputExporter:
             "walkArea": None,
             "sourceNotes": {
                 str(obj.object_number): (obj.introduction or (obj.quote.text if obj.quote else ""))
-                if is_idml or direct_catalog else obj.evidence_limitation or "候选映射，独立审核状态保留。"
+                if is_idml else obj.evidence_limitation or "候选映射，独立审核状态保留。"
                 for obj in snapshot.objects
                 if not is_idml or any(p.object_number == obj.object_number for p in snapshot.positions)
             },
@@ -711,14 +731,14 @@ class SDKUploadedInputPreparer:
                 completed_stages=self._stages(output),
                 message=self._completion_message(prepared_request),
             )
-        original = self._path(request, inputs, "original_idml" if request.entry_level == "idml3d" else "original_pdf")
+        original = self._path(request, inputs, "original_idml" if request.entry_level in ("idml3d", "idmlscene3d") else "original_pdf")
         if original is None:
             raise ServiceError("ORIGINAL_PDF_REQUIRED", "缺少原始史料PDF。", 422)
         tour_input = self._path(request, inputs, "tour")
         tour = self._tour_preflight(request, tour_input, output) if tour_input else None
-        if request.entry_level in ("idml3d", "catalog3d"):
-            worlds = self._source_native_scene(request, inputs, original, output)
-        elif request.entry_level == "raw3d":
+        if request.entry_level in ("idml3d", "idmlscene3d"):
+            worlds = self._idml_scene(request, inputs, original, output)
+        elif request.entry_level in ("raw3d", "catalog3d"):
             worlds = self._raw_scene(request, inputs, original, output)
         elif request.entry_level == "3d":
             archive = self._path(request, inputs, "mounted_3d")
@@ -897,10 +917,13 @@ class SDKUploadedInputPreparer:
             raise ServiceError("PHOTOS_REQUIRED", "照片ZIP为空或总数超过100张。", 422)
         return folder
 
-    def _evidence(self, request: NativeInputRequest, original: Path, inputs: Path, output: Path) -> Path:
+    def _evidence(
+        self, request: NativeInputRequest, original: Path, inputs: Path, output: Path,
+        *, scene_photos: Path | None = None, native_handoff: bool = False,
+    ) -> Path:
         from pastport_evidence.application.document_package import OutputPaths
         from pastport_evidence.domain.execution import SubscriptionGrant as EvidenceGrant
-        folder = self._photos(request, inputs, output)
+        folder = scene_photos if scene_photos is not None else self._photos(request, inputs, output)
         workspace = output / "evidence"
         workspace.mkdir(parents=True, exist_ok=True)
         policy = workspace / "candidate-policy.json"
@@ -956,41 +979,44 @@ class SDKUploadedInputPreparer:
             raise ServiceError(
                 "MAPPING_OUTPUT_SCOPE", "映射PDF输出不在本次工作区内。", 409
             )
+        if native_handoff:
+            if documents.environment_handoff is None:
+                raise ServiceError("EVIDENCE_HANDOFF_MISSING", "已保存证据需补充本地结构化交接，不重发模型。", 409)
+            handoff=Path(documents.environment_handoff).resolve()
+            if not handoff.is_relative_to(workspace.resolve()):
+                raise ServiceError("MAPPING_OUTPUT_SCOPE", "结构化证据交接超出工作区。", 409)
+            from pastport_evidence.adapters.environment_handoff import EvidenceEnvironmentHandoff
+            EvidenceEnvironmentHandoff.validate(handoff)
+            self._record(output,"evidence",handoff/"objects.json")
+            return handoff
         self._record(output, "evidence", mapping)
         return mapping
 
-    def _source_native_scene(self, request: NativeInputRequest, inputs: Path, original: Path, output: Path) -> NativeWorldSet:
+    def _idml_scene(self, request: NativeInputRequest, inputs: Path, original: Path, output: Path) -> NativeWorldSet:
         links = self._path(request, inputs, "historical_links")
         splat = self._path(request, inputs, "scene_splat")
         mesh = self._path(request, inputs, "scene_mesh")
-        catalog = request.entry_level == "catalog3d"
         if splat is None or mesh is None:
             raise ServiceError("LOCAL_SCENE_REQUIRED", "需要同一场景的SPZ和PLY。", 422)
-        if links is None and not catalog:
+        if links is None and request.entry_level == "idml3d":
             raise ServiceError("IDML_INPUTS_REQUIRED", "需要IDML、Links ZIP、现场照片、SPZ和PLY。", 422)
         imported = output / "raw-scene"
         if not (imported / "tour.html").exists():
             self.runner.run("pastport_matched_environment.cli", ("raw-scene-import", "--spz", str(splat), "--mesh", str(mesh), "--workspace", str(imported)), 270)
         self._record(output, "local_scene_import", imported / "scene/raw-scene.json")
         handoff = output / "evidence" / "native-handoff"
-        if catalog:
-            from pastport_matched_environment.application.catalog_handoff import CatalogHandoff
-
-            try:
-                CatalogHandoff().prepare(original, handoff)
-            except (ValueError, OSError) as exc:
-                raise ServiceError("CATALOG_INPUT_INVALID", "无法读取展签图录：" + str(exc), 422) from exc
-            self._record(output, "catalog_extraction", handoff / "objects.json")
-        else:
-            assert links is not None
-            self._prepare_idml_handoff(request, inputs, original, output, links, handoff)
-        return self._localize_native_handoff(request, output, imported, handoff, catalog=catalog)
+        observations = (
+            self._scene_observations(imported, output)
+            if request.entry_level == "idmlscene3d" else None
+        )
+        self._prepare_idml_handoff(request, inputs, original, output, links, handoff, scene_photos=observations)
+        return self._localize_idml_handoff(request, output, imported, handoff)
 
     def _prepare_idml_handoff(
         self, request: NativeInputRequest, inputs: Path, original: Path, output: Path,
-        links: Path, handoff: Path,
+        links: Path | None, handoff: Path, *, scene_photos: Path | None = None,
     ) -> None:
-        photos = self._photos(request, inputs, output)
+        photos = scene_photos if scene_photos is not None else self._photos(request, inputs, output)
         workspace = output / "evidence"
         workspace.mkdir(exist_ok=True)
         (workspace / "no-token-threshold-authorized.txt").write_text("Explicit existing Admin token policy; preserve call ceilings and usage records")
@@ -1001,14 +1027,18 @@ class SDKUploadedInputPreparer:
                 max_calls=request.options.max_evidence_calls,max_recorded_tokens=request.options.max_recorded_tokens,
                 timeout_seconds=240).model_dump_json())
         if not (handoff / "source-units.json").exists():
-            self.runner.run("pastport_evidence.idml_cli", ("--idml",str(original),"--links",str(links),
-                "--photos",str(photos),"--workspace",str(workspace),"--grant",str(grant_file)),
-                240*request.options.max_evidence_calls+180)
+            arguments: tuple[str, ...] = ("--idml", str(original), "--photos", str(photos),
+                         "--workspace", str(workspace), "--grant", str(grant_file))
+            if links is not None:
+                arguments += ("--links", str(links))
+            if request.entry_level == "idmlscene3d":
+                arguments += ("--allow-missing-graphics",)
+            self.runner.run("pastport_evidence.idml_cli", arguments,
+                            240 * request.options.max_evidence_calls + 180)
         self._record(output,"evidence",handoff / "idml-matches.json")
 
-    def _localize_native_handoff(
+    def _localize_idml_handoff(
         self, request: NativeInputRequest, output: Path, imported: Path, handoff: Path,
-        *, catalog: bool,
     ) -> NativeWorldSet:
         from pastport_matched_environment.domain.execution import SubscriptionGrant as EnvironmentGrant
         environment_workspace = output / "environment-build"
@@ -1022,7 +1052,7 @@ class SDKUploadedInputPreparer:
             self.runner.run("pastport_matched_environment.idml_cli",("--handoff",str(handoff),"--tour",str(imported / "tour.html"),
                 "--workspace",str(environment_workspace),"--run-id",request.job_id,"--grant",str(environment_grant)),
                 240*request.options.max_environment_calls+180)
-        self._record(output,"catalog_localization" if catalog else "matched_environment",environment / "import-manifest.json")
+        self._record(output,"matched_environment",environment / "import-manifest.json")
         tour = self.admission.tour(environment)
         attachment = output / "scene3d-1"
         if not (attachment / "delivery.json").exists():
@@ -1031,13 +1061,62 @@ class SDKUploadedInputPreparer:
         self._record(output,"scene3d_1",attachment / "delivery.json")
         return NativeWorldSet(environment,(attachment / "result",),tour.firstSceneId)
 
+    @staticmethod
+    def _scene_observations(imported: Path, output: Path) -> Path:
+        """Use verified rendered cube faces when no external photos were supplied."""
+        from PIL import Image
+        from pastport_matched_environment.application.raw_scene import (
+            CaptureQualityReport, RawSceneReceipt,
+        )
+
+        scene = imported / "scene"
+        receipt = RawSceneReceipt.model_validate_json((scene / "raw-scene.json").read_bytes())
+        quality = CaptureQualityReport.model_validate_json((scene / "capture-quality.json").read_bytes())
+        if quality.capture_sha256 != BoundedNativeArchive.digest(scene / "capture.json"):
+            raise ServiceError("SCENE_CAPTURE_CHANGED", "3D取景记录已变化，请新建任务。", 409)
+        names = [face.file for face in quality.faces]
+        if len(names) != 6 or len(set(names)) != 6:
+            raise ServiceError("SCENE_CAPTURE_INVALID", "3D取景必须包含六个不同方向。", 422)
+        selected = tuple(face for face in quality.faces if face.informative)
+        if not selected:
+            raise ServiceError("SCENE_CAPTURE_EMPTY", "3D取景全部为空，不能继续识别物件。", 422)
+        folder = output / "derived-scene-photos"
+        folder.mkdir(exist_ok=True)
+        photos: list[_DerivedScenePhoto] = []
+        for face in selected:
+            source = scene / face.file
+            if source.is_symlink() or BoundedNativeArchive.digest(source) != face.sha256:
+                raise ServiceError("SCENE_CAPTURE_CHANGED", "3D观察图已变化，请新建任务。", 409)
+            with Image.open(source) as image:
+                image.verify()
+            destination = folder / face.file
+            if destination.exists():
+                if BoundedNativeArchive.digest(destination) != face.sha256:
+                    raise ServiceError("SCENE_CAPTURE_CHANGED", "保存的3D观察图已变化。", 409)
+            else:
+                shutil.copyfile(source, destination)
+            photos.append(_DerivedScenePhoto(filename=face.file, sha256=face.sha256))
+        manifest = _DerivedScenePhotos(
+            source_splat_sha256=receipt.splat_sha256,
+            source_mesh_sha256=receipt.mesh_sha256,
+            capture_sha256=quality.capture_sha256,
+            photos=tuple(photos),
+        )
+        manifest_file = output / "derived-scene-photos.json"
+        if manifest_file.exists() and _DerivedScenePhotos.model_validate_json(
+            manifest_file.read_bytes()
+        ) != manifest:
+            raise ServiceError("SCENE_CAPTURE_CHANGED", "3D观察图来源快照已变化。", 409)
+        manifest_file.write_text(manifest.model_dump_json(indent=2))
+        return folder
+
     def _raw_scene(self, request: NativeInputRequest, inputs: Path, original: Path, output: Path) -> NativeWorldSet:
-        from pastport_matched_environment.domain.environment import RunResultPointer
         from pastport_matched_environment.domain.execution import SubscriptionGrant as EnvironmentGrant
         splat = self._path(request, inputs, "scene_splat")
         mesh = self._path(request, inputs, "scene_mesh")
         if splat is None or mesh is None or splat.suffix != ".spz" or mesh.suffix != ".ply":
             raise ServiceError("RAW_SCENE_REQUIRED", "请上传同场景SPZ和三角碰撞PLY。", 422)
+        # Every uploaded PDF uses this flow, regardless of labels, codes or layout.
         # Shared Evidence flow needs recognition, candidate retrieval and matching.
         # Twenty-object early stopping makes an all-photo estimate misleading;
         # the executor enforces the remaining grant at every actual dispatch.
@@ -1051,19 +1130,25 @@ class SDKUploadedInputPreparer:
         if not (imported / "tour.html").exists():
             self.runner.run("pastport_matched_environment.cli", ("raw-scene-import", "--spz", str(splat), "--mesh", str(mesh), "--workspace", str(imported)), 270)
         self._record(output, "local_scene_import", imported / "scene/raw-scene.json")
-        mapping = self._evidence(request, original, inputs, output)
+        scene_photos = (
+            self._scene_observations(imported, output)
+            if not any(asset.role == "photos" for asset in request.files)
+            else None
+        )
+        handoff = self._evidence(
+            request, original, inputs, output, scene_photos=scene_photos, native_handoff=True
+        )
         workspace = output / "environment-build"
-        environment_run_id = request.job_id + "-" + BoundedNativeArchive.digest(mapping)[:12] + "-cube-v1"
-        pointer_file = workspace / "runs" / environment_run_id / "result-pointer.json"
-        if not pointer_file.exists():
-            grant = EnvironmentGrant(grant_ref="org_"+request.job_id+"_environment", project_id=request.project_id,
-                                     max_calls=request.options.max_environment_calls, max_recorded_tokens=request.options.max_recorded_tokens, timeout_seconds=240)
+        environment_run_id = request.job_id + "-" + BoundedNativeArchive.digest(handoff/"objects.json")[:12] + "-native-text-v1"
+        environment = workspace / "runs" / environment_run_id / "result"
+        if not (environment / "import-manifest.json").exists():
             grant_file = output / "environment-grant.json"
             if not grant_file.exists():
+                grant = EnvironmentGrant(grant_ref="org_"+request.job_id+"_environment", project_id=request.project_id,
+                    max_calls=request.options.max_environment_calls, max_recorded_tokens=request.options.max_recorded_tokens, timeout_seconds=240)
                 grant_file.write_text(grant.model_dump_json())
-            self.runner.run("pastport_matched_environment.cli", ("environment-build", "--pdf", str(mapping), "--tour", str(imported / "tour.html"), "--grant", str(grant_file), "--workspace", str(workspace), "--run-id", environment_run_id, "--large-pdf"), 240*request.options.max_environment_calls+120)
-        pointer = RunResultPointer.model_validate_json(pointer_file.read_bytes())
-        environment = workspace / "runs" / pointer.result_run_id / "result"
+            self.runner.run("pastport_matched_environment.cli", ("environment-handoff", "--handoff", str(handoff), "--tour", str(imported/"tour.html"),
+                "--grant", str(grant_file), "--workspace", str(workspace), "--run-id", environment_run_id), 240*request.options.max_environment_calls+120)
         self._record(output, "matched_environment", environment / "import-manifest.json")
         tour = self.admission.tour(environment)
         if len(tour.scenes) != 1:

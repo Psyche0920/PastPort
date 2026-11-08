@@ -1,5 +1,10 @@
 # PastPort Evidence SDK
 
+Production IDML still recognizes scene objects before source matching. Text-first targeting remains an isolated prototype, not the SDK entry. New IDML workspaces pin v4 same-object visual matching, tolerating unclear minor details when overall identity is supported. Nonidentity associations are omitted; existing workspaces retain their pinned policy and ledger.
+
+The native `idmlscene3d` entry requires only IDML, SPZ and PLY; Links is optional, and no field-photo upload is required. The pipeline derives observations from the hash-bound scene and records their provenance, then reuses native IDML matching, independent audit, localization and attachment. Missing linked graphics remain explicit gaps and are excluded from image evidence; source text and exact citations remain usable. The existing photo-based `idml3d` entry stays separate. Environment preparation stops at `environment_ready`, before Story.
+
+
 ## Current integration contract
 
 | Item | Current behavior |
@@ -17,7 +22,7 @@ Source revision and notices: [UPSTREAM](UPSTREAM.md), [license](LICENSE).
 Input: one historical PDF, ordinary multi-angle photographs, an isolated workspace
 and an explicit finite subscription grant. Output: a comparison PDF, editable IDML,
 source provenance and unresolved gaps. Modern substitutes are labelled as such.
-This package neither builds a game nor claims a structured museum handoff.
+This package does not build a game or grant museum/historical approval. New text-first runs also export an integrity-checked, source-bound environment handoff through `OutputPaths.environment_handoff`, using verified quotations/line selectors and confirmed scene observations; the human PDF/IDML is not reinterpreted by a model.
 
 ## Install independently
 
@@ -27,9 +32,11 @@ pastport-evidence --help
 ```
 
 From inside this package directory, use `uv pip install '.[codex]'` instead.
-Python 3.12 and Poppler `pdftoppm` are required. Installation/import/help does not
+Python 3.12 is required. Poppler `pdftoppm`, local Tesseract and language data are needed only for OCR pages; ordinary native-text extraction does not require these binaries. Installation/import/help does not
 authorize generation. Supply the existing bounded grant explicitly for real work;
 retain the original ledger on resume. Never place credentials in a grant file.
+
+PDF source ingestion is text-first across every page: native text and ordered lines are extracted without page rendering. Only image/vector scans or detectably garbled text use temporary Poppler images and local Tesseract TSV OCR. Native text, OCR reason/engine/languages/confidence and page-space line boxes remain recorded; original PDF bytes/hash never change. New matching uses text passages with one-based page-local line ranges and no PDF-page image payloads. Existing saved image records/policies remain readable, without re-rendering or resetting usage. Empty pages stay indexed; unavailable OCR/language data or low-confidence recovery raises an explicit page diagnostic. Install `tesseract` and required language data; `PASTPORT_OCR_LANGUAGES` selects installed language codes (for example `eng+chi_sim+tur`). The default uses installed common English/Chinese/Turkish/German data. Other scripts require their language data and explicit configuration. This does not guarantee correct recognition of every scan.
 
 ## Python boundary
 
@@ -65,7 +72,7 @@ Run the offline boundary checks from this package root with
 <!-- BEGIN FILE INVENTORY -->
 ## 文件结构与用途
 
-每个文件的用途直接写在同一行。以下覆盖本范围内的 **55 个维护文件**；依赖环境、缓存、私有产物和历史备份不属于源码清单。
+每个文件的用途直接写在同一行。以下覆盖本范围内的 **59 个维护文件**；依赖环境、缓存、私有产物和历史备份不属于源码清单。
 
 ```text
 evidence-sdk/
@@ -77,9 +84,11 @@ evidence-sdk/
 │       │   ├── codex_sdk.py  # Official Codex SDK transport using the operator's existing ChatGPT login.
 │       │   ├── codex_semantics.py  # Bind existing semantic ports to one grant-scoped, metered Codex executor.
 │       │   ├── document_export.py  # Render one layout as a PDF and an editable IDML package with relative image links.
+│       │   ├── environment_handoff.py  # Verified source/line/object/observation handoff without reparsing the human report.
 │       │   ├── execution.py  # Durable grant reservations: uncertain dispatch consumes its slot until reconciled.
 │       │   ├── identity.py  # Transactional scene identity allocation without category/name-based merging.
-│       │   ├── pdf.py  # Native PDF text, positioned line and embedded image extraction plus Poppler rendering.
+│       │   ├── ocr.py  # Bounded local Tesseract TSV OCR with positioned lines and confidence diagnostics.
+│       │   ├── pdf.py  # Full-document text/line extraction; temporary page rendering only for OCR.
 │       │   ├── report_layout.py  # Lay out supported text beside target and source images without truncating quotations.
 │       │   └── structured_output.py  # Translate Pydantic schemas to the provider's strict structured-output subset.
 │       ├── application/
@@ -114,10 +123,14 @@ evidence-sdk/
 │       │   ├── assets.py  # Asset storage contract used by application services.
 │       │   ├── execution.py  # Transport boundary keeps the SDK outside domain/application services.
 │       │   ├── identity.py  # Persistent identity allocation boundary.
-│       │   ├── pdf.py  # PDF processing contract independent of the chosen extraction/render libraries.
+│       │   ├── ocr.py  # Injected local OCR boundary with immutable located-line results.
+│       │   ├── pdf.py  # Text-first incremental page reading, OCR only where needed.
 │       │   └── semantics.py  # Inject a shared metered gateway; application services never instantiate paid SDKs.
 │       ├── prompts/
 │       │   ├── evidence_association_v2.txt  # 证据关联模型提示词，约束史料与对象关联输出。
+│       │   ├── idml_mapping_v2.txt  # 新任务的同一物体视觉识别策略。
+│       │   ├── idml_mapping_audit_v2.txt  # 同一物体候选的独立复核策略。
+│       │   ├── pdf_matching_text-v1.txt  # Text-only PDF evidence policy; source/page/line citations and no invented crops.
 │       │   ├── pdf_matching_v2.txt  # PDF 匹配模型提示词，约束匹配字段与证据表达。
 │       │   └── photo_inspection_v1.txt  # 现场照片检查模型提示词，约束可见物体观察输出。
 │       ├── workflow/
@@ -145,7 +158,7 @@ New workspaces also pin [photo_inspection_v2.txt](src/pastport_evidence/prompts/
 
 Manual interrupted-call recovery uses `SubscriptionExecutor.approve_interrupted_retry(binding, reason)` only after the original worker has stopped and the operator has explicitly authorized replacement. It records a separate replacement binding and audit reason; completed results remain cache hits, the interrupted row/result stays unchanged, and both original and replacement count against the same grant call limit. Actual interrupted token usage remains unknown; recorded-token accounting is not a claim of total billed usage. `StageJournal.reconcile` records the interrupted running stage separately before Admin continuation. No automatic retry or implicit grant reset is introduced. Recovery regression checks preserve the original unknown row, enforce call ceilings and verify successful responses are not dispatched again.
 
-Admin's shared PDF workflow automates the earlier mapping method: recognize current photos, retrieve candidate pages from a source-bound text index, match the actual PDF images, validate exact source selectors locally, then export the mapping PDF for human review. VR and raw 3D uploads use this same Evidence entry point. One bounded text-only request selects at most twelve candidate pages; visual matching uses at most four three-page batches. Exact quotation validation does not dispatch a separate model request for every object. Historical associations remain candidates pending human review; source-exact text is not proof of a physical identity match. Uncovered objects, truncated extraction and non-exhaustive page coverage remain explicit gaps.
+Admin's shared PDF workflow automates the earlier mapping method: recognize current photos, retrieve candidate pages from a source-bound text index, match selected PDF text passages with original page/line selectors, validate exact source selectors locally, then export the mapping PDF for human review. VR and raw 3D uploads use this same Evidence entry point. One bounded text-only request selects at most twelve candidate pages; new text-only matching batches up to twelve candidate pages per request, while historical visual policies retain three-page batches. CLI policy pinning precedes usage-ledger initialization so a new workspace is not misclassified as legacy. Exact quotation validation does not dispatch a separate model request for every object. Historical associations remain candidates pending human review; source-exact text is not proof of a physical identity match. Uncovered objects, truncated extraction and non-exhaustive page coverage remain explicit gaps.
 
 The candidate plan and recognition checkpoints are cached only within the same immutable inputs/revision. New indexed revisions copy registered source/photo inputs and recognition checkpoints, leaving previous PDFs, journals, grants and receipts intact. Legacy non-indexed workspaces remain replayable. New materials are matched anew: the shared processing method never imports another project's object/subject associations.
 

@@ -212,13 +212,27 @@ def create_app(
         from pastport.adapters.organizer_native import SDKUploadedInputPreparer
 
         organizer_inputs = SDKUploadedInputPreparer()
+    player_assets = settings.organizer_player_assets
+    if player_assets is None:
+        # Uploaded scenes provide their own resources; custom portrait art is optional.
+        player_assets = directory / "organizer" / "player-assets"
+        try:
+            player_assets.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            raise ServiceError(
+                "PLAYER_ASSETS_UNAVAILABLE", "无法创建本机播放器资源目录，请检查数据目录权限。", 503
+            ) from error
+    if player_assets.is_symlink() or not player_assets.is_dir():
+        raise ServiceError(
+            "PLAYER_ASSETS_UNAVAILABLE", "播放器资源目录不存在或包含链接，请检查服务器配置。", 503
+        )
     organizer_store = OrganizerStore(directory / "organizer")
     organizer = OrganizerService(
         organizer_store,
         organizer_catalog,
         organizer_production,
         input_preparer=organizer_inputs,
-        player_assets=settings.organizer_player_assets,
+        player_assets=player_assets,
         reviews=organizer_reviews,
         story_reuse=organizer_story_reuse,
     )

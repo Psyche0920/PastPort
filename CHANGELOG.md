@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-08 — Native source preparation, pinned visual policy and Story contracts
+
+- Unify normal PDF text extraction with page/line provenance and targeted local OCR for scanned or garbled pages. Preserve originals and pass verified evidence directly to native environment preparation; remove the label-layout-specific path.
+- Add the native IDML + SPZ + PLY entry and stepwise Organizer preparation; initialize optional player assets locally, retain bounded budgets and saved receipts, and stop environment preparation before Story.
+- Pin new IDML runs to v4 same-object visual matching and new environment runs to the v2 localization skill snapshot. Unclear minor marks remain limitations; function-only analogies are excluded. Existing runs retain their prior policies. Show pending IDML review entries directly.
+- Include the current Story preparation/schema, budget/resume and English/Turkish contract updates, shared game runtime preparation, localization assets and remote-start diagnostics.
+- Text-first IDML targeting and moved-camera search remain local experimental artifacts, not production features in this commit. Same-material source-first testing selected 9 targets, matched 7 and localized 6; the production baseline had 30 candidates and 9 matches/locations. Counts are not an accuracy benchmark. No private source files, model ledgers, project databases, game bundles or experimental run directories are committed.
+- Validation: Evidence and Matched Environment SDK offline suites, strict application/test typing (214 files), strict SDK typing (131 files), 43 schema contracts, player contracts and repository/documentation checks passed. The application-wide run had one active-time settlement assertion failure; the focused rerun including that test passed. An i18n test now explicitly verifies intentional version-suffix omission and complete composed labels. Repository-wide Ruff is not clean (610 findings on the prior committed baseline; 738 in the current working tree), and format-check requests 100 files; these are not claimed as green. Generation, browser playthrough, human historical approval and public deployment remain separate acceptance layers.
+
 ## 2026-11-07 — Player-map game names and launch verification
 
 - Label map nodes and place details with the verified publication edition, keeping heritage place names. Game headers and iframe titles follow the actual launched release; older saves cannot borrow the current edition label. Simplified Chinese, English and Turkish update together.

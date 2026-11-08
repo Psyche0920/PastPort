@@ -706,3 +706,40 @@ class EnvironmentBuildTests(unittest.TestCase):
                 self.assertNotIn("build", create.call_args.args)
 
         asyncio.run(exercise())
+
+
+def test_environment_skill_is_used_and_pinned_for_new_runs_only(tmp_path: Path) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    from pastport_matched_environment.application.environment_build import EnvironmentRun, prepare_environment_skill
+
+    packaged = Path(__file__).parents[1] / 'src/pastport_matched_environment/prompts/environment_skill_v2.txt'
+    canonical = Path(__file__).parents[3] / 'skills/environment-localization-review/SKILL.md'
+    assert packaged.read_bytes() == canonical.read_bytes()
+    run = tmp_path / 'runs' / 'new'
+    skill = prepare_environment_skill(run)
+    assert skill == canonical.read_text()
+    with patch('pastport_matched_environment.application.environment_build.files', side_effect=RuntimeError('source unavailable')):
+        assert prepare_environment_skill(run) == skill
+    previous = tmp_path / 'runs' / 'previous'
+    previous.mkdir()
+    (previous / 'environment-skill-v1.snapshot.txt').write_text('retained old policy')
+    assert prepare_environment_skill(previous) == 'retained old policy'
+    legacy = tmp_path / 'runs' / 'legacy'
+    legacy.mkdir()
+    assert prepare_environment_skill(legacy) is None
+    grant = SubscriptionGrant(project_id='fixture', grant_ref='fixture', max_calls=3)
+    captured: list[ExecutionInput] = []
+
+    class CaptureExecutor:
+        def execute(self, request: ExecutionInput) -> SimpleNamespace:
+            captured.append(request)
+            return SimpleNamespace(payload_json='{"objects":[]}')
+
+    for name in ('new', 'legacy'):
+        context = EnvironmentRun(tmp_path / 'source.pdf', tmp_path / 'tour.html', grant,
+            tmp_path, name, 'fixture', False, Path('/unused'), Mock(), 'a' * 64)
+        context.executor = CaptureExecutor()  # type: ignore[assignment]
+        context.call('Locate fixture', SceneInput(source_scene_id='scene', objects=()), LocationReviews)
+    assert skill in captured[0].instructions
+    assert skill not in captured[1].instructions

@@ -97,8 +97,24 @@ class OperationalService:
         previous = self.database.budget_policy(run_id)
         if command.budget_hash != CanonicalSerializer.digest(previous):
             raise ServiceError("BUDGET_STALE", "Budget differs from the authorized version")
-        if command.budget_policy == previous:
+        if command.budget_policy == previous and not command.accepted_recorded_usage:
             raise ServiceError("BUDGET_UNCHANGED", "New limits must differ from the current limits")
+        entries = {entry.operation_id: entry for entry in self.database.budget(run_id).entries}
+        accepted_ids = [item.operation_id for item in command.accepted_recorded_usage]
+        if len(accepted_ids) != len(set(accepted_ids)):
+            raise ServiceError("RECORDED_USAGE_INVALID", "Duplicate recorded usage acceptance")
+        for acceptance in command.accepted_recorded_usage:
+            entry = entries.get(acceptance.operation_id)
+            saved = self.database.execution_receipt(acceptance.operation_id)
+            if (
+                entry is None or entry.state != "settled" or entry.settlement is None
+                or saved is None or saved.response is None or saved.settlement is None
+                or saved.settlement != entry.settlement
+                or CanonicalSerializer.digest(saved) != acceptance.receipt_sha256
+            ):
+                raise ServiceError(
+                    "RECORDED_USAGE_INVALID", "Acceptance requires the unchanged settled provider receipt"
+                )
         result = self.result(run, retry=run.state.status == "budget_exhausted")
         self.database.amend_budget(
             result,

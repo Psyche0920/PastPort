@@ -790,3 +790,39 @@ def test_v3_migration_preserves_model_requests_responses_and_existing_budget(
     assert not database.interventions(run_id).reconciliations
     with database.connection() as connection:
         assert connection.execute("SELECT version FROM schema_versions").fetchone()[0] == 4
+
+
+def test_settled_overrun_requires_exact_operator_acceptance_and_reuses_one_call(tmp_path: Path) -> None:
+    from pastport.domain.common import CanonicalSerializer
+
+    tape = ProviderTape()
+    def oversized(request: ProviderRequest) -> ProviderResponse:
+        return updated(tape.respond(request), output_tokens=10001)
+    config = replace(operator_settings(tmp_path), execution=execution(), skill_directory=SKILLS)
+    with TestClient(create_app(config, providers=(ProviderRegistration(
+        "fake", FakeModelProvider(oversized)),), narrative_factory=GatewayNarrative)) as client:
+        run_id = start(client)
+        stopped(client, run_id, "budget_exhausted")
+        database = EditorialDatabase(tmp_path / "editorial.sqlite3")
+        summary = database.execution_summaries(run_id)[0]
+        saved = database.execution_receipt(summary.operation_id)
+        assert saved is not None
+        before = database.budget(run_id)
+        body = amend_body(client, run_id, max_output_tokens=before.limit.output_tokens + 10001)
+        accepted_usage = [{"operation_id": summary.operation_id, "receipt_sha256": "0" * 64}]
+        body["accepted_recorded_usage"] = accepted_usage
+        bad = client.post(f"/api/v1/runs/{run_id}/budget-amendments", headers=headers(), json=body)
+        assert bad.status_code == 409 and bad.json()["code"] == "RECORDED_USAGE_INVALID"
+        accepted_usage[0]["receipt_sha256"] = CanonicalSerializer.digest(saved)
+        result = client.post(f"/api/v1/runs/{run_id}/budget-amendments", headers=headers(), json=body)
+        assert result.status_code == 200, result.text
+        resume(client, run_id)
+        wait_for(client, run_id, "needs_review")
+        assert len(tape.calls) == 1
+        after = database.budget(run_id)
+        assert after.used.output_tokens == 10001
+        assert database.execution_receipt(summary.operation_id) == saved
+        original = next(e for e in before.entries if e.operation_id == summary.operation_id)
+        current = next(e for e in after.entries if e.operation_id == summary.operation_id)
+        assert current.reserved == original.reserved
+        assert len(database.interventions(run_id).budget_amendments) == 1

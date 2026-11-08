@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from pastport_matched_environment.adapters.assets import LocalAssetStore
 from pastport_matched_environment.adapters.tour import TourImporter
 from pastport_matched_environment.application.environment_agent import offline_input_limits
-from pastport_matched_environment.application.environment_build import EnvironmentRun
+from pastport_matched_environment.application.environment_build import EnvironmentRun, prepare_environment_skill
 from pastport_matched_environment.application.reference_environment import CandidateBuilder, digest, reference_assets
 from pastport_matched_environment.domain.environment import MatchedBatch, MatchedObject, PageCrop, RelationInventory
 from pastport_matched_environment.domain.execution import SubscriptionGrant
@@ -52,7 +52,7 @@ class NativeIDMLEnvironmentRun(EnvironmentRun):
 
     def discover_structure(self) -> RelationInventory:
         if self.pdf.suffix == '.pdf':
-            return RelationInventory(relations=(), review_basis="Each catalog number identifies an independent physical exhibit.")
+            return RelationInventory(relations=(), review_basis="No source-bound physical containment relations were supplied; none are inferred.")
         return super().discover_structure()
 
 
@@ -82,7 +82,10 @@ class IDMLEnvironmentWorkflow:
             if path.is_file():
                 binding.update(path.relative_to(handoff).as_posix().encode());binding.update(digest(path).encode())
         binding.update(digest(tour).encode())
-        title = 'IDML historical environment' if source.suffix == '.idml' else 'Direct PDF exhibit environment'
+        skill = prepare_environment_skill(workspace / 'runs' / run_id)
+        if skill is not None:
+            binding.update(hashlib.sha256(skill.encode('utf-8')).hexdigest().encode())
+        title = 'IDML historical environment' if source.suffix == '.idml' else 'Verified PDF text environment'
         context=NativeIDMLEnvironmentRun(source,tour,grant,workspace,run_id,title,
             False,Path('unused-for-native-idml'),self.transport,binding.hexdigest())
         lock=context.run/'idml-input.sha256'

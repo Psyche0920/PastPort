@@ -7,8 +7,8 @@ const catalog=JSON.parse(await readFile(new URL('../frontend/player/game-display
 const lexicon=new DisplayLexicon(catalog);
 test('Organizer Turkish catalog covers every English key and preserves project identities',()=>{
  assert.deepEqual(Object.keys(turkishMessages).sort(),Object.keys(messages).sort());
- for(const key of Object.keys(messages)){assert.equal(typeof turkishMessages[key],'string');assert.ok(turkishMessages[key].trim());assert.doesNotMatch(turkishMessages[key],/[\u3400-\u9fff]/u);}
- setLanguage('tr');assert.equal(getLanguage(),'tr');assert.equal(translate('制作游戏'),'Oyun oluştur');
+ for(const key of Object.keys(messages)){assert.equal(typeof turkishMessages[key],'string');if(key===' 版')assert.equal(turkishMessages[key],'');else assert.ok(turkishMessages[key].trim());assert.doesNotMatch(turkishMessages[key],/[\u3400-\u9fff]/u);}
+ setLanguage('tr');assert.equal(translate('第 3 版'),'Sürüm 3');assert.equal(translate('第 3 版（当前）'),'Sürüm 3 (geçerli)');assert.equal(getLanguage(),'tr');assert.equal(translate('制作游戏'),'Oyun oluştur');
  assert.equal(translate('wcheung · 当前第 3 版'),'wcheung · geçerli sürüm 3');
  assert.equal(translate('/Users/test/muradiye/game-3d'),'/Users/test/muradiye/game-3d');setLanguage('zh');
 });

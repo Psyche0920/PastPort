@@ -71,6 +71,57 @@ def test_blank_observations_never_become_recognition_inputs(tmp_path: Path) -> N
     assert not (tmp_path/'prepared/scene/scene.json').exists()
 
 
+@pytest.mark.parametrize("blank_faces", [(5,), (0,), (0, 1, 2, 3, 4)])
+def test_partial_blank_capture_preserves_empty_directions_and_resumes(
+    tmp_path: Path, blank_faces: tuple[int, ...],
+) -> None:
+    splat, mesh = inputs(tmp_path)
+    capture = Capture()
+    workspace = tmp_path / "prepared"
+    scene = workspace / "scene"
+    RawSceneGeometry().prepare(splat, mesh, scene)
+    capture.capture(scene, tmp_path, workspace / "capture.log")
+    for index in blank_faces:
+        with Image.new("RGB", (32, 32), "black") as image:
+            image.save(scene / f"face-{index}.png")
+    before = {path.name: path.read_bytes() for path in scene.glob("face-*.png")}
+
+    preparation = RawScenePreparation(capture)
+    tour = preparation.prepare(splat, mesh, workspace)
+    report = json.loads((scene / "capture-quality.json").read_text())
+    assert [face["file"] for face in report["faces"] if not face["informative"]] == [
+        f"face-{index}.png" for index in blank_faces
+    ]
+    assert tour.is_file() and (scene / "scene.json").is_file()
+    assert before == {path.name: path.read_bytes() for path in scene.glob("face-*.png")}
+    with Image.open(scene / "panorama.jpg") as panorama:
+        # Cube-face centres in equirectangular coordinates, including both poles.
+        centres = ((1024, 512), (1536, 512), (0, 512), (512, 512), (1024, 0), (1024, 1023))
+        for index in blank_faces:
+            assert max(panorama.getpixel(centres[index])) < 5
+    panorama_bytes = (scene / "panorama.jpg").read_bytes()
+    preparation.prepare(splat, mesh, workspace)
+    assert capture.calls == 1
+    assert (scene / "panorama.jpg").read_bytes() == panorama_bytes
+
+
+def test_differently_coloured_uniform_faces_still_fail(tmp_path: Path) -> None:
+    splat, mesh = inputs(tmp_path)
+    workspace = tmp_path / "prepared"
+    scene = workspace / "scene"
+    RawSceneGeometry().prepare(splat, mesh, scene)
+    capture = Capture(blank=True)
+    capture.capture(scene, tmp_path, workspace / "capture.log")
+    for index in range(6):
+        with Image.new("RGB", (32, 32), (index * 40, 0, 0)) as image:
+            image.save(scene / f"face-{index}.png")
+    with pytest.raises(ValueError, match="All rendered views are blank"):
+        RawScenePreparation(capture).prepare(splat, mesh, workspace)
+    assert (scene / "capture-quality.json").is_file()
+    assert not (scene / "panorama.jpg").exists()
+    assert not (scene / "scene.json").exists()
+
+
 @pytest.mark.parametrize('corruption',['truncated','invalid-index','non-triangle'])
 def test_invalid_mesh_cannot_publish_registered_scene(tmp_path: Path,corruption: str) -> None:
     splat,mesh=inputs(tmp_path)
@@ -122,3 +173,28 @@ def test_raw_localization_views_cover_ceiling_and_floor_without_extra_image_slot
     with Image.open(paths[-2]) as top,Image.open(paths[-1]) as bottom:
         assert top.getpixel((512,512))[0]>200
         assert bottom.getpixel((512,512))[2]>200
+
+
+
+def test_capture_origin_uses_observed_lower_floor_in_stepped_scene(tmp_path: Path) -> None:
+    from numpy.typing import NDArray
+
+    class SteppedGeometry(RawSceneGeometry):
+        def ply(self, path: Path) -> tuple[NDArray[np.float32], NDArray[np.uint32]]:
+            return (np.array([(0, 0, 0), (1, 0, 0), (0, 0, 1),
+                              (10, 4, 20), (11, 4, 20), (10, 4, 21)], dtype=np.float32),
+                    np.array([(0, 1, 2), (3, 4, 5)], dtype=np.uint32))
+
+    origin = SteppedGeometry().capture_origin(tmp_path / "unused.ply", 4.0)
+    assert origin == pytest.approx((10 + 1 / 3, 1.6, -(20 + 1 / 3)))
+
+
+def test_capture_without_horizontal_floor_retains_provider_origin(tmp_path: Path) -> None:
+    from numpy.typing import NDArray
+
+    class WallGeometry(RawSceneGeometry):
+        def ply(self, path: Path) -> tuple[NDArray[np.float32], NDArray[np.uint32]]:
+            return (np.array([(0, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=np.float32),
+                    np.array([(0, 1, 2)], dtype=np.uint32))
+
+    assert WallGeometry().capture_origin(tmp_path / "unused.ply", 4.0) == (0.0, 4.0, 0.0)

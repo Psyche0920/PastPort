@@ -145,7 +145,10 @@ class ReportLayout:
                 content.extend(("", "映射依据与限制", evidence.limitation, "", "原文摘录"))
                 if evidence.passages:
                     for passage in evidence.passages:
-                        content.append(f"[原 PDF 第 {passage.page_index + 1} 页] {passage.quote}")
+                        locator = f"原 PDF 第 {passage.page_index + 1} 页"
+                        if passage.line_start is not None:
+                            locator += f"，第 {passage.line_start}–{passage.line_end} 行"
+                        content.append(f"[{locator}] {passage.quote}")
                 else:
                     content.append("无已验证的文字依据；不补写介绍。")
                 for claim in evidence.claims:
@@ -211,7 +214,7 @@ class ReportLayout:
                     page = evidence.pdf_page_number
                     texts.append(
                         TextFrame(
-                            f"图片出处：原 PDF 第 {page} 页",
+                            f"资料出处：原 PDF 第 {page} 页",
                             32,
                             515,
                             300,

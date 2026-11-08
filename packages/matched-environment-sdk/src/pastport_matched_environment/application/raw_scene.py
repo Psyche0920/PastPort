@@ -136,6 +136,24 @@ class RawSceneGeometry:
             raise ValueError("PLY contains invalid or non-triangular faces")
         return positions, faces["indices"].astype(np.uint32)
 
+    def capture_origin(self, mesh: Path, ground: float) -> tuple[float, float, float]:
+        """Choose an observed lower-floor triangle instead of assuming a global floor height."""
+        positions, indices = self.ply(mesh)
+        triangles = positions[indices]
+        normals = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
+        areas = np.linalg.norm(normals, axis=1)
+        centres = triangles.mean(axis=1)
+        floor_mask = ((areas > 1e-8) & (np.abs(normals[:, 1]) >= 0.95 * areas)
+                      & (centres[:, 1] >= ground - 0.25))
+        if not np.any(floor_mask):
+            # Provider origin is the conservative fallback, without inventing a floor.
+            return (0.0, ground, 0.0)
+        floors = centres[floor_mask]
+        middle = np.average(floors, axis=0, weights=areas[floor_mask])
+        distances = ((floors[:, [0, 2]] - middle[[0, 2]]) ** 2).sum(axis=1)
+        floor = floors[int(np.argmin(distances))]
+        return (float(floor[0]), ground - float(floor[1]) + 1.6, -float(floor[2]))
+
     @staticmethod
     def glb(positions: NDArray[np.float32], indices: NDArray[np.uint32], target: Path) -> None:
         position_bytes = positions.astype("<f4").tobytes()
@@ -195,6 +213,20 @@ class SceneCapture(DomainModel):
     faces: tuple[CapturedFace, ...] = Field(min_length=6, max_length=6)
 
 
+class CapturedFaceQuality(DomainModel):
+    file: str = Field(pattern=r"^face-[0-5]\.png$")
+    sha256: str
+    maximum_channel_std: float = Field(ge=0, allow_inf_nan=False)
+    informative: bool
+
+
+class CaptureQualityReport(DomainModel):
+    schema_version: str = "pastport.raw-capture-quality/1"
+    capture_sha256: str
+    minimum_channel_std: float = 1.0
+    faces: tuple[CapturedFaceQuality, ...]
+
+
 class SceneCaptureRunner(Protocol):
     def capture(self, output: Path, assets: Path, log: Path) -> None: ...
 
@@ -252,6 +284,7 @@ class RawScenePreparation:
         directions = np.stack((np.sin(yaw)*np.cos(pitch), np.sin(pitch), -np.cos(yaw)*np.cos(pitch)), axis=-1).reshape(-1, 3)
         chosen = np.full(width*height, -np.inf)
         pixels = np.zeros((width*height, 3), dtype=np.uint8)
+        qualities: list[CapturedFaceQuality] = []
         for face in capture.faces:
             rotation = np.asarray(face.matrix).reshape(4, 4, order="F")[:3, :3]
             local = directions @ rotation
@@ -259,12 +292,23 @@ class RawScenePreparation:
             mask = (depth > chosen) & (depth > 0)
             with Image.open(root / face.file) as image:
                 frame = np.asarray(image.convert("RGB"))
-            if float(frame.std(axis=(0, 1)).max()) < 1.0:
-                raise ValueError("Rendered view is blank; no recognition is permitted")
+            contrast = float(frame.std(axis=(0, 1)).max())
+            qualities.append(CapturedFaceQuality(
+                file=face.file, sha256=RawSceneGeometry.digest(root / face.file),
+                maximum_channel_std=contrast, informative=contrast >= 1.0,
+            ))
+            # Empty directions remain empty; never stretch neighbouring content into them.
             x = np.clip(((local[mask, 0]/depth[mask]+1)*0.5*frame.shape[1]).astype(int), 0, frame.shape[1]-1)
             y = np.clip(((1-local[mask, 1]/depth[mask])*0.5*frame.shape[0]).astype(int), 0, frame.shape[0]-1)
             pixels[mask] = frame[y, x]
             chosen[mask] = depth[mask]
+        report = CaptureQualityReport(
+            capture_sha256=RawSceneGeometry.digest(root / "capture.json"),
+            faces=tuple(qualities),
+        )
+        (root / "capture-quality.json").write_text(report.model_dump_json(indent=2))
+        if not any(face.informative for face in report.faces):
+            raise ValueError("All rendered views are blank; no recognition is permitted")
         panorama_image = Image.fromarray(pixels.reshape(height, width, 3))
         panorama_image.save(root / "panorama.jpg", quality=92)
 
@@ -285,7 +329,9 @@ class RawScenePreparation:
         assets = Path(str(files("pastport_matched_environment").joinpath("scene3d_assets")))
         if not (output / "capture.json").exists():
             template = (assets / "raw_scene_capture.html").read_text()
-            (output / "capture.html").write_text(template.replace("GROUND_OFFSET", str(receipt.ground_plane_offset)))
+            origin = importer.capture_origin(mesh, receipt.ground_plane_offset)
+            template = template.replace("GROUND_OFFSET", str(receipt.ground_plane_offset))
+            (output / "capture.html").write_text(template.replace("CAPTURE_ORIGIN", json.dumps(origin)))
             self.capture_runner.capture(output, assets, workspace / "capture.log")
         if not (output / "panorama.jpg").exists():
             self.panorama(output)

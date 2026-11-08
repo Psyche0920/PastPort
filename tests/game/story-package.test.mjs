@@ -379,3 +379,26 @@ for(const inputKind of ['runtime-package','narrative-draft','embedded-design'])t
   await assert.rejects(readFile(path.join(root,'bad-game','manifest.json')));
  }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('English/Turkish runtime packages compile and preserve playable outcomes',async()=>{
+  const {museum,input}=await fixture();
+  const localize=value=>{
+    if(Array.isArray(value))return value.map(localize);
+    if(value&&typeof value==='object'){
+      if(typeof value.en==='string'&&typeof value.zh==='string')return {en:value.en,tr:'Kanıtı inceleyin ve devam edin.'};
+      return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,localize(v)]));
+    }
+    return value;
+  };
+  const runtime=input.story.payload;
+  runtime.game.locales=runtime.game.locales.map(table=>table.locale==='zh'?{locale:'tr',entries:table.entries.map(e=>({...e,text:'Kanıtı inceleyin ve devam edin.'}))}:table);
+  runtime.runtime_compatibility.locales=['en','tr'];
+  museum.runtimeCapabilities=runtime.runtime_compatibility;
+  input.presentation=localize(input.presentation);
+  input.tasks=localize(input.tasks);
+  input.museum.snapshot_sha256=await museumSnapshotHash(museum);
+  const compiler=new StoryPackageCompiler();
+  const compiled=await compiler.compile(input,museum);
+  assert.deepEqual(new Set(compiled.runtime.game.locales.map(t=>t.locale)),new Set(['en','tr']));
+  assert.equal(typeof compiled.presentation.intro.tr,'string');
+});

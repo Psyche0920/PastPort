@@ -77,7 +77,7 @@ class OrganizerJob(Contract):
         "story_ready",
     ]
     input_kind: Literal["registered", "uploads"] = "registered"
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"] | None = None
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "idmlscene3d", "catalog3d"] | None = None
     completed_stages: tuple[str, ...] = ()
     message: Text
     new_model_calls: int | None = None
@@ -110,17 +110,17 @@ class OrganizerFile(Contract):
 class OrganizerMaterials(Contract):
     project_id: Identifier
     owner_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "idmlscene3d", "catalog3d"]
     files: tuple[OrganizerFile, ...] = ()
 
 
 class OrganizerProjectCreate(Contract):
     project_id: Identifier
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "idmlscene3d", "catalog3d"]
 
 
 class OrganizerPlan(Contract):
-    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "catalog3d"]
+    entry_level: Literal["raw", "mapping", "vr", "3d", "raw3d", "idml3d", "idmlscene3d", "catalog3d"]
     missing_roles: tuple[str, ...]
     reused: tuple[str, ...]
     stages: tuple[str, ...]

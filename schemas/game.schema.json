@@ -874,7 +874,8 @@
         "locale": {
           "enum": [
             "en",
-            "zh"
+            "zh",
+            "tr"
           ],
           "title": "Locale",
           "type": "string"

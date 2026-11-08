@@ -2,6 +2,20 @@
 import {createServer,request} from 'node:http';
 import {once} from 'node:events';
 import {browserOrigin} from './network.mjs';
+/** Check local prerequisites before allocating any public tunnels. */
+export async function verifyOrganizerReady(target,{request=fetch,signal=AbortSignal.timeout(5000)}={}) {
+  const port=new URL(target).port;
+  let response;
+  try {response=await request(target+'/organizer/api/access',{signal});}
+  catch(error){throw new Error(`Cannot reach Organizer at ${target}. Start it in another terminal: uv run python -m pastport organizer --port ${port}. Keep that terminal open. If Organizer uses another port, pass --organizer-port PORT to this sharing command.`,{cause:error});}
+  if(!response.ok)throw new Error(`Organizer at ${target} returned HTTP ${response.status}. Check that this is the Organizer port before sharing.`);
+  let state;
+  try {state=await response.json();}
+  catch(error){throw new Error(`The service at ${target} did not return Organizer access information. Check --organizer-port.`,{cause:error});}
+  if(typeof state?.setup_required!=='boolean')throw new Error(`The service at ${target} is not a recognized Organizer endpoint. Check --organizer-port.`);
+  if(state.setup_required)throw new Error(`Complete local admin setup at ${target}/organizer/ before sharing it.`);
+}
+
 export class OrganizerGateway {
   constructor(target) {
     const url=new URL(target);

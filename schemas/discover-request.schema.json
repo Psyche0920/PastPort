@@ -269,7 +269,8 @@
           "items": {
             "enum": [
               "en",
-              "zh"
+              "zh",
+              "tr"
             ],
             "type": "string"
           },
@@ -397,7 +398,8 @@
           "items": {
             "enum": [
               "en",
-              "zh"
+              "zh",
+              "tr"
             ],
             "type": "string"
           },

@@ -344,7 +344,12 @@ class EnvironmentSnapshot(Contract):
                         and world.interaction_content_revision != self.content_revision
                     )
                     or any(
-                        (o.object_number, world.view_id) not in occurrences for o in world.objects
+                        o.object_number not in objects
+                        or (
+                            (o.object_number, world.view_id) not in occurrences
+                            and not (o.basis == "saved_anchor" and o.point is not None and o.version > 0)
+                        )
+                        for o in world.objects
                     )
                     or any(link.target_view_id not in views for link in world.navigation)
                 ):

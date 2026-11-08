@@ -1,7 +1,16 @@
 // Appended only to the isolated viewer response; never written into the input.
 import {sourceArrival,screenBearing} from '/scene3d-navigation.mjs';
-import {prepareRenderer} from '/scene-preparation.mjs';
+import {prepareRenderer,SparkScenePreparation} from '/scene-preparation.mjs';
 import {NavigationBoundary} from '../navigation_boundary.js?v=plane-3';
+// Imported SPZ viewers predate the optional preparation hook. Adapt their actual loaded
+// Spark instances; retain custom adapters supplied by other viewers.
+if (!globalThis.pastportScenePreparation && collider) {
+  const splat=group.children.find(child=>child instanceof SplatMesh);
+  const spark=scene.children.find(child=>child instanceof SparkRenderer);
+  if (splat && spark) globalThis.pastportScenePreparation=new SparkScenePreparation({
+    splat,spark,renderer,scene,camera,
+  });
+}
 const storyPost=message=>parent.postMessage(message,location.origin);
 let storyRoute=null,storyPaused=false,storyReady=false;
 let storyLocale='zh';const storyT=(zh,en)=>storyLocale==='en'?en:zh;

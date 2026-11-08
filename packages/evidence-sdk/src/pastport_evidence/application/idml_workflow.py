@@ -28,12 +28,12 @@ class IDMLPhotoWorkflow:
     def __init__(self, transport: SemanticTransport) -> None:
         self.transport=transport
 
-    def run(self, source: Path, links: Path, photos: Path, workspace: Path,
-            grant: SubscriptionGrant) -> IDMLMatchResult:
+    def run(self, source: Path, links: Path | None, photos: Path, workspace: Path,
+            grant: SubscriptionGrant, *, allow_missing_graphics: bool = False) -> IDMLMatchResult:
         workspace.mkdir(parents=True,exist_ok=True)
         atomic_write(workspace/'progress.json',json.dumps({'phase':'idml_import'}))
         document=IDMLDocumentReader().read(source,links)
-        if any(image.link_state!='available' for image in document.images):
+        if not allow_missing_graphics and any(image.link_state!='available' for image in document.images):
             raise ValueError('IDML graphic references must be complete before paid matching')
         paths=tuple(sorted(p for p in photos.iterdir() if p.is_file() and not p.name.startswith('.')))
         assets=LocalAssetStore(workspace/'assets')
@@ -44,13 +44,23 @@ class IDMLPhotoWorkflow:
                 f'Full photo coverage and mapping require at least {minimum_calls} authorized calls; '
                 'no model dispatched, extend the finite grant before running'
             )
+        policy_file = workspace / 'idml-match-policy.txt'
+        if policy_file.exists():
+            policy = policy_file.read_text().strip()
+            if policy not in ('v1', 'v2', 'v3', 'v4'):
+                raise ValueError('Unknown IDML matching policy')
+        else:
+            policy = 'v1' if (workspace / 'idml-input.sha256').exists() else 'v4'
+            atomic_write(policy_file, policy)
         fingerprint=hashlib.sha256(b'idml-full-photo-coverage-v1')
         fingerprint.update(document.model_dump_json().encode())
+        if allow_missing_graphics:
+            fingerprint.update(b'explicit-available-graphics-only-v1')
         fingerprint.update((Path(__file__).parents[1]/'prompts'/'photo_inspection_v2.txt').read_bytes())
         for photo in registered:
             fingerprint.update(photo.original.asset.sha256.encode())
         # Prompt changes create separate workspaces instead of rewriting paid receipts.
-        for name in ('idml_mapping_v1.txt','idml_mapping_audit_v1.txt'):
+        for name in (f'idml_mapping_{policy}.txt',f'idml_mapping_audit_{policy}.txt'):
             fingerprint.update((Path(__file__).parents[1]/'prompts'/name).read_bytes())
         lock=workspace/'idml-input.sha256'
         if lock.exists() and lock.read_text()!=fingerprint.hexdigest():
@@ -70,13 +80,22 @@ class IDMLPhotoWorkflow:
             raise ValueError('No recognized site objects available for historical mapping')
         if any(gap.startswith('photo_call_budget_exhausted:inventory:') for gap in inventory.gaps):
             raise ValueError('Photo coverage incomplete; retain receipts and extend the finite grant before mapping')
-        source_sheets=self._source_sheets(document,IDMLGraphicLibrary(links),run)
+        # Missing links remain recorded in the original document, never offered as image evidence.
+        available_images = tuple(image for image in document.images if image.link_state == 'available')
+        available_ids = {image.image_id for image in available_images}
+        matching_document = document.model_copy(update={
+            'images': available_images,
+            'associations': tuple(item for item in document.associations if item.image_id in available_ids),
+        })
+        source_sheets=self._source_sheets(matching_document,IDMLGraphicLibrary(links),run)
         modern=self._modern_sheets(inventory,assets,run)
-        service = IDMLMatchingService(MeteredIDMLMatchGateway(executor))
+        from typing import cast, Literal
+        selected_policy = cast(Literal['v1', 'v2', 'v3', 'v4'], policy)
+        service = IDMLMatchingService(MeteredIDMLMatchGateway(executor, policy=selected_policy), strict_identity=policy in ('v2', 'v3', 'v4'))
         batches: list[IDMLMatchResult] = []
         for index, sheet in enumerate(modern):
             start = index * 16
-            request = IDMLMatchRequest(source=document, objects=inventory.entities[start:start + 16])
+            request = IDMLMatchRequest(source=matching_document, objects=inventory.entities[start:start + 16])
             atomic_write(workspace / 'progress.json', json.dumps({
                 'phase': 'idml_mapping', 'recognized_objects': len(inventory.entities),
                 'completed_calls': index * 2,

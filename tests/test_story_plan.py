@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from test_story_automation import ROOT, material_fixture
 
 from pastport.adapters.story_workflow import StoryAutomationWorkflow
+from pastport.adapters.story_materials import StoryMaterials
 from pastport.application.execution_models import ProviderRequest, ProviderResponse
 from pastport.application.models import ServiceError
 from pastport.domain.modules import NarrativeDraft
@@ -400,7 +401,7 @@ def test_all_four_typed_patterns_share_registered_sources_and_checked_image_mani
         "success": words("Checked", "已核對"),
         "content_kind": "original_fiction",
     }
-    plugins = [
+    plugins: list[dict[str, object]] = [
         {
             **common,
             "kind": "spot-difference",
@@ -434,11 +435,13 @@ def test_all_four_typed_patterns_share_registered_sources_and_checked_image_mani
             ],
         },
     ]
+    interludes = design["interludes"]
+    assert isinstance(interludes, list) and isinstance(interludes[0], dict)
     for plugin in plugins:
-        row = {**design["interludes"][0], "plugin": plugin}
+        row = {**interludes[0], "plugin": plugin}
         if plugin["kind"] == "scene-search":
             row["required_sources"] = [1, 2]
-        design["interludes"].append(row)
+        interludes.append(row)
     data["plan"]["activity_design"] = design
     result = StoryPlanResult.model_validate_json(json.dumps(data)).plan
     assert result is not None and result.activity_design is not None
@@ -447,3 +450,102 @@ def test_all_four_typed_patterns_share_registered_sources_and_checked_image_mani
     design["asset_manifest"][0]["path"] = "assets/../private.svg"
     with pytest.raises(ValidationError):
         StoryPlanResult.model_validate_json(json.dumps(data))
+
+
+FICTION_TEXT = (
+    "X21 / FICTION\nA room shared unequally\n"
+    "Mira wants fresh air in the morning; porter Dani works a cold late shift.\n"
+    "MATERIAL M08 · Two recollections\n"
+    "Mira: Morning, by the window. Dani: Evening, beside the door.\n"
+)
+
+
+def fiction_materials_fixture(tmp_path: Path) -> StoryMaterials:
+    from dataclasses import replace
+    from pastport.application.updates import updated
+
+    materials = material_fixture(tmp_path / "inputs")
+    original = materials.index.fragments[0]
+    # A heading split between extraction chunks must survive. Page provenance stays exact.
+    fragments = tuple(updated(original, page_index=1, paragraph_or_region=part)
+                      for part in (FICTION_TEXT[:7], FICTION_TEXT[7:]))
+    return replace(materials, index=updated(
+        materials.index, fragments=(*materials.index.fragments, *fragments)
+    ))
+
+
+class FictionPlanProvider:
+    def __init__(self, failure: str = "") -> None:
+        self.calls = 0
+        self.failure = failure
+
+    async def respond(self, request: ProviderRequest, timeout_seconds: float) -> ProviderResponse:
+        del timeout_seconds
+        self.calls += 1
+        assert "UNTRUSTED_CATALOG_FICTION_V1" in request.input_text
+        assert "Mira wants fresh air" in request.input_text
+        output = plan_fixture()
+        output["plan"]["opening_context"] = opening_fixture()
+        material = {
+            "section_id": "X21", "material_id": "M08",
+            "source_quote": "Mira wants fresh air in the morning; porter Dani works a cold late shift.",
+            "title": words("Two workers remember", "两名工人的回忆"),
+            "body": words("Mira: I start early. Dani: I stay late.", "米拉：我来得早。丹尼：我留到很晚。"),
+            "task_positions": [1],
+        }
+        if self.failure == "quote":
+            material["source_quote"] = "This fabricated quotation never appeared in the catalogue."
+        if self.failure == "identity":
+            material["material_id"] = "M99"
+        if self.failure == "position":
+            material["task_positions"] = [8]
+        output["plan"]["fictional_materials"] = [] if self.failure == "omitted" else [material]
+        return ProviderResponse(
+            raw_json="{}", output_text=json.dumps(output), provider_request_id="fiction-fixture",
+            input_tokens=100, output_tokens=100, error_code=None,
+        )
+
+
+def test_catalog_fiction_remains_source_bound_and_reaches_readable_station(tmp_path: Path) -> None:
+    from pastport.application.story_plan_schema import CatalogFictionContract
+
+    materials = fiction_materials_fixture(tmp_path)
+    catalog = CatalogFictionContract.read(materials.index.fragments)
+    assert len(catalog.sections) == 1
+    assert catalog.sections[0].material_ids == ("M08",)
+    assert catalog.sections[0].locator.page_index == 1
+    assert catalog.sections[0].content_kind == "original_fiction"
+    # Fiction is not turned into archaeological claims or new object identities.
+    assert len(materials.index.candidate_claims) == len(materials.museum.objects) == 1
+    provider = FictionPlanProvider()
+    output = tmp_path / "out"
+    runner = StoryAutomationWorkflow(materials, output, ROOT / "skills", "Adapt source fiction", provider)
+    asyncio.run(runner.run())
+    draft = NarrativeDraft.model_validate_json((output / "narrative-draft.json").read_bytes())
+    values = {entry.key: entry.text for table in draft.package.game.locales if table.locale == "zh"
+              for entry in table.entries}
+    assert "X21 / M08" in values["presentation.station.object-1.purpose"]
+    assert "丹尼" in values["presentation.station.object-1.purpose"]
+    assert (output / "catalog-fiction-input.json").exists()
+    assert json.loads((output / "input-lock.json").read_text())["catalog_fiction_sha256"]
+    asyncio.run(runner.run())
+    assert provider.calls == 1
+
+
+@pytest.mark.parametrize("failure", ["omitted", "quote", "identity", "position"])
+def test_catalog_fiction_rejects_omitted_or_invented_materials_without_retry(
+    tmp_path: Path, failure: str,
+) -> None:
+    provider = FictionPlanProvider(failure)
+    output = tmp_path / "out"
+    runner = StoryAutomationWorkflow(
+        fiction_materials_fixture(tmp_path), output, ROOT / "skills", "Adapt source fiction", provider
+    )
+    with pytest.raises(ServiceError):
+        asyncio.run(runner.run())
+    assert provider.calls == 1
+    assert (output / "receipts/00.json").exists()
+    assert not (output / "narrative-draft.json").exists()
+    with pytest.raises(ServiceError):
+        asyncio.run(runner.run())
+    assert provider.calls == 1

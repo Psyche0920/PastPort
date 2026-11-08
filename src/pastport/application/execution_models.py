@@ -19,6 +19,7 @@ from pastport.domain.common import (
 from pastport.domain.workflow import ExecutionMetadata, ToolKind
 
 STORY_CODEX_MODEL = "gpt-6.1-sol"
+STORY_CODEX_TIMEOUT_SECONDS = 900
 
 BoundedText = Annotated[str, Field(max_length=1024 * 1024)]
 
@@ -56,7 +57,7 @@ class ModelPolicy(Contract):
 class ExecutionSettings(Contract):
     models: tuple[ModelPolicy, ...] = ()
     allowed_tools: tuple[ToolKind, ...] = ()
-    timeout_seconds: Annotated[int, Field(ge=1, le=300)] = 120
+    timeout_seconds: Annotated[int, Field(ge=1, le=1800)] = 120
     maximum_source_bytes: Annotated[int, Field(ge=1, le=64 * 1024 * 1024)] = 262144
 
     @model_validator(mode="after")

@@ -62,6 +62,12 @@ class CorpusIndex:
                         start=start,
                         end=end,
                         quote=quote,
+                        line_start=(text.count("\n", 0, start) + 1)
+                        if document.extractor_version.startswith("text-lines-v2")
+                        else None,
+                        line_end=(text.count("\n", 0, end - 1) + 1)
+                        if document.extractor_version.startswith("text-lines-v2")
+                        else None,
                     )
                 )
                 start = end
@@ -115,6 +121,11 @@ class CorpusIndex:
         if passage.source != self.document.source or passage.page_index >= self.document.page_count:
             raise EvidenceValidationError("Passage belongs to another source/version/page")
         original = self.document.pages[passage.page_index].original_text
+        if passage.line_start is not None and (
+            passage.line_start != original.count("\n", 0, passage.start) + 1
+            or passage.line_end != original.count("\n", 0, passage.end - 1) + 1
+        ):
+            raise EvidenceValidationError("Passage line selectors disagree with its source text")
         if original[passage.start : passage.end] != passage.quote:
             raise EvidenceValidationError("Passage selector does not recover its exact quotation")
 

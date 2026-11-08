@@ -1,4 +1,4 @@
-"""Register a source PDF and persist page text and rendered-page references."""
+"""Preserve original PDF bytes and full-page text, lines and OCR provenance."""
 
 from __future__ import annotations
 
@@ -49,11 +49,15 @@ class PDFIngestionService:
         ):
             if draft.page_index != len(page_contents):
                 raise PDFIngestionError("PDF reader returned pages out of sequence")
-            rendered_asset = self._asset_store.register_bytes(
-                project_id=project_id,
-                content=draft.rendered_jpeg,
-                media_type="image/jpeg",
-                max_bytes=limits.pdf_render_max_bytes,
+            rendered_asset = (
+                self._asset_store.register_bytes(
+                    project_id=project_id,
+                    content=draft.rendered_jpeg,
+                    media_type="image/jpeg",
+                    max_bytes=limits.pdf_render_max_bytes,
+                )
+                if draft.rendered_jpeg is not None
+                else None
             )
             page_contents.append(
                 PDFPageContent(
@@ -65,7 +69,12 @@ class PDFIngestionService:
                     text_lines=draft.text_lines,
                     image_regions=draft.image_regions,
                     extraction_status=draft.extraction_status,
-                    rendered_page=rendered_asset.reference,
+                    rendered_page=rendered_asset.reference if rendered_asset else None,
+                    native_text=draft.native_text,
+                    ocr_engine=draft.ocr_engine,
+                    ocr_languages=draft.ocr_languages,
+                    ocr_confidence=draft.ocr_confidence,
+                    ocr_reason=draft.ocr_reason,
                 )
             )
         return RegisteredPDF(
@@ -73,4 +82,5 @@ class PDFIngestionService:
             page_count=page_count,
             pages=tuple(page_contents),
             extractor_version=self._reader.version,
+            original_filename=pdf_path.name,
         )

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 from pathlib import Path
 
 from pastport_evidence.adapters.pdf import PopplerPDFReader
@@ -32,9 +31,10 @@ def main() -> None:
 
     from pastport_evidence.adapters.codex_sdk import CodexSDKTransport
 
-    executable = shutil.which("pdftoppm")
-    if executable is None:
-        parser.error("Poppler pdftoppm is required (macOS: brew install poppler)")
+    # Pin a new workspace's policy before the usage ledger can make it look legacy.
+    from pastport_evidence.application.prompting import resolve_prompt_profile
+
+    resolve_prompt_profile(args.workspace)
     grant = SubscriptionGrant.model_validate_json(args.grant.read_bytes())
     if args.no_token_threshold:
         from pastport_evidence.adapters.execution import SubscriptionExecutor
@@ -45,7 +45,7 @@ def main() -> None:
         "-> verify evidence -> PDF + IDML",
         flush=True,
     )
-    PhotoMappingWorkflow(PopplerPDFReader(Path(executable)), CodexSDKTransport(grant.effort)).run(
+    PhotoMappingWorkflow(PopplerPDFReader(), CodexSDKTransport(grant.effort)).run(
         args.pdf, args.photos, args.workspace, grant, args.run_id, args.large_pdf
     )
     result_path = args.workspace / "result.json"

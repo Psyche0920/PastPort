@@ -1,8 +1,9 @@
-"""Native PDF text, positioned line and embedded image extraction plus Poppler rendering."""
+"""Extract every page as text; render only scans or garbled pages for local OCR."""
 
 from __future__ import annotations
 
 import math
+import os
 import re
 import subprocess
 import unicodedata
@@ -25,6 +26,8 @@ from pastport_evidence.domain.pdf import (
     PDFTextLine,
 )
 from pastport_evidence.ports.pdf import PDFDocumentReader
+from pastport_evidence.ports.ocr import OCRError, PageOCR
+from pastport_evidence.adapters.ocr import TesseractPageOCR
 
 
 class PDFProcessingError(ValueError):
@@ -32,14 +35,18 @@ class PDFProcessingError(ValueError):
 
 
 class PopplerPDFReader(PDFDocumentReader):
-    """Extract text with pdfplumber and render page images with an injected Poppler binary."""
+    """Keep source bytes and located lines; page images exist only during OCR."""
 
-    def __init__(self, pdftoppm_path: Path) -> None:
-        self._pdftoppm_path = pdftoppm_path
+    def __init__(self, pdftoppm_path: Path | None = None, *, ocr: PageOCR | None = None) -> None:
+        self._pdftoppm_path = pdftoppm_path or Path("pdftoppm")
+        self._ocr = ocr if ocr is not None else TesseractPageOCR()
 
     @property
     def version(self) -> str:
-        return f"pdfplumber/{pdfplumber.__version__};pypdf/{pypdf_version}"
+        return (
+            f"text-lines-v2;pdfplumber/{pdfplumber.__version__};pypdf/{pypdf_version};"
+            f"ocr-languages={os.environ.get('PASTPORT_OCR_LANGUAGES', 'installed-common')}"
+        )
 
     def page_count(self, pdf_path: Path, max_pages: int) -> int:
         try:
@@ -82,33 +89,91 @@ class PopplerPDFReader(PDFDocumentReader):
                         self._image_region(record, index)
                         for index, record in enumerate(_library_records(page.images))
                     )
-                    normalized_text = _normalize_text(original_text)
-                    rendered_jpeg = self._render_page(
-                        pdf_path,
-                        page_index,
-                        max_render_edge,
-                        max_render_bytes,
-                        render_timeout_seconds,
-                    )
+                    native_text = original_text
+                    reason = self.ocr_reason(original_text)
+                    # A genuinely blank PDF page is not a scan. Vector-outlined text
+                    # and image-backed pages still need OCR when no text is extractable.
+                    marked = bool(page.images or page.chars or page.curves or page.rects)
+                    result = None
+                    if reason is not None and (reason == "garbled" or marked):
+                        rendered = self._render_page(
+                            pdf_path,
+                            page_index,
+                            max_render_edge,
+                            max_render_bytes,
+                            render_timeout_seconds,
+                        )
+                        try:
+                            result = self._ocr.recognize(
+                                rendered,
+                                float(page.width),
+                                float(page.height),
+                                render_timeout_seconds,
+                            )
+                        except OCRError as error:
+                            raise PDFProcessingError(
+                                f"PDF page {page_index + 1}: {error}"
+                            ) from error
+                        text_lines = result.lines
+                        original_text = "\n".join(line.text for line in text_lines)
+                        if self.ocr_reason(original_text) == "garbled":
+                            raise PDFProcessingError(
+                                f"PDF page {page_index + 1}: OCR text remains garbled"
+                            )
+                        if not original_text.strip() and reason == "garbled":
+                            raise PDFProcessingError(
+                                f"PDF page {page_index + 1}: OCR could not recover garbled text"
+                            )
+                    else:
+                        # The persisted line order and canonical text share the same
+                        # newline boundaries so line/character citations cannot drift.
+                        original_text = (
+                            "\n".join(line.text for line in text_lines)
+                            if text_lines
+                            else original_text
+                        )
                     yield PDFPageDraft(
                         page_index=page_index,
                         page_width=float(page.width),
                         page_height=float(page.height),
                         original_text=original_text,
-                        normalized_text=normalized_text,
+                        normalized_text=_normalize_text(original_text),
                         text_lines=text_lines,
                         image_regions=images,
                         extraction_status=(
-                            PDFExtractionStatus.TEXT_EXTRACTED
-                            if normalized_text
-                            else PDFExtractionStatus.OCR_NEEDED
+                            PDFExtractionStatus.OCR_EXTRACTED
+                            if result and original_text.strip()
+                            else PDFExtractionStatus.TEXT_EXTRACTED
+                            if original_text.strip()
+                            else PDFExtractionStatus.EMPTY_PAGE
                         ),
-                        rendered_jpeg=rendered_jpeg,
+                        native_text=native_text,
+                        ocr_engine=result.engine if result else None,
+                        ocr_languages=result.languages if result else None,
+                        ocr_confidence=result.confidence if result else None,
+                        ocr_reason=reason if result else None,
                     )
         except (OSError, PDFSyntaxError, ValueError) as error:
             if isinstance(error, PDFProcessingError):
                 raise
             raise PDFProcessingError("PDF page extraction failed") from error
+
+    @staticmethod
+    def ocr_reason(text: str) -> str | None:
+        visible = [char for char in text if not char.isspace()]
+        if not visible:
+            return "no_text"
+        invalid = sum(
+            char == "\ufffd" or unicodedata.category(char) in ("Cc", "Co", "Cn") for char in visible
+        )
+        mojibake = re.findall(r"Ã[\u0080-\u00bf]|Â[\u0080-\u00bf]|ï»¿|â€™|â€œ|â€", text)
+        if (
+            invalid / len(visible) >= 0.05
+            or re.search(r"\(cid:\d+\)", text)
+            or sum(map(len, mojibake)) / len(visible) >= 0.05
+        ):
+            return "garbled"
+        return None
 
     def _render_page(
         self,

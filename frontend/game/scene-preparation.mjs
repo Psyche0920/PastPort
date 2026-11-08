@@ -29,7 +29,52 @@ export async function prepareRenderer(renderer, buildLod = true) {
     if (typeof renderer?.prepare !== 'function') throw new Error('Renderer LOD is unavailable');
     await renderer.prepare();
   }
-  if (!buildLod) await renderer?.prepareWithoutLod?.();
+  if (!buildLod) {
+    if (typeof renderer?.prepareWithoutLod !== 'function') throw new Error('Renderer readiness is unavailable');
+    await renderer.prepareWithoutLod();
+  }
   const quality = renderer?.getQuality?.();
   return ['low','standard'].includes(quality) ? quality : null;
+}
+
+
+/** Adapt the bundled Spark viewer without changing its source snapshot or geometry. */
+export class SparkScenePreparation {
+  constructor({splat, spark, renderer, scene, camera, pixelRatio=()=>globalThis.devicePixelRatio||1}) {
+    if (!splat?.initialized || typeof splat.createLodSplats !== 'function' ||
+        typeof spark?.update !== 'function' || typeof renderer?.setPixelRatio !== 'function') {
+      throw new Error('Spark scene preparation is unavailable');
+    }
+    Object.assign(this, {splat, spark, renderer, scene, camera, pixelRatio});
+    this.quality='low';this.lodPending=null;
+  }
+  async prepare() {
+    await this.splat.initialized;
+    if (!this.splat.packedSplats?.lodSplats && !this.splat.extSplats?.lodSplats) {
+      if (!this.lodPending) this.lodPending=this.splat.createLodSplats().catch(error=>{
+        this.lodPending=null;throw error;
+      });
+      await this.lodPending;
+      if (!this.splat.packedSplats?.lodSplats && !this.splat.extSplats?.lodSplats) {
+        throw new Error('Spark LOD preparation did not produce a usable scene');
+      }
+    }
+    this.splat.enableLod=true;this.spark.enableLod=true;this.spark.enableDriveLod=true;
+    this.setQuality(this.quality);
+    await this.spark.update({scene:this.scene,camera:this.camera});
+  }
+  async prepareWithoutLod() {
+    await this.splat.initialized;
+    this.splat.enableLod=false;this.spark.enableLod=false;this.spark.enableDriveLod=false;
+    this.setQuality(this.quality);
+    await this.spark.update({scene:this.scene,camera:this.camera});
+  }
+  setQuality(value) {
+    if (!['low','standard'].includes(value)) throw new Error('Unsupported graphics quality');
+    this.quality=value;
+    this.renderer.setPixelRatio(Math.min(this.pixelRatio(),value==='low'?1:1.5));
+    this.spark.lodSplatCount=value==='low'?500000:1500000;
+    return value;
+  }
+  getQuality() {return this.quality;}
 }

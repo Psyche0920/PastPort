@@ -616,8 +616,9 @@ def test_metric_contract_rejects_stale_positions_foreign_ids_and_inferred_permis
         )
 
 
+@pytest.mark.parametrize("manual_anchor", [False, True])
 def test_sdk_spatial_reader_preserves_saved_arrows_and_checks_collider(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, manual_anchor: bool,
 ) -> None:
     from pastport_matched_environment.api.scene3d import Scene3DStore
 
@@ -628,9 +629,15 @@ def test_sdk_spatial_reader_preserves_saved_arrows_and_checks_collider(
 
     reader, request = native(tmp_path / "native")
     snapshot = read(reader, request)
+    if manual_anchor:
+        from pastport.domain.story_inputs import EnvironmentSpatialRevision
+
+        revision = EnvironmentSpatialRevision(entry_view_id=snapshot.entry_view_id,
+                                              views=snapshot.views, positions=())
+        snapshot = updated(snapshot, positions=(), spatial_revision=CanonicalSerializer.digest(revision))
     root = reader.directory
     (root / "scene3d").mkdir()
-    attachment = json.dumps({"binding": "a" * 64}).encode()
+    attachment = json.dumps({"binding": "a" * 64, "source_scene_id": "one"}).encode()
     (root / "scene3d/attachment.json").write_bytes(attachment)
     collider = b"synthetic collider: tests identity checks, not geometry"
     (root / "scene3d/collider.glb").write_bytes(collider)
@@ -659,16 +666,18 @@ def test_sdk_spatial_reader_preserves_saved_arrows_and_checks_collider(
                 "confirmed": False,
                 "editor": "native metadata",
             },
-            "objects": [{"id": 27, "point_json": None, "version": 0}],
-            "candidates": [{"object_id": 27, "point_json": '{"x":1.0,"y":2.0,"z":3.0}'}],
-            "source_hotspots": [{"object_id": 27}],
+            "objects": [{"id": 27,
+                         "point_json": '{"x":1.0,"y":2.0,"z":3.0}' if manual_anchor else None,
+                         "version": 1 if manual_anchor else 0}],
+            "candidates": [] if manual_anchor else [{"object_id": 27, "point_json": '{"x":1.0,"y":2.0,"z":3.0}'}],
+            "source_hotspots": [] if manual_anchor else [{"object_id": 27}],
         }
     )
 
-    def current(store: Scene3DStore) -> str:
-        return payload
+    def current_snapshot(store: Scene3DStore) -> bytes:
+        return payload.encode()
 
-    monkeypatch.setattr(Scene3DStore, "current", current)
+    monkeypatch.setattr(Scene3DStore, "current", current_snapshot)
     with closing(sqlite3.connect(root / "pastport_matching.sqlite3")) as db, db:
         db.execute("CREATE TABLE scene3d_arrows(binding TEXT, hotspot_id TEXT, payload TEXT)")
         db.execute(
@@ -680,6 +689,8 @@ def test_sdk_spatial_reader_preserves_saved_arrows_and_checks_collider(
                     {
                         "hotspot_id": "arrow-one",
                         "target_scene_id": "two",
+                        "yaw": 0.0,
+                        "pitch": 0.0,
                         "target_url": "http://localhost/view?arrival_yaw=90&arrival_pitch=10",
                         "point": {"x": 1.0, "y": 0.0, "z": 2.0},
                         "version": 2,
@@ -701,9 +712,38 @@ def test_sdk_spatial_reader_preserves_saved_arrows_and_checks_collider(
     result = spatial.read_spatial(snapshot, context())
     assert result.worlds[0].navigation[0].arrival_yaw == 90.0
     assert result.worlds[0].navigation[0].version == 2
-    assert result.worlds[0].objects[0].basis == "automatic_candidate"
+    assert result.worlds[0].objects[0].basis == ("saved_anchor" if manual_anchor else "automatic_candidate")
     assert result.worlds[0].objects[0].visibility == "unknown"
     assert not result.worlds[0].calibration.confirmed
+    if manual_anchor:
+        from pydantic import ValidationError
+        from pastport.adapters.organizer_review import SDKOrganizerReview
+        from pastport.domain.organizer_review import OrganizerReviewBinding
+        from pastport_matched_environment.application.vr_positions import VRPositionService
+
+        monkeypatch.setattr(VRPositionService, "current", lambda self: ())
+        binding = OrganizerReviewBinding(root=root, worlds=(root,),
+                                         import_sha256=snapshot.import_manifest_sha256)
+        _, current = SDKOrganizerReview._spatial_state(binding, updated(snapshot, spatial_profile="metric_3d_source_bound", metric_spatial=result))
+        assert current
+        from pastport.adapters.organizer_native import NativeGameInputExporter
+
+        prepared = updated(snapshot, spatial_profile="metric_3d_source_bound", metric_spatial=result)
+        assert not prepared.positions
+        assert NativeGameInputExporter.object_scene_ids(prepared, 27) == ("one",)
+        assert NativeGameInputExporter.object_scene_ids(prepared, 999) == ()
+        foreign_world = result.worlds[0].model_copy(update={
+            "objects": (result.worlds[0].objects[0].model_copy(update={"object_number": 999}),)
+        })
+        foreign_content = MetricSpatialContent(worlds=(foreign_world,), rules=result.rules)
+        foreign = MetricSpatialSnapshot(worlds=foreign_content.worlds, rules=foreign_content.rules,
+                                        revision=CanonicalSerializer.digest(foreign_content))
+        with pytest.raises(ValidationError, match="another environment"):
+            updated(snapshot, spatial_profile="metric_3d_source_bound", metric_spatial=foreign)
+        missing_content = MetricSpatialContent(worlds=(result.worlds[0].model_copy(update={"objects": ()}),), rules=result.rules)
+        missing = MetricSpatialSnapshot(worlds=missing_content.worlds, rules=missing_content.rules, revision=CanonicalSerializer.digest(missing_content))
+        _, current = SDKOrganizerReview._spatial_state(binding, updated(snapshot, spatial_profile="metric_3d_source_bound", metric_spatial=missing))
+        assert not current
     (root / "scene3d/collider.glb").write_bytes(b"changed")
     with pytest.raises(ServiceError, match="collider changed"):
         spatial.read_spatial(snapshot, context())

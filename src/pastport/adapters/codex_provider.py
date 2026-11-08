@@ -1,6 +1,7 @@
 """Story-only model transport using the official SDK and saved ChatGPT login."""
 
 import asyncio
+import json
 import logging
 import shutil
 import tempfile
@@ -107,7 +108,10 @@ class CodexStoryProvider:
                         result = await turn.run()
                         usage = result.usage.total if result.usage is not None else None
                         completed = ProviderResponse(
-                            raw_json='{"transport":"codex-sdk","billing":"chatgpt-plan"}',
+                            raw_json=json.dumps({
+                                "transport": "codex-sdk", "billing": "chatgpt-plan",
+                                "usage": usage.model_dump(mode="json") if usage is not None else None,
+                            }),
                             output_text=result.final_response or "",
                             provider_request_id="codex-" + result.id,
                             input_tokens=usage.input_tokens if usage is not None else None,

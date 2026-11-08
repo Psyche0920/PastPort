@@ -19,7 +19,7 @@ Sha256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 NonNegative = Annotated[int, Field(ge=0, le=9007199254740991)]
 Positive = Annotated[int, Field(gt=0, le=9007199254740991)]
 Version = Literal["0.1.0"]
-Locale = Literal["en", "zh"]
+Locale = Literal["en", "zh", "tr"]
 Environment = Literal["test", "production"]
 Owner = Literal["evidence", "narrative", "assembly", "runtime", "workflow"]
 ArtifactKind = Literal[
@@ -128,7 +128,7 @@ class ProjectRequirements(VersionedPayload):
     @field_validator("languages")
     @classmethod
     def bilingual(cls, value: tuple[Locale, ...]) -> tuple[Locale, ...]:
-        if set(value) != {"en", "zh"} or len(value) != 2:
+        if set(value) not in ({"en", "zh"}, {"en", "tr"}) or len(value) != 2:
             raise ValueError("The initial profile requires en and zh exactly once")
         return value
 

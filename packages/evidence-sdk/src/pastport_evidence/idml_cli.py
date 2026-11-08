@@ -11,7 +11,8 @@ from pastport_evidence.application.bootstrap import atomic_write
 def main() -> None:
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--idml',type=Path,required=True)
-    parser.add_argument('--links',type=Path,required=True)
+    parser.add_argument('--links',type=Path)
+    parser.add_argument('--allow-missing-graphics',action='store_true',help='Keep missing source graphics as gaps; match text and available graphics only')
     mode=parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--output',type=Path,help='Local source index only; no model calls')
     mode.add_argument('--workspace',type=Path,help='Grant-bound photo matching workspace')
@@ -28,6 +29,8 @@ def main() -> None:
         print(f'Source imported: {len(document.stories)} stories, {len(document.pages)} layout pages, '
               f'{len(document.images)} graphics; associations remain candidates; no models called.')
         return
+    if args.links is None and not args.allow_missing_graphics:
+        parser.error('Matching requires --links unless --allow-missing-graphics is explicit')
     if args.photos is None or args.grant is None:
         parser.error('Paid matching requires --photos and an explicit finite --grant')
     from pastport_evidence.adapters.codex_sdk import CodexSDKTransport
@@ -39,7 +42,7 @@ def main() -> None:
     from pastport_evidence.domain.photos import PhotoInventory
     grant=SubscriptionGrant.model_validate_json(args.grant.read_bytes())
     workspace: Path=args.workspace
-    result=IDMLPhotoWorkflow(CodexSDKTransport(grant.effort)).run(args.idml,args.links,args.photos,workspace,grant)
+    result=IDMLPhotoWorkflow(CodexSDKTransport(grant.effort)).run(args.idml,args.links,args.photos,workspace,grant,allow_missing_graphics=args.allow_missing_graphics)
     run=workspace/'runs'/(workspace/'idml-input.sha256').read_text()
     inventory=PhotoInventory.model_validate_json((run/'photo-inventory.json').read_bytes())
     identity_reviews = TypeAdapter(tuple[DistinctIdentityReview, ...]).validate_json(args.identity_reviews.read_bytes()) if args.identity_reviews else ()

@@ -11,7 +11,7 @@ const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)
 const keys=(value,allowed,required=allowed)=>{
   requireValue(object(value)&&required.every(key=>Object.hasOwn(value,key))&&Object.keys(value).every(key=>allowed.includes(key)), 'STORY_INPUT_INVALID', 'Unexpected or missing story package fields');
 };
-const displayText=value=>typeof value==='string'&&value.trim().length>0||object(value)&&['zh','en'].every(locale=>typeof value[locale]==='string'&&value[locale].trim().length>0);
+const displayText=value=>typeof value==='string'&&value.trim().length>0||object(value)&&['en',value.tr?'tr':'zh'].every(locale=>typeof value[locale]==='string'&&value[locale].trim().length>0);
 
 /** A local, versioned bridge; the shared wire package and rules remain unchanged. */
 export class StoryPackageCompiler {
@@ -38,6 +38,7 @@ export class StoryPackageCompiler {
         package_id:input.story.package_id,runtime_compatibility:structuredClone(museum.runtimeCapabilities),
         evidence_package_hash:narrative.evidence_package_hash,narrative_package_hash:await contentHash(narrative),
         game:structuredClone(narrative.game),media_manifest:[]};
+      pkg.runtime_compatibility.locales=pkg.game.locales.map(table=>table.locale);
       requireValue(Array.isArray(input.tasks),'STORY_BINDING_INVALID','Task bindings are required');
       for(const binding of input.tasks) {
         const task=pkg.game.scenes.flatMap(scene=>scene.tasks).find(task=>task.task_id===binding.task_id);
@@ -55,7 +56,7 @@ export class StoryPackageCompiler {
     context.initialState();
     requireValue(Array.isArray(input.tasks)&&input.tasks.length===pkg.game.scenes.length&&unique(input.tasks.map(item=>item.task_id)), 'STORY_BINDING_INVALID','Each scene requires exactly one unique task binding');
     const tables=new Map(pkg.game.locales.map(table=>[table.locale,new Map(table.entries.map(item=>[item.key,item.text]))]));
-    const text=key=>Object.fromEntries(['zh','en'].map(locale=>{
+    const text=key=>Object.fromEntries([...tables.keys()].map(locale=>{
       const value=tables.get(locale)?.get(key);
       requireValue(typeof value==='string'&&value.trim().length>0,'STORY_TEXT_MISSING',`Missing ${locale} story text: ${key}`);
       return [locale,value];
