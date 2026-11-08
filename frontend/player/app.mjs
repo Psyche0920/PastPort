@@ -1,4 +1,7 @@
 export const playerTurkish=Object.freeze({
+  "This run has not reached a verified ending.": "Bu oyun doğrulanmış bir sona ulaşmadı.",
+  "This game cannot provide a verified completion record.": "Bu oyun doğrulanmış bir tamamlama kaydı sağlayamıyor.",
+  "Start a new game to earn this cleared stamp again.": "Bu tamamlama damgasını yeniden kazanmak için yeni bir oyun başlatın.",
   "Search places or games…": "Yer veya oyun ara…",
   "Search the map": "Haritada ara",
   "Playable only": "Yalnızca oynanabilir",
@@ -176,6 +179,9 @@ const errors = {
   '此游戏尚未支持账号存档':'This game does not support account saves yet.',
   '另一设备已更新存档，请返回地图重新打开，避免覆盖':'Another device has a newer save. Return to the map and reopen to avoid overwriting it.',
   '存档格式不符合此游戏要求':'This game snapshot could not be accepted.',
+  '本局尚未达到已验证的结局。':'This run has not reached a verified ending.',
+  '此游戏暂不能提供可验证的通关记录。':'This game cannot provide a verified completion record.',
+  '请重新开始游戏，通关后再次领取印章。':'Start a new game to earn this cleared stamp again.',
   '此地点尚未发布试玩。':'This place does not have a published game yet.',
   '来源不符':'Request origin does not match.',
   '远程游戏入口尚未连通，请检查网络或 DNS 后重试。':'Remote game access could not connect. Check network/DNS and retry.',
@@ -795,6 +801,8 @@ window.addEventListener('message',async event=>{
     saveSync.queue(key,value);return;
   }
   if(event.data.type!=='pastport:ending' || claiming || active.stamped)return;
+  if(typeof event.data.endingId!=='string'||!event.data.endingId.trim()||event.data.endingId.length>200)return;
+  active.endingId=event.data.endingId;
   active.endingPending=true;
   await claimEnding(launched);
 });
@@ -803,7 +811,7 @@ async function claimEnding(launched) {
   claiming=true;
   try {
     await saveSync?.flush();
-    current=await api('stamp',{run:launched.run});
+    current=await api('stamp',{run:launched.run,ending_id:launched.endingId});
     if(active!==launched)return;
     active.stamped=true;
     setGameStatus('已在通关文书盖章','Passport stamped');

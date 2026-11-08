@@ -120,13 +120,13 @@ test('HTTP saves require the correct login/run; resume after service restart and
     const next=(await post('launch',{site_id:'site'},alice.cookie)).value;
     assert.equal(next.save.revision,0);assert.notEqual(next.namespace,run.namespace);
     assert.equal((await post('stamp',{run:next.run},bob.cookie)).status,403);
-    assert.equal((await post('stamp',{run:next.run},alice.cookie)).value.stamps.length,1);
-    assert.equal((await post('stamp',{run:next.run},alice.cookie)).value.stamps.length,1);
-    assert.equal((await post('stamp',{run:restored.run},alice.cookie)).value.stamps.length,1);
+    assert.equal((await post('stamp',{run:next.run},alice.cookie)).status,409);
+    assert.equal((await post('stamp',{run:next.run},alice.cookie)).status,409);
+    assert.equal((await post('stamp',{run:restored.run},alice.cookie)).status,409);
     const bobActive=(await post('launch',{site_id:'site'},bob.cookie)).value;
-    assert.equal((await post('stamp',{run:bobActive.run},bob.cookie)).value.stamps.length,1);
+    assert.equal((await post('stamp',{run:bobActive.run},bob.cookie)).status,409);
     const ranking=await (await fetch(origin+'/api/leaderboard')).json();
-    assert.equal(ranking.length,2);assert.ok(ranking.every(row=>row.rank===1 && row.games.length===1));
+    assert.deepEqual(ranking,[],'protocol-only sessions have no completed gameplay');
   }finally{await stop();await rm(directory,{recursive:true,force:true});}
 });
 

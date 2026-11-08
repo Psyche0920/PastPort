@@ -191,3 +191,11 @@ The editable r2 delivery contains the seven-chapter story, two optional investig
 The shared player/Admin site catalog now includes **Şeker Han**, ID `sekerhan`, preserving existing identities including `education`. This adds an unbound map node only; the user will select and publish a game version from Admin later. Already-running player services need a restart to load the catalog; the owner of any sharing session must restart that session.
 
 本机玩家服务 18851 已重启并验证17个节点、三语未发布提示、名称与ID搜索及手机显示，原发布保持不变；Admin 共用 publisher 已读到新选项，未执行登录后的 Admin 点击。现有远端共享未重启，仍需共享持有人重启才会载入新目录。 Local port 18851 has restarted and passed the 17-node, three-language unpublished-card, name/ID search and mobile checks, with existing publications preserved. The shared Admin publisher reads the option; no authenticated Admin click was performed. Existing remote sharing has not restarted and keeps its startup catalog until its owner restarts it.
+
+## 2026-11-08 — Cleared 发章条件 / Completion gate
+
+GameSession（包括当前 Şeker Han 包）须同步同版本存档，并通过共用引擎恢复、必需任务／选择路线及结局规则核对后才发章；有效 run 或结局消息本身不够。撤章后恢复完成旧档不会再自动补章，须先「重新开始」并完成新局，旧进度及其他印章保留。旧二维游戏仍由受限事件／固定摘要 UI 桥接通知结局，此检查不声称服务端逐步裁定或防作弊。53项玩家测试及真实 Şeker Han 存档的只读核验通过；现有远端共享需重启后才会加载新后端。
+
+GameSession deliveries, including the current Şeker Han bundle, must sync a same-release save and pass shared-engine restoration, required tasks/choices along the route and ending-rule validation before receiving a stamp. A valid run or ending message alone is insufficient. After retraction, start again and finish a new run to reclaim the stamp; existing progress and other medals are preserved. Legacy 2D games retain bounded event/digest-pinned UI bridges; this is not server-side action adjudication or an anti-cheat guarantee. All 53 player tests and read-only checks of the actual Şeker Han save passed. Existing remote sharing needs a restart to load the backend change.
+
+本机18851已重启加载新条件；旧档自动补发的 Şeker Han 印章已再次撤回，其他印章、存档与地图发布逐项比对保持不变。隔离浏览器已验证真实玩家界面的提前结局拒绝与有效完成发章（合成游戏、非人工试玩验收）。 Local port 18851 has restarted with the new gate. The old-save automatic Şeker Han award was retracted again; other stamps, saves and map publications were compared and preserved. An isolated browser verified early-ending rejection and valid-completion stamping through the real player shell using a synthetic game, not a human playthrough.

@@ -32,6 +32,7 @@ test('opening, observing and incomplete interactions never emit completion; an e
   game.finish();assert.equal(game.messages.length,1);
   assert.equal(game.messages[0].value.type,'pastport:ending');
   assert.equal(game.messages[0].value.run,'issued-run');
+  assert.equal(game.messages[0].value.endingId,'legacy-ending');
   assert.equal(game.messages[0].origin,'http://127.0.0.1:18856');
   game.finish();game.changed();assert.equal(game.messages.length,1);
 });
@@ -44,8 +45,9 @@ test('legacy local saves are account-scoped and old unbound saves are retained',
 });
 test('new games can use the standard completion event; incomplete events cannot stamp',()=>{
   const game=fixture();const notify=game.events.get('pastport:completed');
-  notify({detail:null});notify({detail:{}});notify({detail:{endingId:''}});
+  notify({detail:null});notify({detail:{}});notify({detail:{endingId:''}});notify({detail:{endingId:'   '}});
   assert.equal(game.messages.length,0);notify({detail:{endingId:'complete'}});assert.equal(game.messages.length,1);
+  assert.equal(game.messages[0].value.endingId,'complete');
   game.finish();assert.equal(game.messages.length,1);
 });
 

@@ -1,3 +1,4 @@
+import {CompletionRejected,GameSessionCompletionVerifier,hasEndingSave,hasUnfinishedSave} from './completion-verifier.mjs';
 import {browserOrigin,QuickTunnel,stopProcess} from './network.mjs';
 import {PlayerSaveRepository, SaveConflict, InvalidSave} from './cloud-saves.mjs';
 import {completionAdapter} from '../../tools/game-package/player-completion.mjs';
@@ -75,7 +76,8 @@ const endingMessage = `
   const passportRun = new URL(location.href).searchParams.get('passportRun');
   if (passportRun && window.parent !== window &&
       (typeof continuationPending === 'undefined' || !continuationPending)) {
-    window.parent.postMessage({type:'pastport:ending',run:passportRun}, ${JSON.stringify(origin)});
+    const endingId=typeof session!=='undefined' ? session?.state?.ending_id : typeof title==='string' ? title : null;
+    if(typeof endingId==='string' && endingId.length)window.parent.postMessage({type:'pastport:ending',run:passportRun,endingId}, ${JSON.stringify(origin)});
   }
 `;
 async function startPublishedGame(publication) {
@@ -166,7 +168,12 @@ window.parent.postMessage({type:'pastport:save-error',run:new URL(location.href)
       await tunnel.waitReady({signal:lifecycle.signal});
       if(child.exitCode!==null || child.signalCode!==null)throw new Error('Game stopped before remote access was ready.');
     }
-    return {url:tunnel?.url??url,child,saveKeys,saveFormat,close:async()=>{await tunnel?.close();await stopProcess(child);}};
+    let verifier;
+    const verifyCompletion=saveFormat==='gamesession-v2' ? async(entries,endingId)=>{
+      verifier??=GameSessionCompletionVerifier.load(game,saveKeys[0]);
+      return (await verifier).verify(entries,endingId);
+    } : null;
+    return {url:tunnel?.url??url,child,saveKeys,saveFormat,verifyCompletion,close:async()=>{await tunnel?.close();await stopProcess(child);}};
   } catch (error) {
     await tunnel?.close();
     await stopProcess(child);
@@ -313,11 +320,12 @@ const server = createServer(async (req,res) => {
         }
         if(!pending.game)return send(res,202,{pending:true});
       }
-      const {url,saveKeys,saveFormat} = await pending;
+      const {url,saveKeys,saveFormat,verifyCompletion} = await pending;
       const run = opaque();
       for (const [key, entry] of runs) if (entry.expires < Date.now()) runs.delete(key);
-      runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,saveFormat,expires:runEnds()});
       const save=saveKeys.length ? saves.read(account.id,publication.site_id,publication.version) : null;
+      const requiresFreshStart=Boolean(verifyCompletion&&hasEndingSave(save?.entries??{})&&!db.prepare('SELECT 1 FROM stamp WHERE player=? AND game=?').get(account.id,publication.site_id));
+      runs.set(run,{token,siteId:publication.site_id,version:publication.version,saveKeys,saveFormat,verifyCompletion,requiresFreshStart,expires:runEnds()});
       const namespace=createHash('sha256').update(JSON.stringify([account.id,publication.site_id,publication.version])).digest('hex');
       return send(res,200,{url:`${url}/?scene=3d&passportRun=${run}&passportScope=${namespace}`,run,version:publication.version,
         current_version:current.version,latest:publication.version===current.version,save_format:saveFormat,save,namespace});
@@ -328,6 +336,7 @@ const server = createServer(async (req,res) => {
       if (!issued.saveKeys.length) return send(res,409,{error:'此游戏尚未支持账号存档'});
       try {
         const saved=saves.write(account.id,issued.siteId,issued.version,input,issued.saveKeys,issued.saveFormat);
+        if(issued.requiresFreshStart&&hasUnfinishedSave(saved.entries))issued.requiresFreshStart=false;
         return send(res,200,{revision:saved.revision,updated:saved.updated});
       } catch(error) {
         if(error instanceof SaveConflict)return send(res,409,{error:'另一设备已更新存档，请返回地图重新打开，避免覆盖',code:'SAVE_CONFLICT'});
@@ -338,6 +347,15 @@ const server = createServer(async (req,res) => {
     if (route === '/api/stamp') {
       const issued = runs.get(input.run);
       if (!issued || issued.token !== token || issued.expires < Date.now()) return send(res,403,{error:'本次通关回执无效'});
+      if(typeof input.ending_id!=='string'||!input.ending_id.trim()||input.ending_id.length>200)return send(res,409,{error:'本局尚未达到已验证的结局。',code:'COMPLETION_REQUIRED'});
+      if(issued.requiresFreshStart)return send(res,409,{error:'请重新开始游戏，通关后再次领取印章。',code:'FRESH_COMPLETION_REQUIRED'});
+      if(issued.verifyCompletion){
+        const saved=saves.read(account.id,issued.siteId,issued.version);
+        try {await issued.verifyCompletion(saved.entries,input.ending_id);}
+        catch(error){if(error instanceof CompletionRejected)return send(res,409,{error:error.message==='This game cannot provide a verified completion record.'?'此游戏暂不能提供可验证的通关记录。':'本局尚未达到已验证的结局。',code:'COMPLETION_REQUIRED'});throw error;}
+        if(runs.get(input.run)!==issued||issued.token!==token||issued.expires<Date.now())return send(res,403,{error:'本次通关回执无效'});
+        if(saves.read(account.id,issued.siteId,issued.version).revision!==saved.revision)return send(res,409,{error:'本局尚未达到已验证的结局。',code:'COMPLETION_REQUIRED'});
+      }
       db.prepare('INSERT OR IGNORE INTO stamp VALUES (?,?,?)').run(account.id,issued.siteId,new Date().toISOString());
       return send(res,200,profile(account));
     }

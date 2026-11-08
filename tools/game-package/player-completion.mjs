@@ -55,17 +55,17 @@ export function installCompletionBridge(config, platformOrigin) {
     window.parent.postMessage({type:'pastport:save-ready',run},platformOrigin);
   }
   let sent=false;
-  const finished=()=>{
+  const finished=(endingId)=>{
     if(sent)return;
     sent=true;
-    window.parent.postMessage({type:'pastport:ending',run},platformOrigin);
+    window.parent.postMessage({type:'pastport:ending',run,endingId},platformOrigin);
   };
   // New games emit this explicit event; known legacy UIs use a pinned adapter.
   window.addEventListener('pastport:completed',event=>{
-    if(typeof event.detail?.endingId==='string' && event.detail.endingId.length)finished();
+    if(typeof event.detail?.endingId==='string' && event.detail.endingId.trim().length)finished(event.detail.endingId);
   });
   if(config.selector){
-    const observe=()=>{if(document.querySelector(config.selector))finished();};
+    const observe=()=>{if(document.querySelector(config.selector))finished('legacy-ending');};
     new MutationObserver(observe).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['open','hidden']});
     observe();
   }

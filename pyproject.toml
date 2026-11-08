@@ -82,6 +82,7 @@ include = ["/frontend/player/network.mjs", "/frontend/player/remote.mjs", "/fron
 "frontend/player/sites.mjs" = "pastport/runtime_assets/frontend/player/sites.mjs"
 "frontend/player/illustrations.mjs" = "pastport/runtime_assets/frontend/player/illustrations.mjs"
 "frontend/player/cloud-saves.mjs" = "pastport/runtime_assets/frontend/player/cloud-saves.mjs"
+"frontend/player/completion-verifier.mjs" = "pastport/runtime_assets/frontend/player/completion-verifier.mjs"
 "frontend/player/save-sync.mjs" = "pastport/runtime_assets/frontend/player/save-sync.mjs"
 "frontend/player/game-save-bridge.mjs" = "pastport/runtime_assets/frontend/player/game-save-bridge.mjs"
 "frontend/player/data-identity.mjs" = "pastport/runtime_assets/frontend/player/data-identity.mjs"

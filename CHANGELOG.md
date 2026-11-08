@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08 — Require verified GameSession completion before Cleared
+
+- Stamp requests require a nonempty ending ID. GameSession deliveries must sync and pass trusted shared-engine restoration, required-route/task checks and ending-rule/table validation; a valid launch run alone is insufficient. Imported server scripts are never executed.
+- Retraction preserves the completed save, but reopening that old ending cannot reclaim the medal until the run first saves an unfinished new game and completes it. Login/run and save-revision checks remain in place; other sites and existing stamps are preserved.
+- Verified: 53 player tests, including HTTP rejection before completion, wrong IDs/accounts, valid completion, idempotence and retraction/replay; the actual local Şeker Han completed save is accepted, with incomplete puzzle/differences rejected using in-memory copies only. An isolated browser test exercised the real player shell/iframe hook: an early ending was rejected and a verified completed save awarded one medal. Local port 18851 was restarted; the old-save auto-award was retracted again without modifying saves or other stamps. Existing remote sharing was left running and requires its own restart. Legacy static games retain bounded event/digest-pinned bridges. This is not server-side action execution or an anti-cheat guarantee.
+
 ## 2026-11-08 — Separate Şeker Han map node
 
 - Add **Şeker Han** (`sekerhan`) to the shared player/Admin site catalog, using the existing interpretive house motif in the lower map row. Name checked against the Istanbul Encyclopedia’s Hobyar street record.
