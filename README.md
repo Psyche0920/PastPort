@@ -35,7 +35,9 @@
 | maslan ·《最后两袋》· 主试玩 r1 | 独立 maslan 交付，2026-11-05；不是 UI Trial 下载项，也不是三语可行走剧场包 | [maslan 主试玩 r1 · maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) |
 | 《最后两袋》· 可行走剧场 · 三语版 | 当前穆拉迪耶三语包，简体中文 / English / Türkçe；沿用 `muradiye-ui-trial` 导入项目名 | [《最后两袋》可行走剧场三语版 · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
 | wcheung · The Last Tour · 三语版 | 四二场景的另一款游戏，简体中文 / English / Türkçe；与《最后两袋》不同 | [The Last Tour 三语版 · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
-| Eyne Bey Subaşı Medresesi（Şeker Han Demo）· 三语版 | 主演示：Vakıf 清册《教育建筑》第557–561页真实记录（英文、土耳其文原文逐字引用，中文为译文）放在 Şeker Han 地下室 iPhone 扫描中（替代场景，非原址）；简体中文 / English / Türkçe；发布到“Eğitim Yapıları”节点 | [Eyne Bey 三语包 · eyne-bey-seker-han.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r1/eyne-bey-seker-han.tar.gz) |
+| Eyne Bey ·《十二間房 · 未完的承諾》· r2 | 7章主线、2条可选支线、3个主结局；来源照片九片拼图及三处找不同；首页提前准备3D/LOD、连通楼梯路线及到达后朝向物件；中文 / English / Türkçe | [Eyne Bey r2 · eyne-bey-seker-han.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/eyne-bey-seker-han.tar.gz) |
+
+Eyne Bey r2 是独立打磨的游戏包：[发布说明](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r2) · [SHA-256 校验](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/SHA256SUMS) · [保留的 r1](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r1)。历史主体为布尔萨 Eyne Bey 经学院，3D仍为伊斯坦布尔 Şeker Han 地下室替代扫描。照片直接取自 Vakıf 清册印刷页558、559；找不同的修改稿明确标为非史料，原照和页码保留。第一页可单独提前准备，准备完成不自动开局；语言选择在 Menu 旁边，避开 minimap。在 Organizer 原 `eyne-bey-seker-han` 卡片「提交新版」导入；地图仍须另行选择版本发布。下载包包含可编辑代码及 `authoring/`，不随 Git pull 同步，也不自动改变 Main/SDK 的生成结果。已验证12组分支、一次完整浏览器通关、来源小游戏及3个到达朝向；人工剧情验收、稳定实机帧率及本版地图发布未完成。
 
 原始独立 2D UI Trial 暂无单独核实的下载项；不要将上述历史剧场附件当作原始 2D 包。后台按已核实的附件 SHA-256 显示游戏与版本名称，卡片、发布选择、历史和已发布列表使用同一名称；未知附件只显示导入标识与“版本未标注”，不猜测标题。
 
