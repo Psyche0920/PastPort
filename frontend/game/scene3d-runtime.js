@@ -1,16 +1,7 @@
 // Appended only to the isolated viewer response; never written into the input.
 import {sourceArrival,screenBearing} from '/scene3d-navigation.mjs';
-import {prepareRenderer,SparkScenePreparation} from '/scene-preparation.mjs';
+import {prepareRenderer} from '/scene-preparation.mjs';
 import {NavigationBoundary} from '../navigation_boundary.js?v=plane-3';
-// Imported SPZ viewers predate the optional preparation hook. Adapt their actual loaded
-// Spark instances; retain custom adapters supplied by other viewers.
-if (!globalThis.pastportScenePreparation && collider) {
-  const splat=group.children.find(child=>child instanceof SplatMesh);
-  const spark=scene.children.find(child=>child instanceof SparkRenderer);
-  if (splat && spark) globalThis.pastportScenePreparation=new SparkScenePreparation({
-    splat,spark,renderer,scene,camera,
-  });
-}
 const storyPost=message=>parent.postMessage(message,location.origin);
 let storyRoute=null,storyPaused=false,storyReady=false;
 let storyLocale='zh';const storyT=(zh,en)=>storyLocale==='en'?en:zh;
@@ -22,8 +13,19 @@ const storyLabelNodes=new Map();
 if(storySharpLabels){
  const style=document.createElement('style');style.textContent='.story-object-label{position:fixed;left:0;top:0;width:44px;height:44px;box-sizing:border-box;border:2px solid #f5df9d;border-radius:50%;background:#142d2bf5;color:#fff5d4;display:flex;align-items:center;justify-content:center;font:700 20px/1 system-ui;box-shadow:0 2px 7px #000b;pointer-events:none;z-index:20;transform:translate(-50%,-50%)}.story-object-label[data-pending="true"]{border-style:dashed}.story-object-label[data-target="true"]{width:50px;height:50px;border:3px solid #ffe29a;background:#534016fa;color:#fff;box-shadow:0 0 0 3px #142d2bd9,0 2px 8px #000b}.story-object-label[hidden]{display:none}';document.head.append(style);
 }
+// In tunnels and multi-room scans every label used to float through the walls. Recheck line of
+// sight a few times a second; the current objective stays visible so players can still find it.
+let storyOcclusionAt=0;
+function storyUpdateOcclusion(){
+ const now=performance.now();if(now-storyOcclusionAt<300)return;storyOcclusionAt=now;
+ for(const marker of markers){
+  const delta=marker.getWorldPosition(new THREE.Vector3()).sub(camera.position),distance=delta.length();
+  marker.userData.storyOccluded=distance>.8&&new THREE.Raycaster(camera.position.clone(),delta.normalize(),0,distance-.35).intersectObject(collider,true).length>0;
+ }
+}
 function storyUpdateSharpLabels(){
  if(!storySharpLabels)return;
+ storyUpdateOcclusion();
  const live=new Set();
  for(const marker of markers){
   const id=marker.userData.object.id;live.add(id);
@@ -31,7 +33,7 @@ function storyUpdateSharpLabels(){
   if(!label){label=document.createElement('span');label.className='story-object-label';label.setAttribute('aria-hidden','true');label.textContent=String(id).padStart(2,'0');document.body.append(label);storyLabelNodes.set(id,label);}
   const world=marker.getWorldPosition(new THREE.Vector3()),projected=world.clone().project(camera);
   const forward=world.clone().sub(camera.position).applyQuaternion(camera.quaternion.clone().invert());
-  label.hidden=!marker.visible||forward.z>=0||projected.z < -1||projected.z > 1||Math.abs(projected.x)>1.08||Math.abs(projected.y)>1.08;
+  label.hidden=!marker.visible||(marker.userData.storyOccluded&&id!==storyObjective?.number)||forward.z>=0||projected.z < -1||projected.z > 1||Math.abs(projected.x)>1.08||Math.abs(projected.y)>1.08;
   if(!label.hidden){label.style.left=`${(projected.x+1)*innerWidth/2}px`;label.style.top=`${(1-projected.y)*innerHeight/2}px`;}
   label.dataset.target=String(id===storyObjective?.number);label.dataset.pending=String(marker.userData.pending===true);
   marker.material.opacity=0;
@@ -70,7 +72,7 @@ renderer.domElement.onpointerup=async event=>{
     const rect=renderer.domElement.getBoundingClientRect();
     let closest=null,closestDistance=Infinity;
     for(const marker of markers){
-      if(!marker.visible)continue;
+      if(!marker.visible||(storySharpLabels&&marker.userData.storyOccluded&&marker.userData.object.id!==storyObjective?.number))continue;
       const projected=marker.getWorldPosition(new THREE.Vector3()).project(camera);
       if(projected.z<-1||projected.z>1)continue;
       const x=rect.left+(projected.x+1)*rect.width/2,y=rect.top+(1-projected.y)*rect.height/2;
@@ -84,7 +86,9 @@ renderer.domElement.onpointerup=async event=>{
 function storyFloor(x,z,y){
   const probe=new THREE.Raycaster(new THREE.Vector3(x,y+1,z),new THREE.Vector3(0,-1,0),0,4);
   for(const hit of probe.intersectObject(collider,true)){
-    if(!hit.face)continue;
+    // The floor is below the eye. A low vault or ceiling within a metre above the eye is also a
+    // horizontal face hit first by this probe; taking it froze movement in tunnels.
+    if(!hit.face||hit.point.y>=y)continue;
     const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
     if(Math.abs(normal.y)>.7)return hit.point;
   }
@@ -93,7 +97,9 @@ function storyFloor(x,z,y){
 function storySegment(from,to){
   const delta=to.clone().sub(from),distance=delta.length();
   if(distance<.001)return true;
-  for(const offset of [-Math.max(.1,storyEyeHeight-.12),-storyEyeHeight*.5,0]){
+  // The lowest wall ray sits just above the 0.35 m step limit; at 0.12 m every stair riser
+  // counted as a wall, so stairs that the floor rule allows could never be climbed.
+  for(const offset of [-Math.max(.1,storyEyeHeight-.4),-storyEyeHeight*.5,0]){
     const start=from.clone();start.y+=offset;
     const probe=new THREE.Raycaster(start,delta.clone().normalize(),0,distance+.2);
     if(probe.intersectObject(collider,true).length)return false;
@@ -272,3 +278,5 @@ function storySendMap(){
 function storySendReady(){storyPost({type:'story3d:ready',qualityControl:typeof globalThis.pastportScenePreparation?.setQuality==='function'});storySendMap();}
 const storyMapDirection=new THREE.Vector3();
 storyReady=true;storySendReady();requestAnimationFrame(storyTick);
+
+window.addEventListener('pastport:display-language',()=>storySetLocale(storyLocale));

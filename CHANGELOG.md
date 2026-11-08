@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-08 — Eyne Bey Subaşı Madrasa (Şeker Han Demo)
+
+- New featured demo `eyne-bey-seker-han-demo-2026-11-08-r1`: the team's iPhone scan of the Şeker Han basement (Istanbul) as a stand-in space, with 12 hand-placed points opening real records from the Vakıf inventory, Osmangazi · Educational Institutions · Eyne Bey Subaşı Madrasa (pp. 557–561). English and Turkish records are verbatim (35 quotes checked against the PDF text, including the original typo "the the"; two excerpts marked […]); Chinese is our translation. Seven reading scenes, three choices, twelve ending texts; story and interface in Türkçe / English / 简体中文 using the shared display catalog.
+- 3D runtime: the floor probe ignores ceilings above the eye (low vaults froze movement), the wall check sits above the 0.35 m step limit (stairs could not be climbed), labels behind walls are hidden (current target stays visible), and 3D labels follow the display language.
+- Player map: search box (place or game name in any language, Turkish letters folded) and a "playable only" filter, on the redesigned map.
+- Verified: zero model/Marble calls; 12 choice paths reach their ending; Chrome without page errors in zh/en/tr; scripted walk from entrance to chamber (stuck at the entrance with the previous runtime); Organizer import; 119 player/game tests. Not verified: full human playthrough per language, phone layout, native review of the story Turkish.
+
 ## 2026-11-08 — Automatic review translations
 
 - Main handoff validation: 69 focused Python regressions, 16 frontend localization tests, strict typing for six affected Python files, repository/documentation contracts and whitespace checks passed. Runtime translation caches and review databases remain local, outside the source commit. No fresh recognition, Story call, public deployment or production restart was performed during the push task.

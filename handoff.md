@@ -177,3 +177,5 @@ The production Organizer IDML entry still runs scene-object recognition → IDML
 审核页新增独立显示译文缓存：英文／土耳其语跟随界面切换，悬停保留原文；不会覆盖原审核数据或重新识别。旧后台需重启加载接口。用户已明确授权向当前 Codex 订阅服务发送审核文本，333 的 136 段与 444 的 112 段均已生成英／土译文；共 9 次纯文本翻译调用、245 段独立缓存，当前审核来源缺失为零。两份权威审核数据前后 SHA-256 一致，识别与故事调用均为零；未重启用户的后台。
 
 新上传 SDK 任务现已自动准备英／土审核译文（额外最多 8 次文本调用，授权面板披露），在 environment_ready 前完成；原文与审核记录不变。提供离线成功／中断回归，当前任务未重新运行真实识别、未生成故事或重启用户服务。
+
+Eyne Bey Subaşı Medresesi（Şeker Han Demo）/ Featured demo: [eyne-bey-seker-han-demo-2026-11-08-r1](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r1)。Vakıf 清册《教育建筑》第557–561页的真实记录（英、土原文逐字，中文为译文）放在团队 iPhone 扫描的 Şeker Han 地下室（替代场景，非原址）中；三语；在 Organizer 导入后发布到“Eğitim Yapıları”节点。Real records from the Vakıf inventory (Educational Institutions, pp. 557–561; English and Turkish verbatim, Chinese translated) placed in the team's iPhone scan of the Şeker Han basement, a stand-in rather than the madrasa; trilingual; import in Organizer and publish to the "Eğitim Yapıları" pin. 3D runtime fixes for tunnels and stairs and the map search box ship with main.

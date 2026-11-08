@@ -1,4 +1,9 @@
 export const playerTurkish=Object.freeze({
+  "Search places or games…": "Yer veya oyun ara…",
+  "Search the map": "Haritada ara",
+  "Playable only": "Yalnızca oynanabilir",
+  "places": "yer",
+  "No place matches your search.": "Aramanızla eşleşen yer yok.",
   "Interface language": "Arayüz dili",
   "PastPort · Bursa Heritage Map": "PastPort · Bursa Kültürel Miras Haritası",
   "中文": "简体中文",
@@ -198,6 +203,10 @@ function renderLanguage() {
   retrySave.textContent=t('重试同步','Retry sync');
   exportSave.textContent=t('下载未同步存档','Export unsynced save');
   reloadSave.textContent=t('载入另一设备的最新存档','Load the newest save from the other device');
+  $('#site-search').placeholder=t('搜索地点或游戏…','Search places or games…');
+  $('#site-search').setAttribute('aria-label',t('搜索地图','Search the map'));
+  $('#site-search-playable-label').textContent=t('只看可玩','Playable only');
+  applySiteSearch();
 }
 const node = (tag, text, className) => {
   const el = document.createElement(tag);
@@ -553,6 +562,7 @@ async function refreshPublications() {
     document.querySelector('[data-site-id="'+site.id+'"]').classList.toggle('unavailable',
       !published.some(publication=>publication.site_id===site.id));
   }
+  applySiteSearch();
   const state=JSON.stringify(published);
   const changed=publicationState && state!==publicationState;
   publicationState=state;
@@ -598,6 +608,23 @@ mapPoints.forEach(({site,index,mobileX,mobileY}) => {
   });
   $('#markers').append(marker);
 });
+// Search by place or game name in any language; Turkish letters and accents fold ("hudavendigar" finds "Hüdavendigar").
+function foldSearch(value){return String(value??'').toLocaleLowerCase('tr').replace(/ı/g,'i').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+function applySiteSearch(){
+  const input=document.getElementById('site-search');if(!input)return;
+  const query=foldSearch(input.value),playable=document.getElementById('site-search-playable').checked;
+  let shown=0;
+  for(const site of sites){
+    const marker=document.querySelector('[data-site-id="'+site.id+'"]');if(!marker)continue;
+    const version=livePublications.find(p=>p.site_id===site.id)?.version;
+    const haystack=foldSearch([site.name,site.id,marker.title,...['zh','en','tr'].map(l=>publishedGameTitle(version,l)??'')].join(' '));
+    const match=(!query||query.split(/\s+/).every(word=>haystack.includes(word)))&&(!playable||!marker.classList.contains('unavailable'));
+    marker.hidden=!match;if(match)shown++;
+  }
+  document.getElementById('site-search-count').textContent=shown?`${shown} ${t('个地点','places')}`:t('没有符合搜索的地点。','No place matches your search.');
+}
+$('#site-search').addEventListener('input',applySiteSearch);
+$('#site-search-playable').addEventListener('change',applySiteSearch);
 $('.map-sheet')?.addEventListener('click', e => {
   if (!e.target.closest('.marker') && !e.target.closest('#in-situ-card')) {
     closeInSituCard();

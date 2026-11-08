@@ -1145,3 +1145,13 @@ header{
 #launch.unavailable .thumb{border-color:#664c39;box-shadow:0 4px 7px #3e332b73}
 .marker-game-title{font:600 clamp(9px,.95vw,12px)/1.25 Georgia,serif;color:#6d2332;background:#fff1d6e8;padding:.2rem .4rem;border-radius:.25rem;text-wrap:balance;max-width:165px}
 .marker-game-title[hidden]{display:none}.game-edition{font-weight:700;color:var(--red);text-wrap:balance}
+.site-search{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;margin:.8rem 0 .4rem}
+#site-search{flex:1 1 16rem;max-width:30rem;font:inherit;padding:.65rem .9rem;border-radius:.7rem;border:1px solid #c9a46a;background:#fff8e8;color:#2c241b}
+#site-search:focus-visible{outline:3px solid #f0d59c;outline-offset:2px}
+.site-search-toggle{display:inline-flex;align-items:center;gap:.4rem;cursor:pointer}
+#site-search-count{font-size:.9rem;opacity:.85}
+.marker[hidden]{display:none!important}
+.site-search{justify-content:center}
+.site-search-toggle,#site-search-count{color:#f3e5c7}
+.site-search-toggle input{accent-color:#e3b968;width:1.05rem;height:1.05rem}
+#site-search-count{flex-basis:100%;text-align:center}
