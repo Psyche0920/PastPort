@@ -8,7 +8,7 @@
 
 English · [中文](README_ZH.md)
 
-[Watch demo](#demo) · [Presentation](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1) · [Quickstart](#startup-and-use) · [Architecture](#architecture-and-modules) · [Repository layout](#file-structure-and-purposes) · [Team handoff](handoff.md#en)
+[Watch demo](#demo) · [Presentation](#presentation) · [Quickstart](#startup-and-use) · [Architecture](#architecture-and-modules) · [Repository layout](#file-structure-and-purposes)
 
 </div>
 
@@ -16,13 +16,19 @@ English · [中文](README_ZH.md)
 
 ## Watch PastPort in action
 
-[View the presentation on Google Slides](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1)
-
 [![Watch the PastPort demo — opens in Google Drive](.github/showcase/demo.svg)](https://drive.google.com/file/d/1m5JBXLTCtL9ITxiZJSNey-Ev8xvFqccy/view?usp=sharing)
 
 **[▶ Watch the full demo](https://drive.google.com/file/d/1m5JBXLTCtL9ITxiZJSNey-Ev8xvFqccy/view?usp=sharing)** · Click the cover to play in Google Drive.
 
 The demo shows the game experience. See the project documentation below for production and prototype boundaries; the video does not establish that every detail is produced automatically by the general generator.
+
+<a id="presentation"></a>
+
+## Presentation
+
+[![PastPort presentation — first slide](.github/showcase/presentation-cover.png)](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1)
+
+**[Open the presentation on Google Slides](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1)**
 
 ![PastPort production workflow](.github/showcase/workflow-en.svg)
 
@@ -40,66 +46,21 @@ Turn original historical sources, matched museum environments and spatial inform
 
 **Current status: five SDKs are integrated with local main. Saved-real-material replay, assembly and 3D completion have been verified. CLI replay makes no model calls; Organizer supports saved-result reuse and explicitly authorized generation separately. Source is managed in Git; private preview artifacts are not published with it.**
 
-[Finals handoff: wcheung, maslan and wehan](handoff.md#en)
+The production IDML workflow reads source text and linked images, recognizes scene objects, matches and independently audits them, then localizes candidates. The native scene entry uses IDML + SPZ + triangular PLY; linked images are optional, with missing image evidence retained as a gap. Environment preparation stops before Story generation.
 
-[Initial proposal version (PDF)](references/PastPort_ROOT_CODE_Application.pdf) · [Proposal and competition direction](handoff.md#original-proposal-and-competition-direction)
+Matching requires source-backed visual identity; functional analogies are excluded. Unclear minor details can remain documented limitations, while contradictory structures or unsupported positions remain unresolved. Model confirmation does not replace human approval. Text-first search and moved-camera review are not part of the production entry.
 
-[Shared online platform: Claude execution PRD](docs/TECHNICAL_PRD_EN.md#shared-online-platform)
+## Current playable releases
 
-The production Organizer IDML entry still runs scene-object recognition → IDML image/text matching → independent audit → localization and attachment. The text-first sequence (IDML text → corresponding image subject → directed scene search) has been exercised only in an isolated local prototype and is not wired into production; moved-camera review is also not integrated. With the same Şeker Han material, the prototype selected 9 text-bound targets, matched 7 and localized 6; the production run recognized 30 scene candidates, matched and localized 9. Different target populations make these counts unsuitable as an accuracy comparison. Prototype 3D attachment remains pending alignment and manual acceptance; no Story was generated. Run material and private databases are excluded from Git, and pulling main does not transfer local jobs or playable artifacts.
-
-New runs share a calibrated visual identity threshold: recognizable overall appearance and scene context permit model confirmation despite unclear small marks, stickers or textures, which remain limitations. Unrecognizable objects, unsupported points and defining structural contradictions remain gaps. Model confirmation is not human approval. IDML uses v4 and the environment skill uses a v2 snapshot; this update adds no camera movement, review rounds or functional analogies. Existing runs retain pinned versions.
-
-New IDML scene runs count only source-backed same-object visual identity; functional analogies are not output or counted. Existing runs retain their original policy.
-
-New environment model requests include a pinned localization and review skill snapshot; existing runs retain their original policies and receipts.
-
-The native `idmlscene3d` entry requires only IDML, SPZ and PLY; Links is optional, and no field-photo upload is required. The pipeline derives observations from the hash-bound scene and records their provenance, then reuses native IDML matching, independent audit, localization and attachment. Missing linked graphics remain explicit gaps and are excluded from image evidence; source text and exact citations remain usable. The existing photo-based `idml3d` entry stays separate. Environment preparation stops at `environment_ready`, before Story.
-
-## Team playable deliveries
-
-<details>
-<summary>Expand game editions, download links and import instructions</summary>
-
-
-### Game titles and build identities
-
-The original UI Trial also tells *The Last Two Sacks*. Distinguish the builds below by edition, not by archive filename alone. `muradiye-ui-trial` and `wcheung` are retained import project IDs, not titles for every build.
-
-| Game / edition | Contents | Complete playable download |
+| Game | Latest listed edition | Download |
 | --- | --- | --- |
-| UI Trial historical delivery · The Last Two Sacks · walkable theatre | 2026-11-05 archive; its entry already contains the walkable theatre under a legacy UI Trial wrapper; not the trilingual edition | [UI Trial theatre archive · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz) |
-| maslan · The Last Two Sacks · featured r1 | Separate maslan delivery, 2026-11-05; not the UI Trial download or the trilingual walkable-theatre archive | [maslan featured r1 · maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) |
-| The Last Two Sacks · walkable theatre · trilingual | Current Muradiye Simplified Chinese / English / Turkish package; retains the `muradiye-ui-trial` import project ID | [The Last Two Sacks · trilingual walkable theatre · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
-| wcheung · The Last Tour · trilingual | A different game in the Forty Two scene, in Simplified Chinese / English / Turkish; distinct from The Last Two Sacks | [The Last Tour · trilingual · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
-| Eyne Bey · The Twelve Rooms: A Promise Kept · r2 | Seven main chapters, two optional investigations and three main endings; nine-piece source-photo puzzle and three photo differences; first-page 3D/LOD preparation, connected stair routes and object-facing arrival; Chinese / English / Türkçe | [Eyne Bey r2 · eyne-bey-seker-han.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/eyne-bey-seker-han.tar.gz) |
+| The Twelve Rooms: A Promise Kept | Eyne Bey r2 · Chinese / English / Turkish | [Game bundle](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/eyne-bey-seker-han.tar.gz) |
+| The Last Two Sacks | Trilingual walkable theatre | [Game bundle](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
+| The Last Tour | Trilingual Forty Two edition | [Game bundle](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
 
-Eyne Bey r2 is a separately polished game bundle: [release notes](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r2) · [SHA-256 checksums](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/SHA256SUMS) · [retained r1](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r1). The historical subject is the Eyne Bey madrasa in Bursa; the 3D stage remains the separate Şeker Han basement scan in Istanbul. Photographs come directly from printed inventory pages 558 and 559; the altered comparison copy is explicitly not historical evidence, with the originals and page references retained. Prepare on the first page without starting the game automatically; the language selector sits beside Menu, clear of the minimap. Import through **Submit new version** on the original `eyne-bey-seker-han` Organizer card; selecting a version for map publication remains separate. Editable code and `authoring/` are inside the download, not transferred by Git pull, and do not automatically change Main/SDK generation. Verified: 12 choice combinations, one complete browser playthrough, source minigames and three object-facing arrivals. Human story acceptance, stable physical-device FPS and map publication of this revision remain unverified.
+Import a `.tar.gz` through Organizer → Progress & delivery → Import delivery, then explicitly select a site and release to publish. GitHub Source code downloads are not playable bundles. Pulling source does not transfer private jobs, uploads, accounts or saves.
 
-No separate download of the original standalone 2D UI Trial has been verified. Do not treat the historical theatre archive as that original 2D build. Organizer uses verified archive SHA-256 identities for consistent card, publication, version-history and published-list labels; unknown archives show their import ID and an unidentified-edition label rather than a guessed game title.
-
-The player map retains place names and labels verified published editions: Forty Two shows The Last Tour trilingual, and Muradiye shows The Last Two Sacks trilingual walkable theatre. Place details and game headers reflect the actually launched release, including earlier-release saves. Refresh the player page; no reimport or republication is needed.
-
-Release tags in these URLs distinguish editions. Asset filenames remain unchanged for Organizer import compatibility. GitHub's automatic Source code archives are not playable packages. Import, then explicitly publish to a site; earlier saves remain on their earlier release.
-
-[Six player-map packages · unified downloads](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
-
-The Forty Two Heilbronn and Muradiye rows now link to the 2026-11-07 trilingual The Last Tour and The Last Two Sacks releases; other rows retain the 2026-11-06 delivery snapshots. Site names identify launch slots, not historical scene approval.
-
-| Map site | Project / snapshot | Download |
-| --- | --- | --- |
-| Forty Two Heilbronn | The Last Tour · wcheung · `839c304f27ec` · zh / en / tr | [The Last Tour trilingual · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
-| Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
-| Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
-| I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
-| II. Murat Külliyesi | The Last Two Sacks · walkable theatre · `812d71853b4c` · zh / en / tr | [The Last Two Sacks trilingual theatre · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
-| Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
-
-Download the desired `.tar.gz`, import it through Organizer → Progress & delivery → Import delivery, then publish it to the matching site above. The new computer creates its own delivery record; Git pull does not synchronize local history, accounts or saves.
-
-The Orhan Bey package is the older director build currently published on the player map. The latest Maslan 3D build in Organizer has not been published to the map and is excluded from this six-package snapshot. Assets include `packages.json`, `SHA256SUMS` and import instructions, without account databases or original PDFs.
-
-</details>
+The Eyne Bey game uses historical records about the Bursa madrasa with a separate Şeker Han basement scan from Istanbul as its stage. Its fictional story and altered puzzle images are distinct from source evidence. This separately polished release is not a guarantee of general-generator output. Release checks do not replace human historical/story review or establish stable device FPS; downloading does not establish which release a local player map publishes.
 
 ## Startup and use
 
@@ -336,6 +297,7 @@ PastPort/
 │   │   └── <a href=".github/workflows/ci.yml">ci.yml</a>  — GitHub Actions CI: install dependencies and run repository checks and tests.
 │   ├── <a href=".github/showcase/">showcase/</a>  — GitHub presentation assets, separate from product runtime resources
 │   │   ├── <a href=".github/showcase/hero.svg">hero.svg</a>  — Project banner following the GoalCoach visual style
+│   │   ├── <a href=".github/showcase/presentation-cover.png">presentation-cover.png</a>  — Actual first-slide cover for the presentation link
 │   │   ├── <a href=".github/showcase/demo.svg">demo.svg</a>  — Clickable cover linking to the demo video
 │   │   ├── <a href=".github/showcase/workflow-zh.svg">workflow-zh.svg</a>  — Chinese production workflow overview
 │   │   └── <a href=".github/showcase/workflow-en.svg">workflow-en.svg</a>  — English version of the same production workflow
@@ -815,8 +777,6 @@ PastPort/
 ├── <a href=".gitignore">.gitignore</a>  — Excludes local environments, private inputs, generated artifacts and caches from Git.
 ├── <a href=".python-version">.python-version</a>  — Pins the project Python version.
 ├── <a href="AGENTS.md">AGENTS.md</a>  — Architecture, implementation, verification and documentation rules for coding agents.
-├── <a href="CHANGELOG.md">CHANGELOG.md</a>  — Dated changes, validation evidence and remaining limitations.
-├── <a href="handoff.md">handoff.md</a>  — Bilingual finals handoff.
 ├── <a href="LICENSE">LICENSE</a>  — Module license; retain in source/package distributions.
 ├── <a href="package-lock.json">package-lock.json</a>  — Pins the Node dependency tree/integrity for reproducible installation.
 ├── <a href="package.json">package.json</a>  — Node tooling dependencies and check/test scripts.
@@ -834,7 +794,7 @@ The [Technical PRD: current initial specification](docs/TECHNICAL_PRD_EN.md) def
 
 The Admin production workflow disables cumulative recorded-token stop thresholds under explicit user authorization for both Evidence and environment matching. Actual usage remains recorded. Authorized call counts, timeouts, source validation and unknown-usage recovery checks remain enforced. Continuation creates a new output revision and reuses successful receipts, preserving old PDFs and original grants. Standalone SDK execution still honors its explicit grant by default.
 
-[Change history](CHANGELOG.md)
+[Archived hackathon handoff, proposal and development records](https://github.com/Psyche0920/PastPort/tree/archive/hackathon-docs-2026-11-11) · Historical reference, not current setup instructions.
 
 Start the player map from the checkout root in another terminal with `node frontend/player/server.mjs` (Node.js 22.13+), then open http://127.0.0.1:18851/ . It reads this checkout's Organizer data by default; set `ORGANIZER_DATA` to the same `server/organizer` directory for custom setups. Every completed delivery with a standalone preview can select a site and publish to the map. Refresh the map to see the site light up. Publishing again replaces that site's version while keeping other sites intact. Players use separate accounts from Organizer staff. Stamps require a nonempty ending ID. GameSession games must first sync their same-release save; the backend uses the shared engine to check tasks, the required route and a valid ending. Opening a game or sending an ending message alone cannot award a stamp. After stamp retraction, opening the level automatically starts at its first-play opening without a restart button. The completed save is archived unchanged; unfinished new attempts resume normally and award the stamp on completion. Legacy 2D games still use bounded completion events or a digest-pinned UI bridge, rather than server-side action adjudication.
 

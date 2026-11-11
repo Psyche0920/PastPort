@@ -8,7 +8,7 @@
 
 中文 · [English](README.md)
 
-[观看 Demo](#demo) · [演示 PPT](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1) · [快速启动](#启动与使用) · [架构与模块](#架构与模块) · [文件结构](#文件结构与用途) · [团队交接](handoff.md#zh)
+[观看 Demo](#demo) · [演示 PPT](#presentation) · [快速启动](#启动与使用) · [架构与模块](#架构与模块) · [文件结构](#文件结构与用途)
 
 </div>
 
@@ -16,13 +16,19 @@
 
 ## 看看 PastPort 如何运行
 
-[查看演示 PPT（Google Slides）](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1)
-
 [![点击观看 PastPort Demo，前往 Google Drive](.github/showcase/demo.svg)](https://drive.google.com/file/d/1m5JBXLTCtL9ITxiZJSNey-Ev8xvFqccy/view?usp=sharing)
 
 **[▶ 观看完整 Demo](https://drive.google.com/file/d/1m5JBXLTCtL9ITxiZJSNey-Ev8xvFqccy/view?usp=sharing)** · 点击封面在 Google Drive 播放。
 
 Demo 展示游戏体验；当前正式流程与独立试验的范围见下方项目文档，视频不代表所有效果均由通用生成器自动完成。
+
+<a id="presentation"></a>
+
+## 演示 PPT
+
+[![PastPort 演示 PPT 首页](.github/showcase/presentation-cover.png)](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1)
+
+**[打开 Google Slides 演示稿](https://docs.google.com/presentation/d/1AGZIhHhWdMs3ogOZTk8CjLOHduYBt1xg/edit?slide=id.p1#slide=id.p1)**
 
 ![PastPort：从史料到初版游戏的制作流程](.github/showcase/workflow-zh.svg)
 
@@ -40,66 +46,21 @@ AI 主要辅助制作；代码与 Schema 校验数据，人工核对历史内容
 
 **当前：五个 SDK 已与本地 main 集成；真实材料的保存结果复跑、组包与 3D 通关已验证。命令行复跑不调用模型；Organizer分别提供缓存复用与明确授权后的新生成。源码通过 Git 管理；本地试玩产物不随源码发布。**
 
-[决赛交接：wcheung、maslan 和 wehan](handoff.md#zh)
+正式 IDML 流程读取原文和关联图片，识别场景物件，再匹配、独立复核并定位候选。原生场景入口使用 IDML + SPZ + 三角网格 PLY；Links 配图可选，缺图时保留图片证据缺口。环境准备完成后停下，不自动生成故事。
 
-[初始申请书版本（PDF）](references/PastPort_ROOT_CODE_Application.pdf) · [申请书与比赛方向](handoff.md#初始申请书与比赛方向)
+匹配只接受有来源支持的同物外观证据，不输出功能类比。细节模糊可记为局限，但主要结构矛盾或位置证据不足仍保留未确认。模型确认不代替人工审批。文字优先定向查找与移动取景复核尚未接入正式入口。
 
-[统一在线平台：Claude 执行 PRD](docs/TECHNICAL_PRD.md#shared-online-platform)
+## 当前游戏发行版
 
-正式 Organizer 的 IDML 入口目前仍为“场景物件识别 → IDML 图文匹配 → 独立复核 → 环境定位与挂载”。“IDML 文字 → 对应配图目标 → 定向场景查找”已在独立本机副本验证，尚未接入正式入口；移动取景也未接入。Şeker Han 同材料副本选出9个文字目标、7项图文匹配、6项定位，原流程为30项识别、9项匹配及定位。两者目标清单不同，不作为准确率对比；副本3D附加仍待校准和人工验收，未生成故事。这些运行材料和私有数据库不进入Git，拉取main不会获得本机任务或试玩产物。
-
-新任务统一可见同物判断尺度：整体外观与场景位置足以识别时，细小标记、贴纸或纹理不清不阻止模型确认，仅记录局限；物体本身不可辨认、定位证据不足或主要结构矛盾仍保留缺口。模型确认不代替人工审批。IDML 使用 v4，环境 skill 使用 v2 快照；本次不增加移动取景、复核轮次或功能类比，旧任务保留固定版本。
-
-新 IDML 场景任务仅按可复核的实物外观与位置证据识别同一物体；功能类比不输出或计入匹配，旧任务保留原策略。
-
-环境定位与审核 skill 由环境 SDK 在新任务模型请求中加载并保存快照；旧任务继续使用原策略和回执。
-
-新增 `idmlscene3d` 原生入口：只要求 IDML、SPZ 和 PLY；Links 为可选配图，不要求另传现场照片。流程内部从同一哈希绑定的场景取景，保存派生观察来源，再复用 IDML 原文匹配、独立复核、环境定位与挂载。缺失的图链保留为缺口，不提交为图片证据；正文与精确引用仍可处理。旧 `idml3d` 照片入口保持独立。环境准备停在 `environment_ready`，不自动生成故事。
-
-## 团队试玩交付
-
-<details>
-<summary>展开游戏版本、下载链接与导入说明</summary>
-
-
-### 游戏名称与版本对照
-
-原始 UI Trial 的故事也叫《最后两袋》；下面按版本形态区分，不要仅凭压缩包文件名判断内容。`muradiye-ui-trial` 和 `wcheung` 是沿用的导入项目名，不是所有版本的游戏标题。
-
-| 游戏 / 版本 | 对应内容 | 完整游戏包下载 |
+| 游戏 | 当前列出的最新版本 | 下载 |
 | --- | --- | --- |
-| UI Trial 历史交付 ·《最后两袋》可行走剧场 | 2026-11-05 历史附件；包内入口已为可行走剧场，外层保留 UI Trial 名称；不是三语版 | [UI Trial 剧场历史包 · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-05-r1/muradiye-ui-trial.tar.gz) |
-| maslan ·《最后两袋》· 主试玩 r1 | 独立 maslan 交付，2026-11-05；不是 UI Trial 下载项，也不是三语可行走剧场包 | [maslan 主试玩 r1 · maslan.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) |
-| 《最后两袋》· 可行走剧场 · 三语版 | 当前穆拉迪耶三语包，简体中文 / English / Türkçe；沿用 `muradiye-ui-trial` 导入项目名 | [《最后两袋》可行走剧场三语版 · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
-| wcheung · The Last Tour · 三语版 | 四二场景的另一款游戏，简体中文 / English / Türkçe；与《最后两袋》不同 | [The Last Tour 三语版 · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
-| Eyne Bey ·《十二間房 · 未完的承諾》· r2 | 7章主线、2条可选支线、3个主结局；来源照片九片拼图及三处找不同；首页提前准备3D/LOD、连通楼梯路线及到达后朝向物件；中文 / English / Türkçe | [Eyne Bey r2 · eyne-bey-seker-han.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/eyne-bey-seker-han.tar.gz) |
+| 《十二间房 · 未完的承诺》 | Eyne Bey r2 · 中文 / English / Türkçe | [游戏包](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/eyne-bey-seker-han.tar.gz) |
+| 《最后两袋》 | 三语可行走剧场 | [游戏包](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
+| The Last Tour | 四二场景三语版 | [游戏包](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
 
-Eyne Bey r2 是独立打磨的游戏包：[发布说明](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r2) · [SHA-256 校验](https://github.com/Psyche0920/PastPort/releases/download/eyne-bey-seker-han-demo-2026-11-08-r2/SHA256SUMS) · [保留的 r1](https://github.com/Psyche0920/PastPort/releases/tag/eyne-bey-seker-han-demo-2026-11-08-r1)。历史主体为布尔萨 Eyne Bey 经学院，3D仍为伊斯坦布尔 Şeker Han 地下室替代扫描。照片直接取自 Vakıf 清册印刷页558、559；找不同的修改稿明确标为非史料，原照和页码保留。第一页可单独提前准备，准备完成不自动开局；语言选择在 Menu 旁边，避开 minimap。在 Organizer 原 `eyne-bey-seker-han` 卡片「提交新版」导入；地图仍须另行选择版本发布。下载包包含可编辑代码及 `authoring/`，不随 Git pull 同步，也不自动改变 Main/SDK 的生成结果。已验证12组分支、一次完整浏览器通关、来源小游戏及3个到达朝向；人工剧情验收、稳定实机帧率及本版地图发布未完成。
+在 Organizer「制作进度与交付 → 导入交付包」导入 `.tar.gz`，再明确选择站点和版本发布。GitHub 的 Source code 下载项不是游戏包。拉取源码不会同步私有任务、上传材料、账号或存档。
 
-原始独立 2D UI Trial 暂无单独核实的下载项；不要将上述历史剧场附件当作原始 2D 包。后台按已核实的附件 SHA-256 显示游戏与版本名称，卡片、发布选择、历史和已发布列表使用同一名称；未知附件只显示导入标识与“版本未标注”，不猜测标题。
-
-玩家地图保留真实站点名，并按已核实的发布版本补充游戏名：四二显示 The Last Tour 三语版，穆拉迪耶显示《最后两袋》三语可行走剧场。详情与游戏页标题同样按实际启动版本显示；继续旧存档不会冒用新版名称。刷新玩家页面即可加载更新，无需重新导入或发布。
-
-下载链接中的 Release 标签区分版本。为兼容 Organizer 导入，附件文件名保持不变；不要把 GitHub 自动生成的 Source code 当成游戏包。导入后仍需选择站点发布，旧存档继续旧版本。
-
-[六个玩家端游戏包 · 统一下载](https://github.com/Psyche0920/PastPort/releases/tag/player-map-six-2026-11-06-r1)
-
-四二与穆拉迪耶行已更新为 2026-11-07 的《The Last Tour》《最后两袋》三语版；其余行保留 2026-11-06 的交付快照。站点是平台入口标签，不代表历史场景认证。
-
-| 地图站点 | 项目 / 版本 | 下载 |
-| --- | --- | --- |
-| Forty Two Heilbronn | The Last Tour · wcheung · `839c304f27ec` · zh / en / tr | [The Last Tour 三语包 · wcheung.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/wcheung-demo-2026-11-07-trilingual/wcheung.tar.gz) |
-| Eğitim Yapıları | wcheung · `994013cb873a` | [player-education.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-education.tar.gz) |
-| Hamzabey Külliyesi | karlastest · `2b98d4a99a53` | [player-hamzabey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hamzabey.tar.gz) |
-| I. Murat Hüdavendigar Külliyesi | muradiye-ui-trial · `1730505587e8` | [player-hudavendigar.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-hudavendigar.tar.gz) |
-| II. Murat Külliyesi | 《最后两袋》可行走剧场 · `812d71853b4c` · 简中 / 英 / 土 | [《最后两袋》剧场三语包 · muradiye-ui-trial.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/muradiye-ui-trial-2026-11-07-trilingual/muradiye-ui-trial.tar.gz) |
-| Orhan Bey Külliyesi | maslan-lamplight-playable · `03702ea80431` | [player-orhan-bey.tar.gz](https://github.com/Psyche0920/PastPort/releases/download/player-map-six-2026-11-06-r1/player-orhan-bey.tar.gz) |
-
-下载所需 `.tar.gz`，在 Organizer「制作进度与交付 → 导入交付包」导入，再选择上表对应站点发布。新电脑会创建自己的交付记录；Git pull 不会同步本机历史、账号或存档。
-
-Orhan Bey 包是玩家地图已发布的旧导演版；Organizer 最近记录中的 Maslan 三维新版尚未发布到地图，因此不混入本次六包快照。发布附有 `packages.json`、`SHA256SUMS` 和导入说明，不包含账号数据库或原始 PDF。
-
-</details>
+Eyne Bey 游戏的史料主体为布尔萨经学院，采用伊斯坦布尔 Şeker Han 地下室扫描作为替代舞台；虚构剧情、修改后的拼图图片与原始证据分别标明。这是独立打磨的成品包，不代表通用生成器对任意输入都有同等效果。发行检查不代替人工历史／剧情审核，也不证明实机稳定帧率；下载包不代表本机地图已发布该版本。
 
 ## 启动与使用
 
@@ -338,6 +299,7 @@ PastPort/
 │   │   └── <a href=".github/workflows/ci.yml">ci.yml</a>  — GitHub Actions 持续集成：安装依赖并执行仓库检查与测试。
 │   ├── <a href=".github/showcase/">showcase/</a>  — GitHub 展示图片，不属于程序运行时资源
 │   │   ├── <a href=".github/showcase/hero.svg">hero.svg</a>  — 与 GoalCoach 风格统一的项目封面
+│   │   ├── <a href=".github/showcase/presentation-cover.png">presentation-cover.png</a>  — 演示稿真实首页，用于 PPT 的可点击封面
 │   │   ├── <a href=".github/showcase/demo.svg">demo.svg</a>  — 指向 Demo 视频的可点击封面
 │   │   ├── <a href=".github/showcase/workflow-zh.svg">workflow-zh.svg</a>  — 中文制作流程概览
 │   │   └── <a href=".github/showcase/workflow-en.svg">workflow-en.svg</a>  — 同一制作流程的英文版
@@ -817,8 +779,6 @@ PastPort/
 ├── <a href=".gitignore">.gitignore</a>  — 排除本地环境、私有输入、运行产物和缓存，防止误提交。
 ├── <a href=".python-version">.python-version</a>  — 指定项目使用的 Python 版本。
 ├── <a href="AGENTS.md">AGENTS.md</a>  — 开发代理的架构、实现、验证和文档维护约束。
-├── <a href="CHANGELOG.md">CHANGELOG.md</a>  — 按日期记录变更、验证证据和未完成边界。
-├── <a href="handoff.md">handoff.md</a>  — 中英双语决赛交接。
 ├── <a href="LICENSE">LICENSE</a>  — 本模块的许可证；分发源码或安装包时保留。
 ├── <a href="package-lock.json">package-lock.json</a>  — 锁定 Node 依赖树和完整性，支持可复现安装。
 ├── <a href="package.json">package.json</a>  — Node 工具依赖和检查、测试等脚本命令。
@@ -836,7 +796,7 @@ PastPort/
 
 Admin制作流程已按用户授权取消累计token用量停机阈值，照片/史料与环境匹配均继续记录真实用量，不再因默认25万或旧100万阈值停止。已授权调用次数、超时、输入与史料校验、未知用量恢复保护仍保留。当前任务恢复采用新输出修订，复用成功回执，保留旧PDF及原始授权记录；独立SDK调用默认仍遵守其显式grant。
 
-[变更记录](CHANGELOG.md)
+[比赛交接、初始提案与开发记录归档](https://github.com/Psyche0920/PastPort/tree/archive/hackathon-docs-2026-11-11) · 仅作历史参考，不作为当前启动说明。
 
 玩家地图在另一终端从仓库根目录运行 `node frontend/player/server.mjs`（Node.js 22.13+），打开 http://127.0.0.1:18851/ 。默认读取本仓库 Organizer 的数据目录；自定义部署需通过 `ORGANIZER_DATA` 指向相同的 `server/organizer` 目录。所有已完成且能打开独立玩家预览的交付卡片，均可选择站点并「发布到玩家地图」。发布后刷新地图，对应站点点亮；同一站点再次发布会切到新版本，其他站点保持原有版本。玩家登录独立于工作人员登录。通关奖章需要非空结局编号。GameSession 游戏还须先同步同版本存档，后端用共用引擎核对任务、必需路线与有效结局；仅打开或发送结局消息不能发章。撤回印章后，下次点开关卡会自动从第一次游玩的开场开始，无须点击「重新开始」；已完成旧档先原样归档，未完成的新局仍正常续玩，通关后再次发章。旧二维包仍使用受限的结局事件／已固定摘要的 UI 桥接，不属于服务端逐步裁定。
 

@@ -10,7 +10,7 @@ SDK_NAMES = (
 PRD = "docs/TECHNICAL_PRD.md"
 PRD_EN = "docs/TECHNICAL_PRD_EN.md"
 TRANSLATIONS = ("README_ZH.md", PRD_EN)
-ROUTE_FILES = ("README_ZH.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md")
+ROUTE_FILES = ("README_ZH.md", "AGENTS.md", ".github/copilot-instructions.md")
 REQUIRED_TOPICS = (
     "architecture-and-ownership", "technology-stack", "workflow", "contracts-and-versions",
     "sdk-modules", "story-and-agents", "verification-and-delivery",
@@ -24,7 +24,7 @@ EXCLUDED = frozenset({
 def check(root: Path) -> tuple[str, ...]:
     root = root.resolve()
     errors: list[str] = []
-    allowed = {"README.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md", PRD}
+    allowed = {"README.md", "AGENTS.md", ".github/copilot-instructions.md", PRD}
     allowed.update(TRANSLATIONS)
     allowed.update(f"packages/{name}/README.md" for name in SDK_NAMES)
     for relative in sorted(allowed):
@@ -67,7 +67,8 @@ def check(root: Path) -> tuple[str, ...]:
                 and not any(part in EXCLUDED for part in path.relative_to(root).parts)
             ):
                 errors.append(
-                    f"{path.relative_to(root)}: archive historical docs/resources; keep only {PRD} and its English translation"
+                    f"{path.relative_to(root)}: archive historical docs/resources; "
+                    f"keep only {PRD} and its English translation"
                 )
     for folder, directories, names in os.walk(root):
         directories[:] = sorted(
@@ -77,7 +78,7 @@ def check(root: Path) -> tuple[str, ...]:
         for name in sorted(names):
             path = Path(folder) / name
             relative = path.relative_to(root).as_posix()
-            if path.suffix != ".md" or relative in allowed or relative == "CHANGELOG.md":
+            if path.suffix != ".md" or relative in allowed:
                 continue
             # Machine Skills and their supporting resources are not user guides.
             if relative.startswith("skills/"):
@@ -94,7 +95,7 @@ def main() -> int:
     if errors:
         print("\n".join(errors))
         return 1
-    print("Documentation contract passed: bilingual root README/technical PRD, team handoff and five SDK guides.")
+    print("Documentation contract passed: bilingual root README/technical PRD and five SDK guides.")
     return 0
 
 

@@ -1,4 +1,4 @@
-"""One project entry, the requested team handoff, one technical PRD and five SDK guides."""
+"""Current bilingual entries and SDK guides exclude archived intermediate documentation."""
 
 import importlib.util
 from pathlib import Path
@@ -42,12 +42,16 @@ def documentation_fixture(root: Path) -> None:
 def test_duplicate_guides_are_rejected(tmp_path: Path) -> None:
     documentation_fixture(tmp_path)
     (tmp_path / "docs/obsolete-guide.md").write_text("Old parallel guide")
+    (tmp_path / "handoff.md").write_text("Archived team handoff")
+    (tmp_path / "CHANGELOG.md").write_text("Archived development log")
     (tmp_path / "docs/PastPort_PRD_EN.md").write_text("Duplicate PRD")
     (tmp_path / "docs/showcase").mkdir()
     (tmp_path / "docs/showcase/old.svg").write_text("<svg/>")
     errors = checker().check(tmp_path)
     assert any("showcase/old.svg: archive historical docs/resources" in e for e in errors)
     assert any("obsolete-guide.md: duplicate guide" in error for error in errors)
+    assert any("handoff.md: duplicate guide" in error for error in errors)
+    assert any("CHANGELOG.md: duplicate guide" in error for error in errors)
     assert any("PastPort_PRD_EN.md: duplicate guide" in error for error in errors)
 
 

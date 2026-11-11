@@ -13,7 +13,7 @@ The native `idmlscene3d` entry requires only IDML, SPZ and PLY; Links is optiona
 
 [中文](TECHNICAL_PRD.md) · English
 
-**Version: 1.0 · Single initial specification · Current baseline: 2026-11-01**
+**Current technical specification · Documentation reviewed: 2026-11-11**
 
 This document defines the responsibilities, technology, inputs, outputs, workflows and acceptance boundaries of current main, the five SDKs and the shared runtime. It does not authorize model calls, publication or deployment; execution remains subject to caller permissions and budgets. Start with the [root README](../README.md) for installation and play. Each SDK README documents its commands and API. This is the English translation of the same specification, not a separate product version.
 
@@ -33,7 +33,7 @@ This document defines the responsibilities, technology, inputs, outputs, workflo
 - [Development, verification and delivery](#verification-and-delivery)
 - [Next steps](#next-steps)
 
-The team first polishes and play-tests existing bundles, then carries reusable story, gameplay, binding and packaging improvements back into Main and the SDKs after acceptance. The goal is an editable first game built from source materials. City map and public publishing integration remain to be built and validated. See the [handoff](../handoff.md#en) for ownership.
+Current interfaces and limits are specified below. Archived hackathon planning and ownership notes are historical reference only; use the root README for current setup and delivery.
 
 <a id="product-and-status"></a>
 ## 1. Product goal and current status
@@ -697,12 +697,12 @@ Evidence, characters, approvals and images in `tests/fixtures/reference` are syn
 - Five `packages/*-sdk/README.md` guides: package dependencies, API, inputs/outputs, commands and limitations.
 - `TECHNICAL_PRD.md` and this English translation: one system specification for main/SDK architecture, workflow, technology and contracts.
 
-The user-requested root `handoff.md` records team ownership, change boundaries and next tasks, without duplicating system/startup instructions. Translated files are language counterparts, not independent specifications. Do not add competing guides, duplicate PRDs or per-source-module explanatory READMEs. AGENTS/Skills, licensing/provenance, schemas and fixtures are distinct machine/legal/test resources. Recoverable historical documentation lives in ignored local artifact directories and is not current policy. Keep run evidence there, not in another long-lived specification.
+Current main retains the bilingual root README, this bilingual technical specification and five SDK guides. Hackathon handoff notes, the initial proposal and development logs are preserved in the [documentation archive](https://github.com/Psyche0920/PastPort/tree/archive/hackathon-docs-2026-11-11), not maintained as current instructions. Machine Skills, licensing/provenance, schemas and fixtures remain distinct resources. Keep private run evidence in ignored artifact directories.
 
 <a id="next-steps"></a>
 ## 13. Next steps
 
-See root [handoff.md](../handoff.md) for finals ownership, playable acceptance and delivery rules. This section retains stage goals only. These are plans, not implemented capabilities or authorization to call services/publish.
+This section states remaining work and acceptance targets. These are plans, not implemented capabilities or authorization to call services/publish.
 
 | Priority | Scope and acceptance target |
 |---|---|
@@ -801,7 +801,7 @@ The current system is local development, not an already deployed shared cloud ba
 
 
 <a id="shared-online-platform"></a>
-## 14. Shared online platform technical PRD (Claude execution handoff)
+## 14. Shared online platform specification
 
 Status: implementation specification; shared deployment is not implemented. Owner: wehan. Executor: Claude. Use current main as the baseline. Local validation is not cross-device acceptance. This section defines the target; earlier local/deployment limitations describe current behavior.
 
@@ -941,10 +941,10 @@ Use isolated data and two physical devices/independent browser sessions connecte
 | A15 | Missing persistent directory/unwritable database | Explicit startup/write failure, not an empty replacement pretending to migrate successfully |
 | A16 | Restore backup into isolated deployment | Matching account, asset, release and save identities; shareable report excludes secrets |
 
-### 14.10 Claude deliverables
+### 14.10 Implementation checks
 
 - Implementation, configuration examples and a simple startup entry; no conflicting parallel specification.
-- Update both READMEs/technical PRDs and `handoff.md`, distinguishing development/LAN/production evidence.
+- Update both READMEs and technical specifications, distinguishing development/LAN/production evidence.
 - Run relevant deterministic tests, Ruff, strict mypy, JS syntax, repository/handoff checks and `git diff --check`. Installation resources include new adapters/public frontends and exclude private game/player data.
 - Save input versions, sanitized configuration, resource checks, A1–A16 outcomes, physical-device evidence and remaining gaps under ignored artifacts. Mark unexecuted/failed items honestly, never replace them with simulated acceptance.
 - Separate source commit/push, Release assets and deployment. No database upload/public exposure/cloud purchases without explicit authorization; request only genuinely missing deployment details from wehan.
