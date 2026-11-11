@@ -45,12 +45,8 @@ def check(root: Path) -> tuple[str, ...]:
         path = root / relative
         if path.is_file() and PRD not in path.read_text():
             errors.append(f"{relative}: missing canonical route: {PRD}")
-    readme = root / "README.md"
-    root_text = readme.read_text() if readme.is_file() else ""
     for name in SDK_NAMES:
         relative = f"packages/{name}/README.md"
-        if f"]({relative})" not in root_text:
-            errors.append(f"README.md: missing SDK link: {relative}")
         path = root / relative
         if path.is_file():
             text = path.read_text()

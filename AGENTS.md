@@ -11,4 +11,4 @@
 
 - Current main contains final user documentation only. Historical hackathon handoff notes, the original proposal and development logs are preserved under the Git tag `archive/hackathon-docs-2026-11-11`; do not restore them as active root guides.
 
-- User-requested `README.md` is the default English project entry; `README_ZH.md` is the full Chinese version. `docs/TECHNICAL_PRD_EN.md` is the English translation of the Chinese technical specification. These are language views, not separate guides or product versions. Keep structure, commands, file inventory and acceptance boundaries aligned, with reciprocal language links.
+- User-requested `README.md` is the default English project entry; `README_ZH.md` is the full Chinese version. `docs/TECHNICAL_PRD_EN.md` is the English translation of the Chinese technical specification. These are language views, not separate guides or product versions. Keep structure, commands and acceptance boundaries aligned, with reciprocal language links. The public README emphasizes the concept, real screenshots, demo and startup; keep internal module details in the existing technical/SDK documentation.

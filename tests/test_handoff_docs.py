@@ -58,6 +58,9 @@ def test_duplicate_guides_are_rejected(tmp_path: Path) -> None:
 def test_current_entries_and_sdk_contracts_are_required(tmp_path: Path) -> None:
     documentation_fixture(tmp_path)
     assert checker().check(tmp_path) == ()
+    # Product-facing entry points need not repeat internal SDK navigation.
+    (tmp_path / "README.md").write_text(checker().PRD_EN)
+    assert checker().check(tmp_path) == ()
     path = tmp_path / "packages/story-sdk/README.md"
     path.write_text("Story text without an interface contract")
     errors = checker().check(tmp_path)
