@@ -15,7 +15,7 @@ The native `idmlscene3d` entry requires only IDML, SPZ and PLY; Links is optiona
 
 **Version: 1.0 · Single initial specification · Current baseline: 2026-11-01**
 
-This document defines the responsibilities, technology, inputs, outputs, workflows and acceptance boundaries of current main, the five SDKs and the shared runtime. It does not authorize model calls, publication or deployment; execution remains subject to caller permissions and budgets. Start with the [root README](../README_EN.md) for installation and play. Each SDK README documents its commands and API. This is the English translation of the same specification, not a separate product version.
+This document defines the responsibilities, technology, inputs, outputs, workflows and acceptance boundaries of current main, the five SDKs and the shared runtime. It does not authorize model calls, publication or deployment; execution remains subject to caller permissions and budgets. Start with the [root README](../README.md) for installation and play. Each SDK README documents its commands and API. This is the English translation of the same specification, not a separate product version.
 
 ## Contents
 
@@ -693,7 +693,7 @@ Evidence, characters, approvals and images in `tests/fixtures/reference` are syn
 
 ### 12.4 One documentation set, translated views
 
-- Root `README.md` and `README_EN.md`: Chinese and English views of project status, installation, startup and navigation.
+- Root `README.md` is the default English entry; `README_ZH.md` is the Chinese view of the same project status, installation, startup and navigation.
 - Five `packages/*-sdk/README.md` guides: package dependencies, API, inputs/outputs, commands and limitations.
 - `TECHNICAL_PRD.md` and this English translation: one system specification for main/SDK architecture, workflow, technology and contracts.
 

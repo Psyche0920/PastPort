@@ -36,7 +36,7 @@ Main 和 SDK 的目标是基于材料生成可试玩、可继续编辑的游戏�
 
 答辩顺序为 **wehan 城市地图 → maslan 主试玩 → wcheung 技术复用 → wehan 后台更新**。wcheung 用四二展示换一份图文 PDF 和场景后如何匹配实物并点击查看介绍。四二作为复用样例，两处真实遗产从地图展示。耗时的生成步骤用已完成的结果说明。
 
-每次有新版，沿用 `wcheung.tar.gz` 和 `maslan.tar.gz`，上传到 PastPort GitHub Releases，用发布标签区分版本。发布说明写清变更和试玩起点，再更新 [中文 README](README.md) 和 [英文 README](README_EN.md) 里对应的下载链接并推送。wehan 下载后导入 Organizer，在「制作进度与交付」打开同名记录试玩验收。彩排确认地图能直达主试玩，以及后台更新能在用户端看到。
+每次有新版，沿用 `wcheung.tar.gz` 和 `maslan.tar.gz`，上传到 PastPort GitHub Releases，用发布标签区分版本。发布说明写清变更和试玩起点，再更新 [中文 README](README_ZH.md) 和 [英文 README](README.md) 里对应的下载链接并推送。wehan 下载后导入 Organizer，在「制作进度与交付」打开同名记录试玩验收。彩排确认地图能直达主试玩，以及后台更新能在用户端看到。
 
 ### 最终交付包
 
@@ -90,7 +90,7 @@ Completed Organizer deliveries can select a map site and publish; the player map
 
 Present in this order: **wehan (city map), maslan (featured game), wcheung (workflow reuse), wehan (Organizer update)**. Use the 42 demo to show how a different illustrated PDF and scene can be matched and how players open an object's description. The map provides the two real heritage sites. Use completed runs to explain generation steps that take longer than the live slot allows.
 
-Upload each reviewable build to PastPort GitHub Releases as `wcheung.tar.gz` or `maslan.tar.gz`, using release tags for versions. Describe the changes and where to start playing, then update the corresponding download links in both [Chinese README](README.md) and [English README](README_EN.md) and push the edits. wehan downloads each bundle, imports it into Organizer, and tests the matching entry under **Progress & delivery**. Rehearse the map-to-game transition and verify that an Organizer edit appears in the player-facing product.
+Upload each reviewable build to PastPort GitHub Releases as `wcheung.tar.gz` or `maslan.tar.gz`, using release tags for versions. Describe the changes and where to start playing, then update the corresponding download links in both [Chinese README](README_ZH.md) and [English README](README.md) and push the edits. wehan downloads each bundle, imports it into Organizer, and tests the matching entry under **Progress & delivery**. Rehearse the map-to-game transition and verify that an Organizer edit appears in the player-facing product.
 
 ### Final handoff packages
 
@@ -101,7 +101,7 @@ Sign in to GitHub with access to the PastPort repository. Extract the wcheung ar
 | Item | Contents | Download |
 |---|---|---|
 | Competition rules and information note | Two official PDFs | [Terms and Conditions](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-terms.pdf) · [Information Note](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/competition-information-note.pdf) |
-| Playable game bundle | Featured game *The Last Two Sacks*, ready for Organizer import; editable sources in the package's `authoring/` | [Playable game bundle (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) · [Release notes](https://github.com/Psyche0920/PastPort/releases/tag/maslan-demo-2026-11-05-r1) · [Earlier build](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README_EN.md) |
+| Playable game bundle | Featured game *The Last Two Sacks*, ready for Organizer import; editable sources in the package's `authoring/` | [Playable game bundle (maslan-demo-2026-11-05-r1)](https://github.com/Psyche0920/PastPort/releases/download/maslan-demo-2026-11-05-r1/maslan.tar.gz) · [Release notes](https://github.com/Psyche0920/PastPort/releases/tag/maslan-demo-2026-11-05-r1) · [Earlier build](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan.tar.gz) · [Startup and import instructions](README.md) |
 | Original materials for the game bundle | Original IDML, historical image ZIP, 24 site photos, original SPZ and PLY, and JSON and CSV matching results | [Organizer source archive](https://github.com/Psyche0920/PastPort/releases/download/team-handover-2026-11-03/maslan-organizer-sources.tar.gz) |
 | Organizer-provided Vakıf materials (Muradiye) | Original IDML, its `Links` folder, and the chapter PDF | [Muradiye Google Drive folder](https://drive.google.com/drive/folders/18rlNGjpMhGuazgqqOUkJRDNbPEBIcTbh) |
 | Team roles and presentation plan | Ownership and presentation order in this document | [Team handoff](#en) |
@@ -130,7 +130,7 @@ Authored story/assets in a game bundle are delivered separately from Main/SDK so
 Following user-reported acceptance, the saved story and explicit blueprint were replayed through shared compilation/assembly in an isolated workspace. Runtime and presentation matched the tested build. The candidate passed 36 packaged-engine route/ending combinations, production Organizer import/idempotency/persistence and all file checksums in an isolated store, production preview HTTP checks, and browser LOD preparation → character introduction → 3D investigation. No fresh model generation, publication, push, existing Organizer database changes or new FPS measurement was performed. The four-mechanic typed intent/catalog integration remains outside this zero-model acceptance.
 
 
-玩家存档 / Player saves：玩家地图的账号进度已接 SQLite，复用游戏原有 `GameSession` 保存点；同账号、站点、发布版本可恢复。自定义游戏需接同一存档契约；仅改成品包不自动增加账号存档支持。跨设备访问需共享同一个平台后端，默认本机启动尚未公开部署。启动、数据目录、备份和验证边界见 [中文 README](README.md) / [English README](README_EN.md) 及 [技术 PRD](docs/TECHNICAL_PRD.md)。Account saves now persist existing GameSession checkpoints in SQLite. Accounts/sites/releases are isolated; custom games must adopt the save contract. Cross-device access requires the same backend; default local startup is not a public deployment. See the linked README and specification for startup, data, backup and validation boundaries.
+玩家存档 / Player saves：玩家地图的账号进度已接 SQLite，复用游戏原有 `GameSession` 保存点；同账号、站点、发布版本可恢复。自定义游戏需接同一存档契约；仅改成品包不自动增加账号存档支持。跨设备访问需共享同一个平台后端，默认本机启动尚未公开部署。启动、数据目录、备份和验证边界见 [中文 README](README_ZH.md) / [English README](README.md) 及 [技术 PRD](docs/TECHNICAL_PRD.md)。Account saves now persist existing GameSession checkpoints in SQLite. Accounts/sites/releases are isolated; custom games must adopt the save contract. Cross-device access requires the same backend; default local startup is not a public deployment. See the linked README and specification for startup, data, backup and validation boundaries.
 
 
 共享交付 / Shared delivery：同一平台使用一次导入和站点发布，不需要每名玩家上传游戏包。独立电脑的 Organizer 历史不通过 Git 自动同步；团队继续采用 Release → 下载 → 导入 → 验收。共享云部署与回环游戏地址改造由 wehan 负责，尚未实施。Within one deployment, import/publish once for all players. Git does not synchronize independent local Organizer histories. Team handoff remains Release → download → import → acceptance. wehan owns the still-pending shared deployment and replacement of loopback game URLs.
@@ -138,9 +138,9 @@ Following user-reported acceptance, the saved story and explicit blueprint were 
 
 下一执行任务 / Next execution task：由 Claude 按 [统一在线平台 PRD 第14节](docs/TECHNICAL_PRD.md#shared-online-platform) / [shared online platform §14](docs/TECHNICAL_PRD_EN.md#shared-online-platform) 分 P0–P5 实施，并用 A1–A16 验收。目标为同管理账号跨设备历史、发布游戏统一可玩、逐玩家实时存档及共享排名；现有本机证据不算统一部署验收。本次交接只编写规格，未实施或部署。This handoff specifies work only; it does not implement or deploy it.
 
-共享游戏包平台 / Shared package platform（2026-11-05，按 `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`）：同一 Organizer 中的游戏包可分块上传、下载原包、提交新版（基于当前版本，过期基线返回409）、恢复旧版，并发布或回退站点版本；后台列表和玩家地图每4秒自动刷新。玩家可继续旧版进度或另开新版存档；旧版 UI Trial 已接入账号存档。持久目录丢失时服务拒绝启动，`organizer-backup` 生成一致备份。用法见 [README](README.md#共享游戏包上传获取修改发布)，验收状态见 [技术 PRD §14.12](docs/TECHNICAL_PRD.md#shared-package-platform)。真实双设备、不同 Wi-Fi 及隧道远程验收仍需 wehan 用两台设备执行。Packages in one Organizer support chunked upload, original download, based-on-current new versions (stale bases get 409), restore, and per-site publish/rollback; staff lists and the player map refresh every 4 s. Players continue an earlier release or start a separate new-release save; the legacy UI Trial saves to accounts. Missing persistent data stops startup; `organizer-backup` writes a consistent backup. Real two-device, different-Wi-Fi and tunnel acceptance remains for wehan to run.
+共享游戏包平台 / Shared package platform（2026-11-05，按 `PastPort_Shared_Game_Platform_Acceptance_ZH.docx`）：同一 Organizer 中的游戏包可分块上传、下载原包、提交新版（基于当前版本，过期基线返回409）、恢复旧版，并发布或回退站点版本；后台列表和玩家地图每4秒自动刷新。玩家可继续旧版进度或另开新版存档；旧版 UI Trial 已接入账号存档。持久目录丢失时服务拒绝启动，`organizer-backup` 生成一致备份。用法见 [README](README_ZH.md#共享游戏包上传获取修改发布)，验收状态见 [技术 PRD §14.12](docs/TECHNICAL_PRD.md#shared-package-platform)。真实双设备、不同 Wi-Fi 及隧道远程验收仍需 wehan 用两台设备执行。Packages in one Organizer support chunked upload, original download, based-on-current new versions (stale bases get 409), restore, and per-site publish/rollback; staff lists and the player map refresh every 4 s. Players continue an earlier release or start a separate new-release save; the legacy UI Trial saves to accounts. Missing persistent data stops startup; `organizer-backup` writes a consistent backup. Real two-device, different-Wi-Fi and tunnel acceptance remains for wehan to run.
 
-Temporary remote sharing: use the foreground remote.mjs entry in the host terminal; see [Chinese README](README.md) / [English README](README_EN.md). Existing data and authentication are retained with separate temporary origins. This does not provide permanent hosting, remote private previews, legacy UI Trial cloud saves or full physical-device acceptance.
+Temporary remote sharing: use the foreground remote.mjs entry in the host terminal; see [Chinese README](README_ZH.md) / [English README](README.md). Existing data and authentication are retained with separate temporary origins. This does not provide permanent hosting, remote private previews, legacy UI Trial cloud saves or full physical-device acceptance.
 
 ## wcheung 2026-11-05 candidate / 候選交付
 
@@ -163,7 +163,7 @@ Organizer and the player map support Simplified Chinese, English and Turkish. On
 
 ### 下载版本辨识 / Download identity
 
-UI Trial 历史交付（包内为可行走剧场）、maslan《最后两袋》主试玩 r1、《最后两袋》三语可行走剧场，以及 wcheung《The Last Tour》是不同交付项。原始 UI Trial 的故事也叫《最后两袋》；三语剧场沿用 `muradiye-ui-trial.tar.gz` 文件名，不代表已验证的原始 2D 版。逐项下载见 [中文版对照表](README.md#游戏名称与版本对照) / [English build table](README_EN.md#game-titles-and-build-identities)。
+UI Trial 历史交付（包内为可行走剧场）、maslan《最后两袋》主试玩 r1、《最后两袋》三语可行走剧场，以及 wcheung《The Last Tour》是不同交付项。原始 UI Trial 的故事也叫《最后两袋》；三语剧场沿用 `muradiye-ui-trial.tar.gz` 文件名，不代表已验证的原始 2D 版。逐项下载见 [中文版对照表](README_ZH.md#游戏名称与版本对照) / [English build table](README.md#game-titles-and-build-identities)。
 
 The historical UI Trial delivery (containing the walkable theatre), maslan featured r1, The Last Two Sacks trilingual walkable theatre, and wcheung The Last Tour are separate deliveries. The original UI Trial also tells The Last Two Sacks; the retained theatre filename does not establish that it is the original 2D build. Use the tables above to choose the exact release.
 

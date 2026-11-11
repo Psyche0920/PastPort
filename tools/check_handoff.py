@@ -9,8 +9,8 @@ SDK_NAMES = (
 )
 PRD = "docs/TECHNICAL_PRD.md"
 PRD_EN = "docs/TECHNICAL_PRD_EN.md"
-TRANSLATIONS = ("README_EN.md", PRD_EN)
-ROUTE_FILES = ("README.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md")
+TRANSLATIONS = ("README_ZH.md", PRD_EN)
+ROUTE_FILES = ("README_ZH.md", "handoff.md", "AGENTS.md", ".github/copilot-instructions.md")
 REQUIRED_TOPICS = (
     "architecture-and-ownership", "technology-stack", "workflow", "contracts-and-versions",
     "sdk-modules", "story-and-agents", "verification-and-delivery",
@@ -38,9 +38,9 @@ def check(root: Path) -> tuple[str, ...]:
             for topic in REQUIRED_TOPICS:
                 if f'id="{topic}"' not in text:
                     errors.append(f"{relative}: missing technical topic: {topic}")
-    english_readme = root / "README_EN.md"
+    english_readme = root / "README.md"
     if english_readme.is_file() and PRD_EN not in english_readme.read_text():
-        errors.append(f"README_EN.md: missing translated PRD route: {PRD_EN}")
+        errors.append(f"README.md: missing translated PRD route: {PRD_EN}")
     for relative in ROUTE_FILES:
         path = root / relative
         if path.is_file() and PRD not in path.read_text():

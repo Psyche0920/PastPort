@@ -24,6 +24,7 @@ def documentation_fixture(root: Path) -> None:
     prd.parent.mkdir(parents=True, exist_ok=True)
     prd.write_text("\n".join(f'<a id="{topic}"></a>' for topic in module.REQUIRED_TOPICS))
     root_readme = root / "README.md"
+    root_readme.write_text(module.PRD_EN)
     for name in module.SDK_NAMES:
         path = root / "packages" / name / "README.md"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -34,7 +35,7 @@ def documentation_fixture(root: Path) -> None:
         with root_readme.open("a") as stream:
             stream.write(f"\n[SDK](packages/{name}/README.md)")
 
-    (root / "README_EN.md").write_text(root_readme.read_text().replace(module.PRD, module.PRD_EN))
+    (root / "README_ZH.md").write_text(root_readme.read_text().replace(module.PRD_EN, module.PRD))
     (root / module.PRD_EN).write_text(prd.read_text())
 
 
@@ -91,6 +92,6 @@ def test_requested_translations_are_required_not_parallel_guides(tmp_path: Path)
     assert any("TECHNICAL_PRD_EN.md: missing current documentation entry" in error
                for error in checker().check(tmp_path))
     documentation_fixture(tmp_path)
-    (tmp_path / "README_EN.md").write_text("English without a specification link")
-    assert any("README_EN.md: missing translated PRD route" in error
+    (tmp_path / "README.md").write_text("English without a specification link")
+    assert any("README.md: missing translated PRD route" in error
                for error in checker().check(tmp_path))
