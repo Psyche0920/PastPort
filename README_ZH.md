@@ -71,7 +71,7 @@ PastPort 将历史资料转化为互动三维故事。你可以探索场所、�
 <details>
 <summary>展开安装与启动步骤</summary>
 
-需要 Git、uv、Python 3.12、Node.js 22.13+ 和支持 WebGL 的浏览器。
+需要 Git、[uv](https://docs.astral.sh/uv/)、Python 3.12、Node.js 22.13+ 和支持 WebGL 的浏览器。
 
 ### 首次安装
 
