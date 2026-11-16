@@ -71,7 +71,7 @@ Compare a source photograph with its altered game copy.
 <details>
 <summary>Setup and launch instructions</summary>
 
-You’ll need Git, uv, Python 3.12, Node.js 22.13+ and a browser with WebGL.
+You’ll need Git, [uv](https://docs.astral.sh/uv/), Python 3.12, Node.js 22.13+ and a browser with WebGL.
 
 ### First setup
 
